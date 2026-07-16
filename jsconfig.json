@@ -1,0 +1,18 @@
+{
+  "//": "Type-checks the plain-JS backend with TypeScript's checkJs (no build output). Catches real mistakes — wrong arg counts, typos on known APIs, bad property access — without requiring a TS migration.",
+  "compilerOptions": {
+    "checkJs": true,
+    "allowJs": true,
+    "noEmit": true,
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": false,
+    "noImplicitAny": false,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "types": ["node"]
+  },
+  "include": ["lib/**/*.js", "scripts/**/*.js", "server.js", "types/*.d.ts"],
+  "exclude": ["node_modules", "public"]
+}

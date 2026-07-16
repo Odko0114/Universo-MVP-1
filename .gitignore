@@ -1,0 +1,38 @@
+node_modules/
+
+# Runtime data (seeded/generated on first run — regenerate with `npm run seed`)
+data/universities.json
+data/students.json
+data/admins.json
+data/metrics.json
+data/photos.json
+data/clicks.json
+data/events.jsonl
+data/cache/
+
+# NOTE: data/seed/eter-universities.json is the cached ETER import — keep it in
+# version control so the app runs offline without re-hitting the ETER API.
+
+# Local env / secrets
+.env
+*.log
+.DS_Store
+
+# Business/planning documents and older prototype files — kept on disk but
+# deliberately out of the code repository (not committed anywhere, including
+# private repos): NDA, financials, lead data, pitch materials.
+*.pptx
+*.docx
+Business.Plan*.html
+Finance/
+Presentations/
+Lead Database.*
+NDA.docx
+Uni data.xlsx
+Universo BMC.*
+Weekly plan.xlsx
+qrcode-url.png
+ChatGPT Image*.png
+universo-demo*.html
+universo-site*/
+.claude/

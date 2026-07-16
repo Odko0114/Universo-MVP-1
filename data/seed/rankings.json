@@ -1,0 +1,6146 @@
+{
+  "harvard university": {
+    "world_rank": 1,
+    "national_rank": 1,
+    "country": "USA",
+    "year": 2015
+  },
+  "massachusetts institute of technology": {
+    "world_rank": 3,
+    "national_rank": 3,
+    "country": "USA",
+    "year": 2015
+  },
+  "stanford university": {
+    "world_rank": 2,
+    "national_rank": 2,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of cambridge": {
+    "world_rank": 4,
+    "national_rank": 1,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "california institute of technology": {
+    "world_rank": 12,
+    "national_rank": 10,
+    "country": "USA",
+    "year": 2015
+  },
+  "princeton university": {
+    "world_rank": 9,
+    "national_rank": 7,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of oxford": {
+    "world_rank": 5,
+    "national_rank": 2,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "yale university": {
+    "world_rank": 11,
+    "national_rank": 9,
+    "country": "USA",
+    "year": 2015
+  },
+  "columbia university": {
+    "world_rank": 6,
+    "national_rank": 4,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of california berkeley": {
+    "world_rank": 7,
+    "national_rank": 5,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of chicago": {
+    "world_rank": 8,
+    "national_rank": 6,
+    "country": "USA",
+    "year": 2015
+  },
+  "cornell university": {
+    "world_rank": 10,
+    "national_rank": 8,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of pennsylvania": {
+    "world_rank": 14,
+    "national_rank": 11,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of tokyo": {
+    "world_rank": 13,
+    "national_rank": 1,
+    "country": "Japan",
+    "year": 2015
+  },
+  "johns hopkins university": {
+    "world_rank": 16,
+    "national_rank": 13,
+    "country": "USA",
+    "year": 2015
+  },
+  "swiss federal institute of technology in zurich": {
+    "world_rank": 20,
+    "national_rank": 1,
+    "country": "Switzerland",
+    "year": 2015
+  },
+  "kyoto university": {
+    "world_rank": 17,
+    "national_rank": 2,
+    "country": "Japan",
+    "year": 2015
+  },
+  "weizmann institute of science": {
+    "world_rank": 39,
+    "national_rank": 2,
+    "country": "Israel",
+    "year": 2015
+  },
+  "university of california los angeles": {
+    "world_rank": 15,
+    "national_rank": 12,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of california san diego": {
+    "world_rank": 21,
+    "national_rank": 16,
+    "country": "USA",
+    "year": 2015
+  },
+  "rockefeller university": {
+    "world_rank": 29,
+    "national_rank": 21,
+    "country": "USA",
+    "year": 2015
+  },
+  "hebrew university of jerusalem": {
+    "world_rank": 23,
+    "national_rank": 1,
+    "country": "Israel",
+    "year": 2015
+  },
+  "new york university": {
+    "world_rank": 18,
+    "national_rank": 14,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of california san francisco": {
+    "world_rank": 26,
+    "national_rank": 19,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of wisconsin madison": {
+    "world_rank": 25,
+    "national_rank": 18,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of illinois at urbana champaign": {
+    "world_rank": 33,
+    "national_rank": 24,
+    "country": "USA",
+    "year": 2015
+  },
+  "duke university": {
+    "world_rank": 28,
+    "national_rank": 20,
+    "country": "USA",
+    "year": 2015
+  },
+  "imperial college london": {
+    "world_rank": 35,
+    "national_rank": 4,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "university of texas southwestern medical center": {
+    "world_rank": 75,
+    "national_rank": 46,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of texas at austin": {
+    "world_rank": 30,
+    "national_rank": 22,
+    "country": "USA",
+    "year": 2015
+  },
+  "university college london": {
+    "world_rank": 27,
+    "national_rank": 3,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "osaka university": {
+    "world_rank": 45,
+    "national_rank": 5,
+    "country": "Japan",
+    "year": 2015
+  },
+  "northwestern university": {
+    "world_rank": 22,
+    "national_rank": 17,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of michigan ann arbor": {
+    "world_rank": 19,
+    "national_rank": 15,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of toronto": {
+    "world_rank": 32,
+    "national_rank": 1,
+    "country": "Canada",
+    "year": 2015
+  },
+  "university of north carolina at chapel hill": {
+    "world_rank": 40,
+    "national_rank": 25,
+    "country": "USA",
+    "year": 2015
+  },
+  "washington university in st louis": {
+    "world_rank": 52,
+    "national_rank": 35,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of utah": {
+    "world_rank": 70,
+    "national_rank": 44,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of washington seattle": {
+    "world_rank": 31,
+    "national_rank": 23,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of california santa barbara": {
+    "world_rank": 64,
+    "national_rank": 40,
+    "country": "USA",
+    "year": 2015
+  },
+  "mcgill university": {
+    "world_rank": 42,
+    "national_rank": 2,
+    "country": "Canada",
+    "year": 2015
+  },
+  "purdue university west lafayette": {
+    "world_rank": 43,
+    "national_rank": 27,
+    "country": "USA",
+    "year": 2015
+  },
+  "carnegie mellon university": {
+    "world_rank": 61,
+    "national_rank": 39,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of southern california": {
+    "world_rank": 51,
+    "national_rank": 34,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of california davis": {
+    "world_rank": 53,
+    "national_rank": 36,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of colorado boulder": {
+    "world_rank": 54,
+    "national_rank": 37,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of california irvine": {
+    "world_rank": 89,
+    "national_rank": 52,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of paris sud": {
+    "world_rank": 58,
+    "national_rank": 3,
+    "country": "France",
+    "year": 2015
+  },
+  "university of minnesota twin cities": {
+    "world_rank": 48,
+    "national_rank": 31,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of arizona": {
+    "world_rank": 68,
+    "national_rank": 42,
+    "country": "USA",
+    "year": 2015
+  },
+  "technion israel institute of technology": {
+    "world_rank": 136,
+    "national_rank": 4,
+    "country": "Israel",
+    "year": 2015
+  },
+  "ohio state university columbus": {
+    "world_rank": 49,
+    "national_rank": 32,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of rochester": {
+    "world_rank": 81,
+    "national_rank": 49,
+    "country": "USA",
+    "year": 2015
+  },
+  "ecole normale superieure paris": {
+    "world_rank": 37,
+    "national_rank": 2,
+    "country": "France",
+    "year": 2015
+  },
+  "university of florida": {
+    "world_rank": 60,
+    "national_rank": 38,
+    "country": "USA",
+    "year": 2015
+  },
+  "tel aviv university": {
+    "world_rank": 86,
+    "national_rank": 3,
+    "country": "Israel",
+    "year": 2015
+  },
+  "rice university": {
+    "world_rank": 120,
+    "national_rank": 61,
+    "country": "USA",
+    "year": 2015
+  },
+  "dartmouth college": {
+    "world_rank": 44,
+    "national_rank": 28,
+    "country": "USA",
+    "year": 2015
+  },
+  "vanderbilt university": {
+    "world_rank": 69,
+    "national_rank": 43,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of edinburgh": {
+    "world_rank": 55,
+    "national_rank": 5,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "ecole polytechnique": {
+    "world_rank": 36,
+    "national_rank": 1,
+    "country": "France",
+    "year": 2015
+  },
+  "boston university": {
+    "world_rank": 66,
+    "national_rank": 41,
+    "country": "USA",
+    "year": 2015
+  },
+  "pierre and marie curie university": {
+    "world_rank": 63,
+    "national_rank": 4,
+    "country": "France",
+    "year": 2015
+  },
+  "pennsylvania state university university park": {
+    "world_rank": 47,
+    "national_rank": 30,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of geneva": {
+    "world_rank": 92,
+    "national_rank": 3,
+    "country": "Switzerland",
+    "year": 2015
+  },
+  "brown university": {
+    "world_rank": 83,
+    "national_rank": 50,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of british columbia": {
+    "world_rank": 62,
+    "national_rank": 3,
+    "country": "Canada",
+    "year": 2015
+  },
+  "university of maryland college park": {
+    "world_rank": 72,
+    "national_rank": 45,
+    "country": "USA",
+    "year": 2015
+  },
+  "swiss federal institute of technology in lausanne": {
+    "world_rank": 91,
+    "national_rank": 2,
+    "country": "Switzerland",
+    "year": 2015
+  },
+  "karolinska institute": {
+    "world_rank": 71,
+    "national_rank": 1,
+    "country": "Sweden",
+    "year": 2015
+  },
+  "university of pittsburgh pittsburgh campus": {
+    "world_rank": 46,
+    "national_rank": 29,
+    "country": "USA",
+    "year": 2015
+  },
+  "rutgers university new brunswick": {
+    "world_rank": 50,
+    "national_rank": 33,
+    "country": "USA",
+    "year": 2015
+  },
+  "texas a m university college station": {
+    "world_rank": 102,
+    "national_rank": 56,
+    "country": "USA",
+    "year": 2015
+  },
+  "nagoya university": {
+    "world_rank": 125,
+    "national_rank": 9,
+    "country": "Japan",
+    "year": 2015
+  },
+  "seoul national university": {
+    "world_rank": 24,
+    "national_rank": 1,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "university of manchester": {
+    "world_rank": 67,
+    "national_rank": 6,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "sapienza university of rome": {
+    "world_rank": 112,
+    "national_rank": 1,
+    "country": "Italy",
+    "year": 2015
+  },
+  "case western reserve university": {
+    "world_rank": 105,
+    "national_rank": 57,
+    "country": "USA",
+    "year": 2015
+  },
+  "tohoku university": {
+    "world_rank": 73,
+    "national_rank": 6,
+    "country": "Japan",
+    "year": 2015
+  },
+  "arizona state university": {
+    "world_rank": 97,
+    "national_rank": 55,
+    "country": "USA",
+    "year": 2015
+  },
+  "emory university": {
+    "world_rank": 84,
+    "national_rank": 51,
+    "country": "USA",
+    "year": 2015
+  },
+  "ruprecht karl university of heidelberg": {
+    "world_rank": 76,
+    "national_rank": 1,
+    "country": "Germany",
+    "year": 2015
+  },
+  "ludwig maximilian university of munich": {
+    "world_rank": 79,
+    "national_rank": 2,
+    "country": "Germany",
+    "year": 2015
+  },
+  "university of virginia": {
+    "world_rank": 41,
+    "national_rank": 26,
+    "country": "USA",
+    "year": 2015
+  },
+  "leiden university": {
+    "world_rank": 108,
+    "national_rank": 3,
+    "country": "Netherlands",
+    "year": 2015
+  },
+  "tufts university": {
+    "world_rank": 95,
+    "national_rank": 54,
+    "country": "USA",
+    "year": 2015
+  },
+  "georgia institute of technology": {
+    "world_rank": 80,
+    "national_rank": 48,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of zurich": {
+    "world_rank": 96,
+    "national_rank": 4,
+    "country": "Switzerland",
+    "year": 2015
+  },
+  "university of helsinki": {
+    "world_rank": 111,
+    "national_rank": 1,
+    "country": "Finland",
+    "year": 2015
+  },
+  "technical university of munich": {
+    "world_rank": 101,
+    "national_rank": 3,
+    "country": "Germany",
+    "year": 2015
+  },
+  "university of oslo": {
+    "world_rank": 99,
+    "national_rank": 1,
+    "country": "Norway",
+    "year": 2015
+  },
+  "university of queensland": {
+    "world_rank": 103,
+    "national_rank": 3,
+    "country": "Australia",
+    "year": 2015
+  },
+  "university of copenhagen": {
+    "world_rank": 74,
+    "national_rank": 1,
+    "country": "Denmark",
+    "year": 2015
+  },
+  "university of sydney": {
+    "world_rank": 88,
+    "national_rank": 1,
+    "country": "Australia",
+    "year": 2015
+  },
+  "williams college": {
+    "world_rank": 95,
+    "national_rank": 57,
+    "country": "USA",
+    "year": 2012
+  },
+  "university of texas md anderson cancer center": {
+    "world_rank": 90,
+    "national_rank": 53,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of nottingham": {
+    "world_rank": 140,
+    "national_rank": 10,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "university of bristol": {
+    "world_rank": 123,
+    "national_rank": 8,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "utrecht university": {
+    "world_rank": 87,
+    "national_rank": 2,
+    "country": "Netherlands",
+    "year": 2015
+  },
+  "mines paristech": {
+    "world_rank": 104,
+    "national_rank": 5,
+    "country": "France",
+    "year": 2015
+  },
+  "keio university": {
+    "world_rank": 34,
+    "national_rank": 3,
+    "country": "Japan",
+    "year": 2015
+  },
+  "king s college london": {
+    "world_rank": 94,
+    "national_rank": 7,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "indiana university bloomington": {
+    "world_rank": 106,
+    "national_rank": 58,
+    "country": "USA",
+    "year": 2015
+  },
+  "national university of singapore": {
+    "world_rank": 65,
+    "national_rank": 1,
+    "country": "Singapore",
+    "year": 2015
+  },
+  "stony brook university": {
+    "world_rank": 138,
+    "national_rank": 65,
+    "country": "USA",
+    "year": 2015
+  },
+  "lomonosov moscow state university": {
+    "world_rank": 59,
+    "national_rank": 1,
+    "country": "Russia",
+    "year": 2015
+  },
+  "australian national university": {
+    "world_rank": 179,
+    "national_rank": 6,
+    "country": "Australia",
+    "year": 2015
+  },
+  "university of alberta": {
+    "world_rank": 107,
+    "national_rank": 4,
+    "country": "Canada",
+    "year": 2015
+  },
+  "paris diderot university paris 7": {
+    "world_rank": 131,
+    "national_rank": 6,
+    "country": "France",
+    "year": 2015
+  },
+  "waseda university": {
+    "world_rank": 38,
+    "national_rank": 4,
+    "country": "Japan",
+    "year": 2015
+  },
+  "peking university": {
+    "world_rank": 56,
+    "national_rank": 1,
+    "country": "China",
+    "year": 2015
+  },
+  "university of notre dame": {
+    "world_rank": 77,
+    "national_rank": 47,
+    "country": "USA",
+    "year": 2015
+  },
+  "national taiwan university": {
+    "world_rank": 57,
+    "national_rank": 1,
+    "country": "Taiwan",
+    "year": 2015
+  },
+  "tsinghua university": {
+    "world_rank": 78,
+    "national_rank": 2,
+    "country": "China",
+    "year": 2015
+  },
+  "kyushu university": {
+    "world_rank": 100,
+    "national_rank": 7,
+    "country": "Japan",
+    "year": 2015
+  },
+  "katholieke universiteit leuven": {
+    "world_rank": 82,
+    "national_rank": 1,
+    "country": "Belgium",
+    "year": 2015
+  },
+  "tokyo institute of technology": {
+    "world_rank": 109,
+    "national_rank": 8,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of melbourne": {
+    "world_rank": 93,
+    "national_rank": 2,
+    "country": "Australia",
+    "year": 2015
+  },
+  "university of bonn": {
+    "world_rank": 158,
+    "national_rank": 8,
+    "country": "Germany",
+    "year": 2015
+  },
+  "royal institute of technology": {
+    "world_rank": 126,
+    "national_rank": 4,
+    "country": "Sweden",
+    "year": 2015
+  },
+  "erasmus university rotterdam": {
+    "world_rank": 85,
+    "national_rank": 1,
+    "country": "Netherlands",
+    "year": 2015
+  },
+  "yonsei university": {
+    "world_rank": 98,
+    "national_rank": 2,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "michigan state university": {
+    "world_rank": 118,
+    "national_rank": 60,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of the witwatersrand": {
+    "world_rank": 149,
+    "national_rank": 1,
+    "country": "South Africa",
+    "year": 2015
+  },
+  "lund university": {
+    "world_rank": 117,
+    "national_rank": 2,
+    "country": "Sweden",
+    "year": 2015
+  },
+  "georgetown university": {
+    "world_rank": 113,
+    "national_rank": 59,
+    "country": "USA",
+    "year": 2015
+  },
+  "aarhus university": {
+    "world_rank": 122,
+    "national_rank": 2,
+    "country": "Denmark",
+    "year": 2015
+  },
+  "university of barcelona": {
+    "world_rank": 116,
+    "national_rank": 1,
+    "country": "Spain",
+    "year": 2015
+  },
+  "baylor college of medicine": {
+    "world_rank": 121,
+    "national_rank": 62,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of amsterdam": {
+    "world_rank": 114,
+    "national_rank": 5,
+    "country": "Netherlands",
+    "year": 2015
+  },
+  "uppsala university": {
+    "world_rank": 124,
+    "national_rank": 3,
+    "country": "Sweden",
+    "year": 2015
+  },
+  "university of iowa": {
+    "world_rank": 141,
+    "national_rank": 67,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of groningen": {
+    "world_rank": 110,
+    "national_rank": 4,
+    "country": "Netherlands",
+    "year": 2015
+  },
+  "korea advanced institute of science and technology kaist": {
+    "world_rank": 144,
+    "national_rank": 4,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "radboud university nijmegen": {
+    "world_rank": 134,
+    "national_rank": 7,
+    "country": "Netherlands",
+    "year": 2015
+  },
+  "korea university": {
+    "world_rank": 115,
+    "national_rank": 3,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "university of sao paulo": {
+    "world_rank": 132,
+    "national_rank": 1,
+    "country": "Brazil",
+    "year": 2015
+  },
+  "university of colorado denver": {
+    "world_rank": 127,
+    "national_rank": 63,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of montreal": {
+    "world_rank": 151,
+    "national_rank": 7,
+    "country": "Canada",
+    "year": 2015
+  },
+  "albert ludwig university of freiburg": {
+    "world_rank": 155,
+    "national_rank": 6,
+    "country": "Germany",
+    "year": 2015
+  },
+  "ghent university": {
+    "world_rank": 119,
+    "national_rank": 2,
+    "country": "Belgium",
+    "year": 2015
+  },
+  "university of glasgow": {
+    "world_rank": 128,
+    "national_rank": 9,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "university of miami": {
+    "world_rank": 137,
+    "national_rank": 64,
+    "country": "USA",
+    "year": 2015
+  },
+  "universite libre de bruxelles": {
+    "world_rank": 163,
+    "national_rank": 3,
+    "country": "Belgium",
+    "year": 2015
+  },
+  "mcmaster university": {
+    "world_rank": 150,
+    "national_rank": 6,
+    "country": "Canada",
+    "year": 2015
+  },
+  "university of birmingham": {
+    "world_rank": 152,
+    "national_rank": 12,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "university of texas at dallas": {
+    "world_rank": 139,
+    "national_rank": 66,
+    "country": "USA",
+    "year": 2015
+  },
+  "vu university amsterdam": {
+    "world_rank": 129,
+    "national_rank": 6,
+    "country": "Netherlands",
+    "year": 2015
+  },
+  "wake forest university": {
+    "world_rank": 159,
+    "national_rank": 73,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of southampton": {
+    "world_rank": 148,
+    "national_rank": 11,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "nanyang technological university": {
+    "world_rank": 135,
+    "national_rank": 2,
+    "country": "Singapore",
+    "year": 2015
+  },
+  "university of new south wales": {
+    "world_rank": 130,
+    "national_rank": 4,
+    "country": "Australia",
+    "year": 2015
+  },
+  "osaka city university": {
+    "world_rank": 474,
+    "national_rank": 22,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of leeds": {
+    "world_rank": 161,
+    "national_rank": 13,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "western university the university of western ontario": {
+    "world_rank": 133,
+    "national_rank": 5,
+    "country": "Canada",
+    "year": 2015
+  },
+  "kobe university": {
+    "world_rank": 320,
+    "national_rank": 14,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of basel": {
+    "world_rank": 160,
+    "national_rank": 5,
+    "country": "Switzerland",
+    "year": 2015
+  },
+  "university of hong kong": {
+    "world_rank": 170,
+    "national_rank": 1,
+    "country": "Hong Kong",
+    "year": 2015
+  },
+  "indiana university purdue university indianapolis": {
+    "world_rank": 164,
+    "national_rank": 74,
+    "country": "USA",
+    "year": 2015
+  },
+  "humboldt university of berlin": {
+    "world_rank": 153,
+    "national_rank": 5,
+    "country": "Germany",
+    "year": 2015
+  },
+  "free university of berlin": {
+    "world_rank": 147,
+    "national_rank": 4,
+    "country": "Germany",
+    "year": 2015
+  },
+  "university of tubingen": {
+    "world_rank": 156,
+    "national_rank": 7,
+    "country": "Germany",
+    "year": 2015
+  },
+  "goethe university frankfurt": {
+    "world_rank": 176,
+    "national_rank": 10,
+    "country": "Germany",
+    "year": 2015
+  },
+  "university of houston": {
+    "world_rank": 184,
+    "national_rank": 80,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of california santa cruz": {
+    "world_rank": 154,
+    "national_rank": 71,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of alabama at birmingham": {
+    "world_rank": 146,
+    "national_rank": 70,
+    "country": "USA",
+    "year": 2015
+  },
+  "icahn school of medicine at mount sinai": {
+    "world_rank": 143,
+    "national_rank": 69,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of calgary": {
+    "world_rank": 167,
+    "national_rank": 8,
+    "country": "Canada",
+    "year": 2015
+  },
+  "university of gothenburg": {
+    "world_rank": 237,
+    "national_rank": 6,
+    "country": "Sweden",
+    "year": 2015
+  },
+  "university of gottingen": {
+    "world_rank": 177,
+    "national_rank": 11,
+    "country": "Germany",
+    "year": 2015
+  },
+  "monash university": {
+    "world_rank": 145,
+    "national_rank": 5,
+    "country": "Australia",
+    "year": 2015
+  },
+  "southern methodist university": {
+    "world_rank": 142,
+    "national_rank": 68,
+    "country": "USA",
+    "year": 2015
+  },
+  "yeshiva university": {
+    "world_rank": 171,
+    "national_rank": 76,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of south florida tampa": {
+    "world_rank": 190,
+    "national_rank": 83,
+    "country": "USA",
+    "year": 2015
+  },
+  "hanyang university": {
+    "world_rank": 192,
+    "national_rank": 6,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "oregon health science university": {
+    "world_rank": 166,
+    "national_rank": 75,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of strasbourg": {
+    "world_rank": 182,
+    "national_rank": 7,
+    "country": "France",
+    "year": 2015
+  },
+  "university of cincinnati": {
+    "world_rank": 157,
+    "national_rank": 72,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of sheffield": {
+    "world_rank": 173,
+    "national_rank": 14,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "university of hamburg": {
+    "world_rank": 162,
+    "national_rank": 9,
+    "country": "Germany",
+    "year": 2015
+  },
+  "george washington university": {
+    "world_rank": 202,
+    "national_rank": 87,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of milan": {
+    "world_rank": 172,
+    "national_rank": 3,
+    "country": "Italy",
+    "year": 2015
+  },
+  "iowa state university": {
+    "world_rank": 187,
+    "national_rank": 81,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of maryland baltimore": {
+    "world_rank": 175,
+    "national_rank": 77,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of padua": {
+    "world_rank": 169,
+    "national_rank": 2,
+    "country": "Italy",
+    "year": 2015
+  },
+  "university of new mexico": {
+    "world_rank": 181,
+    "national_rank": 78,
+    "country": "USA",
+    "year": 2015
+  },
+  "pohang university of science and technology": {
+    "world_rank": 165,
+    "national_rank": 5,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "stockholm university": {
+    "world_rank": 168,
+    "national_rank": 5,
+    "country": "Sweden",
+    "year": 2015
+  },
+  "hokkaido university": {
+    "world_rank": 178,
+    "national_rank": 10,
+    "country": "Japan",
+    "year": 2015
+  },
+  "fudan university": {
+    "world_rank": 195,
+    "national_rank": 5,
+    "country": "China",
+    "year": 2015
+  },
+  "university of sussex": {
+    "world_rank": 253,
+    "national_rank": 22,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "universite catholique de louvain": {
+    "world_rank": 231,
+    "national_rank": 4,
+    "country": "Belgium",
+    "year": 2015
+  },
+  "wayne state university": {
+    "world_rank": 189,
+    "national_rank": 82,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of massachusetts medical school": {
+    "world_rank": 183,
+    "national_rank": 79,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of lausanne": {
+    "world_rank": 186,
+    "national_rank": 6,
+    "country": "Switzerland",
+    "year": 2015
+  },
+  "shanghai jiao tong university": {
+    "world_rank": 180,
+    "national_rank": 3,
+    "country": "China",
+    "year": 2015
+  },
+  "university of missouri columbia": {
+    "world_rank": 194,
+    "national_rank": 84,
+    "country": "USA",
+    "year": 2015
+  },
+  "technical university of denmark": {
+    "world_rank": 174,
+    "national_rank": 3,
+    "country": "Denmark",
+    "year": 2015
+  },
+  "complutense university of madrid": {
+    "world_rank": 228,
+    "national_rank": 2,
+    "country": "Spain",
+    "year": 2015
+  },
+  "university of cologne": {
+    "world_rank": 197,
+    "national_rank": 12,
+    "country": "Germany",
+    "year": 2015
+  },
+  "trinity college dublin": {
+    "world_rank": 185,
+    "national_rank": 1,
+    "country": "Ireland",
+    "year": 2015
+  },
+  "university of bern": {
+    "world_rank": 200,
+    "national_rank": 7,
+    "country": "Switzerland",
+    "year": 2015
+  },
+  "chinese university of hong kong": {
+    "world_rank": 220,
+    "national_rank": 2,
+    "country": "Hong Kong",
+    "year": 2015
+  },
+  "university of kansas": {
+    "world_rank": 196,
+    "national_rank": 85,
+    "country": "USA",
+    "year": 2015
+  },
+  "sungkyunkwan university": {
+    "world_rank": 211,
+    "national_rank": 7,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "university of vienna": {
+    "world_rank": 223,
+    "national_rank": 1,
+    "country": "Austria",
+    "year": 2015
+  },
+  "zhejiang university": {
+    "world_rank": 191,
+    "national_rank": 4,
+    "country": "China",
+    "year": 2015
+  },
+  "university of georgia": {
+    "world_rank": 198,
+    "national_rank": 86,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of massachusetts amherst": {
+    "world_rank": 219,
+    "national_rank": 91,
+    "country": "USA",
+    "year": 2015
+  },
+  "cardiff university": {
+    "world_rank": 201,
+    "national_rank": 16,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "university of munster": {
+    "world_rank": 205,
+    "national_rank": 14,
+    "country": "Germany",
+    "year": 2015
+  },
+  "university of liverpool": {
+    "world_rank": 199,
+    "national_rank": 15,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "university of ottawa": {
+    "world_rank": 193,
+    "national_rank": 9,
+    "country": "Canada",
+    "year": 2015
+  },
+  "university of erlangen nuremberg": {
+    "world_rank": 204,
+    "national_rank": 13,
+    "country": "Germany",
+    "year": 2015
+  },
+  "queen mary university of london": {
+    "world_rank": 209,
+    "national_rank": 17,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "karlsruhe institute of technology": {
+    "world_rank": 213,
+    "national_rank": 16,
+    "country": "Germany",
+    "year": 2015
+  },
+  "louisiana state university baton rouge": {
+    "world_rank": 332,
+    "national_rank": 121,
+    "country": "USA",
+    "year": 2015
+  },
+  "nanjing university": {
+    "world_rank": 244,
+    "national_rank": 7,
+    "country": "China",
+    "year": 2015
+  },
+  "university of illinois at chicago": {
+    "world_rank": 203,
+    "national_rank": 88,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of bologna": {
+    "world_rank": 208,
+    "national_rank": 4,
+    "country": "Italy",
+    "year": 2015
+  },
+  "university of manitoba": {
+    "world_rank": 222,
+    "national_rank": 10,
+    "country": "Canada",
+    "year": 2015
+  },
+  "joseph fourier university": {
+    "world_rank": 188,
+    "national_rank": 8,
+    "country": "France",
+    "year": 2015
+  },
+  "university of california riverside": {
+    "world_rank": 214,
+    "national_rank": 89,
+    "country": "USA",
+    "year": 2015
+  },
+  "julius maximilian s university of wurzburg": {
+    "world_rank": 235,
+    "national_rank": 20,
+    "country": "Germany",
+    "year": 2015
+  },
+  "aix marseille university": {
+    "world_rank": 206,
+    "national_rank": 9,
+    "country": "France",
+    "year": 2015
+  },
+  "university of western australia": {
+    "world_rank": 216,
+    "national_rank": 7,
+    "country": "Australia",
+    "year": 2015
+  },
+  "laval university": {
+    "world_rank": 229,
+    "national_rank": 11,
+    "country": "Canada",
+    "year": 2015
+  },
+  "university of tennessee knoxville": {
+    "world_rank": 227,
+    "national_rank": 92,
+    "country": "USA",
+    "year": 2015
+  },
+  "north carolina state university": {
+    "world_rank": 232,
+    "national_rank": 93,
+    "country": "USA",
+    "year": 2015
+  },
+  "newcastle university": {
+    "world_rank": 212,
+    "national_rank": 18,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "claude bernard university lyon 1": {
+    "world_rank": 207,
+    "national_rank": 10,
+    "country": "France",
+    "year": 2015
+  },
+  "university of turin": {
+    "world_rank": 221,
+    "national_rank": 5,
+    "country": "Italy",
+    "year": 2015
+  },
+  "university of kiel": {
+    "world_rank": 215,
+    "national_rank": 17,
+    "country": "Germany",
+    "year": 2015
+  },
+  "university of connecticut": {
+    "world_rank": 218,
+    "national_rank": 90,
+    "country": "USA",
+    "year": 2015
+  },
+  "tulane university": {
+    "world_rank": 272,
+    "national_rank": 105,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of oklahoma norman campus": {
+    "world_rank": 350,
+    "national_rank": 123,
+    "country": "USA",
+    "year": 2015
+  },
+  "brandeis university": {
+    "world_rank": 274,
+    "national_rank": 107,
+    "country": "USA",
+    "year": 2015
+  },
+  "dresden university of technology": {
+    "world_rank": 210,
+    "national_rank": 15,
+    "country": "Germany",
+    "year": 2015
+  },
+  "rwth aachen university": {
+    "world_rank": 230,
+    "national_rank": 18,
+    "country": "Germany",
+    "year": 2015
+  },
+  "university of texas health science center at san antonio": {
+    "world_rank": 234,
+    "national_rank": 94,
+    "country": "USA",
+    "year": 2015
+  },
+  "virginia commonwealth university": {
+    "world_rank": 259,
+    "national_rank": 100,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of montpellier 2": {
+    "world_rank": 241,
+    "national_rank": 11,
+    "country": "France",
+    "year": 2014
+  },
+  "dalian university of technology": {
+    "world_rank": 305,
+    "national_rank": 9,
+    "country": "China",
+    "year": 2015
+  },
+  "rensselaer polytechnic institute": {
+    "world_rank": 282,
+    "national_rank": 110,
+    "country": "USA",
+    "year": 2015
+  },
+  "paul sabatier university toulouse iii": {
+    "world_rank": 236,
+    "national_rank": 13,
+    "country": "France",
+    "year": 2015
+  },
+  "paris descartes university": {
+    "world_rank": 217,
+    "national_rank": 11,
+    "country": "France",
+    "year": 2015
+  },
+  "national cheng kung university": {
+    "world_rank": 226,
+    "national_rank": 2,
+    "country": "Taiwan",
+    "year": 2015
+  },
+  "university of delaware": {
+    "world_rank": 281,
+    "national_rank": 109,
+    "country": "USA",
+    "year": 2015
+  },
+  "vrije universiteit brussel": {
+    "world_rank": 280,
+    "national_rank": 5,
+    "country": "Belgium",
+    "year": 2015
+  },
+  "johannes gutenberg university of mainz": {
+    "world_rank": 233,
+    "national_rank": 19,
+    "country": "Germany",
+    "year": 2015
+  },
+  "maastricht university": {
+    "world_rank": 225,
+    "national_rank": 8,
+    "country": "Netherlands",
+    "year": 2015
+  },
+  "university of dusseldorf": {
+    "world_rank": 251,
+    "national_rank": 21,
+    "country": "Germany",
+    "year": 2015
+  },
+  "university of dundee": {
+    "world_rank": 242,
+    "national_rank": 20,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "university of tsukuba": {
+    "world_rank": 262,
+    "national_rank": 12,
+    "country": "Japan",
+    "year": 2015
+  },
+  "autonomous university of barcelona": {
+    "world_rank": 241,
+    "national_rank": 3,
+    "country": "Spain",
+    "year": 2015
+  },
+  "florida state university": {
+    "world_rank": 252,
+    "national_rank": 96,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of texas at san antonio": {
+    "world_rank": 291,
+    "national_rank": 112,
+    "country": "USA",
+    "year": 2015
+  },
+  "london school of hygiene tropical medicine": {
+    "world_rank": 246,
+    "national_rank": 21,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "lehigh university": {
+    "world_rank": 264,
+    "national_rank": 102,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of kentucky": {
+    "world_rank": 267,
+    "national_rank": 103,
+    "country": "USA",
+    "year": 2015
+  },
+  "thomas jefferson university": {
+    "world_rank": 254,
+    "national_rank": 97,
+    "country": "USA",
+    "year": 2015
+  },
+  "drexel university": {
+    "world_rank": 258,
+    "national_rank": 99,
+    "country": "USA",
+    "year": 2015
+  },
+  "colorado state university fort collins": {
+    "world_rank": 271,
+    "national_rank": 104,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of leicester": {
+    "world_rank": 240,
+    "national_rank": 19,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "durham university": {
+    "world_rank": 261,
+    "national_rank": 23,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "oregon state university": {
+    "world_rank": 260,
+    "national_rank": 101,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of florence": {
+    "world_rank": 247,
+    "national_rank": 6,
+    "country": "Italy",
+    "year": 2015
+  },
+  "university of cape town": {
+    "world_rank": 248,
+    "national_rank": 2,
+    "country": "South Africa",
+    "year": 2015
+  },
+  "university at buffalo the state university of new york": {
+    "world_rank": 273,
+    "national_rank": 106,
+    "country": "USA",
+    "year": 2015
+  },
+  "university college dublin": {
+    "world_rank": 238,
+    "national_rank": 2,
+    "country": "Ireland",
+    "year": 2015
+  },
+  "university of science and technology of china": {
+    "world_rank": 239,
+    "national_rank": 6,
+    "country": "China",
+    "year": 2015
+  },
+  "virginia polytechnic institute and state university": {
+    "world_rank": 256,
+    "national_rank": 98,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of naples federico ii": {
+    "world_rank": 268,
+    "national_rank": 7,
+    "country": "Italy",
+    "year": 2015
+  },
+  "university of auckland": {
+    "world_rank": 266,
+    "national_rank": 1,
+    "country": "New Zealand",
+    "year": 2015
+  },
+  "university of texas health science center at houston": {
+    "world_rank": 249,
+    "national_rank": 95,
+    "country": "USA",
+    "year": 2015
+  },
+  "delft university of technology": {
+    "world_rank": 255,
+    "national_rank": 9,
+    "country": "Netherlands",
+    "year": 2015
+  },
+  "university of aberdeen": {
+    "world_rank": 285,
+    "national_rank": 26,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "queen s university": {
+    "world_rank": 284,
+    "national_rank": 13,
+    "country": "Canada",
+    "year": 2015
+  },
+  "university of lisbon": {
+    "world_rank": 257,
+    "national_rank": 1,
+    "country": "Portugal",
+    "year": 2015
+  },
+  "hiroshima university": {
+    "world_rank": 290,
+    "national_rank": 13,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of waterloo": {
+    "world_rank": 269,
+    "national_rank": 12,
+    "country": "Canada",
+    "year": 2015
+  },
+  "okayama university": {
+    "world_rank": 245,
+    "national_rank": 11,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of ulm": {
+    "world_rank": 278,
+    "national_rank": 22,
+    "country": "Germany",
+    "year": 2015
+  },
+  "chulalongkorn university": {
+    "world_rank": 311,
+    "national_rank": 1,
+    "country": "Thailand",
+    "year": 2015
+  },
+  "dalhousie university": {
+    "world_rank": 286,
+    "national_rank": 14,
+    "country": "Canada",
+    "year": 2015
+  },
+  "saint petersburg state university": {
+    "world_rank": 406,
+    "national_rank": 3,
+    "country": "Russia",
+    "year": 2015
+  },
+  "norwegian university of science and technology": {
+    "world_rank": 243,
+    "national_rank": 2,
+    "country": "Norway",
+    "year": 2015
+  },
+  "university of reading": {
+    "world_rank": 263,
+    "national_rank": 24,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "wageningen university and research centre": {
+    "world_rank": 276,
+    "national_rank": 10,
+    "country": "Netherlands",
+    "year": 2015
+  },
+  "umea university": {
+    "world_rank": 287,
+    "national_rank": 7,
+    "country": "Sweden",
+    "year": 2015
+  },
+  "university of porto": {
+    "world_rank": 308,
+    "national_rank": 2,
+    "country": "Portugal",
+    "year": 2015
+  },
+  "hong kong university of science and technology": {
+    "world_rank": 319,
+    "national_rank": 3,
+    "country": "Hong Kong",
+    "year": 2015
+  },
+  "sun yat sen university": {
+    "world_rank": 277,
+    "national_rank": 8,
+    "country": "China",
+    "year": 2015
+  },
+  "medical college of wisconsin": {
+    "world_rank": 297,
+    "national_rank": 113,
+    "country": "USA",
+    "year": 2015
+  },
+  "city college of new york": {
+    "world_rank": 289,
+    "national_rank": 111,
+    "country": "USA",
+    "year": 2015
+  },
+  "hannover medical school": {
+    "world_rank": 292,
+    "national_rank": 24,
+    "country": "Germany",
+    "year": 2015
+  },
+  "washington state university pullman": {
+    "world_rank": 380,
+    "national_rank": 132,
+    "country": "USA",
+    "year": 2015
+  },
+  "technical university of berlin": {
+    "world_rank": 345,
+    "national_rank": 30,
+    "country": "Germany",
+    "year": 2015
+  },
+  "university of south carolina columbia": {
+    "world_rank": 300,
+    "national_rank": 115,
+    "country": "USA",
+    "year": 2015
+  },
+  "leipzig university": {
+    "world_rank": 302,
+    "national_rank": 26,
+    "country": "Germany",
+    "year": 2015
+  },
+  "university of stuttgart": {
+    "world_rank": 316,
+    "national_rank": 27,
+    "country": "Germany",
+    "year": 2015
+  },
+  "university of valencia": {
+    "world_rank": 294,
+    "national_rank": 4,
+    "country": "Spain",
+    "year": 2015
+  },
+  "linkoping university": {
+    "world_rank": 355,
+    "national_rank": 8,
+    "country": "Sweden",
+    "year": 2015
+  },
+  "university of duisburg essen": {
+    "world_rank": 288,
+    "national_rank": 23,
+    "country": "Germany",
+    "year": 2015
+  },
+  "ruhr university bochum": {
+    "world_rank": 296,
+    "national_rank": 25,
+    "country": "Germany",
+    "year": 2015
+  },
+  "university of bergen": {
+    "world_rank": 283,
+    "national_rank": 3,
+    "country": "Norway",
+    "year": 2015
+  },
+  "london school of economics": {
+    "world_rank": 279,
+    "national_rank": 25,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "wesleyan university": {
+    "world_rank": 351,
+    "national_rank": 124,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of pisa": {
+    "world_rank": 295,
+    "national_rank": 8,
+    "country": "Italy",
+    "year": 2015
+  },
+  "autonomous university of madrid": {
+    "world_rank": 304,
+    "national_rank": 5,
+    "country": "Spain",
+    "year": 2015
+  },
+  "medical university of vienna": {
+    "world_rank": 265,
+    "national_rank": 2,
+    "country": "Austria",
+    "year": 2015
+  },
+  "stellenbosch university": {
+    "world_rank": 306,
+    "national_rank": 3,
+    "country": "South Africa",
+    "year": 2015
+  },
+  "medical university of south carolina": {
+    "world_rank": 303,
+    "national_rank": 116,
+    "country": "USA",
+    "year": 2015
+  },
+  "charles university in prague": {
+    "world_rank": 270,
+    "national_rank": 1,
+    "country": "Czech Republic",
+    "year": 2015
+  },
+  "kyungpook national university": {
+    "world_rank": 307,
+    "national_rank": 8,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "university of science malaysia": {
+    "world_rank": 482,
+    "national_rank": 1,
+    "country": "Malaysia",
+    "year": 2015
+  },
+  "university of liege": {
+    "world_rank": 321,
+    "national_rank": 7,
+    "country": "Belgium",
+    "year": 2015
+  },
+  "university of hull": {
+    "world_rank": 506,
+    "national_rank": 38,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "northeastern university": {
+    "world_rank": 275,
+    "national_rank": 108,
+    "country": "USA",
+    "year": 2015
+  },
+  "kansas state university": {
+    "world_rank": 353,
+    "national_rank": 125,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of vermont": {
+    "world_rank": 324,
+    "national_rank": 119,
+    "country": "USA",
+    "year": 2015
+  },
+  "rush university": {
+    "world_rank": 323,
+    "national_rank": 118,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of louisville": {
+    "world_rank": 298,
+    "national_rank": 114,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of st andrews": {
+    "world_rank": 309,
+    "national_rank": 28,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "university of warwick": {
+    "world_rank": 293,
+    "national_rank": 27,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "university of rome tor vergata": {
+    "world_rank": 317,
+    "national_rank": 9,
+    "country": "Italy",
+    "year": 2015
+  },
+  "university of innsbruck": {
+    "world_rank": 347,
+    "national_rank": 3,
+    "country": "Austria",
+    "year": 2015
+  },
+  "darmstadt university of technology": {
+    "world_rank": 374,
+    "national_rank": 34,
+    "country": "Germany",
+    "year": 2015
+  },
+  "indian institute of technology delhi": {
+    "world_rank": 341,
+    "national_rank": 1,
+    "country": "India",
+    "year": 2015
+  },
+  "federal university of rio de janeiro": {
+    "world_rank": 322,
+    "national_rank": 2,
+    "country": "Brazil",
+    "year": 2015
+  },
+  "university of antwerp": {
+    "world_rank": 312,
+    "national_rank": 6,
+    "country": "Belgium",
+    "year": 2015
+  },
+  "national and kapodistrian university of athens": {
+    "world_rank": 301,
+    "national_rank": 1,
+    "country": "Greece",
+    "year": 2015
+  },
+  "boston college": {
+    "world_rank": 326,
+    "national_rank": 120,
+    "country": "USA",
+    "year": 2015
+  },
+  "vita salute san raffaele university": {
+    "world_rank": 329,
+    "national_rank": 11,
+    "country": "Italy",
+    "year": 2015
+  },
+  "gwangju institute of science and technology": {
+    "world_rank": 310,
+    "national_rank": 9,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "university of nebraska lincoln": {
+    "world_rank": 314,
+    "national_rank": 117,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of york": {
+    "world_rank": 325,
+    "national_rank": 29,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "national autonomous university of mexico": {
+    "world_rank": 334,
+    "national_rank": 1,
+    "country": "Mexico",
+    "year": 2015
+  },
+  "university of regensburg": {
+    "world_rank": 318,
+    "national_rank": 28,
+    "country": "Germany",
+    "year": 2015
+  },
+  "yokohama national university": {
+    "world_rank": 518,
+    "national_rank": 28,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of adelaide": {
+    "world_rank": 335,
+    "national_rank": 8,
+    "country": "Australia",
+    "year": 2015
+  },
+  "university of genoa": {
+    "world_rank": 330,
+    "national_rank": 12,
+    "country": "Italy",
+    "year": 2015
+  },
+  "queen s university belfast": {
+    "world_rank": 343,
+    "national_rank": 33,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "university of marburg": {
+    "world_rank": 346,
+    "national_rank": 31,
+    "country": "Germany",
+    "year": 2015
+  },
+  "university of pavia": {
+    "world_rank": 327,
+    "national_rank": 10,
+    "country": "Italy",
+    "year": 2015
+  },
+  "st george s university of london": {
+    "world_rank": 340,
+    "national_rank": 32,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "university of oregon": {
+    "world_rank": 339,
+    "national_rank": 122,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of navarra": {
+    "world_rank": 338,
+    "national_rank": 6,
+    "country": "Spain",
+    "year": 2015
+  },
+  "san diego state university": {
+    "world_rank": 361,
+    "national_rank": 128,
+    "country": "USA",
+    "year": 2015
+  },
+  "nankai university": {
+    "world_rank": 315,
+    "national_rank": 11,
+    "country": "China",
+    "year": 2015
+  },
+  "university of east anglia": {
+    "world_rank": 336,
+    "national_rank": 31,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "university of nebraska medical center": {
+    "world_rank": 399,
+    "national_rank": 136,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of southern denmark": {
+    "world_rank": 356,
+    "national_rank": 4,
+    "country": "Denmark",
+    "year": 2015
+  },
+  "eindhoven university of technology": {
+    "world_rank": 348,
+    "national_rank": 11,
+    "country": "Netherlands",
+    "year": 2015
+  },
+  "xiamen university": {
+    "world_rank": 313,
+    "national_rank": 10,
+    "country": "China",
+    "year": 2015
+  },
+  "university of otago": {
+    "world_rank": 357,
+    "national_rank": 2,
+    "country": "New Zealand",
+    "year": 2015
+  },
+  "university of santiago de compostela": {
+    "world_rank": 363,
+    "national_rank": 7,
+    "country": "Spain",
+    "year": 2015
+  },
+  "university of exeter": {
+    "world_rank": 333,
+    "national_rank": 30,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "university of jena": {
+    "world_rank": 328,
+    "national_rank": 29,
+    "country": "Germany",
+    "year": 2015
+  },
+  "university of perugia": {
+    "world_rank": 344,
+    "national_rank": 14,
+    "country": "Italy",
+    "year": 2015
+  },
+  "justus liebig university giessen": {
+    "world_rank": 358,
+    "national_rank": 32,
+    "country": "Germany",
+    "year": 2015
+  },
+  "college of william and mary": {
+    "world_rank": 360,
+    "national_rank": 127,
+    "country": "USA",
+    "year": 2015
+  },
+  "ben gurion university of the negev": {
+    "world_rank": 349,
+    "national_rank": 5,
+    "country": "Israel",
+    "year": 2015
+  },
+  "saint louis university": {
+    "world_rank": 364,
+    "national_rank": 129,
+    "country": "USA",
+    "year": 2015
+  },
+  "colorado school of mines": {
+    "world_rank": 365,
+    "national_rank": 130,
+    "country": "USA",
+    "year": 2015
+  },
+  "oklahoma state university stillwater": {
+    "world_rank": 412,
+    "national_rank": 139,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of guelph": {
+    "world_rank": 368,
+    "national_rank": 18,
+    "country": "Canada",
+    "year": 2015
+  },
+  "university of trieste": {
+    "world_rank": 342,
+    "national_rank": 13,
+    "country": "Italy",
+    "year": 2015
+  },
+  "university of verona": {
+    "world_rank": 411,
+    "national_rank": 21,
+    "country": "Italy",
+    "year": 2015
+  },
+  "university at albany suny": {
+    "world_rank": 388,
+    "national_rank": 134,
+    "country": "USA",
+    "year": 2015
+  },
+  "tongji university": {
+    "world_rank": 420,
+    "national_rank": 20,
+    "country": "China",
+    "year": 2015
+  },
+  "eotvos lorand university": {
+    "world_rank": 458,
+    "national_rank": 1,
+    "country": "Hungary",
+    "year": 2015
+  },
+  "university of alabama tuscaloosa": {
+    "world_rank": 409,
+    "national_rank": 138,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of eastern finland": {
+    "world_rank": 366,
+    "national_rank": 2,
+    "country": "Finland",
+    "year": 2015
+  },
+  "ewha womans university": {
+    "world_rank": 390,
+    "national_rank": 11,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "city university of hong kong": {
+    "world_rank": 373,
+    "national_rank": 5,
+    "country": "Hong Kong",
+    "year": 2015
+  },
+  "tokyo medical and dental university": {
+    "world_rank": 392,
+    "national_rank": 15,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of victoria": {
+    "world_rank": 352,
+    "national_rank": 16,
+    "country": "Canada",
+    "year": 2015
+  },
+  "university of buenos aires": {
+    "world_rank": 367,
+    "national_rank": 1,
+    "country": "Argentina",
+    "year": 2015
+  },
+  "university of texas medical branch at galveston": {
+    "world_rank": 378,
+    "national_rank": 131,
+    "country": "USA",
+    "year": 2015
+  },
+  "kyung hee university": {
+    "world_rank": 401,
+    "national_rank": 12,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "hong kong polytechnic university": {
+    "world_rank": 354,
+    "national_rank": 4,
+    "country": "Hong Kong",
+    "year": 2015
+  },
+  "saarland university": {
+    "world_rank": 372,
+    "national_rank": 33,
+    "country": "Germany",
+    "year": 2015
+  },
+  "scuola normale superiore di pisa": {
+    "world_rank": 393,
+    "national_rank": 19,
+    "country": "Italy",
+    "year": 2015
+  },
+  "university of seville": {
+    "world_rank": 398,
+    "national_rank": 10,
+    "country": "Spain",
+    "year": 2015
+  },
+  "beijing normal university": {
+    "world_rank": 396,
+    "national_rank": 15,
+    "country": "China",
+    "year": 2015
+  },
+  "chiba university": {
+    "world_rank": 418,
+    "national_rank": 16,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of ferrara": {
+    "world_rank": 369,
+    "national_rank": 15,
+    "country": "Italy",
+    "year": 2015
+  },
+  "university of bari aldo moro": {
+    "world_rank": 377,
+    "national_rank": 16,
+    "country": "Italy",
+    "year": 2015
+  },
+  "polytechnic university of milan": {
+    "world_rank": 397,
+    "national_rank": 20,
+    "country": "Italy",
+    "year": 2015
+  },
+  "temple university": {
+    "world_rank": 381,
+    "national_rank": 133,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of turku": {
+    "world_rank": 383,
+    "national_rank": 3,
+    "country": "Finland",
+    "year": 2015
+  },
+  "aalto university": {
+    "world_rank": 421,
+    "national_rank": 4,
+    "country": "Finland",
+    "year": 2015
+  },
+  "simon fraser university": {
+    "world_rank": 362,
+    "national_rank": 17,
+    "country": "Canada",
+    "year": 2015
+  },
+  "tianjin university": {
+    "world_rank": 331,
+    "national_rank": 12,
+    "country": "China",
+    "year": 2015
+  },
+  "chalmers university of technology": {
+    "world_rank": 402,
+    "national_rank": 9,
+    "country": "Sweden",
+    "year": 2015
+  },
+  "middle east technical university": {
+    "world_rank": 470,
+    "national_rank": 1,
+    "country": "Turkey",
+    "year": 2015
+  },
+  "cranfield university": {
+    "world_rank": 594,
+    "national_rank": 44,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "york university": {
+    "world_rank": 337,
+    "national_rank": 15,
+    "country": "Canada",
+    "year": 2015
+  },
+  "xi an jiaotong university": {
+    "world_rank": 389,
+    "national_rank": 13,
+    "country": "China",
+    "year": 2015
+  },
+  "chonnam national university": {
+    "world_rank": 384,
+    "national_rank": 10,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "university of central florida": {
+    "world_rank": 394,
+    "national_rank": 135,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of lorraine": {
+    "world_rank": 385,
+    "national_rank": 16,
+    "country": "France",
+    "year": 2015
+  },
+  "university of bordeaux ii": {
+    "world_rank": 403,
+    "national_rank": 15,
+    "country": "France",
+    "year": 2014
+  },
+  "university of new hampshire": {
+    "world_rank": 359,
+    "national_rank": 126,
+    "country": "USA",
+    "year": 2015
+  },
+  "versailles saint quentin en yvelines university": {
+    "world_rank": 371,
+    "national_rank": 15,
+    "country": "France",
+    "year": 2015
+  },
+  "chonbuk national university": {
+    "world_rank": 422,
+    "national_rank": 13,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "kumamoto university": {
+    "world_rank": 419,
+    "national_rank": 17,
+    "country": "Japan",
+    "year": 2015
+  },
+  "huazhong university of science and technology": {
+    "world_rank": 400,
+    "national_rank": 16,
+    "country": "China",
+    "year": 2015
+  },
+  "brunel university": {
+    "world_rank": 472,
+    "national_rank": 37,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "polytechnic university of catalonia": {
+    "world_rank": 370,
+    "national_rank": 8,
+    "country": "Spain",
+    "year": 2015
+  },
+  "national chiao tung university": {
+    "world_rank": 386,
+    "national_rank": 3,
+    "country": "Taiwan",
+    "year": 2015
+  },
+  "southeast university": {
+    "world_rank": 443,
+    "national_rank": 24,
+    "country": "China",
+    "year": 2015
+  },
+  "tokyo university of science": {
+    "world_rank": 481,
+    "national_rank": 23,
+    "country": "Japan",
+    "year": 2015
+  },
+  "catholic university of the sacred heart": {
+    "world_rank": 387,
+    "national_rank": 18,
+    "country": "Italy",
+    "year": 2015
+  },
+  "brigham young university": {
+    "world_rank": 403,
+    "national_rank": 137,
+    "country": "USA",
+    "year": 2015
+  },
+  "technical university of madrid": {
+    "world_rank": 435,
+    "national_rank": 12,
+    "country": "Spain",
+    "year": 2015
+  },
+  "nagasaki university": {
+    "world_rank": 486,
+    "national_rank": 24,
+    "country": "Japan",
+    "year": 2015
+  },
+  "national tsing hua university": {
+    "world_rank": 407,
+    "national_rank": 4,
+    "country": "Taiwan",
+    "year": 2015
+  },
+  "university of warsaw": {
+    "world_rank": 462,
+    "national_rank": 2,
+    "country": "Poland",
+    "year": 2015
+  },
+  "king saud university": {
+    "world_rank": 569,
+    "national_rank": 1,
+    "country": "Saudi Arabia",
+    "year": 2015
+  },
+  "university of bath": {
+    "world_rank": 405,
+    "national_rank": 34,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "concordia university": {
+    "world_rank": 417,
+    "national_rank": 19,
+    "country": "Canada",
+    "year": 2015
+  },
+  "georgia regents university": {
+    "world_rank": 424,
+    "national_rank": 141,
+    "country": "USA",
+    "year": 2015
+  },
+  "niigata university": {
+    "world_rank": 468,
+    "national_rank": 20,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of oulu": {
+    "world_rank": 447,
+    "national_rank": 6,
+    "country": "Finland",
+    "year": 2015
+  },
+  "pompeu fabra university": {
+    "world_rank": 375,
+    "national_rank": 9,
+    "country": "Spain",
+    "year": 2015
+  },
+  "vienna university of technology": {
+    "world_rank": 427,
+    "national_rank": 5,
+    "country": "Austria",
+    "year": 2015
+  },
+  "sogang university": {
+    "world_rank": 581,
+    "national_rank": 21,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "gyeongsang national university": {
+    "world_rank": 434,
+    "national_rank": 15,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "university of tampere": {
+    "world_rank": 442,
+    "national_rank": 5,
+    "country": "Finland",
+    "year": 2015
+  },
+  "university of milan bicocca": {
+    "world_rank": 382,
+    "national_rank": 17,
+    "country": "Italy",
+    "year": 2015
+  },
+  "university of bordeaux i": {
+    "world_rank": 432,
+    "national_rank": 17,
+    "country": "France",
+    "year": 2014
+  },
+  "swedish university of agricultural sciences": {
+    "world_rank": 416,
+    "national_rank": 10,
+    "country": "Sweden",
+    "year": 2015
+  },
+  "george mason university": {
+    "world_rank": 414,
+    "national_rank": 140,
+    "country": "USA",
+    "year": 2015
+  },
+  "jilin university": {
+    "world_rank": 391,
+    "national_rank": 14,
+    "country": "China",
+    "year": 2015
+  },
+  "university of delhi": {
+    "world_rank": 379,
+    "national_rank": 2,
+    "country": "India",
+    "year": 2015
+  },
+  "university of campinas": {
+    "world_rank": 404,
+    "national_rank": 3,
+    "country": "Brazil",
+    "year": 2015
+  },
+  "wuhan university": {
+    "world_rank": 415,
+    "national_rank": 19,
+    "country": "China",
+    "year": 2015
+  },
+  "west virginia university": {
+    "world_rank": 441,
+    "national_rank": 145,
+    "country": "USA",
+    "year": 2015
+  },
+  "pusan national university": {
+    "world_rank": 452,
+    "national_rank": 16,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "university of mississippi oxford campus": {
+    "world_rank": 522,
+    "national_rank": 164,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of arkansas for medical sciences": {
+    "world_rank": 429,
+    "national_rank": 143,
+    "country": "USA",
+    "year": 2015
+  },
+  "miami university": {
+    "world_rank": 444,
+    "national_rank": 146,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of tokushima": {
+    "world_rank": 512,
+    "national_rank": 26,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of twente": {
+    "world_rank": 408,
+    "national_rank": 12,
+    "country": "Netherlands",
+    "year": 2015
+  },
+  "loyola university chicago": {
+    "world_rank": 437,
+    "national_rank": 144,
+    "country": "USA",
+    "year": 2015
+  },
+  "ajou university": {
+    "world_rank": 433,
+    "national_rank": 14,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "syracuse university": {
+    "world_rank": 463,
+    "national_rank": 150,
+    "country": "USA",
+    "year": 2015
+  },
+  "lancaster university": {
+    "world_rank": 426,
+    "national_rank": 35,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "pontifical catholic university of chile": {
+    "world_rank": 376,
+    "national_rank": 1,
+    "country": "Chile",
+    "year": 2015
+  },
+  "university of chile": {
+    "world_rank": 425,
+    "national_rank": 2,
+    "country": "Chile",
+    "year": 2015
+  },
+  "innsbruck medical university": {
+    "world_rank": 395,
+    "national_rank": 4,
+    "country": "Austria",
+    "year": 2015
+  },
+  "university of granada": {
+    "world_rank": 431,
+    "national_rank": 11,
+    "country": "Spain",
+    "year": 2015
+  },
+  "kanazawa university": {
+    "world_rank": 457,
+    "national_rank": 18,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of parma": {
+    "world_rank": 456,
+    "national_rank": 24,
+    "country": "Italy",
+    "year": 2015
+  },
+  "university of siena": {
+    "world_rank": 446,
+    "national_rank": 23,
+    "country": "Italy",
+    "year": 2015
+  },
+  "shandong university": {
+    "world_rank": 413,
+    "national_rank": 18,
+    "country": "China",
+    "year": 2015
+  },
+  "technical university of dortmund": {
+    "world_rank": 487,
+    "national_rank": 37,
+    "country": "Germany",
+    "year": 2015
+  },
+  "university of kwazulu natal": {
+    "world_rank": 478,
+    "national_rank": 4,
+    "country": "South Africa",
+    "year": 2015
+  },
+  "university of nevada reno": {
+    "world_rank": 454,
+    "national_rank": 148,
+    "country": "USA",
+    "year": 2015
+  },
+  "yokohama city university": {
+    "world_rank": 513,
+    "national_rank": 27,
+    "country": "Japan",
+    "year": 2015
+  },
+  "ecole normale superieure de lyon": {
+    "world_rank": 471,
+    "national_rank": 18,
+    "country": "France",
+    "year": 2015
+  },
+  "university college cork": {
+    "world_rank": 436,
+    "national_rank": 3,
+    "country": "Ireland",
+    "year": 2015
+  },
+  "ohio university": {
+    "world_rank": 460,
+    "national_rank": 149,
+    "country": "USA",
+    "year": 2015
+  },
+  "central south university": {
+    "world_rank": 438,
+    "national_rank": 22,
+    "country": "China",
+    "year": 2015
+  },
+  "university of modena and reggio emilia": {
+    "world_rank": 432,
+    "national_rank": 22,
+    "country": "Italy",
+    "year": 2015
+  },
+  "new mexico state university": {
+    "world_rank": 519,
+    "national_rank": 163,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of konstanz": {
+    "world_rank": 490,
+    "national_rank": 38,
+    "country": "Germany",
+    "year": 2015
+  },
+  "university of hawaii at manoa": {
+    "world_rank": 488,
+    "national_rank": 156,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of nebraska omaha": {
+    "world_rank": 489,
+    "national_rank": 157,
+    "country": "USA",
+    "year": 2015
+  },
+  "shinshu university": {
+    "world_rank": 529,
+    "national_rank": 30,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of strathclyde": {
+    "world_rank": 453,
+    "national_rank": 36,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "baylor university": {
+    "world_rank": 567,
+    "national_rank": 172,
+    "country": "USA",
+    "year": 2015
+  },
+  "polytechnic university of valencia": {
+    "world_rank": 440,
+    "national_rank": 13,
+    "country": "Spain",
+    "year": 2015
+  },
+  "harbin institute of technology": {
+    "world_rank": 410,
+    "national_rank": 17,
+    "country": "China",
+    "year": 2015
+  },
+  "university of rennes 1": {
+    "world_rank": 475,
+    "national_rank": 19,
+    "country": "France",
+    "year": 2015
+  },
+  "university of arkansas fayetteville": {
+    "world_rank": 550,
+    "national_rank": 168,
+    "country": "USA",
+    "year": 2015
+  },
+  "aristotle university of thessaloniki": {
+    "world_rank": 459,
+    "national_rank": 2,
+    "country": "Greece",
+    "year": 2015
+  },
+  "jagiellonian university": {
+    "world_rank": 451,
+    "national_rank": 1,
+    "country": "Poland",
+    "year": 2015
+  },
+  "texas tech university ttu": {
+    "world_rank": 469,
+    "national_rank": 152,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of rostock": {
+    "world_rank": 450,
+    "national_rank": 35,
+    "country": "Germany",
+    "year": 2015
+  },
+  "university of akron": {
+    "world_rank": 543,
+    "national_rank": 165,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of saskatchewan": {
+    "world_rank": 455,
+    "national_rank": 20,
+    "country": "Canada",
+    "year": 2015
+  },
+  "juntendo university": {
+    "world_rank": 465,
+    "national_rank": 19,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of wyoming": {
+    "world_rank": 466,
+    "national_rank": 151,
+    "country": "USA",
+    "year": 2015
+  },
+  "macquarie university": {
+    "world_rank": 449,
+    "national_rank": 9,
+    "country": "Australia",
+    "year": 2015
+  },
+  "university of canterbury": {
+    "world_rank": 533,
+    "national_rank": 3,
+    "country": "New Zealand",
+    "year": 2015
+  },
+  "university of denver": {
+    "world_rank": 428,
+    "national_rank": 142,
+    "country": "USA",
+    "year": 2015
+  },
+  "illinois institute of technology": {
+    "world_rank": 480,
+    "national_rank": 154,
+    "country": "USA",
+    "year": 2015
+  },
+  "creighton university": {
+    "world_rank": 508,
+    "national_rank": 159,
+    "country": "USA",
+    "year": 2015
+  },
+  "bielefeld university": {
+    "world_rank": 464,
+    "national_rank": 36,
+    "country": "Germany",
+    "year": 2015
+  },
+  "university of malaya": {
+    "world_rank": 498,
+    "national_rank": 2,
+    "country": "Malaysia",
+    "year": 2015
+  },
+  "university of ulsan": {
+    "world_rank": 495,
+    "national_rank": 17,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "city university london": {
+    "world_rank": 545,
+    "national_rank": 41,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "grenoble institute of technology": {
+    "world_rank": 430,
+    "national_rank": 17,
+    "country": "France",
+    "year": 2015
+  },
+  "federal university of minas gerais": {
+    "world_rank": 526,
+    "national_rank": 4,
+    "country": "Brazil",
+    "year": 2015
+  },
+  "university of hanover": {
+    "world_rank": 492,
+    "national_rank": 39,
+    "country": "Germany",
+    "year": 2015
+  },
+  "south china university of technology": {
+    "world_rank": 439,
+    "national_rank": 23,
+    "country": "China",
+    "year": 2015
+  },
+  "university of surrey": {
+    "world_rank": 525,
+    "national_rank": 39,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "otto von guericke university magdeburg": {
+    "world_rank": 536,
+    "national_rank": 44,
+    "country": "Germany",
+    "year": 2015
+  },
+  "indian institute of science": {
+    "world_rank": 448,
+    "national_rank": 3,
+    "country": "India",
+    "year": 2015
+  },
+  "tokyo metropolitan university": {
+    "world_rank": 501,
+    "national_rank": 25,
+    "country": "Japan",
+    "year": 2015
+  },
+  "bar ilan university": {
+    "world_rank": 521,
+    "national_rank": 6,
+    "country": "Israel",
+    "year": 2015
+  },
+  "mississippi state university": {
+    "world_rank": 607,
+    "national_rank": 181,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of maryland baltimore county": {
+    "world_rank": 493,
+    "national_rank": 158,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of wollongong": {
+    "world_rank": 467,
+    "national_rank": 10,
+    "country": "Australia",
+    "year": 2015
+  },
+  "flinders university": {
+    "world_rank": 620,
+    "national_rank": 17,
+    "country": "Australia",
+    "year": 2015
+  },
+  "martin luther university of halle wittenberg": {
+    "world_rank": 497,
+    "national_rank": 40,
+    "country": "Germany",
+    "year": 2015
+  },
+  "graduate university for advanced studies": {
+    "world_rank": 524,
+    "national_rank": 29,
+    "country": "Japan",
+    "year": 2015
+  },
+  "clemson university": {
+    "world_rank": 483,
+    "national_rank": 155,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of brescia": {
+    "world_rank": 503,
+    "national_rank": 26,
+    "country": "Italy",
+    "year": 2015
+  },
+  "georgia state university": {
+    "world_rank": 509,
+    "national_rank": 160,
+    "country": "USA",
+    "year": 2015
+  },
+  "dongguk university": {
+    "world_rank": 560,
+    "national_rank": 19,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "university of fribourg": {
+    "world_rank": 573,
+    "national_rank": 8,
+    "country": "Switzerland",
+    "year": 2015
+  },
+  "sichuan university": {
+    "world_rank": 479,
+    "national_rank": 26,
+    "country": "China",
+    "year": 2015
+  },
+  "university of iceland": {
+    "world_rank": 461,
+    "national_rank": 1,
+    "country": "Iceland",
+    "year": 2015
+  },
+  "university of sherbrooke": {
+    "world_rank": 502,
+    "national_rank": 21,
+    "country": "Canada",
+    "year": 2015
+  },
+  "university of graz": {
+    "world_rank": 584,
+    "national_rank": 7,
+    "country": "Austria",
+    "year": 2015
+  },
+  "university of malaga": {
+    "world_rank": 693,
+    "national_rank": 24,
+    "country": "Spain",
+    "year": 2015
+  },
+  "university of zaragoza": {
+    "world_rank": 484,
+    "national_rank": 14,
+    "country": "Spain",
+    "year": 2015
+  },
+  "new york medical college": {
+    "world_rank": 546,
+    "national_rank": 166,
+    "country": "USA",
+    "year": 2015
+  },
+  "suny downstate medical center": {
+    "world_rank": 516,
+    "national_rank": 162,
+    "country": "USA",
+    "year": 2015
+  },
+  "ecole centrale paris": {
+    "world_rank": 548,
+    "national_rank": 23,
+    "country": "France",
+    "year": 2015
+  },
+  "utah state university": {
+    "world_rank": 566,
+    "national_rank": 171,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of ljubljana": {
+    "world_rank": 504,
+    "national_rank": 1,
+    "country": "Slovenia",
+    "year": 2015
+  },
+  "university of montpellier 1": {
+    "world_rank": 526,
+    "national_rank": 22,
+    "country": "France",
+    "year": 2014
+  },
+  "victoria university of wellington": {
+    "world_rank": 588,
+    "national_rank": 4,
+    "country": "New Zealand",
+    "year": 2015
+  },
+  "east china university of science and technology": {
+    "world_rank": 477,
+    "national_rank": 25,
+    "country": "China",
+    "year": 2015
+  },
+  "konkuk university": {
+    "world_rank": 602,
+    "national_rank": 22,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "university of potsdam": {
+    "world_rank": 517,
+    "national_rank": 41,
+    "country": "Germany",
+    "year": 2015
+  },
+  "university of the basque country": {
+    "world_rank": 485,
+    "national_rank": 15,
+    "country": "Spain",
+    "year": 2015
+  },
+  "university of nice sophia antipolis": {
+    "world_rank": 505,
+    "national_rank": 21,
+    "country": "France",
+    "year": 2015
+  },
+  "university of udine": {
+    "world_rank": 500,
+    "national_rank": 25,
+    "country": "Italy",
+    "year": 2015
+  },
+  "national yang ming university": {
+    "world_rank": 542,
+    "national_rank": 5,
+    "country": "Taiwan",
+    "year": 2015
+  },
+  "indian institute of technology bombay": {
+    "world_rank": 596,
+    "national_rank": 6,
+    "country": "India",
+    "year": 2015
+  },
+  "university of bayreuth": {
+    "world_rank": 520,
+    "national_rank": 42,
+    "country": "Germany",
+    "year": 2015
+  },
+  "university of wisconsin milwaukee": {
+    "world_rank": 510,
+    "national_rank": 161,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of dayton": {
+    "world_rank": 445,
+    "national_rank": 147,
+    "country": "USA",
+    "year": 2015
+  },
+  "nihon university": {
+    "world_rank": 473,
+    "national_rank": 21,
+    "country": "Japan",
+    "year": 2015
+  },
+  "montana state university bozeman": {
+    "world_rank": 556,
+    "national_rank": 170,
+    "country": "USA",
+    "year": 2015
+  },
+  "royal holloway university of london": {
+    "world_rank": 540,
+    "national_rank": 40,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "tokyo women s medical university": {
+    "world_rank": 555,
+    "national_rank": 32,
+    "country": "Japan",
+    "year": 2015
+  },
+  "panjab university": {
+    "world_rank": 491,
+    "national_rank": 4,
+    "country": "India",
+    "year": 2015
+  },
+  "tampere university of technology": {
+    "world_rank": 577,
+    "national_rank": 7,
+    "country": "Finland",
+    "year": 2015
+  },
+  "university of coimbra": {
+    "world_rank": 507,
+    "national_rank": 3,
+    "country": "Portugal",
+    "year": 2015
+  },
+  "university of newcastle": {
+    "world_rank": 494,
+    "national_rank": 11,
+    "country": "Australia",
+    "year": 2015
+  },
+  "nara institute of science and technology": {
+    "world_rank": 547,
+    "national_rank": 31,
+    "country": "Japan",
+    "year": 2015
+  },
+  "auburn university": {
+    "world_rank": 549,
+    "national_rank": 167,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of bremen": {
+    "world_rank": 535,
+    "national_rank": 43,
+    "country": "Germany",
+    "year": 2015
+  },
+  "mahidol university": {
+    "world_rank": 532,
+    "national_rank": 2,
+    "country": "Thailand",
+    "year": 2015
+  },
+  "university of crete": {
+    "world_rank": 515,
+    "national_rank": 3,
+    "country": "Greece",
+    "year": 2015
+  },
+  "bangor university": {
+    "world_rank": 568,
+    "national_rank": 42,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "university of aveiro": {
+    "world_rank": 557,
+    "national_rank": 4,
+    "country": "Portugal",
+    "year": 2015
+  },
+  "university of palermo": {
+    "world_rank": 528,
+    "national_rank": 27,
+    "country": "Italy",
+    "year": 2015
+  },
+  "nagoya city university": {
+    "world_rank": 599,
+    "national_rank": 34,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of tartu": {
+    "world_rank": 537,
+    "national_rank": 1,
+    "country": "Estonia",
+    "year": 2015
+  },
+  "university of savoy": {
+    "world_rank": 499,
+    "national_rank": 20,
+    "country": "France",
+    "year": 2015
+  },
+  "university of troms the arctic university of norway": {
+    "world_rank": 527,
+    "national_rank": 4,
+    "country": "Norway",
+    "year": 2015
+  },
+  "university of missouri kansas city": {
+    "world_rank": 554,
+    "national_rank": 169,
+    "country": "USA",
+    "year": 2015
+  },
+  "beihang university": {
+    "world_rank": 705,
+    "national_rank": 40,
+    "country": "China",
+    "year": 2015
+  },
+  "american university of beirut": {
+    "world_rank": 682,
+    "national_rank": 1,
+    "country": "Lebanon",
+    "year": 2015
+  },
+  "university of nantes": {
+    "world_rank": 539,
+    "national_rank": 22,
+    "country": "France",
+    "year": 2015
+  },
+  "university of essex": {
+    "world_rank": 632,
+    "national_rank": 48,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "university of zagreb": {
+    "world_rank": 551,
+    "national_rank": 1,
+    "country": "Croatia",
+    "year": 2015
+  },
+  "national central university": {
+    "world_rank": 564,
+    "national_rank": 8,
+    "country": "Taiwan",
+    "year": 2015
+  },
+  "university lille 1 sciences and technologies": {
+    "world_rank": 562,
+    "national_rank": 24,
+    "country": "France",
+    "year": 2015
+  },
+  "university of catania": {
+    "world_rank": 531,
+    "national_rank": 28,
+    "country": "Italy",
+    "year": 2015
+  },
+  "national polytechnic institute of toulouse": {
+    "world_rank": 580,
+    "national_rank": 25,
+    "country": "France",
+    "year": 2015
+  },
+  "indian institute of technology kanpur": {
+    "world_rank": 714,
+    "national_rank": 11,
+    "country": "India",
+    "year": 2015
+  },
+  "kagoshima university": {
+    "world_rank": 619,
+    "national_rank": 36,
+    "country": "Japan",
+    "year": 2015
+  },
+  "lanzhou university": {
+    "world_rank": 514,
+    "national_rank": 28,
+    "country": "China",
+    "year": 2015
+  },
+  "james cook university": {
+    "world_rank": 541,
+    "national_rank": 13,
+    "country": "Australia",
+    "year": 2015
+  },
+  "shizuoka university": {
+    "world_rank": 648,
+    "national_rank": 39,
+    "country": "Japan",
+    "year": 2015
+  },
+  "indian institute of technology kharagpur": {
+    "world_rank": 614,
+    "national_rank": 8,
+    "country": "India",
+    "year": 2015
+  },
+  "second university of naples": {
+    "world_rank": 575,
+    "national_rank": 31,
+    "country": "Italy",
+    "year": 2015
+  },
+  "indian institute of technology madras": {
+    "world_rank": 534,
+    "national_rank": 5,
+    "country": "India",
+    "year": 2015
+  },
+  "plymouth university": {
+    "world_rank": 587,
+    "national_rank": 43,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "international school for advanced studies": {
+    "world_rank": 576,
+    "national_rank": 32,
+    "country": "Italy",
+    "year": 2015
+  },
+  "polytechnic university of turin": {
+    "world_rank": 653,
+    "national_rank": 34,
+    "country": "Italy",
+    "year": 2015
+  },
+  "university of oviedo": {
+    "world_rank": 559,
+    "national_rank": 16,
+    "country": "Spain",
+    "year": 2015
+  },
+  "ehime university": {
+    "world_rank": 651,
+    "national_rank": 40,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of ioannina": {
+    "world_rank": 582,
+    "national_rank": 4,
+    "country": "Greece",
+    "year": 2015
+  },
+  "university of cagliari": {
+    "world_rank": 570,
+    "national_rank": 30,
+    "country": "Italy",
+    "year": 2015
+  },
+  "tottori university": {
+    "world_rank": 736,
+    "national_rank": 49,
+    "country": "Japan",
+    "year": 2015
+  },
+  "federal university of rio grande do sul": {
+    "world_rank": 583,
+    "national_rank": 5,
+    "country": "Brazil",
+    "year": 2015
+  },
+  "kent state university": {
+    "world_rank": 571,
+    "national_rank": 173,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of los andes colombia": {
+    "world_rank": 652,
+    "national_rank": 1,
+    "country": "Colombia",
+    "year": 2015
+  },
+  "hunan university": {
+    "world_rank": 553,
+    "national_rank": 30,
+    "country": "China",
+    "year": 2015
+  },
+  "tokai university": {
+    "world_rank": 622,
+    "national_rank": 37,
+    "country": "Japan",
+    "year": 2015
+  },
+  "lsu health sciences center new orleans": {
+    "world_rank": 600,
+    "national_rank": 178,
+    "country": "USA",
+    "year": 2015
+  },
+  "southern illinois university carbondale": {
+    "world_rank": 590,
+    "national_rank": 175,
+    "country": "USA",
+    "year": 2015
+  },
+  "tata institute of fundamental research": {
+    "world_rank": 601,
+    "national_rank": 7,
+    "country": "India",
+    "year": 2015
+  },
+  "aalborg university": {
+    "world_rank": 565,
+    "national_rank": 5,
+    "country": "Denmark",
+    "year": 2015
+  },
+  "osaka prefecture university": {
+    "world_rank": 598,
+    "national_rank": 33,
+    "country": "Japan",
+    "year": 2015
+  },
+  "chang gung university": {
+    "world_rank": 563,
+    "national_rank": 7,
+    "country": "Taiwan",
+    "year": 2015
+  },
+  "northern illinois university": {
+    "world_rank": 643,
+    "national_rank": 187,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of trento": {
+    "world_rank": 561,
+    "national_rank": 29,
+    "country": "Italy",
+    "year": 2015
+  },
+  "semmelweis university": {
+    "world_rank": 617,
+    "national_rank": 2,
+    "country": "Hungary",
+    "year": 2015
+  },
+  "university of science and technology beijing": {
+    "world_rank": 530,
+    "national_rank": 29,
+    "country": "China",
+    "year": 2015
+  },
+  "national university of ireland galway": {
+    "world_rank": 558,
+    "national_rank": 4,
+    "country": "Ireland",
+    "year": 2015
+  },
+  "dankook university": {
+    "world_rank": 834,
+    "national_rank": 29,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "istanbul university": {
+    "world_rank": 623,
+    "national_rank": 2,
+    "country": "Turkey",
+    "year": 2015
+  },
+  "tokyo university of agriculture and technology": {
+    "world_rank": 624,
+    "national_rank": 38,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of montana missoula": {
+    "world_rank": 585,
+    "national_rank": 174,
+    "country": "USA",
+    "year": 2015
+  },
+  "queensland university of technology": {
+    "world_rank": 621,
+    "national_rank": 18,
+    "country": "Australia",
+    "year": 2015
+  },
+  "binghamton university": {
+    "world_rank": 647,
+    "national_rank": 188,
+    "country": "USA",
+    "year": 2015
+  },
+  "universite de namur": {
+    "world_rank": 730,
+    "national_rank": 8,
+    "country": "Belgium",
+    "year": 2015
+  },
+  "university of tasmania": {
+    "world_rank": 523,
+    "national_rank": 12,
+    "country": "Australia",
+    "year": 2015
+  },
+  "university of pretoria": {
+    "world_rank": 678,
+    "national_rank": 5,
+    "country": "South Africa",
+    "year": 2015
+  },
+  "central china normal university": {
+    "world_rank": 572,
+    "national_rank": 31,
+    "country": "China",
+    "year": 2015
+  },
+  "indian institute of technology roorkee": {
+    "world_rank": 638,
+    "national_rank": 9,
+    "country": "India",
+    "year": 2015
+  },
+  "curtin university": {
+    "world_rank": 595,
+    "national_rank": 15,
+    "country": "Australia",
+    "year": 2015
+  },
+  "deakin university": {
+    "world_rank": 579,
+    "national_rank": 14,
+    "country": "Australia",
+    "year": 2015
+  },
+  "tilburg university": {
+    "world_rank": 689,
+    "national_rank": 13,
+    "country": "Netherlands",
+    "year": 2015
+  },
+  "inha university": {
+    "world_rank": 578,
+    "national_rank": 20,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "university of new orleans": {
+    "world_rank": 609,
+    "national_rank": 182,
+    "country": "USA",
+    "year": 2015
+  },
+  "paris est creteil val de marne university": {
+    "world_rank": 633,
+    "national_rank": 27,
+    "country": "France",
+    "year": 2015
+  },
+  "university of l aquila": {
+    "world_rank": 680,
+    "national_rank": 37,
+    "country": "Italy",
+    "year": 2015
+  },
+  "chungnam national university": {
+    "world_rank": 628,
+    "national_rank": 23,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "university of salamanca": {
+    "world_rank": 637,
+    "national_rank": 18,
+    "country": "Spain",
+    "year": 2015
+  },
+  "university of alaska fairbanks": {
+    "world_rank": 591,
+    "national_rank": 176,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of poitiers": {
+    "world_rank": 675,
+    "national_rank": 30,
+    "country": "France",
+    "year": 2015
+  },
+  "albany medical college": {
+    "world_rank": 650,
+    "national_rank": 189,
+    "country": "USA",
+    "year": 2015
+  },
+  "birkbeck university of london": {
+    "world_rank": 698,
+    "national_rank": 54,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "griffith university": {
+    "world_rank": 613,
+    "national_rank": 16,
+    "country": "Australia",
+    "year": 2015
+  },
+  "federal university of sao paulo": {
+    "world_rank": 589,
+    "national_rank": 6,
+    "country": "Brazil",
+    "year": 2015
+  },
+  "carleton university": {
+    "world_rank": 593,
+    "national_rank": 23,
+    "country": "Canada",
+    "year": 2015
+  },
+  "massey university": {
+    "world_rank": 658,
+    "national_rank": 5,
+    "country": "New Zealand",
+    "year": 2015
+  },
+  "catholic university of korea": {
+    "world_rank": 511,
+    "national_rank": 18,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "open university uk": {
+    "world_rank": 631,
+    "national_rank": 47,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "university of patras": {
+    "world_rank": 641,
+    "national_rank": 5,
+    "country": "Greece",
+    "year": 2015
+  },
+  "universidade nova de lisboa": {
+    "world_rank": 612,
+    "national_rank": 5,
+    "country": "Portugal",
+    "year": 2015
+  },
+  "texas a m health science center": {
+    "world_rank": 616,
+    "national_rank": 183,
+    "country": "USA",
+    "year": 2015
+  },
+  "braunschweig university of technology": {
+    "world_rank": 636,
+    "national_rank": 46,
+    "country": "Germany",
+    "year": 2015
+  },
+  "national chung hsing university": {
+    "world_rank": 544,
+    "national_rank": 6,
+    "country": "Taiwan",
+    "year": 2015
+  },
+  "la trobe university": {
+    "world_rank": 645,
+    "national_rank": 19,
+    "country": "Australia",
+    "year": 2015
+  },
+  "missouri university of science and technology": {
+    "world_rank": 718,
+    "national_rank": 199,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of idaho": {
+    "world_rank": 655,
+    "national_rank": 190,
+    "country": "USA",
+    "year": 2015
+  },
+  "louisiana tech university": {
+    "world_rank": 625,
+    "national_rank": 184,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of portsmouth": {
+    "world_rank": 597,
+    "national_rank": 45,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "university of la laguna": {
+    "world_rank": 603,
+    "national_rank": 17,
+    "country": "Spain",
+    "year": 2015
+  },
+  "florida international university": {
+    "world_rank": 605,
+    "national_rank": 179,
+    "country": "USA",
+    "year": 2015
+  },
+  "medical university of graz": {
+    "world_rank": 574,
+    "national_rank": 6,
+    "country": "Austria",
+    "year": 2015
+  },
+  "howard university": {
+    "world_rank": 719,
+    "national_rank": 200,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of hertfordshire": {
+    "world_rank": 604,
+    "national_rank": 46,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "state university of new york upstate medical university": {
+    "world_rank": 635,
+    "national_rank": 186,
+    "country": "USA",
+    "year": 2015
+  },
+  "royal college of surgeons in ireland": {
+    "world_rank": 711,
+    "national_rank": 5,
+    "country": "Ireland",
+    "year": 2015
+  },
+  "national technical university of athens": {
+    "world_rank": 695,
+    "national_rank": 6,
+    "country": "Greece",
+    "year": 2015
+  },
+  "university of windsor": {
+    "world_rank": 538,
+    "national_rank": 22,
+    "country": "Canada",
+    "year": 2015
+  },
+  "rovira i virgili university": {
+    "world_rank": 644,
+    "national_rank": 19,
+    "country": "Spain",
+    "year": 2015
+  },
+  "university of burgundy": {
+    "world_rank": 654,
+    "national_rank": 28,
+    "country": "France",
+    "year": 2015
+  },
+  "gunma university": {
+    "world_rank": 608,
+    "national_rank": 35,
+    "country": "Japan",
+    "year": 2015
+  },
+  "agh university of science and technology": {
+    "world_rank": 782,
+    "national_rank": 4,
+    "country": "Poland",
+    "year": 2015
+  },
+  "gifu university": {
+    "world_rank": 670,
+    "national_rank": 43,
+    "country": "Japan",
+    "year": 2015
+  },
+  "hacettepe university": {
+    "world_rank": 634,
+    "national_rank": 3,
+    "country": "Turkey",
+    "year": 2015
+  },
+  "orebro university": {
+    "world_rank": 639,
+    "national_rank": 11,
+    "country": "Sweden",
+    "year": 2015
+  },
+  "memorial university of newfoundland": {
+    "world_rank": 611,
+    "national_rank": 24,
+    "country": "Canada",
+    "year": 2015
+  },
+  "kindai university": {
+    "world_rank": 737,
+    "national_rank": 50,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of rhode island": {
+    "world_rank": 606,
+    "national_rank": 180,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of alicante": {
+    "world_rank": 681,
+    "national_rank": 22,
+    "country": "Spain",
+    "year": 2015
+  },
+  "new jersey institute of technology": {
+    "world_rank": 761,
+    "national_rank": 206,
+    "country": "USA",
+    "year": 2015
+  },
+  "lille 2 university of health and law": {
+    "world_rank": 618,
+    "national_rank": 26,
+    "country": "France",
+    "year": 2015
+  },
+  "keele university": {
+    "world_rank": 674,
+    "national_rank": 49,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "university of jyvaskyla": {
+    "world_rank": 671,
+    "national_rank": 8,
+    "country": "Finland",
+    "year": 2015
+  },
+  "rochester institute of technology": {
+    "world_rank": 710,
+    "national_rank": 196,
+    "country": "USA",
+    "year": 2015
+  },
+  "sapporo medical university": {
+    "world_rank": 713,
+    "national_rank": 44,
+    "country": "Japan",
+    "year": 2015
+  },
+  "banaras hindu university": {
+    "world_rank": 679,
+    "national_rank": 10,
+    "country": "India",
+    "year": 2015
+  },
+  "king abdullah university of science and technology": {
+    "world_rank": 704,
+    "national_rank": 2,
+    "country": "Saudi Arabia",
+    "year": 2015
+  },
+  "northeast normal university": {
+    "world_rank": 640,
+    "national_rank": 35,
+    "country": "China",
+    "year": 2015
+  },
+  "portland state university": {
+    "world_rank": 661,
+    "national_rank": 192,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of quebec at montreal": {
+    "world_rank": 663,
+    "national_rank": 25,
+    "country": "Canada",
+    "year": 2015
+  },
+  "east china normal university": {
+    "world_rank": 586,
+    "national_rank": 32,
+    "country": "China",
+    "year": 2015
+  },
+  "university of debrecen": {
+    "world_rank": 667,
+    "national_rank": 3,
+    "country": "Hungary",
+    "year": 2015
+  },
+  "loma linda university": {
+    "world_rank": 665,
+    "national_rank": 193,
+    "country": "USA",
+    "year": 2015
+  },
+  "old dominion university": {
+    "world_rank": 656,
+    "national_rank": 191,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of insubria": {
+    "world_rank": 676,
+    "national_rank": 36,
+    "country": "Italy",
+    "year": 2015
+  },
+  "university of nevada las vegas": {
+    "world_rank": 687,
+    "national_rank": 195,
+    "country": "USA",
+    "year": 2015
+  },
+  "hong kong baptist university": {
+    "world_rank": 649,
+    "national_rank": 6,
+    "country": "Hong Kong",
+    "year": 2015
+  },
+  "university of minho": {
+    "world_rank": 629,
+    "national_rank": 6,
+    "country": "Portugal",
+    "year": 2015
+  },
+  "university of messina": {
+    "world_rank": 690,
+    "national_rank": 38,
+    "country": "Italy",
+    "year": 2015
+  },
+  "university of texas at arlington": {
+    "world_rank": 626,
+    "national_rank": 185,
+    "country": "USA",
+    "year": 2015
+  },
+  "university francois rabelais tours": {
+    "world_rank": 699,
+    "national_rank": 31,
+    "country": "France",
+    "year": 2015
+  },
+  "unesp sao paulo state university": {
+    "world_rank": 664,
+    "national_rank": 7,
+    "country": "Brazil",
+    "year": 2015
+  },
+  "toho university": {
+    "world_rank": 727,
+    "national_rank": 46,
+    "country": "Japan",
+    "year": 2015
+  },
+  "beijing university of chemical technology": {
+    "world_rank": 642,
+    "national_rank": 36,
+    "country": "China",
+    "year": 2015
+  },
+  "rutgers the state university of new jersey newark": {
+    "world_rank": 723,
+    "national_rank": 201,
+    "country": "USA",
+    "year": 2015
+  },
+  "johannes kepler university of linz": {
+    "world_rank": 715,
+    "national_rank": 9,
+    "country": "Austria",
+    "year": 2015
+  },
+  "warsaw university of technology": {
+    "world_rank": 646,
+    "national_rank": 3,
+    "country": "Poland",
+    "year": 2015
+  },
+  "university of paris 13": {
+    "world_rank": 672,
+    "national_rank": 29,
+    "country": "France",
+    "year": 2015
+  },
+  "university of toyama": {
+    "world_rank": 666,
+    "national_rank": 42,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of toledo": {
+    "world_rank": 592,
+    "national_rank": 177,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of vigo": {
+    "world_rank": 686,
+    "national_rank": 23,
+    "country": "Spain",
+    "year": 2015
+  },
+  "university of kent": {
+    "world_rank": 692,
+    "national_rank": 51,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "jichi medical university": {
+    "world_rank": 722,
+    "national_rank": 45,
+    "country": "Japan",
+    "year": 2015
+  },
+  "roma tre university": {
+    "world_rank": 701,
+    "national_rank": 39,
+    "country": "Italy",
+    "year": 2015
+  },
+  "chung yuan christian university": {
+    "world_rank": 875,
+    "national_rank": 14,
+    "country": "Taiwan",
+    "year": 2015
+  },
+  "university of haifa": {
+    "world_rank": 700,
+    "national_rank": 7,
+    "country": "Israel",
+    "year": 2015
+  },
+  "abo akademi university": {
+    "world_rank": 735,
+    "national_rank": 9,
+    "country": "Finland",
+    "year": 2015
+  },
+  "swansea university": {
+    "world_rank": 729,
+    "national_rank": 57,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "china agricultural university": {
+    "world_rank": 627,
+    "national_rank": 34,
+    "country": "China",
+    "year": 2015
+  },
+  "marche polytechnic university": {
+    "world_rank": 662,
+    "national_rank": 35,
+    "country": "Italy",
+    "year": 2015
+  },
+  "university of maine orono": {
+    "world_rank": 668,
+    "national_rank": 194,
+    "country": "USA",
+    "year": 2015
+  },
+  "heriot watt university": {
+    "world_rank": 707,
+    "national_rank": 55,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "marquette university": {
+    "world_rank": 717,
+    "national_rank": 198,
+    "country": "USA",
+    "year": 2015
+  },
+  "loughborough university": {
+    "world_rank": 694,
+    "national_rank": 52,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "kaiserslautern university of technology": {
+    "world_rank": 691,
+    "national_rank": 47,
+    "country": "Germany",
+    "year": 2015
+  },
+  "aston university": {
+    "world_rank": 720,
+    "national_rank": 56,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "university of girona": {
+    "world_rank": 673,
+    "national_rank": 21,
+    "country": "Spain",
+    "year": 2015
+  },
+  "hasselt university": {
+    "world_rank": 733,
+    "national_rank": 9,
+    "country": "Belgium",
+    "year": 2015
+  },
+  "nanjing university of science and technology": {
+    "world_rank": 804,
+    "national_rank": 48,
+    "country": "China",
+    "year": 2015
+  },
+  "university of natural resources and life sciences vienna": {
+    "world_rank": 743,
+    "national_rank": 10,
+    "country": "Austria",
+    "year": 2015
+  },
+  "university of szeged": {
+    "world_rank": 731,
+    "national_rank": 4,
+    "country": "Hungary",
+    "year": 2015
+  },
+  "soochow university suzhou": {
+    "world_rank": 615,
+    "national_rank": 33,
+    "country": "China",
+    "year": 2015
+  },
+  "university of the balearic islands": {
+    "world_rank": 660,
+    "national_rank": 20,
+    "country": "Spain",
+    "year": 2015
+  },
+  "fuzhou university": {
+    "world_rank": 706,
+    "national_rank": 41,
+    "country": "China",
+    "year": 2015
+  },
+  "university of memphis": {
+    "world_rank": 746,
+    "national_rank": 202,
+    "country": "USA",
+    "year": 2015
+  },
+  "san francisco state university": {
+    "world_rank": 712,
+    "national_rank": 197,
+    "country": "USA",
+    "year": 2015
+  },
+  "east carolina university": {
+    "world_rank": 762,
+    "national_rank": 207,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of augsburg": {
+    "world_rank": 739,
+    "national_rank": 48,
+    "country": "Germany",
+    "year": 2015
+  },
+  "university of missouri st louis": {
+    "world_rank": 748,
+    "national_rank": 203,
+    "country": "USA",
+    "year": 2015
+  },
+  "kyoto prefectural university of medicine": {
+    "world_rank": 728,
+    "national_rank": 47,
+    "country": "Japan",
+    "year": 2015
+  },
+  "shanghai university": {
+    "world_rank": 684,
+    "national_rank": 39,
+    "country": "China",
+    "year": 2015
+  },
+  "university of south australia": {
+    "world_rank": 751,
+    "national_rank": 21,
+    "country": "Australia",
+    "year": 2015
+  },
+  "liverpool john moores university": {
+    "world_rank": 696,
+    "national_rank": 53,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "graz university of technology": {
+    "world_rank": 669,
+    "national_rank": 8,
+    "country": "Austria",
+    "year": 2015
+  },
+  "kitasato university": {
+    "world_rank": 732,
+    "national_rank": 48,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of north carolina at charlotte": {
+    "world_rank": 794,
+    "national_rank": 212,
+    "country": "USA",
+    "year": 2015
+  },
+  "g d annunzio university chieti pescara": {
+    "world_rank": 747,
+    "national_rank": 42,
+    "country": "Italy",
+    "year": 2015
+  },
+  "university of cantabria": {
+    "world_rank": 709,
+    "national_rank": 25,
+    "country": "Spain",
+    "year": 2015
+  },
+  "miguel hernandez university of elche": {
+    "world_rank": 767,
+    "national_rank": 28,
+    "country": "Spain",
+    "year": 2015
+  },
+  "donghua university": {
+    "world_rank": 659,
+    "national_rank": 37,
+    "country": "China",
+    "year": 2015
+  },
+  "comenius university in bratislava": {
+    "world_rank": 685,
+    "national_rank": 1,
+    "country": "Slovak Republic",
+    "year": 2015
+  },
+  "university of alabama in huntsville": {
+    "world_rank": 752,
+    "national_rank": 204,
+    "country": "USA",
+    "year": 2015
+  },
+  "mie university": {
+    "world_rank": 780,
+    "national_rank": 57,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of stirling": {
+    "world_rank": 784,
+    "national_rank": 58,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "hunter college": {
+    "world_rank": 850,
+    "national_rank": 220,
+    "country": "USA",
+    "year": 2015
+  },
+  "swinburne university of technology": {
+    "world_rank": 688,
+    "national_rank": 20,
+    "country": "Australia",
+    "year": 2015
+  },
+  "university of ulster": {
+    "world_rank": 683,
+    "national_rank": 50,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "university of evry val d essonne": {
+    "world_rank": 750,
+    "national_rank": 34,
+    "country": "France",
+    "year": 2015
+  },
+  "university of salerno": {
+    "world_rank": 703,
+    "national_rank": 40,
+    "country": "Italy",
+    "year": 2015
+  },
+  "national university of la plata": {
+    "world_rank": 744,
+    "national_rank": 2,
+    "country": "Argentina",
+    "year": 2015
+  },
+  "masaryk university": {
+    "world_rank": 702,
+    "national_rank": 2,
+    "country": "Czech Republic",
+    "year": 2015
+  },
+  "yamaguchi university": {
+    "world_rank": 657,
+    "national_rank": 41,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of yamanashi": {
+    "world_rank": 759,
+    "national_rank": 51,
+    "country": "Japan",
+    "year": 2015
+  },
+  "showa university": {
+    "world_rank": 800,
+    "national_rank": 59,
+    "country": "Japan",
+    "year": 2015
+  },
+  "north dakota state university main campus": {
+    "world_rank": 792,
+    "national_rank": 211,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of north texas denton": {
+    "world_rank": 778,
+    "national_rank": 209,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of mississippi medical center": {
+    "world_rank": 754,
+    "national_rank": 205,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of tehran": {
+    "world_rank": 768,
+    "national_rank": 2,
+    "country": "Iran",
+    "year": 2015
+  },
+  "paul valery university montpellier iii": {
+    "world_rank": 740,
+    "national_rank": 33,
+    "country": "France",
+    "year": 2015
+  },
+  "wuhan university of technology": {
+    "world_rank": 677,
+    "national_rank": 38,
+    "country": "China",
+    "year": 2015
+  },
+  "university of hyogo": {
+    "world_rank": 763,
+    "national_rank": 53,
+    "country": "Japan",
+    "year": 2015
+  },
+  "the catholic university of america": {
+    "world_rank": 832,
+    "national_rank": 216,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of neuchatel": {
+    "world_rank": 758,
+    "national_rank": 9,
+    "country": "Switzerland",
+    "year": 2015
+  },
+  "national polytechnic institute": {
+    "world_rank": 786,
+    "national_rank": 2,
+    "country": "Mexico",
+    "year": 2015
+  },
+  "jikei university school of medicine": {
+    "world_rank": 775,
+    "national_rank": 56,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of valladolid": {
+    "world_rank": 841,
+    "national_rank": 31,
+    "country": "Spain",
+    "year": 2015
+  },
+  "university of calabria": {
+    "world_rank": 745,
+    "national_rank": 41,
+    "country": "Italy",
+    "year": 2015
+  },
+  "university of lubeck": {
+    "world_rank": 552,
+    "national_rank": 45,
+    "country": "Germany",
+    "year": 2015
+  },
+  "kurume university": {
+    "world_rank": 771,
+    "national_rank": 54,
+    "country": "Japan",
+    "year": 2015
+  },
+  "peking union medical college": {
+    "world_rank": 423,
+    "national_rank": 21,
+    "country": "China",
+    "year": 2015
+  },
+  "yamagata university": {
+    "world_rank": 760,
+    "national_rank": 52,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of cordoba spain": {
+    "world_rank": 734,
+    "national_rank": 26,
+    "country": "Spain",
+    "year": 2015
+  },
+  "university of mons": {
+    "world_rank": 741,
+    "national_rank": 10,
+    "country": "Belgium",
+    "year": 2015
+  },
+  "saga university": {
+    "world_rank": 773,
+    "national_rank": 55,
+    "country": "Japan",
+    "year": 2015
+  },
+  "clarkson university": {
+    "world_rank": 835,
+    "national_rank": 218,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of south alabama": {
+    "world_rank": 844,
+    "national_rank": 219,
+    "country": "USA",
+    "year": 2015
+  },
+  "inje university": {
+    "world_rank": 813,
+    "national_rank": 28,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "university of caen lower normandy": {
+    "world_rank": 797,
+    "national_rank": 38,
+    "country": "France",
+    "year": 2015
+  },
+  "university of castilla la mancha": {
+    "world_rank": 738,
+    "national_rank": 27,
+    "country": "Spain",
+    "year": 2015
+  },
+  "czech technical university in prague": {
+    "world_rank": 716,
+    "national_rank": 3,
+    "country": "Czech Republic",
+    "year": 2015
+  },
+  "saitama medical university": {
+    "world_rank": 798,
+    "national_rank": 58,
+    "country": "Japan",
+    "year": 2015
+  },
+  "istanbul technical university": {
+    "world_rank": 742,
+    "national_rank": 5,
+    "country": "Turkey",
+    "year": 2015
+  },
+  "kaohsiung medical university": {
+    "world_rank": 757,
+    "national_rank": 10,
+    "country": "Taiwan",
+    "year": 2015
+  },
+  "university of electro communications": {
+    "world_rank": 840,
+    "national_rank": 63,
+    "country": "Japan",
+    "year": 2015
+  },
+  "yeungnam university": {
+    "world_rank": 770,
+    "national_rank": 25,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "jawaharlal nehru centre for advanced scientific research": {
+    "world_rank": 777,
+    "national_rank": 12,
+    "country": "India",
+    "year": 2015
+  },
+  "putra university malaysia": {
+    "world_rank": 610,
+    "national_rank": 3,
+    "country": "Malaysia",
+    "year": 2015
+  },
+  "institut national des sciences appliquees de lyon": {
+    "world_rank": 772,
+    "national_rank": 37,
+    "country": "France",
+    "year": 2015
+  },
+  "university of perpignan via domitia": {
+    "world_rank": 822,
+    "national_rank": 40,
+    "country": "France",
+    "year": 2015
+  },
+  "university of miyazaki": {
+    "world_rank": 839,
+    "national_rank": 62,
+    "country": "Japan",
+    "year": 2015
+  },
+  "second military medical university": {
+    "world_rank": 776,
+    "national_rank": 44,
+    "country": "China",
+    "year": 2015
+  },
+  "northern arizona university": {
+    "world_rank": 766,
+    "national_rank": 208,
+    "country": "USA",
+    "year": 2015
+  },
+  "ecole polytechnique de montreal": {
+    "world_rank": 781,
+    "national_rank": 26,
+    "country": "Canada",
+    "year": 2015
+  },
+  "university of salento": {
+    "world_rank": 765,
+    "national_rank": 43,
+    "country": "Italy",
+    "year": 2015
+  },
+  "fukuoka university": {
+    "world_rank": 862,
+    "national_rank": 65,
+    "country": "Japan",
+    "year": 2015
+  },
+  "nagoya institute of technology": {
+    "world_rank": 827,
+    "national_rank": 60,
+    "country": "Japan",
+    "year": 2015
+  },
+  "ankara university": {
+    "world_rank": 725,
+    "national_rank": 4,
+    "country": "Turkey",
+    "year": 2015
+  },
+  "blaise pascal university": {
+    "world_rank": 769,
+    "national_rank": 36,
+    "country": "France",
+    "year": 2015
+  },
+  "university of electronic science and technology of china": {
+    "world_rank": 783,
+    "national_rank": 45,
+    "country": "China",
+    "year": 2015
+  },
+  "national sun yat sen university": {
+    "world_rank": 803,
+    "national_rank": 11,
+    "country": "Taiwan",
+    "year": 2015
+  },
+  "university of rouen": {
+    "world_rank": 831,
+    "national_rank": 41,
+    "country": "France",
+    "year": 2015
+  },
+  "bowling green state university": {
+    "world_rank": 809,
+    "national_rank": 213,
+    "country": "USA",
+    "year": 2015
+  },
+  "norwegian university of life sciences": {
+    "world_rank": 789,
+    "national_rank": 5,
+    "country": "Norway",
+    "year": 2015
+  },
+  "university of picardie jules verne": {
+    "world_rank": 764,
+    "national_rank": 35,
+    "country": "France",
+    "year": 2015
+  },
+  "michigan technological university": {
+    "world_rank": 790,
+    "national_rank": 210,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of concepcion": {
+    "world_rank": 805,
+    "national_rank": 3,
+    "country": "Chile",
+    "year": 2015
+  },
+  "china medical university taiwan": {
+    "world_rank": 708,
+    "national_rank": 9,
+    "country": "Taiwan",
+    "year": 2015
+  },
+  "university of hohenheim": {
+    "world_rank": 793,
+    "national_rank": 51,
+    "country": "Germany",
+    "year": 2015
+  },
+  "aberystwyth university": {
+    "world_rank": 814,
+    "national_rank": 59,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "wilfrid laurier university": {
+    "world_rank": 907,
+    "national_rank": 30,
+    "country": "Canada",
+    "year": 2015
+  },
+  "cairo university": {
+    "world_rank": 796,
+    "national_rank": 1,
+    "country": "Egypt",
+    "year": 2015
+  },
+  "university of murcia": {
+    "world_rank": 799,
+    "national_rank": 29,
+    "country": "Spain",
+    "year": 2015
+  },
+  "palacky university olomouc": {
+    "world_rank": 724,
+    "national_rank": 4,
+    "country": "Czech Republic",
+    "year": 2015
+  },
+  "taipei medical university": {
+    "world_rank": 807,
+    "national_rank": 12,
+    "country": "Taiwan",
+    "year": 2015
+  },
+  "university of bradford": {
+    "world_rank": 821,
+    "national_rank": 60,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "king fahd university of petroleum and minerals": {
+    "world_rank": 847,
+    "national_rank": 3,
+    "country": "Saudi Arabia",
+    "year": 2015
+  },
+  "ege university": {
+    "world_rank": 779,
+    "national_rank": 6,
+    "country": "Turkey",
+    "year": 2015
+  },
+  "university of belgrade": {
+    "world_rank": 726,
+    "national_rank": 1,
+    "country": "Serbia",
+    "year": 2015
+  },
+  "university of eastern piedmont amedeo avogadro": {
+    "world_rank": 630,
+    "national_rank": 33,
+    "country": "Italy",
+    "year": 2015
+  },
+  "budapest university of technology and economics": {
+    "world_rank": 819,
+    "national_rank": 5,
+    "country": "Hungary",
+    "year": 2015
+  },
+  "university of salzburg": {
+    "world_rank": 753,
+    "national_rank": 11,
+    "country": "Austria",
+    "year": 2015
+  },
+  "university of massachusetts lowell": {
+    "world_rank": 884,
+    "national_rank": 222,
+    "country": "USA",
+    "year": 2015
+  },
+  "jaume i university": {
+    "world_rank": 808,
+    "national_rank": 30,
+    "country": "Spain",
+    "year": 2015
+  },
+  "chongqing university": {
+    "world_rank": 774,
+    "national_rank": 43,
+    "country": "China",
+    "year": 2015
+  },
+  "beijing institute of technology": {
+    "world_rank": 749,
+    "national_rank": 42,
+    "country": "China",
+    "year": 2015
+  },
+  "manchester metropolitan university": {
+    "world_rank": 885,
+    "national_rank": 64,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "zhengzhou university": {
+    "world_rank": 795,
+    "national_rank": 47,
+    "country": "China",
+    "year": 2015
+  },
+  "dublin city university": {
+    "world_rank": 843,
+    "national_rank": 6,
+    "country": "Ireland",
+    "year": 2015
+  },
+  "national university of ireland maynooth": {
+    "world_rank": 853,
+    "national_rank": 7,
+    "country": "Ireland",
+    "year": 2015
+  },
+  "kangwon national university": {
+    "world_rank": 812,
+    "national_rank": 27,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "royal veterinary college university of london": {
+    "world_rank": 874,
+    "national_rank": 63,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "wright state university dayton": {
+    "world_rank": 833,
+    "national_rank": 217,
+    "country": "USA",
+    "year": 2015
+  },
+  "capital medical university": {
+    "world_rank": 788,
+    "national_rank": 46,
+    "country": "China",
+    "year": 2015
+  },
+  "university of brighton": {
+    "world_rank": 824,
+    "national_rank": 61,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "sofia university": {
+    "world_rank": 845,
+    "national_rank": 1,
+    "country": "Bulgaria",
+    "year": 2015
+  },
+  "university of regina": {
+    "world_rank": 836,
+    "national_rank": 27,
+    "country": "Canada",
+    "year": 2015
+  },
+  "magna gr cia university of catanzaro": {
+    "world_rank": 802,
+    "national_rank": 44,
+    "country": "Italy",
+    "year": 2015
+  },
+  "chungbuk national university": {
+    "world_rank": 806,
+    "national_rank": 26,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "kochi university": {
+    "world_rank": 838,
+    "national_rank": 61,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of new brunswick": {
+    "world_rank": 870,
+    "national_rank": 29,
+    "country": "Canada",
+    "year": 2015
+  },
+  "sejong university": {
+    "world_rank": 868,
+    "national_rank": 31,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "sharif university of technology": {
+    "world_rank": 697,
+    "national_rank": 1,
+    "country": "Iran",
+    "year": 2015
+  },
+  "chung ang university": {
+    "world_rank": 756,
+    "national_rank": 24,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "queens college city university of new york": {
+    "world_rank": 893,
+    "national_rank": 223,
+    "country": "USA",
+    "year": 2015
+  },
+  "murdoch university": {
+    "world_rank": 829,
+    "national_rank": 24,
+    "country": "Australia",
+    "year": 2015
+  },
+  "chosun university": {
+    "world_rank": 878,
+    "national_rank": 32,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "vilnius university": {
+    "world_rank": 791,
+    "national_rank": 1,
+    "country": "Lithuania",
+    "year": 2015
+  },
+  "university of maribor": {
+    "world_rank": 820,
+    "national_rank": 2,
+    "country": "Slovenia",
+    "year": 2015
+  },
+  "ritsumeikan university": {
+    "world_rank": 926,
+    "national_rank": 72,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of sassari": {
+    "world_rank": 817,
+    "national_rank": 45,
+    "country": "Italy",
+    "year": 2015
+  },
+  "nanjing normal university": {
+    "world_rank": 864,
+    "national_rank": 53,
+    "country": "China",
+    "year": 2015
+  },
+  "university of franche comte": {
+    "world_rank": 816,
+    "national_rank": 39,
+    "country": "France",
+    "year": 2015
+  },
+  "university of texas at el paso": {
+    "world_rank": 929,
+    "national_rank": 228,
+    "country": "USA",
+    "year": 2015
+  },
+  "rio de janeiro state university": {
+    "world_rank": 826,
+    "national_rank": 8,
+    "country": "Brazil",
+    "year": 2015
+  },
+  "jinan university": {
+    "world_rank": 955,
+    "national_rank": 70,
+    "country": "China",
+    "year": 2015
+  },
+  "university of massachusetts boston": {
+    "world_rank": 825,
+    "national_rank": 215,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of alcala": {
+    "world_rank": 849,
+    "national_rank": 32,
+    "country": "Spain",
+    "year": 2015
+  },
+  "tehran university of medical sciences": {
+    "world_rank": 854,
+    "national_rank": 3,
+    "country": "Iran",
+    "year": 2015
+  },
+  "university of the ryukyus": {
+    "world_rank": 855,
+    "national_rank": 64,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of angers": {
+    "world_rank": 859,
+    "national_rank": 42,
+    "country": "France",
+    "year": 2015
+  },
+  "fluminense federal university": {
+    "world_rank": 915,
+    "national_rank": 9,
+    "country": "Brazil",
+    "year": 2015
+  },
+  "florida institute of technology": {
+    "world_rank": 823,
+    "national_rank": 214,
+    "country": "USA",
+    "year": 2015
+  },
+  "trent university": {
+    "world_rank": 910,
+    "national_rank": 31,
+    "country": "Canada",
+    "year": 2015
+  },
+  "national chung cheng university": {
+    "world_rank": 865,
+    "national_rank": 13,
+    "country": "Taiwan",
+    "year": 2015
+  },
+  "bilkent university": {
+    "world_rank": 842,
+    "national_rank": 8,
+    "country": "Turkey",
+    "year": 2015
+  },
+  "national taiwan normal university": {
+    "world_rank": 932,
+    "national_rank": 16,
+    "country": "Taiwan",
+    "year": 2015
+  },
+  "saitama university": {
+    "world_rank": 909,
+    "national_rank": 71,
+    "country": "Japan",
+    "year": 2015
+  },
+  "rmit university": {
+    "world_rank": 873,
+    "national_rank": 25,
+    "country": "Australia",
+    "year": 2015
+  },
+  "hamamatsu university school of medicine": {
+    "world_rank": 863,
+    "national_rank": 66,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of greifswald": {
+    "world_rank": 785,
+    "national_rank": 49,
+    "country": "Germany",
+    "year": 2015
+  },
+  "university of pecs": {
+    "world_rank": 892,
+    "national_rank": 6,
+    "country": "Hungary",
+    "year": 2015
+  },
+  "university of fukui": {
+    "world_rank": 900,
+    "national_rank": 68,
+    "country": "Japan",
+    "year": 2015
+  },
+  "oakland university": {
+    "world_rank": 906,
+    "national_rank": 226,
+    "country": "USA",
+    "year": 2015
+  },
+  "nanjing university of technology": {
+    "world_rank": 810,
+    "national_rank": 49,
+    "country": "China",
+    "year": 2015
+  },
+  "university of technology sydney": {
+    "world_rank": 815,
+    "national_rank": 23,
+    "country": "Australia",
+    "year": 2015
+  },
+  "university of north carolina at greensboro": {
+    "world_rank": 897,
+    "national_rank": 224,
+    "country": "USA",
+    "year": 2015
+  },
+  "all india institute of medical sciences new delhi": {
+    "world_rank": 851,
+    "national_rank": 13,
+    "country": "India",
+    "year": 2015
+  },
+  "kyoto institute of technology": {
+    "world_rank": 887,
+    "national_rank": 67,
+    "country": "Japan",
+    "year": 2015
+  },
+  "ocean university of china": {
+    "world_rank": 846,
+    "national_rank": 51,
+    "country": "China",
+    "year": 2015
+  },
+  "chiang mai university": {
+    "world_rank": 818,
+    "national_rank": 3,
+    "country": "Thailand",
+    "year": 2015
+  },
+  "university of camerino": {
+    "world_rank": 919,
+    "national_rank": 46,
+    "country": "Italy",
+    "year": 2015
+  },
+  "hirosaki university": {
+    "world_rank": 945,
+    "national_rank": 73,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of north dakota": {
+    "world_rank": 913,
+    "national_rank": 227,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of extremadura": {
+    "world_rank": 872,
+    "national_rank": 33,
+    "country": "Spain",
+    "year": 2015
+  },
+  "teikyo university": {
+    "world_rank": 908,
+    "national_rank": 70,
+    "country": "Japan",
+    "year": 2015
+  },
+  "jiangnan university": {
+    "world_rank": 828,
+    "national_rank": 50,
+    "country": "China",
+    "year": 2015
+  },
+  "adam mickiewicz university in poznan": {
+    "world_rank": 890,
+    "national_rank": 5,
+    "country": "Poland",
+    "year": 2015
+  },
+  "university of waikato": {
+    "world_rank": 937,
+    "national_rank": 6,
+    "country": "New Zealand",
+    "year": 2015
+  },
+  "university of veterinary medicine vienna": {
+    "world_rank": 848,
+    "national_rank": 12,
+    "country": "Austria",
+    "year": 2015
+  },
+  "university of cadiz": {
+    "world_rank": 930,
+    "national_rank": 36,
+    "country": "Spain",
+    "year": 2015
+  },
+  "florida atlantic university": {
+    "world_rank": 856,
+    "national_rank": 221,
+    "country": "USA",
+    "year": 2015
+  },
+  "huazhong agricultural university": {
+    "world_rank": 858,
+    "national_rank": 52,
+    "country": "China",
+    "year": 2015
+  },
+  "brock university": {
+    "world_rank": 861,
+    "national_rank": 28,
+    "country": "Canada",
+    "year": 2015
+  },
+  "university of lleida": {
+    "world_rank": 894,
+    "national_rank": 34,
+    "country": "Spain",
+    "year": 2015
+  },
+  "shanghai normal university": {
+    "world_rank": 888,
+    "national_rank": 59,
+    "country": "China",
+    "year": 2015
+  },
+  "jean monnet university": {
+    "world_rank": 880,
+    "national_rank": 44,
+    "country": "France",
+    "year": 2015
+  },
+  "shimane university": {
+    "world_rank": 903,
+    "national_rank": 69,
+    "country": "Japan",
+    "year": 2015
+  },
+  "university of orleans": {
+    "world_rank": 879,
+    "national_rank": 43,
+    "country": "France",
+    "year": 2015
+  },
+  "university of siegen": {
+    "world_rank": 857,
+    "national_rank": 53,
+    "country": "Germany",
+    "year": 2015
+  },
+  "makerere university": {
+    "world_rank": 869,
+    "national_rank": 1,
+    "country": "Uganda",
+    "year": 2015
+  },
+  "university of wales trinity saint david": {
+    "world_rank": 830,
+    "national_rank": 62,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "national taiwan university of science and technology": {
+    "world_rank": 916,
+    "national_rank": 15,
+    "country": "Taiwan",
+    "year": 2015
+  },
+  "university of brasilia": {
+    "world_rank": 920,
+    "national_rank": 11,
+    "country": "Brazil",
+    "year": 2015
+  },
+  "university of western brittany": {
+    "world_rank": 896,
+    "national_rank": 46,
+    "country": "France",
+    "year": 2015
+  },
+  "nanjing agricultural university": {
+    "world_rank": 866,
+    "national_rank": 54,
+    "country": "China",
+    "year": 2015
+  },
+  "national university of cordoba": {
+    "world_rank": 933,
+    "national_rank": 3,
+    "country": "Argentina",
+    "year": 2015
+  },
+  "federal university of santa catarina": {
+    "world_rank": 918,
+    "national_rank": 10,
+    "country": "Brazil",
+    "year": 2015
+  },
+  "national taiwan ocean university": {
+    "world_rank": 946,
+    "national_rank": 17,
+    "country": "Taiwan",
+    "year": 2015
+  },
+  "gazi university": {
+    "world_rank": 852,
+    "national_rank": 9,
+    "country": "Turkey",
+    "year": 2015
+  },
+  "national university of colombia": {
+    "world_rank": 968,
+    "national_rank": 2,
+    "country": "Colombia",
+    "year": 2015
+  },
+  "university of jaen": {
+    "world_rank": 935,
+    "national_rank": 37,
+    "country": "Spain",
+    "year": 2015
+  },
+  "bogazici university": {
+    "world_rank": 837,
+    "national_rank": 7,
+    "country": "Turkey",
+    "year": 2015
+  },
+  "jadavpur university": {
+    "world_rank": 923,
+    "national_rank": 15,
+    "country": "India",
+    "year": 2015
+  },
+  "pukyong national university": {
+    "world_rank": 898,
+    "national_rank": 33,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "university of western sydney": {
+    "world_rank": 882,
+    "national_rank": 26,
+    "country": "Australia",
+    "year": 2015
+  },
+  "northeastern university china": {
+    "world_rank": 871,
+    "national_rank": 55,
+    "country": "China",
+    "year": 2015
+  },
+  "university of mannheim": {
+    "world_rank": 902,
+    "national_rank": 55,
+    "country": "Germany",
+    "year": 2015
+  },
+  "university of osnabruck": {
+    "world_rank": 876,
+    "national_rank": 54,
+    "country": "Germany",
+    "year": 2015
+  },
+  "charles darwin university": {
+    "world_rank": 942,
+    "national_rank": 27,
+    "country": "Australia",
+    "year": 2015
+  },
+  "university of hyderabad": {
+    "world_rank": 925,
+    "national_rank": 16,
+    "country": "India",
+    "year": 2015
+  },
+  "northwest university china": {
+    "world_rank": 877,
+    "national_rank": 56,
+    "country": "China",
+    "year": 2015
+  },
+  "university of southern mississippi": {
+    "world_rank": 901,
+    "national_rank": 225,
+    "country": "USA",
+    "year": 2015
+  },
+  "university of wroc aw": {
+    "world_rank": 921,
+    "national_rank": 7,
+    "country": "Poland",
+    "year": 2015
+  },
+  "carlos iii university of madrid": {
+    "world_rank": 927,
+    "national_rank": 35,
+    "country": "Spain",
+    "year": 2015
+  },
+  "novosibirsk state university": {
+    "world_rank": 985,
+    "national_rank": 5,
+    "country": "Russia",
+    "year": 2015
+  },
+  "nanjing medical university": {
+    "world_rank": 886,
+    "national_rank": 58,
+    "country": "China",
+    "year": 2015
+  },
+  "nicolaus copernicus university in torun": {
+    "world_rank": 911,
+    "national_rank": 6,
+    "country": "Poland",
+    "year": 2015
+  },
+  "federal university of santa maria": {
+    "world_rank": 974,
+    "national_rank": 16,
+    "country": "Brazil",
+    "year": 2015
+  },
+  "chemnitz university of technology": {
+    "world_rank": 920,
+    "national_rank": 54,
+    "country": "Germany",
+    "year": 2014
+  },
+  "southwest university": {
+    "world_rank": 889,
+    "national_rank": 60,
+    "country": "China",
+    "year": 2015
+  },
+  "wroc aw university of technology": {
+    "world_rank": 944,
+    "national_rank": 8,
+    "country": "Poland",
+    "year": 2015
+  },
+  "university of california merced": {
+    "world_rank": 936,
+    "national_rank": 229,
+    "country": "USA",
+    "year": 2015
+  },
+  "united arab emirates university": {
+    "world_rank": 950,
+    "national_rank": 1,
+    "country": "United Arab Emirates",
+    "year": 2015
+  },
+  "federal university of sao carlos": {
+    "world_rank": 941,
+    "national_rank": 14,
+    "country": "Brazil",
+    "year": 2015
+  },
+  "university of thessaly": {
+    "world_rank": 905,
+    "national_rank": 7,
+    "country": "Greece",
+    "year": 2015
+  },
+  "university of basilicata": {
+    "world_rank": 922,
+    "national_rank": 47,
+    "country": "Italy",
+    "year": 2015
+  },
+  "feng chia university": {
+    "world_rank": 983,
+    "national_rank": 21,
+    "country": "Taiwan",
+    "year": 2015
+  },
+  "federal university of parana": {
+    "world_rank": 934,
+    "national_rank": 12,
+    "country": "Brazil",
+    "year": 2015
+  },
+  "university of almeria": {
+    "world_rank": 940,
+    "national_rank": 38,
+    "country": "Spain",
+    "year": 2015
+  },
+  "hallym university": {
+    "world_rank": 952,
+    "national_rank": 35,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "fourth military medical university": {
+    "world_rank": 899,
+    "national_rank": 62,
+    "country": "China",
+    "year": 2015
+  },
+  "university of the republic uruguay": {
+    "world_rank": 867,
+    "national_rank": 66,
+    "country": "Uruguay",
+    "year": 2015
+  },
+  "dokuz eylul university": {
+    "world_rank": 954,
+    "national_rank": 10,
+    "country": "Turkey",
+    "year": 2015
+  },
+  "nanjing university of aeronautics and astronautics": {
+    "world_rank": 895,
+    "national_rank": 61,
+    "country": "China",
+    "year": 2015
+  },
+  "public university of navarre": {
+    "world_rank": 959,
+    "national_rank": 39,
+    "country": "Spain",
+    "year": 2015
+  },
+  "university of a coruna": {
+    "world_rank": 999,
+    "national_rank": 40,
+    "country": "Spain",
+    "year": 2015
+  },
+  "isfahan university of technology": {
+    "world_rank": 914,
+    "national_rank": 5,
+    "country": "Iran",
+    "year": 2015
+  },
+  "university of new england australia": {
+    "world_rank": 811,
+    "national_rank": 22,
+    "country": "Australia",
+    "year": 2015
+  },
+  "federal university of pernambuco": {
+    "world_rank": 939,
+    "national_rank": 13,
+    "country": "Brazil",
+    "year": 2015
+  },
+  "jiangsu university": {
+    "world_rank": 947,
+    "national_rank": 66,
+    "country": "China",
+    "year": 2015
+  },
+  "third military medical university": {
+    "world_rank": 957,
+    "national_rank": 71,
+    "country": "China",
+    "year": 2015
+  },
+  "south china normal university": {
+    "world_rank": 924,
+    "national_rank": 64,
+    "country": "China",
+    "year": 2015
+  },
+  "university of limerick": {
+    "world_rank": 981,
+    "national_rank": 8,
+    "country": "Ireland",
+    "year": 2015
+  },
+  "xiangtan university": {
+    "world_rank": 949,
+    "national_rank": 68,
+    "country": "China",
+    "year": 2015
+  },
+  "yangzhou university": {
+    "world_rank": 943,
+    "national_rank": 65,
+    "country": "China",
+    "year": 2015
+  },
+  "northwestern polytechnical university": {
+    "world_rank": 948,
+    "national_rank": 67,
+    "country": "China",
+    "year": 2015
+  },
+  "university of reims champagne ardenne": {
+    "world_rank": 978,
+    "national_rank": 48,
+    "country": "France",
+    "year": 2015
+  },
+  "ibaraki university": {
+    "world_rank": 970,
+    "national_rank": 74,
+    "country": "Japan",
+    "year": 2015
+  },
+  "chung shan medical university": {
+    "world_rank": 967,
+    "national_rank": 18,
+    "country": "Taiwan",
+    "year": 2015
+  },
+  "alexandria university": {
+    "world_rank": 997,
+    "national_rank": 4,
+    "country": "Egypt",
+    "year": 2015
+  },
+  "yuan ze university": {
+    "world_rank": 979,
+    "national_rank": 20,
+    "country": "Taiwan",
+    "year": 2015
+  },
+  "university of cyprus": {
+    "world_rank": 928,
+    "national_rank": 1,
+    "country": "Cyprus",
+    "year": 2015
+  },
+  "university of silesia": {
+    "world_rank": 964,
+    "national_rank": 9,
+    "country": "Poland",
+    "year": 2015
+  },
+  "southern medical university": {
+    "world_rank": 963,
+    "national_rank": 72,
+    "country": "China",
+    "year": 2015
+  },
+  "shiraz university": {
+    "world_rank": 956,
+    "national_rank": 7,
+    "country": "Iran",
+    "year": 2015
+  },
+  "university of bucharest": {
+    "world_rank": 986,
+    "national_rank": 1,
+    "country": "Romania",
+    "year": 2015
+  },
+  "mansoura university": {
+    "world_rank": 988,
+    "national_rank": 3,
+    "country": "Egypt",
+    "year": 2015
+  },
+  "amirkabir university of technology": {
+    "world_rank": 958,
+    "national_rank": 8,
+    "country": "Iran",
+    "year": 2015
+  },
+  "beijing jiaotong university": {
+    "world_rank": 960,
+    "national_rank": 69,
+    "country": "China",
+    "year": 2014
+  },
+  "university of valenciennes and hainaut cambresis": {
+    "world_rank": 966,
+    "national_rank": 47,
+    "country": "France",
+    "year": 2015
+  },
+  "university of the algarve": {
+    "world_rank": 996,
+    "national_rank": 7,
+    "country": "Portugal",
+    "year": 2015
+  },
+  "university of chemistry and technology prague": {
+    "world_rank": 980,
+    "national_rank": 5,
+    "country": "Czech Republic",
+    "year": 2015
+  },
+  "federal university of ceara": {
+    "world_rank": 998,
+    "national_rank": 18,
+    "country": "Brazil",
+    "year": 2015
+  },
+  "ain shams university": {
+    "world_rank": 965,
+    "national_rank": 2,
+    "country": "Egypt",
+    "year": 2015
+  },
+  "university of oldenburg": {
+    "world_rank": 801,
+    "national_rank": 52,
+    "country": "Germany",
+    "year": 2015
+  },
+  "federal university of bahia": {
+    "world_rank": 992,
+    "national_rank": 17,
+    "country": "Brazil",
+    "year": 2015
+  },
+  "hunan normal university": {
+    "world_rank": 972,
+    "national_rank": 74,
+    "country": "China",
+    "year": 2015
+  },
+  "western michigan university": {
+    "world_rank": 969,
+    "national_rank": 229,
+    "country": "USA",
+    "year": 2014
+  },
+  "university of seoul": {
+    "world_rank": 860,
+    "national_rank": 30,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "federico santa maria technical university": {
+    "world_rank": 960,
+    "national_rank": 4,
+    "country": "Chile",
+    "year": 2015
+  },
+  "ryerson university": {
+    "world_rank": 994,
+    "national_rank": 33,
+    "country": "Canada",
+    "year": 2015
+  },
+  "south china agricultural university": {
+    "world_rank": 969,
+    "national_rank": 73,
+    "country": "China",
+    "year": 2015
+  },
+  "fu jen catholic university": {
+    "world_rank": 971,
+    "national_rank": 19,
+    "country": "Taiwan",
+    "year": 2015
+  },
+  "china pharmaceutical university": {
+    "world_rank": 1000,
+    "national_rank": 83,
+    "country": "China",
+    "year": 2015
+  },
+  "tarbiat modares university": {
+    "world_rank": 912,
+    "national_rank": 4,
+    "country": "Iran",
+    "year": 2015
+  },
+  "university of puerto rico at mayaguez": {
+    "world_rank": 962,
+    "national_rank": 1,
+    "country": "Puerto Rico",
+    "year": 2015
+  },
+  "national university of rosario": {
+    "world_rank": 978,
+    "national_rank": 4,
+    "country": "Argentina",
+    "year": 2014
+  },
+  "university of pau and pays de l adour": {
+    "world_rank": 989,
+    "national_rank": 49,
+    "country": "France",
+    "year": 2015
+  },
+  "xidian university": {
+    "world_rank": 991,
+    "national_rank": 81,
+    "country": "China",
+    "year": 2015
+  },
+  "zhejiang university of technology": {
+    "world_rank": 984,
+    "national_rank": 79,
+    "country": "China",
+    "year": 2015
+  },
+  "china medical university prc": {
+    "world_rank": 982,
+    "national_rank": 78,
+    "country": "China",
+    "year": 2015
+  },
+  "federal university of abc": {
+    "world_rank": 961,
+    "national_rank": 15,
+    "country": "Brazil",
+    "year": 2015
+  },
+  "king juan carlos university": {
+    "world_rank": 984,
+    "national_rank": 41,
+    "country": "Spain",
+    "year": 2014
+  },
+  "beijing university of technology": {
+    "world_rank": 977,
+    "national_rank": 77,
+    "country": "China",
+    "year": 2015
+  },
+  "guangxi university": {
+    "world_rank": 986,
+    "national_rank": 77,
+    "country": "China",
+    "year": 2014
+  },
+  "northwest a f university": {
+    "world_rank": 987,
+    "national_rank": 78,
+    "country": "China",
+    "year": 2014
+  },
+  "shanxi university": {
+    "world_rank": 988,
+    "national_rank": 79,
+    "country": "China",
+    "year": 2014
+  },
+  "tamkang university": {
+    "world_rank": 989,
+    "national_rank": 22,
+    "country": "Taiwan",
+    "year": 2014
+  },
+  "harbin medical university": {
+    "world_rank": 990,
+    "national_rank": 80,
+    "country": "China",
+    "year": 2014
+  },
+  "zhejiang normal university": {
+    "world_rank": 991,
+    "national_rank": 81,
+    "country": "China",
+    "year": 2014
+  },
+  "king abdulaziz university": {
+    "world_rank": 995,
+    "national_rank": 4,
+    "country": "Saudi Arabia",
+    "year": 2015
+  },
+  "iran university of science and technology": {
+    "world_rank": 993,
+    "national_rank": 8,
+    "country": "Iran",
+    "year": 2014
+  },
+  "i shou university": {
+    "world_rank": 994,
+    "national_rank": 23,
+    "country": "Taiwan",
+    "year": 2014
+  },
+  "university of maine le mans": {
+    "world_rank": 995,
+    "national_rank": 50,
+    "country": "France",
+    "year": 2014
+  },
+  "national dong hwa university": {
+    "world_rank": 996,
+    "national_rank": 24,
+    "country": "Taiwan",
+    "year": 2014
+  },
+  "national taipei university of technology": {
+    "world_rank": 997,
+    "national_rank": 25,
+    "country": "Taiwan",
+    "year": 2014
+  },
+  "shaanxi normal university": {
+    "world_rank": 998,
+    "national_rank": 82,
+    "country": "China",
+    "year": 2014
+  },
+  "national university of defense technology": {
+    "world_rank": 999,
+    "national_rank": 83,
+    "country": "China",
+    "year": 2014
+  },
+  "yanbian university": {
+    "world_rank": 1000,
+    "national_rank": 84,
+    "country": "China",
+    "year": 2014
+  },
+  "university of montpellier": {
+    "world_rank": 224,
+    "national_rank": 12,
+    "country": "France",
+    "year": 2015
+  },
+  "moscow institute of physics and technology": {
+    "world_rank": 250,
+    "national_rank": 2,
+    "country": "Russia",
+    "year": 2015
+  },
+  "university of bordeaux": {
+    "world_rank": 299,
+    "national_rank": 14,
+    "country": "France",
+    "year": 2015
+  },
+  "university of oklahoma health sciences center": {
+    "world_rank": 476,
+    "national_rank": 153,
+    "country": "USA",
+    "year": 2015
+  },
+  "renmin university of china": {
+    "world_rank": 496,
+    "national_rank": 27,
+    "country": "China",
+    "year": 2015
+  },
+  "ecole normale superieure de cachan": {
+    "world_rank": 721,
+    "national_rank": 32,
+    "country": "France",
+    "year": 2015
+  },
+  "national research nuclear university mephi": {
+    "world_rank": 755,
+    "national_rank": 4,
+    "country": "Russia",
+    "year": 2015
+  },
+  "jacobs university bremen": {
+    "world_rank": 787,
+    "national_rank": 50,
+    "country": "Germany",
+    "year": 2015
+  },
+  "ecole centrale de lyon": {
+    "world_rank": 881,
+    "national_rank": 45,
+    "country": "France",
+    "year": 2015
+  },
+  "hefei university of technology": {
+    "world_rank": 883,
+    "national_rank": 57,
+    "country": "China",
+    "year": 2015
+  },
+  "university of calcutta": {
+    "world_rank": 891,
+    "national_rank": 14,
+    "country": "India",
+    "year": 2015
+  },
+  "china university of geosciences wuhan": {
+    "world_rank": 904,
+    "national_rank": 63,
+    "country": "China",
+    "year": 2015
+  },
+  "university of lethbridge": {
+    "world_rank": 917,
+    "national_rank": 32,
+    "country": "Canada",
+    "year": 2015
+  },
+  "shahid beheshti university of medical sciences": {
+    "world_rank": 931,
+    "national_rank": 6,
+    "country": "Iran",
+    "year": 2015
+  },
+  "university of central lancashire": {
+    "world_rank": 938,
+    "national_rank": 65,
+    "country": "United Kingdom",
+    "year": 2015
+  },
+  "gachon university": {
+    "world_rank": 951,
+    "national_rank": 34,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "harbin engineering university": {
+    "world_rank": 953,
+    "national_rank": 69,
+    "country": "China",
+    "year": 2015
+  },
+  "ulsan national institute of science and technology": {
+    "world_rank": 973,
+    "national_rank": 36,
+    "country": "South Korea",
+    "year": 2015
+  },
+  "shenzhen university": {
+    "world_rank": 975,
+    "national_rank": 75,
+    "country": "China",
+    "year": 2015
+  },
+  "tianjin medical university": {
+    "world_rank": 976,
+    "national_rank": 76,
+    "country": "China",
+    "year": 2015
+  },
+  "babes bolyai university": {
+    "world_rank": 987,
+    "national_rank": 2,
+    "country": "Romania",
+    "year": 2015
+  },
+  "henan normal university": {
+    "world_rank": 990,
+    "national_rank": 80,
+    "country": "China",
+    "year": 2015
+  },
+  "southwest jiaotong university": {
+    "world_rank": 993,
+    "national_rank": 82,
+    "country": "China",
+    "year": 2015
+  }
+}

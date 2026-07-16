@@ -1,0 +1,22 @@
+{
+  "eter": {
+    "fetched_at": "2026-07-16T12:49:34.241Z",
+    "count": 3401,
+    "checksum": "fea1f3ee601fa4e5",
+    "ref_year": 2022,
+    "source_api": "https://eter-project.com/api/4.0/HEIs/query/flattened"
+  },
+  "global": {
+    "fetched_at": "2026-07-16T11:56:47.101Z",
+    "count": 10254,
+    "checksum": "a44536c06aab22bb",
+    "source_url": "https://raw.githubusercontent.com/Hipo/university-domains-list/master/world_universities_and_domains.json"
+  },
+  "rankings": {
+    "fetched_at": "2026-07-16T12:49:34.852Z",
+    "count": 1024,
+    "checksum": "f8c0d12828516aef",
+    "source_url": "https://raw.githubusercontent.com/arnaudbenard/university-ranking/master/cwurData.csv",
+    "provider": "CWUR"
+  }
+}
