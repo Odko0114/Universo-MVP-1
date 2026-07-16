@@ -1,6 +1,15 @@
 'use strict';
 
-const { test, after } = require('node:test');
+// NOTE: these tests back up/restore the REAL data/events.jsonl (lib/events.js
+// has no injectable file path). api.test.js starts the real server, which
+// writes to that same file on requests like registration. Node's test runner
+// runs separate files concurrently by default, so running this file at the
+// same time as api.test.js is a genuine race (whichever finishes last wins,
+// clobbering the other's backup/restore). `npm test` pins concurrency to 1
+// specifically because of this — don't re-parallelize without giving these
+// tests an isolated file path first.
+
+const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const events = require('../lib/events');

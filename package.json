@@ -13,7 +13,7 @@
     "import:rankings": "node scripts/import-rankings.js",
     "import:all": "node scripts/import-eter.js && node scripts/import-global.js && node scripts/import-rankings.js",
     "create-admin": "node scripts/create-admin.js",
-    "test": "node --test",
+    "test": "node --test --test-concurrency=1",
     "typecheck": "tsc -p jsconfig.json"
   },
   "keywords": [
