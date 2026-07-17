@@ -13,6 +13,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const express = require('express');
+const compression = require('compression');
 const bcrypt = require('bcryptjs');
 
 const cfg = require('./lib/config');
@@ -32,7 +33,10 @@ const { fetchWithResilience } = require('./lib/http');
 // ---------------------------------------------------------------------------
 // Storage bootstrap
 // ---------------------------------------------------------------------------
-store.init('universities', buildDataset());
+// Universities are DERIVED data (rebuilt from data/seed/* every boot) — use
+// initFresh so a stale copy on a persistent volume can never shadow updated
+// seed data after a deploy. Everything user-generated below uses init().
+store.initFresh('universities', buildDataset());
 store.init('students', []);
 store.init('admins', []);
 store.init('clicks', {});   // { universityId: count } — kept separate so a click
@@ -53,7 +57,18 @@ const clickOf = (id) => store.read('clicks')[id] || 0;
 // ---------------------------------------------------------------------------
 const app = express();
 app.set('trust proxy', true);
+app.use(compression()); // gzip/brotli — the filter/search JSON responses are big
 app.use(express.json({ limit: '16kb' }));
+
+// Baseline security headers (a CSP is deliberately omitted for now — the SPA
+// uses inline styles throughout, so a useful CSP needs a dedicated pass).
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  next();
+});
 
 // Request id + structured access log (no PII).
 app.use((req, res, next) => {
@@ -114,7 +129,10 @@ api.post('/auth/register', authLimiter, async (req, res) => {
   const students = store.read('students');
   students.push(student);
   store.write('students', students);
-  events.record('signup', { anon: req.anon });
+  // `src` attributes the signup to a CTA (landing hero, gate, nav…) — funnel
+  // attribution only, no PII. Whitelisted to a short slug.
+  const src = typeof req.body.src === 'string' ? req.body.src.slice(0, 24).replace(/[^a-z0-9_-]/gi, '') : '';
+  events.record('signup', { anon: req.anon, ...(src ? { src } : {}) });
   log.info('signup', { students: students.length }); // count only — never the email
 
   auth.setAuthCookie(res, student);
@@ -523,7 +541,9 @@ let sitemapCache = null; // dataset is static — build once
 app.get('/sitemap.xml', (req, res) => {
   const base = `${req.protocol}://${req.get('host')}`;
   if (!sitemapCache) {
-    const urls = ['', 'discover', ...UNIVERSITIES.map((u) => `university/${u.id}`)]
+    // /discover is login-gated (302 for crawlers) so it's deliberately absent;
+    // the landing page + the ~12.5k public profile pages are the SEO surface.
+    const urls = ['', ...UNIVERSITIES.map((u) => `university/${u.id}`)]
       .map((p) => `  <url><loc>${base}/${p}</loc></url>`).join('\n');
     sitemapCache = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
   }
@@ -553,14 +573,31 @@ app.get('/university/:id', (req, res) => {
 });
 
 // Marketing landing page. A returning student with a valid session skips
-// straight past the pitch into the app — no reason to re-sell them.
+// straight past the pitch into the app — no reason to re-sell them. The page
+// itself is static/no-JS, so its pageview is recorded HERE, server-side —
+// otherwise the top of the funnel would be invisible in analytics.
 app.get('/', (req, res) => {
   if (auth.loadStudent(req)) return res.redirect(302, '/discover');
+  events.record('pageview', {
+    anon: req.anon,
+    path: '/',
+    ref: refDomain(req),
+    lang: (req.get('Accept-Language') || '').split(',')[0].split(';')[0].trim().slice(0, 10),
+    device: /mobile/i.test(req.get('User-Agent') || '') ? 'mobile' : 'desktop',
+  });
   res.send(LANDING);
 });
 
-// Server-rendered directory (the actual search/browse tool).
+// The app proper requires an account: anonymous visitors get bounced to
+// sign-up (with a `next` so they land back here after). University profile
+// pages stay public — they're the shareable/SEO surface; the gate lives on
+// the interactive tool. Gate bounces are recorded so the funnel can show how
+// many visitors hit the wall vs. converted.
 app.get('/discover', (req, res) => {
+  if (!auth.loadStudent(req)) {
+    events.record('gate', { anon: req.anon, path: '/discover' });
+    return res.redirect(302, '/account?mode=register&src=gate&next=%2Fdiscover');
+  }
   const list = search.query(INDEX, { limit: 50 }, clickOf).universities;
   res.send(ssr.injectSSR(SHELL, {
     metaHtml: ssr.metaTags({

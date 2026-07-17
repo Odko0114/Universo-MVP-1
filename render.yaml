@@ -1,0 +1,27 @@
+# Render blueprint — one-click deploy with persistent storage.
+# In the Render dashboard: New → Blueprint → point at this repository.
+services:
+  - type: web
+    name: universo
+    runtime: node
+    plan: starter            # smallest paid tier; required for a persistent disk
+    buildCommand: npm ci
+    startCommand: node server.js
+    healthCheckPath: /healthz
+    # Persistent volume for runtime data (accounts, clicks, events, caches).
+    # Mounted OUTSIDE the repo tree so it can't shadow data/seed/* in the image.
+    disk:
+      name: universo-data
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: UNIVERSO_DATA_DIR
+        value: /var/data
+      - key: UNIVERSO_JWT_SECRET
+        generateValue: true    # Render generates a stable random secret once
+      # Set these two in the dashboard for first boot to create your admin
+      # account, then remove them (one-time bootstrap; see DEPLOYMENT.md):
+      # - key: ADMIN_EMAIL
+      # - key: ADMIN_PASSWORD

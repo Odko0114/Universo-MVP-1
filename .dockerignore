@@ -1,0 +1,22 @@
+node_modules
+.git
+.github
+test
+
+# Local runtime data — regenerated on the volume at boot, never shipped.
+data/*.json
+data/*.jsonl
+data/cache
+
+# Local env & workspace files
+.env
+*.log
+.DS_Store
+.claude
+
+# Business documents (kept out of the repo too — see .gitignore)
+*.pptx
+*.docx
+*.xlsx
+Presentations
+Finance

@@ -118,7 +118,7 @@ Universo/
 | Path | What it is |
 |------|------------|
 | `/` | Marketing landing page (`landing.html`, static). A visitor with a valid session is redirected straight to `/discover` — no re-selling returning students. |
-| `/discover` | The actual search/browse tool (server-rendered for SEO, then the SPA takes over). |
+| `/discover` | The actual search/browse tool — **requires an account** (anonymous visitors are redirected to sign-up with a `next` back-link; the bounce is recorded as a `gate` event). Server-rendered for logged-in students. |
 | `/university/:id` | Server-rendered profile page. |
 | `/saved`, `/account`, `/privacy` | SPA routes (client-rendered). `/account?mode=register` opens straight to the sign-up tab. |
 | `/admin` | Login-gated admin dashboard, entirely separate auth from student accounts. |
@@ -246,7 +246,12 @@ Or set `ADMIN_EMAIL` + `ADMIN_PASSWORD` in the environment before the **first** 
 | `NODE_ENV` | — | Set to `production` to require a stable secret and mark cookies `Secure`. |
 | `UNIVERSO_JWT_SECRET` | random per boot (dev) | **Required in production** (boot fails without it). A random dev secret signs everyone out on restart and can't be shared across instances. |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | — | If set and no admin exists yet, auto-creates one admin account on boot. Otherwise use `npm run create-admin -- email password`. |
+| `UNIVERSO_DATA_DIR` | `./data` | Where runtime data (accounts, clicks, events, caches) lives. In production, point at a **persistent volume outside the repo tree** — see [DEPLOYMENT.md](DEPLOYMENT.md). Seed data (`data/seed/*`) always ships with the code and is unaffected. |
 | `LOG_LEVEL` | `info` | `debug` \| `info` \| `warn` \| `error`. |
+
+## Deployment
+
+See **[DEPLOYMENT.md](DEPLOYMENT.md)** — a Render blueprint (`render.yaml`) and a `Dockerfile` are included; the only hard requirement is a persistent volume for `UNIVERSO_DATA_DIR`. The universities dataset is derived and rebuilt from seed files at every boot (`store.initFresh`), so deploys always serve current data while accounts and analytics persist on the volume.
 
 ## Architecture & the road to production
 

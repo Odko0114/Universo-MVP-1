@@ -4,23 +4,23 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0B1F3A" />
-  <title>Universo — Same Start. Equal Chance.</title>
-  <meta name="description" content="Search 12,000+ universities abroad, free. Compare tuition, programs and scholarships — with a focus on affordable, English-taught degrees in the EU. Real data, never sold." />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' rx='44' fill='%230B1F3A'/%3E%3Cpath fill='%23FFFFFF' d='M25 15 C5 55 30 130 100 180 C96 150 94 70 92 35 Z'/%3E%3Cpath fill='%23FFFFFF' d='M175 15 C195 55 170 130 100 180 C104 150 106 70 108 35 Z'/%3E%3C/svg%3E" />
+  <title>Universo — Study in Europe for less than you think</title>
+  <meta name="description" content="Create a free account and search 12,554 universities — including hundreds of English-taught EU programs under €6,000/year — with costs, scholarships and official apply links in one place." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' rx='44' fill='%230B1F3A'/%3E%3Cpath fill='%23FFFFFF' d='M14 34 C14 96 44 150 100 184 C96 128 94 66 92 12 C64 16 38 24 14 34 Z'/%3E%3Cpath fill='%23FFFFFF' d='M186 34 C186 96 156 150 100 184 C104 128 106 66 108 12 C136 16 162 24 186 34 Z'/%3E%3C/svg%3E" />
   <link rel="canonical" href="/" />
   <link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body class="lp-body">
 
-  <!-- Same header component as the app — this is deliberately the exact same
-       navy bar, logo and wordmark so the transition into the app feels seamless. -->
+  <!-- Same header component as the app — deliberately the exact same navy bar,
+       logo and wordmark so the transition into the product feels seamless. -->
   <header class="topbar" style="position:static">
     <div class="topbar__inner">
       <a class="brand" href="/" aria-label="Universo — Same Start. Equal Chance.">
         <span class="brand__mark" aria-hidden="true">
           <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-            <path fill="currentColor" d="M25 15 C5 55 30 130 100 180 C96 150 94 70 92 35 Z"/>
-            <path fill="currentColor" d="M175 15 C195 55 170 130 100 180 C104 150 106 70 108 35 Z"/>
+            <path fill="currentColor" d="M14 34 C14 96 44 150 100 184 C96 128 94 66 92 12 C64 16 38 24 14 34 Z"/>
+            <path fill="currentColor" d="M186 34 C186 96 156 150 100 184 C104 128 106 66 108 12 C136 16 162 24 186 34 Z"/>
           </svg>
         </span>
         <span class="brand__wordmark">
@@ -30,7 +30,7 @@
       </a>
       <nav class="lp-nav" aria-label="Primary">
         <a href="/account" class="lp-nav__link">Log in</a>
-        <a href="/account?mode=register" class="btn btn--gold btn--sm">Sign up free</a>
+        <a href="/account?mode=register&src=nav" class="btn btn--gold btn--sm">Sign up free</a>
       </nav>
     </div>
   </header>
@@ -38,49 +38,77 @@
   <main>
     <!-- ============ Hero ============ -->
     <section class="lp-hero">
-      <div class="lp-wrap">
-        <p class="hero__tagline" style="justify-content:center;display:flex">Same Start. Equal Chance.</p>
-        <h1 class="lp-hero__title">Find your university abroad — <span class="accent">without the guesswork</span></h1>
-        <p class="lp-hero__sub">Search and compare 12,000+ universities worldwide, free. We focus on affordable, English-taught degrees across the EU, with real data clearly flagged so you know what to trust.</p>
-        <div class="lp-hero__ctas">
-          <a href="/account?mode=register" class="btn btn--gold btn--block lp-cta">Get started — it's free</a>
-          <a href="/discover" class="btn btn--ghost-light btn--block lp-cta">Browse universities</a>
+      <div class="lp-wrap lp-hero__grid">
+        <div class="lp-hero__copy">
+          <p class="hero__tagline">Same Start. Equal Chance.</p>
+          <h1 class="lp-hero__title">Study in Europe for <span class="accent">less than you think</span></h1>
+          <p class="lp-hero__sub">A public university in Germany can cost less per year than a single month of US tuition. Universo puts 12,554 universities — costs, scholarships and official apply links — in one free account.</p>
+          <div class="lp-hero__ctas">
+            <a href="/account?mode=register&src=hero" class="btn btn--gold lp-cta">Create your free account</a>
+            <a href="/account?src=hero" class="btn btn--ghost-light lp-cta">Log in</a>
+          </div>
+          <ul class="lp-checklist" aria-label="Key benefits">
+            <li>✓ Free for students, always</li>
+            <li>✓ Estimates clearly flagged — nothing dressed up as verified</li>
+            <li>✓ Your data is never sold or sent to universities</li>
+          </ul>
         </div>
-        <ul class="lp-checklist" aria-label="Key benefits">
-          <li>✓ No cost to search, save or apply</li>
-          <li>✓ Real scholarship programs listed</li>
-          <li>✓ We never sell your data</li>
-        </ul>
+
+        <!-- Product mockup: a stylized mini-view of the actual directory,
+             built in pure HTML/CSS so it always matches the real UI. -->
+        <div class="lp-mock" aria-hidden="true">
+          <div class="lp-mock__window">
+            <div class="lp-mock__bar">
+              <span class="lp-mock__dot"></span><span class="lp-mock__dot"></span><span class="lp-mock__dot"></span>
+              <span class="lp-mock__pill">🇪🇺 Affordable · English-taught · EU</span>
+            </div>
+            <div class="lp-mock__card">
+              <div class="lp-mock__cover" style="background:linear-gradient(135deg,#0d3b4f,#14b8a6)"><span>Germany</span></div>
+              <div class="lp-mock__body">
+                <div class="lp-mock__name">Technical University of Munich</div>
+                <div class="lp-mock__chips"><span class="chip chip--rank">#101 world</span><span class="chip chip--gold">€0–6,000/yr</span><span class="chip">English</span></div>
+                <div class="lp-mock__match">Offers Master programs · EU member state · English-taught</div>
+              </div>
+            </div>
+            <div class="lp-mock__card">
+              <div class="lp-mock__cover" style="background:linear-gradient(135deg,#12294d,#0d9488)"><span>Netherlands</span></div>
+              <div class="lp-mock__body">
+                <div class="lp-mock__name">University of Twente</div>
+                <div class="lp-mock__chips"><span class="chip chip--gold">~€2,530/yr EU</span><span class="chip">English</span><span class="chip chip--plain">Enschede</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
     <!-- ============ Stats ============ -->
     <section class="lp-wrap lp-stats" aria-label="Platform statistics">
-      <div class="lp-stat"><div class="lp-stat__n">12,554</div><div class="lp-stat__l">Universities listed</div></div>
-      <div class="lp-stat"><div class="lp-stat__n">199</div><div class="lp-stat__l">Countries covered</div></div>
-      <div class="lp-stat"><div class="lp-stat__n">27</div><div class="lp-stat__l">EU countries in our niche</div></div>
-      <div class="lp-stat"><div class="lp-stat__n">€0</div><div class="lp-stat__l">Cost to students</div></div>
+      <div class="lp-stat"><div class="lp-stat__n">12,554</div><div class="lp-stat__l">Universities searchable</div></div>
+      <div class="lp-stat"><div class="lp-stat__n">27</div><div class="lp-stat__l">EU countries, one filter</div></div>
+      <div class="lp-stat"><div class="lp-stat__n">&lt;€6,000</div><div class="lp-stat__l">Typical EU public tuition/yr</div></div>
+      <div class="lp-stat"><div class="lp-stat__n">€0</div><div class="lp-stat__l">What students pay us</div></div>
     </section>
 
     <!-- ============ How it works ============ -->
     <section class="lp-wrap lp-section">
       <h2 class="lp-h2">How it works</h2>
-      <p class="lp-lede">Three steps between you and a shortlist you can trust.</p>
+      <p class="lp-lede">Three steps between you and a shortlist you can defend to your parents.</p>
       <div class="lp-steps">
         <div class="lp-step">
           <div class="lp-step__num">1</div>
-          <h3>Search &amp; filter</h3>
-          <p>Filter by country, budget, language and degree level — or let our matching engine suggest schools based on your profile.</p>
+          <h3>Tell us your profile</h3>
+          <p>Field of study, target degree, budget. Thirty seconds — and it powers everything that follows.</p>
         </div>
         <div class="lp-step">
           <div class="lp-step__num">2</div>
-          <h3>Compare &amp; save</h3>
-          <p>See tuition, living costs, programs and real scholarship options side by side. Save your shortlist to your account.</p>
+          <h3>Get matched &amp; compare</h3>
+          <p>We surface universities that fit you — with tuition, living costs and real scholarship programs, and every estimate labeled as one.</p>
         </div>
         <div class="lp-step">
           <div class="lp-step__num">3</div>
-          <h3>Apply with confidence</h3>
-          <p>Click through straight to each university's official application page — we never stand between you and the school.</p>
+          <h3>Apply direct — no middlemen</h3>
+          <p>One click to each university's official application page. No agents, no commissions, no lead-selling.</p>
         </div>
       </div>
     </section>
@@ -89,15 +117,14 @@
     <section class="lp-wrap lp-section">
       <div class="lp-niche">
         <div>
-          <span class="chip chip--gold" style="margin-bottom:10px;display:inline-block">🇪🇺 Our focus</span>
+          <span class="chip chip--gold" style="margin-bottom:10px;display:inline-block">🇪🇺 Our specialty</span>
           <h2 class="lp-h2" style="margin-top:0">Affordable, English-taught, in the EU</h2>
-          <p class="lp-lede" style="margin-bottom:16px">Studying in Europe can cost a fraction of the US or UK — if you know where to look. That's the gap we built Universo to close.</p>
+          <p class="lp-lede" style="margin-bottom:16px">Most students only hear about the US, UK and Australia — the three most expensive options. Meanwhile, public universities across 27 EU countries teach hundreds of full degrees in English for a fraction of the cost. Finding them is exactly what Universo is built for.</p>
           <ul class="lp-checklist lp-checklist--dark">
-            <li>✓ 27 EU member states, one filter away</li>
-            <li>✓ Public university tuition often under €6,000/year</li>
-            <li>✓ Thousands of English-taught programs</li>
+            <li>✓ One toggle filters all 27 EU member states</li>
+            <li>✓ Public tuition frequently €0–6,000 per year</li>
+            <li>✓ Erasmus Mundus, DAAD and national scholarships listed per country</li>
           </ul>
-          <a href="/discover" class="btn btn--primary" style="margin-top:18px">Explore the EU niche ↗</a>
         </div>
       </div>
     </section>
@@ -107,19 +134,19 @@
       <h2 class="lp-h2">Built to be trusted, not just used</h2>
       <div class="lp-trust">
         <div class="lp-trust__item">
-          <div class="lp-trust__icon">🔍</div>
+          <div class="lp-trust__icon"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/><path d="M8.5 11h5M11 8.5v5"/></svg></div>
           <h3>Honest about data</h3>
-          <p>Every estimate is clearly flagged as an estimate. We tell you exactly where each number came from and when it was last checked.</p>
+          <p>Every figure shows its source and an "as of" date. Estimates are marked "~estimate" — never dressed up as verified facts.</p>
         </div>
         <div class="lp-trust__item">
-          <div class="lp-trust__icon">🔒</div>
+          <div class="lp-trust__icon"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
           <h3>Privacy by default</h3>
-          <p>Your data is never sold. Export or permanently delete your account any time — including the anonymous activity linked to it.</p>
+          <p>We never sell your data or send it to universities. Export it or delete your account — including your activity trail — any time.</p>
         </div>
         <div class="lp-trust__item">
-          <div class="lp-trust__icon">🎯</div>
+          <div class="lp-trust__icon"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg></div>
           <h3>Matched to you</h3>
-          <p>Tell us your field, degree level and budget — we surface the universities that actually fit, not just an alphabetical list.</p>
+          <p>Your profile drives recommendations that explain themselves — "English-taught, EU, offers your Master's" — not a black box.</p>
         </div>
       </div>
     </section>
@@ -127,9 +154,9 @@
     <!-- ============ Final CTA ============ -->
     <section class="lp-final-cta">
       <div class="lp-wrap" style="text-align:center">
-        <h2 class="lp-h2" style="color:#fff">Ready to find your fit?</h2>
-        <p class="lp-lede" style="color:#c7d2e2">Join for free and start building your shortlist in minutes.</p>
-        <a href="/account?mode=register" class="btn btn--gold lp-cta" style="margin-top:8px">Get started — it's free</a>
+        <h2 class="lp-h2" style="color:#fff">Your shortlist is 30 seconds away</h2>
+        <p class="lp-lede" style="color:#c7d2e2">Create a free account and see which universities actually fit you.</p>
+        <a href="/account?mode=register&src=footer" class="btn btn--gold lp-cta" style="margin-top:8px">Create your free account</a>
       </div>
     </section>
   </main>
@@ -139,8 +166,8 @@
       <div class="brand">
         <span class="brand__mark" aria-hidden="true" style="color:var(--navy-900)">
           <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-            <path fill="currentColor" d="M25 15 C5 55 30 130 100 180 C96 150 94 70 92 35 Z"/>
-            <path fill="currentColor" d="M175 15 C195 55 170 130 100 180 C104 150 106 70 108 35 Z"/>
+            <path fill="currentColor" d="M14 34 C14 96 44 150 100 184 C96 128 94 66 92 12 C64 16 38 24 14 34 Z"/>
+            <path fill="currentColor" d="M186 34 C186 96 156 150 100 184 C104 128 106 66 108 12 C136 16 162 24 186 34 Z"/>
           </svg>
         </span>
         <span class="brand__wordmark">
@@ -148,8 +175,8 @@
         </span>
       </div>
       <nav class="lp-footer__links" aria-label="Footer">
-        <a href="/discover">Discover</a>
         <a href="/account">Log in</a>
+        <a href="/account?mode=register&src=footer-nav">Sign up</a>
         <a href="/privacy">Privacy</a>
       </nav>
       <p class="lp-footer__copy">© 2026 Universo. Same Start. Equal Chance.</p>

@@ -28,3 +28,11 @@ test('writeDebounced updates cache immediately; flushAll persists', () => {
   store.flushAll();
   assert.equal(JSON.parse(fs.readFileSync(file, 'utf8')).n, 3, 'flushed to disk');
 });
+
+test('initFresh always overwrites an existing file (derived collections)', () => {
+  fs.writeFileSync(file, JSON.stringify({ n: 'stale-from-old-deploy' }));
+  const v = store.initFresh(NAME, { n: 'fresh' });
+  assert.equal(v.n, 'fresh');
+  assert.equal(store.read(NAME).n, 'fresh');
+  assert.equal(JSON.parse(fs.readFileSync(file, 'utf8')).n, 'fresh', 'stale on-disk copy replaced');
+});

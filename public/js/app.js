@@ -23,10 +23,48 @@
     String(name || '').replace(/\b(The|University|of|and|de|di|du|College)\b/gi, '')
       .trim().split(/\s+/).slice(0, 2).map((w) => w[0] || '').join('').toUpperCase() || 'U';
 
+  // Card cover fallbacks: a fixed set of brand-adjacent gradients (navy/teal/
+  // deep tones) picked deterministically per university. Replaces the old
+  // random-hue generator, which produced muddy browns/purples that made the
+  // directory look like a database dump rather than one designed product.
+  const COVERS = [
+    ['#0B1F3A', '#14528a'], ['#0d3b4f', '#14b8a6'], ['#12294d', '#0d9488'],
+    ['#1b3a66', '#2a6f97'], ['#0B1F3A', '#3a5a8c'], ['#123f3a', '#0f766e'],
+    ['#1e3a5f', '#468faf'], ['#0f2e4d', '#1a7f8c'],
+  ];
   function gradient(seed) {
     let h = 0;
-    for (let i = 0; i < String(seed).length; i++) h = (h * 31 + seed.charCodeAt(i)) % 360;
-    return `linear-gradient(135deg, hsl(${h} 45% 32%), hsl(${(h + 40) % 360} 55% 22%))`;
+    for (let i = 0; i < String(seed).length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+    const [a, b] = COVERS[h % COVERS.length];
+    return `linear-gradient(135deg, ${a}, ${b})`;
+  }
+
+  // Inline SVG icons (stroke follows currentColor) — replaces the raw emoji
+  // that made empty states and section markers read as placeholders.
+  const ICONS = {
+    search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+    bookmark: '<path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z"/>',
+    lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+    user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/>',
+    alert: '<path d="M12 3 2 21h20L12 3z"/><path d="M12 10v5"/><circle cx="12" cy="18" r=".5"/>',
+    spark: '<path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.5 2.5M16.5 16.5 19 19M19 5l-2.5 2.5M7.5 16.5 5 19"/>',
+  };
+  const icon = (name, size = 44) =>
+    `<svg class="icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ''}</svg>`;
+
+  // Consistent, designed empty/locked/error states (previously a lone emoji
+  // floating in whitespace).
+  function emptyState({ iconName, title, sub, ctaHref, ctaLabel, secondary }) {
+    return `
+      <div class="empty-card">
+        <div class="empty-card__icon">${icon(iconName)}</div>
+        <h3>${esc(title)}</h3>
+        ${sub ? `<p class="muted">${esc(sub)}</p>` : ''}
+        <div class="empty-card__actions">
+          ${ctaHref ? `<a class="btn btn--primary" href="${esc(ctaHref)}">${esc(ctaLabel)}</a>` : ''}
+          ${secondary || ''}
+        </div>
+      </div>`;
   }
 
   function domainOf(u) {
@@ -119,8 +157,9 @@
     return `
       <article class="uni-card">
         <a class="uni-card__cover" href="/university/${esc(u.id)}" style="background:${gradient(u.id)}" aria-label="${esc(u.name)}">
+          ${u.source === 'curated' ? '<span class="uni-card__tier">★ Curated</span>' : ''}
           <span class="uni-card__badge">${esc(u.country)}</span>
-          <span class="uni-card__loc">📍 ${esc(u.city || u.country)}</span>
+          <span class="uni-card__loc">${esc(u.city || u.country)}</span>
         </a>
         <div class="uni-card__body">
           <div class="uni-card__title">
@@ -140,14 +179,34 @@
       </article>`;
   }
 
+  // Reflect a save/unsave on every visible button for that university WITHOUT
+  // re-rendering the page — a full render() here reset the scroll position, so
+  // saving something mid-list yanked the user back to the top.
+  function paintSaveButtons(id) {
+    const saved = state.savedIds.has(id);
+    document.querySelectorAll(`[data-save="${CSS.escape(id)}"]`).forEach((b) => {
+      b.classList.toggle('btn--saved', saved);
+      b.classList.toggle('btn--primary', !saved && b.classList.contains('btn--sm'));
+      b.classList.toggle('btn--ghost', !saved && !b.classList.contains('btn--sm'));
+      b.innerHTML = saved ? '🔖 Saved' : '＋ Save';
+      b.disabled = false;
+    });
+  }
+
   async function handleSaveClick(id, btn) {
-    if (!state.user) { toast('Sign in to save universities', true); go('/account'); return; }
+    if (!state.user) {
+      toast('Create a free account to save universities', true);
+      go(`/account?mode=register&next=${encodeURIComponent(location.pathname)}`);
+      return;
+    }
     const wasSaved = state.savedIds.has(id);
     btn.disabled = true;
     try {
       if (wasSaved) { await API.unsave(id); state.savedIds.delete(id); toast('Removed from saved'); }
       else { await API.save(id); state.savedIds.add(id); toast('Saved to your list'); }
-      render();
+      paintSaveButtons(id);
+      // Only the Saved list actually changes shape when an item is removed.
+      if (location.pathname.startsWith('/saved')) render();
     } catch (e) { toast(e.message, true); btn.disabled = false; }
   }
 
@@ -160,6 +219,9 @@
   // Views
   // =========================================================================
   async function renderDiscover() {
+    // The app requires an account (mirrors the server-side gate on /discover,
+    // for SPA navigations that never hit the server route).
+    if (!state.user) { navigate('/account?mode=register&src=gate&next=%2Fdiscover', true); return; }
     setActiveNav('discover');
     document.title = 'Discover universities abroad — Universo';
     const d = state.discover;
@@ -273,7 +335,17 @@
       countEl.textContent = `${nfmt(res.count)} ${res.count === 1 ? 'university' : 'universities'}`;
       box.innerHTML = state.results.items.length
         ? state.results.items.map(uniCard).join('')
-        : `<div class="empty" style="grid-column:1/-1"><div class="empty__emoji">🔍</div><h3>No matches</h3><p class="muted">Try clearing a filter or a different term.</p></div>`;
+        : `<div style="grid-column:1/-1">${emptyState({
+            iconName: 'search',
+            title: 'No matches for that combination',
+            sub: 'Try a broader search term, or clear one of the active filters.',
+            secondary: '<button class="btn btn--ghost" id="empty-clear">Clear all filters</button>',
+          })}</div>`;
+      const emptyClear = document.getElementById('empty-clear');
+      if (emptyClear) emptyClear.addEventListener('click', () => {
+        state.discover = { q: '', country: '', region: '', type: '', field: '', language: '', degree: '', maxTuition: '', sort: 'name' };
+        renderDiscover();
+      });
 
       moreWrap.innerHTML = state.results.hasMore
         ? `<button class="btn btn--ghost" id="load-more">Load more (${nfmt(state.results.total - state.results.items.length)} more)</button>`
@@ -282,22 +354,29 @@
       if (moreBtn) moreBtn.addEventListener('click', () => { state.results.offset += PAGE_SIZE; loadResults(false); });
     } catch (e) {
       countEl.textContent = '';
-      box.innerHTML = `<div class="empty" style="grid-column:1/-1"><p class="muted">${esc(e.message)}</p></div>`;
+      box.innerHTML = `<div style="grid-column:1/-1">${emptyState({ iconName: 'alert', title: 'Something went wrong loading results', sub: e.message })}</div>`;
     }
   }
 
   async function renderSaved() {
+    if (!state.user) { navigate('/account?src=gate&next=%2Fsaved', true); return; }
     setActiveNav('saved');
     document.title = 'Saved — Universo';
-    if (!state.user) { view.innerHTML = authPrompt('Sign in to see your saved universities', 'Your shortlist is tied to your account.'); return; }
     view.innerHTML = `<div class="section-head"><h2>Saved universities</h2></div><div id="results" class="grid">${'<div class="skeleton"></div>'.repeat(3)}</div>`;
     try {
       const { universities } = await API.saved();
       state.savedIds = new Set(universities.map((u) => u.id));
       document.getElementById('results').innerHTML = universities.length
         ? universities.map(uniCard).join('')
-        : `<div class="empty" style="grid-column:1/-1"><div class="empty__emoji">🔖</div><h3>No saved universities yet</h3><p class="muted">Tap “Save” on any university to build your shortlist.</p><a class="btn btn--primary" href="/discover" style="margin-top:12px">Browse universities</a></div>`;
-    } catch (e) { view.innerHTML = `<div class="empty"><p class="muted">${esc(e.message)}</p></div>`; }
+        : `<div style="grid-column:1/-1">${emptyState({
+            iconName: 'bookmark',
+            title: 'Your shortlist is empty',
+            sub: 'Tap “Save” on any university to start comparing your options side by side.',
+            ctaHref: '/discover', ctaLabel: 'Browse universities',
+          })}</div>`;
+    } catch (e) {
+      view.innerHTML = emptyState({ iconName: 'alert', title: 'Couldn’t load your saved list', sub: e.message, ctaHref: '/discover', ctaLabel: 'Back to discover' });
+    }
   }
 
   async function renderProfile(id) {
@@ -305,7 +384,10 @@
     view.innerHTML = `<div class="skeleton" style="height:320px"></div>`;
     let u;
     try { ({ university: u } = await API.university(id)); }
-    catch (e) { view.innerHTML = `<a class="back-link" href="/discover">← Back</a><div class="empty"><h3>${esc(e.message)}</h3></div>`; return; }
+    catch (e) {
+      view.innerHTML = `<a class="back-link" href="/discover">← Back</a>${emptyState({ iconName: 'alert', title: 'University not found', sub: e.message, ctaHref: '/discover', ctaLabel: 'Back to discover' })}`;
+      return;
+    }
 
     trackProfileView(u.id);
     document.title = `${u.name} — Universo`;
@@ -375,6 +457,12 @@
         <button class="btn btn--gold" id="apply-btn">Apply Now ↗</button>
       </div>
 
+      ${state.user ? '' : `
+        <div class="signup-nudge">
+          <div><strong>Comparing schools?</strong> Create a free account to save this university, get matched to programs that fit you, and search all 12,000+.</div>
+          <a class="btn btn--primary btn--sm" href="/account?mode=register&src=profile&next=${encodeURIComponent('/university/' + u.id)}">Sign up free</a>
+        </div>`}
+
       ${u.data_verified ? '' : `<div class="verify-flag"><span>⚠️</span><span>${banner}</span></div>`}
       <div class="info-card"><h3>Overview</h3><p id="overview-text" style="margin:0;color:var(--ink-soft)">${esc(u.short_description || '')}</p></div>
       ${facts.length ? `<div class="info-card"><h3>Key facts</h3><div class="info-grid">${factCards}</div>${(u.tuition_range && u.tuition_range.estimated) || u.language_estimated ? '<p class="muted" style="margin:10px 0 0;font-size:.82rem">~ / “est.” / “typical” = <strong>country-level estimate</strong>, not verified per-university. Confirm with the university.</p>' : ''}</div>` : ''}
@@ -424,14 +512,17 @@
   }
 
   // ---- account ------------------------------------------------------------
-  function authPrompt(title, sub) {
-    return `<div class="empty"><div class="empty__emoji">🔒</div><h3>${esc(title)}</h3><p class="muted">${esc(sub)}</p><a class="btn btn--primary" href="/account" style="margin-top:12px">Go to account</a></div>`;
-  }
+  // Where to send the user after auth + which CTA brought them here (funnel
+  // attribution). Captured from the URL when the account page renders.
+  let authCtx = { next: '', src: '' };
 
   function renderAccount(initialMode) {
     setActiveNav('account');
     document.title = 'Account — Universo';
     if (state.user) return renderAccountLoggedIn();
+    const params = new URLSearchParams(location.search);
+    const next = params.get('next') || '';
+    authCtx = { next: next.startsWith('/') ? next : '', src: params.get('src') || '' };
     renderAuthForms(initialMode === 'register' ? 'register' : 'login');
   }
 
@@ -488,18 +579,38 @@
   function renderAuthForms(mode) {
     setActiveNav('account');
     const isLogin = mode === 'login';
+    // The gate message explains WHY the visitor landed here instead of the
+    // page they clicked toward — a silent bounce reads as a broken link.
+    const gateNote = authCtx.src === 'gate'
+      ? `<div class="auth-gate-note">${icon('lock', 16)} <span>Universo is free — create an account (or log in) to start exploring universities.</span></div>`
+      : '';
     view.innerHTML = `
-      <div class="card">
-        <div class="tabs"><button class="${isLogin ? 'is-active' : ''}" data-mode="login">Log in</button><button class="${!isLogin ? 'is-active' : ''}" data-mode="register">Sign up</button></div>
-        <div id="auth-error" class="form-error" hidden></div>
-        ${isLogin ? loginForm() : registerForm()}
+      <div class="auth-card">
+        <div class="auth-card__brand">
+          <span class="brand__mark" aria-hidden="true">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+              <path fill="currentColor" d="M14 34 C14 96 44 150 100 184 C96 128 94 66 92 12 C64 16 38 24 14 34 Z"/>
+              <path fill="currentColor" d="M186 34 C186 96 156 150 100 184 C104 128 106 66 108 12 C136 16 162 24 186 34 Z"/>
+            </svg>
+          </span>
+          <div>
+            <div class="auth-card__name">Universo</div>
+            <div class="auth-card__tag">Same Start. Equal Chance.</div>
+          </div>
+        </div>
+        <div class="card auth-card__body">
+          ${gateNote}
+          <div class="tabs"><button class="${isLogin ? 'is-active' : ''}" data-mode="login">Log in</button><button class="${!isLogin ? 'is-active' : ''}" data-mode="register">Sign up</button></div>
+          <div id="auth-error" class="form-error" hidden></div>
+          ${isLogin ? loginForm() : registerForm()}
+        </div>
       </div>`;
     view.querySelectorAll('[data-mode]').forEach((b) => b.addEventListener('click', () => renderAuthForms(b.dataset.mode)));
     if (isLogin) wireLogin(); else wireRegister();
   }
 
   function loginForm() {
-    return `<h2>Welcome back</h2><p class="muted" style="margin-top:0">Log in to access your saved universities.</p>
+    return `<h2>Welcome back</h2><p class="muted" style="margin-top:0">Log in to pick up your shortlist where you left off.</p>
       <form id="login-form">
         <div class="form-group"><label>Email</label><input type="email" name="email" required autocomplete="email" /></div>
         <div class="form-group"><label>Password</label><input type="password" name="password" required autocomplete="current-password" /></div>
@@ -508,7 +619,7 @@
   }
 
   function registerForm() {
-    return `<h2>Create your account</h2><p class="muted" style="margin-top:0">Save universities and build your shortlist.</p>
+    return `<h2>Create your free account</h2><p class="muted" style="margin-top:0">Search 12,000+ universities, save a shortlist, and get matches for your profile.</p>
       <form id="register-form">
         <div class="form-group"><label>Full name *</label><input type="text" name="full_name" required autocomplete="name" /></div>
         <div class="form-group"><label>Email *</label><input type="email" name="email" required autocomplete="email" /></div>
@@ -518,6 +629,7 @@
         <div class="form-group"><label>Target degree level</label><select name="target_degree_level"><option value="">Select…</option><option>Bachelor</option><option>Master</option><option>PhD</option></select></div>
         <div class="form-group"><label class="consent"><input type="checkbox" name="consent" /><span>I have read and accept the <a href="/privacy">privacy policy</a>, and consent to Universo storing my account data. *</span></label></div>
         <button class="btn btn--primary btn--block" type="submit" id="register-submit">Create account</button>
+        <p class="muted auth-fineprint">Free for students, always. We never sell your data.</p>
       </form>`;
   }
 
@@ -527,7 +639,8 @@
     state.user = data.student;
     state.savedIds = new Set(data.student.saved_universities || []);
     toast(`Welcome, ${data.student.full_name.split(' ')[0]}!`);
-    go('/discover');
+    go(authCtx.next || '/discover');
+    authCtx = { next: '', src: '' };
   }
 
   function wireLogin() {
@@ -555,6 +668,7 @@
           full_name: fd.get('full_name'), email: fd.get('email'), password: fd.get('password'),
           country_of_origin: fd.get('country_of_origin'), field_of_interest: fd.get('field_of_interest'),
           target_degree_level: fd.get('target_degree_level'), consent: fd.get('consent') === 'on',
+          src: authCtx.src || undefined,
         }));
       } catch (err) { showAuthError(err.message); btn.disabled = false; btn.textContent = 'Create account'; }
     });
@@ -606,7 +720,12 @@
 
   function showCrash(e) {
     console.error(e);
-    view.innerHTML = `<div class="empty"><div class="empty__emoji">😵</div><h3>Something went wrong</h3><p class="muted">${esc(e && e.message || 'Unexpected error')}</p><a class="btn btn--primary" href="/discover" style="margin-top:12px">Back to discover</a></div>`;
+    view.innerHTML = emptyState({
+      iconName: 'alert',
+      title: 'Something went wrong',
+      sub: (e && e.message) || 'Unexpected error',
+      ctaHref: '/discover', ctaLabel: 'Back to discover',
+    });
   }
 
   async function boot() {

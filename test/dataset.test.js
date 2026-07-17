@@ -2,7 +2,23 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { mergeSources, hostKey } = require('../lib/dataset');
+const { mergeSources, hostKey, cleanName, describeEter } = require('../lib/dataset');
+
+test('cleanName strips registry quote artifacts', () => {
+  assert.equal(cleanName('"Agora" University of Oradea'), 'Agora University of Oradea');
+  assert.equal(cleanName('“Aldent” University'), 'Aldent University');
+  assert.equal(cleanName('Plain University'), 'Plain University');
+});
+
+test('describeEter builds a human sentence from register fields', () => {
+  const s = describeEter({ legal_status: 'Public', institution_type: 'University', city: 'Oradea', country: 'Romania', founded: 2012, student_count: 775 });
+  assert.equal(s, 'A public university in Oradea, Romania, established 2012. Home to around 775 students.');
+});
+
+test('describeEter degrades gracefully with sparse fields', () => {
+  const s = describeEter({ institution_type: 'Other institution', city: 'Tirana', country: 'Albania' });
+  assert.match(s, /higher-education institution in Tirana, Albania\./);
+});
 
 test('hostKey normalizes protocol and www', () => {
   assert.equal(hostKey({ website: 'https://www.TUM.de/en/apply' }), 'tum.de');

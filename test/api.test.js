@@ -60,11 +60,29 @@ test('GET / serves the marketing landing page for anonymous visitors', async () 
   assert.match(r.text, /Sign up free/);
 });
 
-test('GET /discover is server-rendered with the directory, title and canonical', async () => {
+test('GET /discover bounces anonymous visitors to sign-up (the app is account-gated)', async () => {
+  const res = await fetch(base + '/discover', { redirect: 'manual' });
+  assert.equal(res.status, 302);
+  assert.match(res.headers.get('location'), /^\/account\?mode=register/);
+});
+
+test('GET /discover is server-rendered for a logged-in student', async () => {
+  const email = `disc_${Date.now()}@example.com`;
+  const reg = await req('POST', '/api/auth/register', { full_name: 'Discover Test', email, password: 'password123', consent: true });
+  assert.equal(reg.status, 201);
+
   const r = await req('GET', '/discover');
   assert.match(r.text, /<title>Discover universities abroad/);
   assert.match(r.text, /rel="canonical"/);
-  assert.match(r.text, /Discover universities abroad/);
+
+  await req('DELETE', '/api/me'); // clean up
+});
+
+test('university profile pages stay public for anonymous visitors (SEO surface)', async () => {
+  const anyId = (await req('GET', '/api/universities?limit=1')).json.universities[0].id;
+  const res = await fetch(`${base}/university/${anyId}`); // no cookies
+  assert.equal(res.status, 200);
+  assert.match(await res.text(), /rel="canonical"/);
 });
 
 test('a logged-in visitor hitting / is redirected straight into the app', async () => {
