@@ -52,6 +52,16 @@ const BY_ID = new Map(UNIVERSITIES.map((u) => [u.id, u]));
 
 const clickOf = (id) => store.read('clicks')[id] || 0;
 
+// Cached cover photo (never triggers a fresh Wikipedia lookup — reads only
+// what /photo has already resolved and cached). Lets card grids show real
+// photos progressively as profiles get viewed, without a lookup stampede on
+// every search. `withPhoto` is applied everywhere a card list is returned.
+const photoOf = (id) => {
+  const p = store.read('photos')[id];
+  return p && !p.none ? p.photo_url || null : null;
+};
+const withPhoto = (u) => ({ ...u, cover_photo_url: photoOf(u.id) });
+
 // ---------------------------------------------------------------------------
 // App + global middleware
 // ---------------------------------------------------------------------------
@@ -175,6 +185,7 @@ api.get('/universities/filters', (_req, res) => res.json(FILTERS));
 
 api.get('/universities', (req, res) => {
   const result = search.query(INDEX, req.query, clickOf);
+  result.universities = result.universities.map(withPhoto);
   const q = String(req.query.q || '').trim();
   if (q) {
     events.record('search', { anon: req.anon, results: result.count, q: q.slice(0, 80) });
@@ -185,7 +196,7 @@ api.get('/universities', (req, res) => {
 api.get('/universities/:id', (req, res) => {
   const uni = BY_ID.get(req.params.id);
   if (!uni) return res.status(404).json({ error: 'University not found.' });
-  res.json({ university: { ...uni, click_count: clickOf(uni.id) } });
+  res.json({ university: withPhoto({ ...uni, click_count: clickOf(uni.id) }) });
 });
 
 // Anonymous Apply-Now click — bumps a counter in the separate clicks store and
@@ -289,20 +300,10 @@ async function lookupAttribution(photoUrl) {
   } catch { return { artist: 'Wikimedia Commons', license: '', source: '' }; }
 }
 
-api.get('/universities/:id/photo', photoLimiter, async (req, res) => {
-  const uni = BY_ID.get(req.params.id);
-  if (!uni) return res.status(404).json({ error: 'University not found.' });
-
-  const reply = (c, cached) => res.json({
-    photo_url: c.none ? null : (c.photo_url || null),
-    attribution: c.attribution || null,
-    extract: c.extract || null,
-    cached,
-  });
-
-  const cache = store.read('photos');
-  if (cache[uni.id]) return reply(cache[uni.id], true);
-
+// Resolve + cache a university's photo (shared by the endpoint below and the
+// curated-universities prewarm at boot). Dedupes concurrent lookups for the
+// same id via photoInflight.
+function resolvePhoto(uni) {
   if (!photoInflight.has(uni.id)) {
     photoInflight.set(uni.id, (async () => {
       let found = await lookupWikipedia(uni.name).catch(() => null);
@@ -317,14 +318,43 @@ api.get('/universities/:id/photo', photoLimiter, async (req, res) => {
       return entry;
     })().finally(() => photoInflight.delete(uni.id)));
   }
+  return photoInflight.get(uni.id);
+}
+
+api.get('/universities/:id/photo', photoLimiter, async (req, res) => {
+  const uni = BY_ID.get(req.params.id);
+  if (!uni) return res.status(404).json({ error: 'University not found.' });
+
+  const reply = (c, cached) => res.json({
+    photo_url: c.none ? null : (c.photo_url || null),
+    attribution: c.attribution || null,
+    extract: c.extract || null,
+    cached,
+  });
+
+  const cache = store.read('photos');
+  if (cache[uni.id]) return reply(cache[uni.id], true);
 
   try {
-    reply(await photoInflight.get(uni.id), false);
+    reply(await resolvePhoto(uni), false);
   } catch (e) {
     log.captureError(e, { where: 'photo', uni: uni.id });
     res.json({ photo_url: null, attribution: null, extract: null, cached: false });
   }
 });
+
+// Pre-warm photos for the curated (flagship, most-viewed) universities so
+// their cards show real photos from the first grid load, not only after
+// someone happens to open the profile. Bounded (~40 lookups), sequential with
+// a small delay to be a polite Wikipedia client, entirely non-blocking.
+async function warmCuratedPhotos() {
+  const targets = UNIVERSITIES.filter((u) => u.source === 'curated' && !store.read('photos')[u.id]);
+  for (const uni of targets) {
+    try { await resolvePhoto(uni); } catch { /* best effort */ }
+    await new Promise((r) => setTimeout(r, 150));
+  }
+  if (targets.length) log.info('curated photo prewarm complete', { count: targets.length });
+}
 
 // Logo proxy + on-disk cache (avoids hotlinking a third-party favicon host and
 // lets us fall back server-side). Frontend <img> points here; 404 → initials.
@@ -364,7 +394,7 @@ api.get('/me/saved', auth.requireAuth, (req, res) => {
   const saved = req.student.saved_universities
     .map((id) => BY_ID.get(id))
     .filter(Boolean)
-    .map((u) => ({ ...u, click_count: clickOf(u.id) }));
+    .map((u) => withPhoto({ ...u, click_count: clickOf(u.id) }));
   res.json({ count: saved.length, universities: saved });
 });
 
@@ -396,7 +426,7 @@ api.get('/me/recommendations', auth.requireAuth, (req, res) => {
   const limit = Math.min(24, Math.max(1, parseInt(String(req.query.limit || ''), 10) || 6));
   const excludeIds = new Set(req.student.saved_universities || []);
   const results = match.recommend(req.student, UNIVERSITIES, { limit, excludeIds })
-    .map((u) => ({ ...u, click_count: clickOf(u.id) }));
+    .map((u) => withPhoto({ ...u, click_count: clickOf(u.id) }));
   res.json({ universities: results });
 });
 
@@ -627,6 +657,7 @@ if (require.main === module) {
     log.info('listening', { url: `http://localhost:${cfg.PORT}`, universities: UNIVERSITIES.length });
     process.stdout.write(`\n  Universo → http://localhost:${cfg.PORT}   (admin: /admin)\n  ${UNIVERSITIES.length.toLocaleString('en-US')} universities loaded\n\n`);
   });
+  if (!process.env.SKIP_PHOTO_PREWARM) warmCuratedPhotos().catch((e) => log.warn('photo prewarm failed', { error: e.message }));
 
   let shuttingDown = false;
   async function shutdown(signal) {

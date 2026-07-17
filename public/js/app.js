@@ -152,11 +152,23 @@
     return chips.join('');
   }
 
+  // Real cached photo when the server has already resolved one (never
+  // triggers a fresh lookup from the grid — see server.js `withPhoto`), a
+  // subtle building glyph over the brand gradient otherwise, so a missing
+  // photo reads as a deliberate placeholder rather than a broken image.
+  function coverStyle(u) {
+    return u.cover_photo_url
+      ? `background:linear-gradient(rgba(11,31,58,.15),rgba(11,31,58,.55)),url('${esc(u.cover_photo_url)}') center/cover no-repeat`
+      : `background:${gradient(u.id)}`;
+  }
+  const PLACEHOLDER_GLYPH = '<svg class="uni-card__glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M3 21h18M4 21V9l8-5 8 5v12M9 21v-6h6v6"/></svg>';
+
   function uniCard(u) {
     const saved = state.savedIds.has(u.id);
     return `
       <article class="uni-card">
-        <a class="uni-card__cover" href="/university/${esc(u.id)}" style="background:${gradient(u.id)}" aria-label="${esc(u.name)}">
+        <a class="uni-card__cover" href="/university/${esc(u.id)}" style="${coverStyle(u)}" aria-label="${esc(u.name)}">
+          ${!u.cover_photo_url ? PLACEHOLDER_GLYPH : ''}
           ${u.source === 'curated' ? '<span class="uni-card__tier">★ Curated</span>' : ''}
           <span class="uni-card__badge">${esc(u.country)}</span>
           <span class="uni-card__loc">${esc(u.city || u.country)}</span>

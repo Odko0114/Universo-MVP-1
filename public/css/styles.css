@@ -670,3 +670,12 @@ img { max-width: 100%; display: block; }
   .lp-hero__grid .lp-hero__ctas { justify-content: flex-start; margin-left: 0; }
   .lp-hero__grid .lp-checklist { align-items: flex-start; }
 }
+
+/* Card cover: subtle placeholder glyph when no real photo is cached yet,
+   so the flat gradient reads as a deliberate design choice, not a bug. */
+.uni-card__glyph {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 34px; height: 34px; color: rgba(255,255,255,0.28);
+  pointer-events: none;
+}
+.uni-card__cover { position: relative; }
