@@ -53,10 +53,30 @@ test('GET /api/universities/filters returns facets', async () => {
   assert.ok(r.json.institution_types.length >= 1);
 });
 
-test('GET / is server-rendered with a <title> and canonical', async () => {
+test('GET / serves the marketing landing page for anonymous visitors', async () => {
   const r = await req('GET', '/');
+  assert.equal(r.status, 200);
   assert.match(r.text, /<title>Universo/);
+  assert.match(r.text, /Sign up free/);
+});
+
+test('GET /discover is server-rendered with the directory, title and canonical', async () => {
+  const r = await req('GET', '/discover');
+  assert.match(r.text, /<title>Discover universities abroad/);
   assert.match(r.text, /rel="canonical"/);
+  assert.match(r.text, /Discover universities abroad/);
+});
+
+test('a logged-in visitor hitting / is redirected straight into the app', async () => {
+  const email = `landing_${Date.now()}@example.com`;
+  const reg = await req('POST', '/api/auth/register', { full_name: 'Landing Test', email, password: 'password123', consent: true });
+  assert.equal(reg.status, 201);
+
+  const res = await fetch(base + '/', { headers: { Cookie: cookieHeader() }, redirect: 'manual' });
+  assert.equal(res.status, 302);
+  assert.equal(res.headers.get('location'), '/discover');
+
+  await req('DELETE', '/api/me'); // clean up the test account
 });
 
 test('GET /robots.txt references the sitemap', async () => {

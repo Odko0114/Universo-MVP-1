@@ -509,6 +509,7 @@ app.get('/healthz', (_req, res) => res.json({ status: 'ok', universities: UNIVER
 // ---------------------------------------------------------------------------
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const SHELL = fs.readFileSync(path.join(PUBLIC_DIR, 'index.html'), 'utf8');
+const LANDING = fs.readFileSync(path.join(PUBLIC_DIR, 'landing.html'), 'utf8');
 app.use(express.static(PUBLIC_DIR, { index: false }));
 
 app.get('/admin', (_req, res) => res.sendFile(path.join(PUBLIC_DIR, 'admin.html')));
@@ -522,7 +523,7 @@ let sitemapCache = null; // dataset is static — build once
 app.get('/sitemap.xml', (req, res) => {
   const base = `${req.protocol}://${req.get('host')}`;
   if (!sitemapCache) {
-    const urls = ['', ...UNIVERSITIES.map((u) => `university/${u.id}`)]
+    const urls = ['', 'discover', ...UNIVERSITIES.map((u) => `university/${u.id}`)]
       .map((p) => `  <url><loc>${base}/${p}</loc></url>`).join('\n');
     sitemapCache = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
   }
@@ -537,7 +538,7 @@ app.get('/university/:id', (req, res) => {
   if (!uni) {
     return res.status(404).send(ssr.injectSSR(SHELL, {
       metaHtml: ssr.metaTags({ title: 'University not found — Universo', description: 'This university could not be found.' }),
-      viewHtml: '<div class="empty"><h3>University not found</h3><a href="/">Back to discover</a></div>',
+      viewHtml: '<div class="empty"><h3>University not found</h3><a href="/discover">Back to discover</a></div>',
     }));
   }
   const loc = [uni.city, uni.country].filter(Boolean).join(', ');
@@ -551,14 +552,21 @@ app.get('/university/:id', (req, res) => {
   }));
 });
 
-// Server-rendered directory (home).
+// Marketing landing page. A returning student with a valid session skips
+// straight past the pitch into the app — no reason to re-sell them.
 app.get('/', (req, res) => {
+  if (auth.loadStudent(req)) return res.redirect(302, '/discover');
+  res.send(LANDING);
+});
+
+// Server-rendered directory (the actual search/browse tool).
+app.get('/discover', (req, res) => {
   const list = search.query(INDEX, { limit: 50 }, clickOf).universities;
   res.send(ssr.injectSSR(SHELL, {
     metaHtml: ssr.metaTags({
-      title: 'Universo — Discover and compare universities abroad',
+      title: 'Discover universities abroad — Universo',
       description: `Search ${UNIVERSITIES.length.toLocaleString('en-US')} universities worldwide by country, type, field of study and budget. Save a shortlist and apply.`,
-      canonical: `${baseUrl(req)}/`,
+      canonical: `${baseUrl(req)}/discover`,
     }),
     viewHtml: ssr.directoryView(list, UNIVERSITIES.length),
   }));

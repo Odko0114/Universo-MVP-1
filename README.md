@@ -106,11 +106,22 @@ Universo/
 ├── test/                          # node --test unit + API integration tests
 ├── jsconfig.json, types/          # TypeScript checkJs config for the plain-JS backend
 └── public/                        # frontend (no build step)
+    ├── landing.html                # marketing homepage (/) — static, no JS, shares styles.css
     ├── index.html                 # app shell (bottom tabs on mobile, top nav on desktop)
     ├── admin.html                 # admin dashboard — login-gated (/admin)
-    ├── css/styles.css             # navy / teal / gold, mobile-first
+    ├── css/styles.css             # navy / teal / gold, mobile-first (landing + app share this file)
     └── js/{api.js, app.js}        # API client + SPA views/router
 ```
+
+### Routing
+
+| Path | What it is |
+|------|------------|
+| `/` | Marketing landing page (`landing.html`, static). A visitor with a valid session is redirected straight to `/discover` — no re-selling returning students. |
+| `/discover` | The actual search/browse tool (server-rendered for SEO, then the SPA takes over). |
+| `/university/:id` | Server-rendered profile page. |
+| `/saved`, `/account`, `/privacy` | SPA routes (client-rendered). `/account?mode=register` opens straight to the sign-up tab. |
+| `/admin` | Login-gated admin dashboard, entirely separate auth from student accounts. |
 
 ---
 
@@ -224,7 +235,7 @@ Or set `ADMIN_EMAIL` + `ADMIN_PASSWORD` in the environment before the **first** 
 | **Privacy (GDPR)** | Explicit consent, data **export**, **account deletion**, no PII in logs, and deleting an account **purges its linked anonymous event trail** (not just the account row) — see `DELETE /api/me`. |
 | **Resilience** | All outbound calls (ETER, Wikipedia, logos) go through a timeout + retry + circuit-breaker helper (`lib/http.js`); photos/logos are cached; concurrent first-lookups are de-duped. |
 | **Observability** | Structured JSON logs with request ids (`lib/log.js`), a `/healthz` endpoint, and graceful shutdown that flushes pending writes. |
-| **SEO** | Server-rendered `<title>`/description/Open-Graph tags and content for `/` and every `/university/:id`, plus `sitemap.xml` and `robots.txt`. |
+| **SEO** | Server-rendered `<title>`/description/Open-Graph tags and content for `/discover` and every `/university/:id`, plus a static, crawlable `/` landing page, `sitemap.xml`, and `robots.txt`. |
 | **Data pipeline** | Imports validate the fetched shape and **fail loudly** on junk, and write a provenance manifest (`data/seed/manifest.json`) with counts, checksums, and fetch dates. |
 
 ## Configuration

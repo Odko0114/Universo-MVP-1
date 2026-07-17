@@ -442,3 +442,119 @@ img { max-width: 100%; display: block; }
 .ssr dt { font-weight: 700; color: var(--ink-faint); }
 .ssr ul { margin: 8px 2px; padding-left: 20px; }
 .ssr a { font-weight: 600; }
+
+/* =====================================================================
+   Landing page (public/landing.html) — shares every color/button/shadow
+   variable with the app so the transition in feels like one product.
+   ===================================================================== */
+
+.lp-body { padding-bottom: 0; }
+.lp-wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 20px; }
+
+/* Header nav (Login / Sign up in place of the app's Discover/Saved/Account) */
+.lp-nav { display: flex; align-items: center; gap: 10px; }
+.lp-nav__link { color: #cdd7e6; font-weight: 600; font-size: 0.9rem; padding: 8px 10px; }
+.lp-nav__link:hover { color: #fff; }
+
+/* Hero */
+.lp-hero {
+  background: linear-gradient(135deg, var(--navy-900), var(--navy-700));
+  color: #fff;
+  padding: 44px 20px 36px;
+  text-align: center;
+}
+.lp-hero .hero__tagline { color: var(--gold-500); }
+.lp-hero__title {
+  color: #fff; margin: 6px 0 14px; font-size: 2rem; line-height: 1.15; font-weight: 800;
+  max-width: 640px; margin-left: auto; margin-right: auto;
+}
+.lp-hero__title .accent { color: var(--gold-500); }
+.lp-hero__sub {
+  color: #c7d2e2; font-size: 1.02rem; max-width: 520px; margin: 0 auto 26px; line-height: 1.55;
+}
+.lp-hero__ctas { display: flex; flex-direction: column; gap: 10px; max-width: 340px; margin: 0 auto; }
+.lp-cta { padding: 14px 22px; font-size: 1rem; }
+.btn--ghost-light { background: transparent; color: #fff; border: 1.5px solid rgba(255,255,255,0.4); }
+.btn--ghost-light:hover { background: rgba(255,255,255,0.1); border-color: #fff; }
+
+.lp-checklist {
+  list-style: none; padding: 0; margin: 26px 0 0;
+  display: flex; flex-direction: column; gap: 8px; align-items: center;
+  color: #e6ecf5; font-size: 0.88rem; font-weight: 600;
+}
+.lp-checklist--dark { align-items: flex-start; color: var(--ink-soft); font-weight: 500; }
+
+/* Stats bar */
+.lp-stats {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;
+  padding: 30px 20px; text-align: center;
+}
+.lp-stat__n { font-size: 1.7rem; font-weight: 800; color: var(--navy-900); }
+.lp-stat__l { font-size: 0.78rem; color: var(--ink-faint); font-weight: 600; margin-top: 2px; }
+
+/* Generic section rhythm */
+.lp-section { padding: 34px 20px; }
+.lp-h2 { font-size: 1.5rem; margin: 0 0 8px; color: var(--ink); text-align: center; }
+.lp-lede { color: var(--ink-soft); text-align: center; max-width: 480px; margin: 0 auto 26px; font-size: 0.98rem; }
+
+/* How it works */
+.lp-steps { display: flex; flex-direction: column; gap: 20px; }
+.lp-step {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 22px 20px; box-shadow: var(--shadow-sm);
+}
+.lp-step__num {
+  width: 34px; height: 34px; border-radius: 50%; background: var(--teal-050); color: var(--teal-600);
+  display: grid; place-items: center; font-weight: 800; margin-bottom: 12px;
+}
+.lp-step h3 { margin: 0 0 6px; font-size: 1.05rem; }
+.lp-step p { margin: 0; color: var(--ink-soft); font-size: 0.9rem; line-height: 1.5; }
+
+/* Niche spotlight */
+.lp-niche {
+  background: linear-gradient(135deg, var(--teal-050), #fff);
+  border: 1.5px solid var(--teal-500); border-radius: var(--radius);
+  padding: 28px 22px;
+}
+
+/* Trust */
+.lp-trust { display: flex; flex-direction: column; gap: 18px; }
+.lp-trust__item { text-align: center; }
+.lp-trust__icon { font-size: 1.8rem; margin-bottom: 8px; }
+.lp-trust__item h3 { margin: 0 0 6px; font-size: 1rem; }
+.lp-trust__item p { margin: 0; color: var(--ink-soft); font-size: 0.88rem; line-height: 1.5; }
+
+/* Final CTA band */
+.lp-final-cta { background: var(--navy-900); padding: 46px 20px; }
+
+/* Footer */
+.lp-footer { background: var(--surface); border-top: 1px solid var(--line); padding: 28px 20px; }
+.lp-footer__inner { display: flex; flex-direction: column; gap: 16px; align-items: center; text-align: center; }
+.lp-footer .brand__mark { width: 22px; height: 22px; }
+.lp-footer__links { display: flex; gap: 18px; }
+.lp-footer__links a { color: var(--ink-soft); font-weight: 600; font-size: 0.88rem; }
+.lp-footer__links a:hover { color: var(--teal-600); }
+.lp-footer__copy { color: var(--ink-faint); font-size: 0.8rem; margin: 0; }
+
+@media (min-width: 720px) {
+  .lp-stats { grid-template-columns: repeat(4, 1fr); }
+  .lp-steps { flex-direction: row; }
+  .lp-step { flex: 1; }
+  .lp-trust { flex-direction: row; }
+  .lp-trust__item { flex: 1; }
+}
+
+@media (min-width: 640px) {
+  .lp-hero__ctas { flex-direction: row; max-width: none; justify-content: center; }
+  .lp-cta { width: auto; }
+}
+
+@media (min-width: 900px) {
+  .lp-hero { padding: 70px 20px 56px; }
+  .lp-hero__title { font-size: 2.9rem; }
+  .lp-hero__sub { font-size: 1.15rem; }
+  .lp-section { padding: 56px 20px; }
+  .lp-h2 { font-size: 2rem; }
+  .lp-niche { display: flex; align-items: center; padding: 40px; }
+  .lp-footer__inner { flex-direction: row; justify-content: space-between; text-align: left; }
+}

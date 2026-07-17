@@ -161,7 +161,7 @@
   // =========================================================================
   async function renderDiscover() {
     setActiveNav('discover');
-    document.title = 'Universo — Discover universities abroad';
+    document.title = 'Discover universities abroad — Universo';
     const d = state.discover;
 
     if (!state.filterMeta) {
@@ -296,7 +296,7 @@
       state.savedIds = new Set(universities.map((u) => u.id));
       document.getElementById('results').innerHTML = universities.length
         ? universities.map(uniCard).join('')
-        : `<div class="empty" style="grid-column:1/-1"><div class="empty__emoji">🔖</div><h3>No saved universities yet</h3><p class="muted">Tap “Save” on any university to build your shortlist.</p><a class="btn btn--primary" href="/" style="margin-top:12px">Browse universities</a></div>`;
+        : `<div class="empty" style="grid-column:1/-1"><div class="empty__emoji">🔖</div><h3>No saved universities yet</h3><p class="muted">Tap “Save” on any university to build your shortlist.</p><a class="btn btn--primary" href="/discover" style="margin-top:12px">Browse universities</a></div>`;
     } catch (e) { view.innerHTML = `<div class="empty"><p class="muted">${esc(e.message)}</p></div>`; }
   }
 
@@ -305,7 +305,7 @@
     view.innerHTML = `<div class="skeleton" style="height:320px"></div>`;
     let u;
     try { ({ university: u } = await API.university(id)); }
-    catch (e) { view.innerHTML = `<a class="back-link" href="/">← Back</a><div class="empty"><h3>${esc(e.message)}</h3></div>`; return; }
+    catch (e) { view.innerHTML = `<a class="back-link" href="/discover">← Back</a><div class="empty"><h3>${esc(e.message)}</h3></div>`; return; }
 
     trackProfileView(u.id);
     document.title = `${u.name} — Universo`;
@@ -361,7 +361,7 @@
     }[src];
 
     view.innerHTML = `
-      <a class="back-link" href="/">← Back to discover</a>
+      <a class="back-link" href="/discover">← Back to discover</a>
       <div class="profile__cover" id="cover" style="background:${gradient(u.id)}">
         <div class="profile__headline">
           ${logoHtml(u, 'logo--profile')}
@@ -428,11 +428,11 @@
     return `<div class="empty"><div class="empty__emoji">🔒</div><h3>${esc(title)}</h3><p class="muted">${esc(sub)}</p><a class="btn btn--primary" href="/account" style="margin-top:12px">Go to account</a></div>`;
   }
 
-  function renderAccount() {
+  function renderAccount(initialMode) {
     setActiveNav('account');
     document.title = 'Account — Universo';
     if (state.user) return renderAccountLoggedIn();
-    renderAuthForms('login');
+    renderAuthForms(initialMode === 'register' ? 'register' : 'login');
   }
 
   function renderAccountLoggedIn() {
@@ -466,7 +466,7 @@
 
     document.getElementById('logout').addEventListener('click', async () => {
       try { await API.logout(); } catch { /* ignore */ }
-      state.user = null; state.savedIds = new Set(); toast('Logged out'); go('/');
+      state.user = null; state.savedIds = new Set(); toast('Logged out'); go('/discover');
     });
     document.getElementById('export-data').addEventListener('click', async () => {
       try {
@@ -480,7 +480,7 @@
     });
     document.getElementById('delete-account').addEventListener('click', async () => {
       if (!confirm('Permanently delete your account and saved list? This cannot be undone.')) return;
-      try { await API.deleteAccount(); state.user = null; state.savedIds = new Set(); toast('Account deleted'); go('/'); }
+      try { await API.deleteAccount(); state.user = null; state.savedIds = new Set(); toast('Account deleted'); location.href = '/'; }
       catch (e) { toast(e.message, true); }
     });
   }
@@ -527,7 +527,7 @@
     state.user = data.student;
     state.savedIds = new Set(data.student.saved_universities || []);
     toast(`Welcome, ${data.student.full_name.split(' ')[0]}!`);
-    go('/');
+    go('/discover');
   }
 
   function wireLogin() {
@@ -582,6 +582,11 @@
     window.scrollTo(0, 0);
     view.focus({ preventScroll: true });
 
+    // "/" is the marketing landing page, served as its own static page — the
+    // SPA should never actually be asked to render it. If it ever is (e.g. a
+    // stale link), send the visitor on into the app rather than show nothing.
+    if (parts.length === 0) { navigate('/discover', true); return; }
+
     // Profile views are tracked inside renderProfile (with the university id,
     // once it's confirmed to exist); every other route is a generic pageview.
     const isProfile = parts[0] === 'university' && parts[1];
@@ -589,9 +594,9 @@
 
     let p;
     try {
-      if (parts.length === 0) p = renderDiscover();
+      if (parts[0] === 'discover') p = renderDiscover();
       else if (parts[0] === 'saved') p = renderSaved();
-      else if (parts[0] === 'account') p = renderAccount();
+      else if (parts[0] === 'account') p = renderAccount(new URLSearchParams(location.search).get('mode'));
       else if (parts[0] === 'privacy') p = renderPrivacy();
       else if (isProfile) p = renderProfile(decodeURIComponent(parts[1]));
       else p = renderDiscover();
@@ -601,7 +606,7 @@
 
   function showCrash(e) {
     console.error(e);
-    view.innerHTML = `<div class="empty"><div class="empty__emoji">😵</div><h3>Something went wrong</h3><p class="muted">${esc(e && e.message || 'Unexpected error')}</p><a class="btn btn--primary" href="/" style="margin-top:12px">Back to discover</a></div>`;
+    view.innerHTML = `<div class="empty"><div class="empty__emoji">😵</div><h3>Something went wrong</h3><p class="muted">${esc(e && e.message || 'Unexpected error')}</p><a class="btn btn--primary" href="/discover" style="margin-top:12px">Back to discover</a></div>`;
   }
 
   async function boot() {
