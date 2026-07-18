@@ -3,6 +3,7 @@
 const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const app = require('../server');
+const store = require('../lib/store');
 
 let server, base;
 const jar = {};
@@ -166,6 +167,16 @@ test('POST /api/pilot-leads requires name, work email and university name', asyn
     country: 'Finland',
   });
   assert.equal(ok.status, 201);
+});
+
+test('a filled honeypot field is accepted (looks like success) but not persisted', async () => {
+  const before = store.read('waitlist').length;
+  const r = await req('POST', '/api/waitlist', {
+    email: `bot_${Date.now()}@example.com`,
+    company_website: 'http://spam.example', // a real bot fills every field it finds
+  });
+  assert.equal(r.status, 201); // never reveal the trap was tripped
+  assert.equal(store.read('waitlist').length, before); // ...but nothing was actually stored
 });
 
 test('GET /join serves the built pitch page when present', async () => {

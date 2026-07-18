@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import Honeypot from './Honeypot.jsx';
 
 export default function WaitlistForm() {
   const [email, setEmail] = useState('');
+  const [companyWebsite, setCompanyWebsite] = useState(''); // honeypot — must stay empty
   const [status, setStatus] = useState('idle'); // idle | loading | done | error
   const [error, setError] = useState('');
 
@@ -13,7 +15,7 @@ export default function WaitlistForm() {
       const res = await fetch('/api/waitlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, company_website: companyWebsite }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'Something went wrong. Try again.');
@@ -35,7 +37,8 @@ export default function WaitlistForm() {
 
   return (
     <div className="w-full max-w-md">
-      <form onSubmit={submit} className="flex flex-col sm:flex-row gap-3">
+      <form onSubmit={submit} className="flex flex-col sm:flex-row gap-3 relative">
+        <Honeypot value={companyWebsite} onChange={(e) => setCompanyWebsite(e.target.value)} />
         <label htmlFor="waitlist-email" className="sr-only">Email address</label>
         <input
           id="waitlist-email"

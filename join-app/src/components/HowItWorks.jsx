@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import Reveal from './Reveal.jsx';
 
 const STEPS = {
   students: [
@@ -40,14 +41,14 @@ export default function HowItWorks() {
         </div>
 
         <div className="mt-10 grid sm:grid-cols-3 gap-6">
-          {steps.map((s) => (
-            <div key={s.n} className="rounded-2xl bg-white border border-navy-900/10 p-6">
+          {steps.map((s, i) => (
+            <Reveal key={s.n} delayMs={i * 80} className="rounded-2xl bg-white border border-navy-900/10 p-6">
               <div className="w-8 h-8 rounded-full bg-teal-500/15 text-teal-600 font-bold flex items-center justify-center text-sm mb-4">
                 {s.n}
               </div>
               <p className="font-semibold text-navy-900">{s.title}</p>
               <p className="text-sm text-navy-900/65 mt-2">{s.body}</p>
-            </div>
+            </Reveal>
           ))}
         </div>
       </div>

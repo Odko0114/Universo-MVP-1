@@ -1,4 +1,5 @@
 import WaitlistForm from './WaitlistForm.jsx';
+import Reveal from './Reveal.jsx';
 
 const points = [
   {
@@ -36,11 +37,11 @@ export default function StudentSection() {
         </p>
 
         <div className="mt-12 grid sm:grid-cols-3 gap-6">
-          {points.map((p) => (
-            <div key={p.title} className="rounded-2xl bg-white/5 border border-white/10 p-6">
+          {points.map((p, i) => (
+            <Reveal key={p.title} delayMs={i * 80} className="rounded-2xl bg-white/5 border border-white/10 p-6">
               <p className="font-semibold">{p.title}</p>
               <p className="text-sm text-white/65 mt-2">{p.body}</p>
-            </div>
+            </Reveal>
           ))}
         </div>
 

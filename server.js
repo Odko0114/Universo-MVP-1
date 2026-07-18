@@ -466,6 +466,10 @@ api.delete('/me', auth.requireAuth, async (req, res) => {
 const leadLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 5, message: 'Too many submissions. Try again in a few minutes.' });
 
 api.post('/waitlist', leadLimiter, (req, res) => {
+  // Bots get a normal-looking success so tripping the honeypot doesn't teach
+  // them to route around it — they just never get persisted or emailed.
+  if (validate.isBotSubmission(req.body)) return res.status(201).json({ ok: true });
+
   const result = validate.waitlist(req.body);
   if (!result.ok) return res.status(400).json({ error: result.error });
   const { email } = result.value;
@@ -481,6 +485,8 @@ api.post('/waitlist', leadLimiter, (req, res) => {
 });
 
 api.post('/pilot-leads', leadLimiter, (req, res) => {
+  if (validate.isBotSubmission(req.body)) return res.status(201).json({ ok: true });
+
   const result = validate.pilotLead(req.body);
   if (!result.ok) return res.status(400).json({ error: result.error });
 
@@ -547,6 +553,11 @@ adminApi.get('/stats', (_req, res) => {
       apply_clicks: s.totals.apply_click || 0,
       apply_clicks_unique: Object.values(s.applyUnique).reduce((a, b) => a + b, 0),
       pageviews: (s.totals.pageview || 0) + (s.totals.profile_view || 0),
+      // /join leads — surfaced here so a page whose entire job is generating
+      // leads doesn't require SSH-ing in and reading a JSON file to know if
+      // it's working.
+      waitlist_signups: store.read('waitlist').length,
+      pilot_leads: store.read('pilot_leads').length,
     },
     last_24h: s.last24h,
     last_7d: s.last7d,

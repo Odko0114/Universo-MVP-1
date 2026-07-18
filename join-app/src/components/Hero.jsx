@@ -9,13 +9,18 @@ function Logo() {
 
 export default function Hero() {
   return (
-    <header className="bg-gradient-to-b from-navy-900 to-navy-700 text-white">
-      <div className="max-w-5xl mx-auto px-6 pt-8 pb-2 flex items-center gap-2">
+    <header className="relative overflow-hidden bg-gradient-to-b from-navy-900 to-navy-700 text-white">
+      <div className="pointer-events-none absolute inset-0 -z-0" aria-hidden="true">
+        <div className="join-blob join-blob--teal absolute w-72 h-72 rounded-full bg-teal-500 opacity-25 blur-3xl -top-10 -left-10" />
+        <div className="join-blob join-blob--gold absolute w-72 h-72 rounded-full bg-gold-500 opacity-20 blur-3xl top-1/3 -right-16" />
+      </div>
+
+      <div className="relative max-w-5xl mx-auto px-6 pt-8 pb-2 flex items-center gap-2">
         <Logo />
         <span className="font-bold italic text-lg tracking-tight">Universo</span>
       </div>
 
-      <div className="max-w-4xl mx-auto px-6 pt-14 pb-20 text-center">
+      <div className="relative max-w-4xl mx-auto px-6 pt-14 pb-20 text-center">
         <p className="text-gold-500 font-bold text-xs tracking-[0.18em] mb-5">SAME START. EQUAL CHANCE.</p>
         <h1 className="text-3xl sm:text-5xl font-extrabold leading-tight tracking-tight">
           You get one shot at choosing a university abroad.

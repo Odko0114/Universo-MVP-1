@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
+import ErrorBoundary from './components/ErrorBoundary.jsx';
 import Hero from './components/Hero.jsx';
 import StudentSection from './components/StudentSection.jsx';
 import UniversitySection from './components/UniversitySection.jsx';
+import FounderNote from './components/FounderNote.jsx';
 import HowItWorks from './components/HowItWorks.jsx';
 import Footer from './components/Footer.jsx';
 
-export default function App() {
+function Page() {
   useEffect(() => {
     fetch('/api/track', {
       method: 'POST',
@@ -19,8 +21,17 @@ export default function App() {
       <Hero />
       <StudentSection />
       <UniversitySection />
+      <FounderNote />
       <HowItWorks />
       <Footer />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ErrorBoundary>
+      <Page />
+    </ErrorBoundary>
   );
 }

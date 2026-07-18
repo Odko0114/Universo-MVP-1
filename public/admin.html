@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="/favicon.svg" />
   <title>Universo — Admin dashboard</title>
   <style>
     :root { --navy:#0B1F3A; --navy2:#12294d; --teal:#14b8a6; --teal2:#0d9488; --gold:#E9B949; --line:#e4e8ef; --ink:#10233f; --faint:#7a879b; --danger:#d64550; }
@@ -220,6 +221,8 @@
         ['', t.pageviews, 'Pageviews'],
         ['', t.students, 'Total students'],
         ['', t.universities, 'Universities'],
+        ['gold', t.waitlist_signups, '/join waitlist'],
+        ['gold', t.pilot_leads, '/join pilot leads'],
       ];
       document.getElementById('stats').innerHTML = cards.map(([cls, n, l]) => `<div class="stat ${cls}"><div class="n">${nfmt(n)}</div><div class="l">${l}</div></div>`).join('');
 

@@ -82,6 +82,10 @@ test('GET /api/admin/stats succeeds and returns the expected shape', async () =>
   assert.equal(r.status, 200);
   assert.ok(typeof r.json.totals.universities === 'number');
   assert.ok(Array.isArray(r.json.top_universities_by_apply_clicks));
+  // /join's two lead forms — the dashboard shouldn't require reading a JSON
+  // file over SSH to know whether anyone signed up.
+  assert.ok(typeof r.json.totals.waitlist_signups === 'number');
+  assert.ok(typeof r.json.totals.pilot_leads === 'number');
 });
 
 test('GET /api/admin/funnel and /api/admin/retention are reachable with a session', async () => {
