@@ -35,6 +35,21 @@ seeds at every boot, so it never goes stale on the volume.
    bootstrap; they're ignored once an admin exists, but secrets shouldn't
    linger in config).
 
+## The /join page
+
+`/join` (the two-sided student-waitlist / university-pilot page) is a
+separate React + Tailwind build under `join-app/`, not part of the main
+vanilla-JS app. It has to be built before the server can serve it:
+
+```bash
+npm --prefix join-app ci
+npm run build:join     # outputs to public/join, which server.js serves at /join
+```
+
+`render.yaml`'s `buildCommand` and the `Dockerfile` both already do this — if
+you're deploying some other way, don't forget this step, or `/join` will
+return a 503 telling you it hasn't been built.
+
 ## Option B — Docker (Fly.io, Railway, a VPS…)
 
 ```bash

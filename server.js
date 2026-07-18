@@ -42,6 +42,8 @@ store.init('admins', []);
 store.init('clicks', {});   // { universityId: count } — kept separate so a click
                             // never rewrites the ~12k-record universities file.
 store.init('photos', {});   // { id: { photo_url|null, attribution, cached_at } }
+store.init('waitlist', []);     // student early-access signups from /join
+store.init('pilot_leads', []);  // university pilot-interest leads from /join
 adminAuth.bootstrapFromEnv(); // creates one admin from ADMIN_EMAIL/ADMIN_PASSWORD if none exist yet
 events.rotateIfLarge().catch((e) => log.warn('startup event-log rotation check failed', { error: e.message }));
 
@@ -454,6 +456,42 @@ api.delete('/me', auth.requireAuth, async (req, res) => {
   res.json({ ok: true });
 });
 
+// ---- /join lead capture -----------------------------------------------------
+//
+// Two independent lead forms on the /join marketing page (see join-app/) — a
+// low-friction student waitlist and a higher-touch university pilot-interest
+// form. Neither requires an account; both are rate-limited per IP since
+// they're public, unauthenticated POST endpoints.
+
+const leadLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 5, message: 'Too many submissions. Try again in a few minutes.' });
+
+api.post('/waitlist', leadLimiter, (req, res) => {
+  const result = validate.waitlist(req.body);
+  if (!result.ok) return res.status(400).json({ error: result.error });
+  const { email } = result.value;
+
+  const list = store.read('waitlist');
+  if (!list.some((w) => w.email === email)) {
+    list.push({ id: crypto.randomUUID(), email, created_at: new Date().toISOString(), anon: req.anon || null });
+    store.write('waitlist', list);
+    events.record('waitlist_join', { anon: req.anon });
+  }
+  // Idempotent either way — resubmitting an email already on the list isn't an error.
+  res.status(201).json({ ok: true });
+});
+
+api.post('/pilot-leads', leadLimiter, (req, res) => {
+  const result = validate.pilotLead(req.body);
+  if (!result.ok) return res.status(400).json({ error: result.error });
+
+  const leads = store.read('pilot_leads');
+  leads.push({ id: crypto.randomUUID(), ...result.value, created_at: new Date().toISOString(), anon: req.anon || null });
+  store.write('pilot_leads', leads);
+  events.record('pilot_lead', { anon: req.anon });
+
+  res.status(201).json({ ok: true });
+});
+
 // ---- Admin auth -------------------------------------------------------------
 
 const adminLoginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: 'Too many attempts. Try again in a few minutes.' });
@@ -558,9 +596,25 @@ app.get('/healthz', (_req, res) => res.json({ status: 'ok', universities: UNIVER
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const SHELL = fs.readFileSync(path.join(PUBLIC_DIR, 'index.html'), 'utf8');
 const LANDING = fs.readFileSync(path.join(PUBLIC_DIR, 'landing.html'), 'utf8');
-app.use(express.static(PUBLIC_DIR, { index: false }));
+// redirect:false — public/join is a real directory (the built React app), and
+// the default directory-redirect (/join → /join/) would 301 every request to
+// that route before it ever reaches the app.get('/join') handler below.
+app.use(express.static(PUBLIC_DIR, { index: false, redirect: false }));
 
 app.get('/admin', (_req, res) => res.sendFile(path.join(PUBLIC_DIR, 'admin.html')));
+
+// Two-sided pitch/waitlist page (students + universities) — a separate React
+// build (see join-app/) from the vanilla-JS app, served statically once built
+// to public/join by `npm run build:join`. Deliberately not the same page as
+// "/": the live product doesn't have the video feed / chat / university
+// dashboard this page pitches yet, so it stays off the account signup path.
+const JOIN_INDEX = path.join(PUBLIC_DIR, 'join', 'index.html');
+app.get('/join', (_req, res) => {
+  if (!fs.existsSync(JOIN_INDEX)) {
+    return res.status(503).send('The /join page has not been built yet. Run `npm run build:join`.');
+  }
+  res.sendFile(JOIN_INDEX);
+});
 
 app.get('/robots.txt', (req, res) => {
   const base = `${req.protocol}://${req.get('host')}`;

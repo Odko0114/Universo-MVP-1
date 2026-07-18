@@ -141,3 +141,38 @@ test('register requires consent', async () => {
   const r = await req('POST', '/api/auth/register', { full_name: 'X Y', email: `n_${Date.now()}@e.com`, password: 'password123', consent: false });
   assert.equal(r.status, 400);
 });
+
+test('POST /api/waitlist accepts a valid email and is idempotent on resubmit', async () => {
+  const email = `waitlist_${Date.now()}@example.com`;
+  const first = await req('POST', '/api/waitlist', { email });
+  assert.equal(first.status, 201);
+  const second = await req('POST', '/api/waitlist', { email }); // same email again
+  assert.equal(second.status, 201); // no error — just doesn't duplicate the entry
+});
+
+test('POST /api/waitlist rejects an invalid email', async () => {
+  const r = await req('POST', '/api/waitlist', { email: 'not-an-email' });
+  assert.equal(r.status, 400);
+});
+
+test('POST /api/pilot-leads requires name, work email and university name', async () => {
+  const missing = await req('POST', '/api/pilot-leads', { contact_name: 'A B' });
+  assert.equal(missing.status, 400);
+
+  const ok = await req('POST', '/api/pilot-leads', {
+    contact_name: 'Admissions Lead',
+    work_email: `pilot_${Date.now()}@example.edu`,
+    university_name: 'Test University',
+    country: 'Finland',
+  });
+  assert.equal(ok.status, 201);
+});
+
+test('GET /join serves the built pitch page when present', async () => {
+  const r = await req('GET', '/join');
+  // The join-app build is a separate step (npm run build:join) — if it hasn't
+  // run, the route responds 503 rather than crashing; either is a valid state
+  // for this test to assert on, but a 200 must be the real built page.
+  assert.ok([200, 503].includes(r.status));
+  if (r.status === 200) assert.match(r.text, /<div id="root">/);
+});

@@ -1,4 +1,8 @@
 node_modules/
+join-app/node_modules/
+
+# Built output of join-app/ (npm run build:join) — generated, not source.
+public/join/
 
 # Runtime data (seeded/generated on first run — regenerate with `npm run seed`)
 data/universities.json
@@ -7,6 +11,8 @@ data/admins.json
 data/metrics.json
 data/photos.json
 data/clicks.json
+data/waitlist.json
+data/pilot_leads.json
 data/events.jsonl
 data/cache/
 
