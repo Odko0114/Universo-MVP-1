@@ -85,14 +85,18 @@ test('university profile pages stay public for anonymous visitors (SEO surface)'
   assert.match(await res.text(), /rel="canonical"/);
 });
 
-test('a logged-in visitor hitting / is redirected straight into the app', async () => {
+test('/ stays reachable (200, not a redirect) for a logged-in visitor', async () => {
+  // The landing page used to force-redirect logged-in visitors straight into
+  // /discover — which meant there was no way to ever see it again once
+  // you'd signed in even once. It's a real page for both audiences now; the
+  // page itself swaps its CTAs client-side based on auth state.
   const email = `landing_${Date.now()}@example.com`;
   const reg = await req('POST', '/api/auth/register', { full_name: 'Landing Test', email, password: 'password123', consent: true });
   assert.equal(reg.status, 201);
 
   const res = await fetch(base + '/', { headers: { Cookie: cookieHeader() }, redirect: 'manual' });
-  assert.equal(res.status, 302);
-  assert.equal(res.headers.get('location'), '/discover');
+  assert.equal(res.status, 200);
+  assert.match(await res.text(), /Study in Europe/);
 
   await req('DELETE', '/api/me'); // clean up the test account
 });

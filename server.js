@@ -606,8 +606,13 @@ app.get('/university/:id', (req, res) => {
 // straight past the pitch into the app — no reason to re-sell them. The page
 // itself is static/no-JS, so its pageview is recorded HERE, server-side —
 // otherwise the top of the funnel would be invisible in analytics.
+// The marketing page is always reachable at "/" — logged-in visitors are no
+// longer force-redirected away from it. That redirect made the landing page
+// permanently unreachable once you'd signed in even once (you can't "go back"
+// to a page that bounces you on arrival). Instead the page detects its own
+// auth state client-side and swaps its CTAs (Sign up/Log in → Continue to
+// Discover), so it works as a real home page for both audiences.
 app.get('/', (req, res) => {
-  if (auth.loadStudent(req)) return res.redirect(302, '/discover');
   events.record('pageview', {
     anon: req.anon,
     path: '/',

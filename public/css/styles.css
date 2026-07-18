@@ -31,6 +31,13 @@
 
 * { box-sizing: border-box; }
 
+/* The native [hidden] attribute is only equal-specificity with any class that
+   also sets `display` on the same element — author styles beat the UA
+   stylesheet's [hidden] rule regardless of source order, so `display:flex`
+   on a hidden nav/CTA pair silently wins and both states render stacked on
+   top of each other. Force it to actually hide, everywhere. */
+[hidden] { display: none !important; }
+
 html, body { margin: 0; padding: 0; }
 
 body {
@@ -679,3 +686,58 @@ img { max-width: 100%; display: block; }
   pointer-events: none;
 }
 .uni-card__cover { position: relative; }
+
+/* =====================================================================
+   Landing page: motion & distinctive visual treatment.
+   Respects prefers-reduced-motion throughout — see the block at the end.
+   ===================================================================== */
+
+/* Sticky header that gains depth once the page scrolls */
+.lp-header { transition: box-shadow 0.25s ease; }
+.lp-header.is-scrolled { box-shadow: 0 4px 20px rgba(0,0,0,0.25); }
+
+/* Animated soft gradient orbs behind the hero — gives depth instead of a
+   flat navy rectangle, without any images or JS-driven canvas work. */
+.lp-hero { position: relative; overflow: hidden; }
+.lp-hero__blobs { position: absolute; inset: 0; overflow: hidden; z-index: 0; }
+.lp-blob {
+  position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.35;
+  animation: blob-drift 18s ease-in-out infinite;
+}
+.lp-blob--1 { width: 340px; height: 340px; background: var(--teal-500); top: -80px; left: -60px; animation-delay: 0s; }
+.lp-blob--2 { width: 280px; height: 280px; background: var(--gold-500); bottom: -100px; right: -40px; animation-delay: -6s; }
+.lp-blob--3 { width: 220px; height: 220px; background: #3a6ea8; top: 40%; left: 60%; animation-delay: -12s; }
+@keyframes blob-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -20px) scale(1.08); }
+  66% { transform: translate(-20px, 25px) scale(0.94); }
+}
+.lp-hero > .lp-wrap, .lp-hero__wave { position: relative; z-index: 1; }
+
+/* Wave divider instead of a hard flat edge between hero and the next section */
+.lp-hero__wave { display: block; width: 100%; height: 32px; margin-top: -2px; }
+
+/* Floating product mockup — a gentle continuous drift so the hero doesn't
+   feel like a static screenshot. */
+.lp-mock__window { animation: mock-float 5s ease-in-out infinite; }
+@keyframes mock-float {
+  0%, 100% { transform: rotate(-1.5deg) translateY(0); }
+  50% { transform: rotate(-1.5deg) translateY(-10px); }
+}
+
+/* Scroll-reveal: fade + rise as sections enter the viewport */
+[data-reveal] { opacity: 0; transform: translateY(24px); transition: opacity 0.6s ease, transform 0.6s ease; }
+[data-reveal].is-visible { opacity: 1; transform: translateY(0); }
+.lp-steps [data-reveal]:nth-child(2) { transition-delay: 0.08s; }
+.lp-steps [data-reveal]:nth-child(3) { transition-delay: 0.16s; }
+.lp-trust [data-reveal]:nth-child(2) { transition-delay: 0.08s; }
+.lp-trust [data-reveal]:nth-child(3) { transition-delay: 0.16s; }
+
+.lp-cta { transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.lp-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.18); }
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-blob, .lp-mock__window { animation: none !important; }
+  [data-reveal] { transition: none !important; }
+  .lp-cta:hover { transform: none; }
+}
