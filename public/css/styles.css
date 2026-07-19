@@ -152,6 +152,11 @@ img { max-width: 100%; display: block; }
 .niche-btn:hover { background: var(--teal-500); color: #fff; }
 .niche-btn.is-active { background: var(--teal-500); color: #fff; }
 
+/* Verified-vs-directory scope toggle (sits above the niche button) */
+.scope-row { display: flex; gap: 10px; margin-bottom: 10px; }
+.scope-row .niche-btn { flex: 1; margin-bottom: 0; }
+@media (max-width: 560px) { .scope-row { flex-direction: column; gap: 8px; } }
+
 /* ---------- Recommendations ---------- */
 .grid--rec { margin-bottom: 22px; }
 .match-why {
@@ -616,13 +621,14 @@ img { max-width: 100%; display: block; }
 .signup-nudge strong { color: #fff; }
 .signup-nudge .btn { flex: 0 0 auto; }
 
-/* Curated tier badge on cards */
+/* Curated / verified tier badges on cards */
 .uni-card__tier {
   position: absolute; top: 10px; left: 10px;
   background: var(--gold-500); color: var(--navy-900);
   font-size: 0.7rem; font-weight: 800; letter-spacing: 0.02em;
   padding: 3px 9px; border-radius: 999px;
 }
+.uni-card__tier--verified { background: var(--teal-500); color: #fff; }
 .uni-card__desc {
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   overflow: hidden;

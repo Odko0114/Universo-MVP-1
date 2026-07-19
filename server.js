@@ -42,8 +42,7 @@ store.init('admins', []);
 store.init('clicks', {});   // { universityId: count } — kept separate so a click
                             // never rewrites the ~12k-record universities file.
 store.init('photos', {});   // { id: { photo_url|null, attribution, cached_at } }
-store.init('waitlist', []);     // student early-access signups from /join
-store.init('pilot_leads', []);  // university pilot-interest leads from /join
+store.init('pilot_leads', []);  // university contact/pilot-interest leads (landing page form)
 adminAuth.bootstrapFromEnv(); // creates one admin from ADMIN_EMAIL/ADMIN_PASSWORD if none exist yet
 events.rotateIfLarge().catch((e) => log.warn('startup event-log rotation check failed', { error: e.message }));
 
@@ -51,6 +50,8 @@ const UNIVERSITIES = store.read('universities');
 const INDEX = search.buildIndex(UNIVERSITIES);         // built once (dataset is static)
 const FILTERS = search.buildFilters(UNIVERSITIES);     // cached
 const BY_ID = new Map(UNIVERSITIES.map((u) => [u.id, u]));
+const VERIFIED_COUNT = UNIVERSITIES.filter((u) => u.verified).length;
+FILTERS.counts = { total: UNIVERSITIES.length, verified: VERIFIED_COUNT };
 
 const clickOf = (id) => store.read('clicks')[id] || 0;
 
@@ -129,6 +130,11 @@ api.post('/auth/register', authLimiter, async (req, res) => {
     saved_universities: [],
     consent_accepted: true,
     consent_date: now,
+    // Separate opt-in for product-update emails (new universities,
+    // scholarships). No sending infrastructure yet — the admin dashboard
+    // exports opted-in addresses; wire an email provider behind that list
+    // when one exists.
+    updates_optin: v.updates_optin === true,
     signup_date: now,
     last_active_date: now,
     token_version: 0,
@@ -345,17 +351,23 @@ api.get('/universities/:id/photo', photoLimiter, async (req, res) => {
   }
 });
 
-// Pre-warm photos for the curated (flagship, most-viewed) universities so
-// their cards show real photos from the first grid load, not only after
-// someone happens to open the profile. Bounded (~40 lookups), sequential with
-// a small delay to be a polite Wikipedia client, entirely non-blocking.
-async function warmCuratedPhotos() {
-  const targets = UNIVERSITIES.filter((u) => u.source === 'curated' && !store.read('photos')[u.id]);
+// Pre-warm photos for the whole verified tier (the default Discover view) so
+// its cards show real photos from the first grid load, not only after someone
+// happens to open a profile. Bounded (≈300 lookups worst case, and only for
+// ids not already in the photo cache — after the first boot on a persistent
+// volume this is a no-op), sequential with a small delay to be a polite
+// Wikipedia client, entirely non-blocking. Curated records go first so the
+// flagship cards fill in earliest.
+async function warmVerifiedPhotos() {
+  const cache = store.read('photos');
+  const targets = UNIVERSITIES
+    .filter((u) => u.verified && !cache[u.id])
+    .sort((a, b) => (a.source === 'curated' ? 0 : 1) - (b.source === 'curated' ? 0 : 1));
   for (const uni of targets) {
     try { await resolvePhoto(uni); } catch { /* best effort */ }
     await new Promise((r) => setTimeout(r, 150));
   }
-  if (targets.length) log.info('curated photo prewarm complete', { count: targets.length });
+  if (targets.length) log.info('verified-tier photo prewarm complete', { count: targets.length });
 }
 
 // Logo proxy + on-disk cache (avoids hotlinking a third-party favicon host and
@@ -456,35 +468,17 @@ api.delete('/me', auth.requireAuth, async (req, res) => {
   res.json({ ok: true });
 });
 
-// ---- /join lead capture -----------------------------------------------------
+// ---- University lead capture ------------------------------------------------
 //
-// Two independent lead forms on the /join marketing page (see join-app/) — a
-// low-friction student waitlist and a higher-touch university pilot-interest
-// form. Neither requires an account; both are rate-limited per IP since
-// they're public, unauthenticated POST endpoints.
+// The landing page's "For universities" contact form. No student waitlist
+// exists anymore — students sign up directly. Public, unauthenticated POST, so
+// it's rate-limited per IP and honeypot-protected.
 
 const leadLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 5, message: 'Too many submissions. Try again in a few minutes.' });
 
-api.post('/waitlist', leadLimiter, (req, res) => {
-  // Bots get a normal-looking success so tripping the honeypot doesn't teach
-  // them to route around it — they just never get persisted or emailed.
-  if (validate.isBotSubmission(req.body)) return res.status(201).json({ ok: true });
-
-  const result = validate.waitlist(req.body);
-  if (!result.ok) return res.status(400).json({ error: result.error });
-  const { email } = result.value;
-
-  const list = store.read('waitlist');
-  if (!list.some((w) => w.email === email)) {
-    list.push({ id: crypto.randomUUID(), email, created_at: new Date().toISOString(), anon: req.anon || null });
-    store.write('waitlist', list);
-    events.record('waitlist_join', { anon: req.anon });
-  }
-  // Idempotent either way — resubmitting an email already on the list isn't an error.
-  res.status(201).json({ ok: true });
-});
-
 api.post('/pilot-leads', leadLimiter, (req, res) => {
+  // Bots get a normal-looking success so tripping the honeypot doesn't teach
+  // them to route around it — they just never get persisted.
   if (validate.isBotSubmission(req.body)) return res.status(201).json({ ok: true });
 
   const result = validate.pilotLead(req.body);
@@ -553,11 +547,9 @@ adminApi.get('/stats', (_req, res) => {
       apply_clicks: s.totals.apply_click || 0,
       apply_clicks_unique: Object.values(s.applyUnique).reduce((a, b) => a + b, 0),
       pageviews: (s.totals.pageview || 0) + (s.totals.profile_view || 0),
-      // /join leads — surfaced here so a page whose entire job is generating
-      // leads doesn't require SSH-ing in and reading a JSON file to know if
-      // it's working.
-      waitlist_signups: store.read('waitlist').length,
+      universities_verified: VERIFIED_COUNT,
       pilot_leads: store.read('pilot_leads').length,
+      update_subscribers: students.filter((x) => x.updates_optin).length,
     },
     last_24h: s.last24h,
     last_7d: s.last7d,
@@ -591,6 +583,25 @@ adminApi.get('/searches', (req, res) => {
   res.json({ days, terms: events.topSearches({ sinceMs: days * 86_400_000, limit }) });
 });
 
+// University contact/pilot leads — the actual rows, newest first, so a lead
+// can be followed up from the dashboard without shelling into the server.
+adminApi.get('/leads', (_req, res) => {
+  const leads = [...store.read('pilot_leads')].reverse();
+  res.json({ count: leads.length, leads });
+});
+
+// Product-update subscribers (students who opted in at sign-up), as CSV — lets
+// the founders send an update through any mail tool today. This is the seam
+// where a real email provider (Resend/Postmark/SES) plugs in later: same list,
+// automated sending instead of an export.
+adminApi.get('/subscribers.csv', (_req, res) => {
+  const subs = store.read('students').filter((s) => s.updates_optin);
+  const esc = (v) => `"${String(v || '').replace(/"/g, '""')}"`;
+  const rows = subs.map((s) => [esc(s.email), esc(s.full_name), esc(s.country_of_origin), esc(s.signup_date)].join(','));
+  res.setHeader('Content-Disposition', 'attachment; filename="universo-update-subscribers.csv"');
+  res.type('text/csv').send(['email,full_name,country_of_origin,signup_date', ...rows].join('\n') + '\n');
+});
+
 api.use('/admin', adminApi);
 
 app.use('/api', api);
@@ -614,18 +625,10 @@ app.use(express.static(PUBLIC_DIR, { index: false, redirect: false }));
 
 app.get('/admin', (_req, res) => res.sendFile(path.join(PUBLIC_DIR, 'admin.html')));
 
-// Two-sided pitch/waitlist page (students + universities) — a separate React
-// build (see join-app/) from the vanilla-JS app, served statically once built
-// to public/join by `npm run build:join`. Deliberately not the same page as
-// "/": the live product doesn't have the video feed / chat / university
-// dashboard this page pitches yet, so it stays off the account signup path.
-const JOIN_INDEX = path.join(PUBLIC_DIR, 'join', 'index.html');
-app.get('/join', (_req, res) => {
-  if (!fs.existsSync(JOIN_INDEX)) {
-    return res.status(503).send('The /join page has not been built yet. Run `npm run build:join`.');
-  }
-  res.sendFile(JOIN_INDEX);
-});
+// The old two-sided pitch page merged into the landing page proper — students
+// sign up directly (no waitlist), universities get a contact section on "/".
+// Permanent redirect so any shared /join links keep working.
+app.get('/join', (_req, res) => res.redirect(301, '/#universities'));
 
 app.get('/robots.txt', (req, res) => {
   const base = `${req.protocol}://${req.get('host')}`;
@@ -698,11 +701,12 @@ app.get('/discover', (req, res) => {
     events.record('gate', { anon: req.anon, path: '/discover' });
     return res.redirect(302, '/account?mode=register&src=gate&next=%2Fdiscover');
   }
-  const list = search.query(INDEX, { limit: 50 }, clickOf).universities;
+  // SSR mirrors the client default: verified profiles first impression.
+  const list = search.query(INDEX, { limit: 50, verified: '1' }, clickOf).universities;
   res.send(ssr.injectSSR(SHELL, {
     metaHtml: ssr.metaTags({
       title: 'Discover universities abroad — Universo',
-      description: `Search ${UNIVERSITIES.length.toLocaleString('en-US')} universities worldwide by country, type, field of study and budget. Save a shortlist and apply.`,
+      description: `${VERIFIED_COUNT} verified EU university profiles — tuition, scholarships and apply links — plus a directory of ${UNIVERSITIES.length.toLocaleString('en-US')} institutions worldwide.`,
       canonical: `${baseUrl(req)}/discover`,
     }),
     viewHtml: ssr.directoryView(list, UNIVERSITIES.length),
@@ -727,7 +731,7 @@ if (require.main === module) {
     log.info('listening', { url: `http://localhost:${cfg.PORT}`, universities: UNIVERSITIES.length });
     process.stdout.write(`\n  Universo → http://localhost:${cfg.PORT}   (admin: /admin)\n  ${UNIVERSITIES.length.toLocaleString('en-US')} universities loaded\n\n`);
   });
-  if (!process.env.SKIP_PHOTO_PREWARM) warmCuratedPhotos().catch((e) => log.warn('photo prewarm failed', { error: e.message }));
+  if (!process.env.SKIP_PHOTO_PREWARM) warmVerifiedPhotos().catch((e) => log.warn('photo prewarm failed', { error: e.message }));
 
   let shuttingDown = false;
   async function shutdown(signal) {

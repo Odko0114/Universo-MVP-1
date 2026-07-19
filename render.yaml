@@ -5,7 +5,7 @@ services:
     name: universo
     runtime: node
     plan: starter            # smallest paid tier; required for a persistent disk
-    buildCommand: npm ci && npm --prefix join-app ci && npm run build:join
+    buildCommand: npm ci
     startCommand: node server.js
     healthCheckPath: /healthz
     # Persistent volume for runtime data (accounts, clicks, events, caches).

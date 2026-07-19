@@ -220,9 +220,10 @@
         ['', t.apply_clicks_unique, 'Apply clicks (unique)'],
         ['', t.pageviews, 'Pageviews'],
         ['', t.students, 'Total students'],
-        ['', t.universities, 'Universities'],
-        ['gold', t.waitlist_signups, '/join waitlist'],
-        ['gold', t.pilot_leads, '/join pilot leads'],
+        ['', t.universities_verified, 'Verified profiles'],
+        ['', t.universities, 'Directory total'],
+        ['gold', t.pilot_leads, 'University leads'],
+        ['gold', t.update_subscribers, 'Update subscribers'],
       ];
       document.getElementById('stats').innerHTML = cards.map(([cls, n, l]) => `<div class="stat ${cls}"><div class="n">${nfmt(n)}</div><div class="l">${l}</div></div>`).join('');
 

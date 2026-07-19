@@ -10,7 +10,9 @@
     user: null,
     savedIds: new Set(),
     filterMeta: null,
-    discover: { q: '', country: '', region: '', type: '', field: '', language: '', degree: '', maxTuition: '', sort: 'name' },
+    // scope 'verified' (default) shows the complete-profile tier; 'all' adds
+    // the full worldwide directory (thin records, clearly labeled).
+    discover: { q: '', scope: 'verified', country: '', region: '', type: '', field: '', language: '', degree: '', maxTuition: '', sort: 'name' },
     results: { items: [], total: 0, offset: 0, hasMore: false, loading: false },
   };
 
@@ -169,7 +171,8 @@
       <article class="uni-card">
         <a class="uni-card__cover" href="/university/${esc(u.id)}" style="${coverStyle(u)}" aria-label="${esc(u.name)}">
           ${!u.cover_photo_url ? PLACEHOLDER_GLYPH : ''}
-          ${u.source === 'curated' ? '<span class="uni-card__tier">★ Curated</span>' : ''}
+          ${u.source === 'curated' ? '<span class="uni-card__tier">★ Curated</span>'
+            : u.verified ? '<span class="uni-card__tier uni-card__tier--verified">✓ Verified profile</span>' : ''}
           <span class="uni-card__badge">${esc(u.country)}</span>
           <span class="uni-card__loc">${esc(u.city || u.country)}</span>
         </a>
@@ -247,13 +250,21 @@
     const budgets = [['', 'Any budget'], ['1000', 'Under €1,000/yr'], ['3000', 'Under €3,000/yr'], ['6000', 'Under €6,000/yr'], ['12000', 'Under €12,000/yr'], ['20000', 'Under €20,000/yr']];
 
     const niche = d.region === 'EU' && d.language === 'English' && d.maxTuition === '6000';
+    const counts = m.counts || {};
+    const verifiedN = counts.verified ? nfmt(counts.verified) : '300';
+    const totalN = counts.total ? nfmt(counts.total) : '12,500+';
 
     view.innerHTML = `
       <section class="hero">
         <p class="hero__tagline">Same Start. Equal Chance.</p>
         <h1>Find your university <span class="accent">abroad</span></h1>
-        <p>Search <strong>12,000+</strong> universities across <strong>${m.countries.length || '190'}</strong> countries worldwide — with deeper detail for Europe and in-depth curated profiles.</p>
+        <p><strong>${verifiedN}</strong> verified EU university profiles — real photos, official enrollment data, scholarships — plus a worldwide directory of <strong>${totalN}</strong> institutions when you need it.</p>
       </section>
+
+      <div class="scope-row" role="group" aria-label="Result scope">
+        <button class="niche-btn ${d.scope === 'verified' ? 'is-active' : ''}" id="scope-verified" type="button">✓ Verified profiles (${verifiedN})</button>
+        <button class="niche-btn ${d.scope === 'all' ? 'is-active' : ''}" id="scope-all" type="button">Include worldwide directory (${totalN})</button>
+      </div>
 
       <button class="niche-btn ${niche ? 'is-active' : ''}" id="niche-toggle" type="button">
         🇪🇺 ${niche ? '✓ ' : ''}Affordable, English-taught, EU
@@ -296,8 +307,14 @@
     bind('f-country', 'country'); bind('f-type', 'type'); bind('f-field', 'field');
     bind('f-language', 'language'); bind('f-degree', 'degree'); bind('f-budget', 'maxTuition'); bind('f-sort', 'sort');
     document.getElementById('clear-filters').addEventListener('click', () => {
-      state.discover = { q: '', country: '', region: '', type: '', field: '', language: '', degree: '', maxTuition: '', sort: 'name' };
+      state.discover = { q: '', scope: 'verified', country: '', region: '', type: '', field: '', language: '', degree: '', maxTuition: '', sort: 'name' };
       renderDiscover();
+    });
+    document.getElementById('scope-verified').addEventListener('click', () => {
+      if (d.scope !== 'verified') { d.scope = 'verified'; trackFilter('scope', 'verified'); renderDiscover(); }
+    });
+    document.getElementById('scope-all').addEventListener('click', () => {
+      if (d.scope !== 'all') { d.scope = 'all'; trackFilter('scope', 'all'); renderDiscover(); }
     });
     document.getElementById('niche-toggle').addEventListener('click', () => {
       if (niche) { d.region = ''; d.language = ''; d.maxTuition = ''; }
@@ -339,7 +356,7 @@
     }
 
     try {
-      const res = await API.universities({ q: d.q, country: d.country, region: d.region, type: d.type, field: d.field, language: d.language, degree: d.degree, maxTuition: d.maxTuition, sort: d.sort, offset: state.results.offset, limit: PAGE_SIZE });
+      const res = await API.universities({ q: d.q, verified: d.scope === 'verified' ? '1' : '', country: d.country, region: d.region, type: d.type, field: d.field, language: d.language, degree: d.degree, maxTuition: d.maxTuition, sort: d.sort, offset: state.results.offset, limit: PAGE_SIZE });
       state.results.total = res.count;
       state.results.hasMore = res.has_more;
       state.results.items = reset ? res.universities : state.results.items.concat(res.universities);

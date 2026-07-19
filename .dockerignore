@@ -1,6 +1,4 @@
 node_modules
-join-app/node_modules
-public/join
 .git
 .github
 test

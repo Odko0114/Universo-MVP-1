@@ -143,17 +143,14 @@ test('register requires consent', async () => {
   assert.equal(r.status, 400);
 });
 
-test('POST /api/waitlist accepts a valid email and is idempotent on resubmit', async () => {
-  const email = `waitlist_${Date.now()}@example.com`;
-  const first = await req('POST', '/api/waitlist', { email });
-  assert.equal(first.status, 201);
-  const second = await req('POST', '/api/waitlist', { email }); // same email again
-  assert.equal(second.status, 201); // no error — just doesn't duplicate the entry
-});
-
-test('POST /api/waitlist rejects an invalid email', async () => {
-  const r = await req('POST', '/api/waitlist', { email: 'not-an-email' });
-  assert.equal(r.status, 400);
+test('register stores the product-updates opt-in when given', async () => {
+  const email = `optin_${Date.now()}@example.com`;
+  const reg = await req('POST', '/api/auth/register', {
+    full_name: 'Opt In', email, password: 'password123', consent: true, updates_optin: true,
+  });
+  assert.equal(reg.status, 201);
+  assert.equal(reg.json.student.updates_optin, true);
+  await req('DELETE', '/api/me'); // clean up
 });
 
 test('POST /api/pilot-leads requires name, work email and university name', async () => {
@@ -170,20 +167,33 @@ test('POST /api/pilot-leads requires name, work email and university name', asyn
 });
 
 test('a filled honeypot field is accepted (looks like success) but not persisted', async () => {
-  const before = store.read('waitlist').length;
-  const r = await req('POST', '/api/waitlist', {
-    email: `bot_${Date.now()}@example.com`,
+  const before = store.read('pilot_leads').length;
+  const r = await req('POST', '/api/pilot-leads', {
+    contact_name: 'Totally Real Person',
+    work_email: `bot_${Date.now()}@example.edu`,
+    university_name: 'Spam University',
     company_website: 'http://spam.example', // a real bot fills every field it finds
   });
   assert.equal(r.status, 201); // never reveal the trap was tripped
-  assert.equal(store.read('waitlist').length, before); // ...but nothing was actually stored
+  assert.equal(store.read('pilot_leads').length, before); // ...but nothing was actually stored
 });
 
-test('GET /join serves the built pitch page when present', async () => {
-  const r = await req('GET', '/join');
-  // The join-app build is a separate step (npm run build:join) — if it hasn't
-  // run, the route responds 503 rather than crashing; either is a valid state
-  // for this test to assert on, but a 200 must be the real built page.
-  assert.ok([200, 503].includes(r.status));
-  if (r.status === 200) assert.match(r.text, /<div id="root">/);
+test('GET /join permanently redirects to the landing page (waitlist retired)', async () => {
+  const res = await fetch(base + '/join', { redirect: 'manual' });
+  assert.equal(res.status, 301);
+  assert.equal(res.headers.get('location'), '/#universities');
+});
+
+test('the verified filter narrows results to the complete-profile tier', async () => {
+  const all = await req('GET', '/api/universities?limit=1');
+  const ver = await req('GET', '/api/universities?verified=1&limit=200');
+  assert.ok(ver.json.count > 0, 'verified tier is non-empty');
+  assert.ok(ver.json.count < all.json.count, 'verified tier is a strict subset');
+  assert.ok(ver.json.universities.every((u) => u.verified === true));
+});
+
+test('GET /api/universities/filters exposes verified/total counts', async () => {
+  const r = await req('GET', '/api/universities/filters');
+  assert.ok(r.json.counts.verified > 0);
+  assert.ok(r.json.counts.total > r.json.counts.verified);
 });

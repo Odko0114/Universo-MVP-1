@@ -35,14 +35,11 @@ test('login requires both fields', () => {
   assert.equal(validate.login({ email: 'a@b.com', password: 'x' }).ok, true);
 });
 
-test('waitlist rejects an invalid email', () => {
-  assert.equal(validate.waitlist({ email: 'nope' }).ok, false);
-});
-
-test('waitlist normalizes email to lowercase', () => {
-  const r = validate.waitlist({ email: 'A@B.CoM' });
-  assert.equal(r.ok, true);
-  assert.equal(r.value.email, 'a@b.com');
+test('registration records the separate product-updates opt-in (default false)', () => {
+  const base = { full_name: 'A B', email: 'a@b.com', password: 'password1', consent: true };
+  assert.equal(validate.registration(base).value.updates_optin, false);
+  assert.equal(validate.registration({ ...base, updates_optin: true }).value.updates_optin, true);
+  assert.equal(validate.registration({ ...base, updates_optin: 'yes' }).value.updates_optin, false); // strict boolean only
 });
 
 test('pilotLead requires name, work email and university name', () => {

@@ -26,9 +26,6 @@ jobs:
       # curated set + whatever seed caches are checked in.
       - run: npm run seed
 
-      - run: npm --prefix join-app ci
-      - run: npm run build:join
-
       - run: npm test
 
       - run: npm run typecheck
