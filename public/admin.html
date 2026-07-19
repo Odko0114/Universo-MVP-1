@@ -138,7 +138,16 @@
       </div>
     </div>
 
-    <h2>Top universities by Apply-Now clicks</h2>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">
+      <h2>University leads</h2>
+      <a class="refresh" href="/api/admin/subscribers.csv" download style="text-decoration:none">⬇ Subscribers CSV</a>
+    </div>
+    <div class="panel">
+      <div id="table-leads"></div>
+      <p class="foot" style="margin-top:4px">Submitted through the landing page's "For universities" form. The CSV button downloads students who opted into product-update emails — paste into any mail tool to send an update.</p>
+    </div>
+
+    <h2 style="margin-top:24px">Top universities by Apply-Now clicks</h2>
     <div id="table-clicks"></div>
 
     <h2 style="margin-top:24px">Top universities by profile views</h2>
@@ -296,6 +305,21 @@
       );
     }
 
+    async function loadLeads() {
+      const d = await api('/api/admin/leads');
+      document.getElementById('table-leads').innerHTML = d.leads.length
+        ? `<table><thead><tr><th>Date</th><th>Name</th><th>Email</th><th>University</th><th>Country</th><th>Message</th></tr></thead>
+           <tbody>${d.leads.map(l => `<tr>
+             <td>${esc(String(l.created_at || '').slice(0, 10))}</td>
+             <td>${esc(l.contact_name)}</td>
+             <td><a href="mailto:${esc(l.work_email)}">${esc(l.work_email)}</a></td>
+             <td>${esc(l.university_name)}</td>
+             <td>${esc(l.country)}</td>
+             <td>${esc((l.message || '').slice(0, 120))}</td>
+           </tr>`).join('')}</tbody></table>`
+        : '<p class="empty-note">No university leads yet — they land here when the "For universities" form on the landing page is submitted.</p>';
+    }
+
     async function loadRetention() {
       const d = await api('/api/admin/retention?weeks=6');
       if (!d.cohorts.length) { document.getElementById('retention').innerHTML = '<p class="empty-note">Not enough data yet — check back after a week of traffic.</p>'; return; }
@@ -314,7 +338,7 @@
 
     async function loadAll() {
       try {
-        await Promise.all([loadStats(), loadFunnel(), loadTraffic(), loadSearches(), loadRetention()]);
+        await Promise.all([loadStats(), loadFunnel(), loadTraffic(), loadSearches(), loadRetention(), loadLeads()]);
       } catch (e) {
         if (e.message !== 'unauthorized') console.error(e);
       }

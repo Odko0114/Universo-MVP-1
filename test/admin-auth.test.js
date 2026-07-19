@@ -89,6 +89,23 @@ test('GET /api/admin/stats succeeds and returns the expected shape', async () =>
   assert.ok(r.json.totals.universities_verified > 0);
 });
 
+test('GET /api/admin/leads returns the pilot-lead rows with a session', async () => {
+  const r = await req('GET', '/api/admin/leads');
+  assert.equal(r.status, 200);
+  assert.ok(Array.isArray(r.json.leads));
+  assert.equal(typeof r.json.count, 'number');
+});
+
+test('GET /api/admin/subscribers.csv is admin-gated and returns a CSV header row', async () => {
+  const res = await fetch(base + '/api/admin/subscribers.csv', { headers: { Cookie: cookieHeader() } });
+  assert.equal(res.status, 200);
+  assert.match(res.headers.get('content-type') || '', /text\/csv/);
+  assert.match(await res.text(), /^email,full_name,country_of_origin,signup_date/);
+
+  const anon = await fetch(base + '/api/admin/subscribers.csv'); // no cookies
+  assert.equal(anon.status, 401);
+});
+
 test('GET /api/admin/funnel and /api/admin/retention are reachable with a session', async () => {
   const f = await req('GET', '/api/admin/funnel?days=7');
   assert.equal(f.status, 200);

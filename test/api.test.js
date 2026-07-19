@@ -59,6 +59,11 @@ test('GET / serves the marketing landing page for anonymous visitors', async () 
   assert.equal(r.status, 200);
   assert.match(r.text, /<title>Universo/);
   assert.match(r.text, /Sign up free/);
+  // Two-sided page: the university section (the /join redirect target) and
+  // the founders' mission story both live on the landing page now.
+  assert.match(r.text, /id="universities"/);
+  assert.match(r.text, /id="mission"/);
+  assert.match(r.text, /id="uni-form"/);
 });
 
 test('GET /discover bounces anonymous visitors to sign-up (the app is account-gated)', async () => {

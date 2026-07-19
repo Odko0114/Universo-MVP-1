@@ -747,3 +747,41 @@ img { max-width: 100%; display: block; }
   [data-reveal] { transition: none !important; }
   .lp-cta:hover { transform: none; }
 }
+
+/* ---------- Landing: mission band ---------- */
+.lp-mission { background: var(--navy-800); padding: 56px 20px; text-align: center; }
+.lp-mission__kicker {
+  color: var(--gold-500); font-weight: 700; font-size: 0.74rem;
+  letter-spacing: 0.16em; text-transform: uppercase; margin: 0 0 18px;
+}
+.lp-mission__quote {
+  color: #fff; font-size: 1.12rem; line-height: 1.75; font-style: italic;
+  max-width: 760px; margin: 0 auto;
+}
+.lp-mission__by { color: #c7d2e2; font-weight: 600; font-size: 0.86rem; margin: 18px 0 0; }
+
+/* ---------- Landing: university contact form ---------- */
+.lp-uni-form {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  max-width: 680px; margin-top: 20px; position: relative;
+  background: #fff; border: 1px solid var(--line, #e4e8ef); border-radius: 16px;
+  padding: 22px; box-shadow: 0 2px 10px rgba(11, 31, 58, 0.05);
+}
+.lp-uni-form__wide { grid-column: 1 / -1; }
+.lp-uni-form textarea {
+  width: 100%; padding: 10px 12px; border: 1px solid #d6dce6; border-radius: 10px;
+  font: inherit; color: inherit; resize: vertical;
+}
+.lp-uni-form textarea:focus { outline: none; border-color: var(--teal-500); box-shadow: 0 0 0 3px var(--teal-050); }
+.lp-uni-form__err { color: #d64550; font-size: 0.85rem; margin: 8px 0 0; }
+.lp-uni-form__done {
+  max-width: 680px; margin-top: 20px; background: var(--teal-050);
+  border: 1px solid rgba(20, 184, 166, 0.3); border-radius: 16px; padding: 22px;
+}
+.lp-uni-form__done h3 { margin: 0 0 6px; }
+.lp-uni-form__done p { margin: 0; color: var(--navy-800); }
+@media (max-width: 560px) { .lp-uni-form { grid-template-columns: 1fr; } }
+
+/* Honeypot: off-screen, not display:none (some bots skip hidden inputs
+   entirely; off-screen keeps it in the DOM for the ones that fill everything). */
+.hp-field { position: absolute; left: -9999px; top: auto; width: 1px; height: 1px; overflow: hidden; }

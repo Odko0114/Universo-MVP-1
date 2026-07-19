@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#0B1F3A" />
   <title>Universo — Study in Europe for less than you think</title>
-  <meta name="description" content="Create a free account and search 12,554 universities — including hundreds of English-taught EU programs under €6,000/year — with costs, scholarships and official apply links in one place." />
+  <meta name="description" content="300 verified EU university profiles — real photos, official enrollment data, tuition and scholarships — plus a 12,500-strong worldwide directory. Free for students. Because choosing a university abroad shouldn't depend on who you know." />
   <link rel="icon" href="/favicon.svg" />
   <link rel="canonical" href="/" />
   <link rel="stylesheet" href="/css/styles.css" />
@@ -53,7 +53,7 @@
         <div class="lp-hero__copy">
           <p class="hero__tagline">Same Start. Equal Chance.</p>
           <h1 class="lp-hero__title">Study in Europe for <span class="accent">less than you think</span></h1>
-          <p class="lp-hero__sub">A public university in Germany can cost less per year than a single month of US tuition. Universo puts 12,554 universities — costs, scholarships and official apply links — in one free account.</p>
+          <p class="lp-hero__sub">A public university in Germany can cost less per year than a single month of US tuition. Universo gives you 300 verified EU university profiles — real photos, official enrollment data, scholarships, apply links — plus a 12,500-strong worldwide directory, in one free account.</p>
 
           <div class="lp-hero__ctas" id="lp-cta-logged-out">
             <a href="/account?mode=register&src=hero" class="btn btn--gold lp-cta">Create your free account</a>
@@ -101,7 +101,7 @@
 
     <!-- ============ Stats ============ -->
     <section class="lp-wrap lp-stats" aria-label="Platform statistics">
-      <div class="lp-stat" data-reveal><div class="lp-stat__n" data-count="12554">0</div><div class="lp-stat__l">Universities searchable</div></div>
+      <div class="lp-stat" data-reveal><div class="lp-stat__n" data-count="300">0</div><div class="lp-stat__l">Verified EU profiles</div></div>
       <div class="lp-stat" data-reveal><div class="lp-stat__n" data-count="27">0</div><div class="lp-stat__l">EU countries, one filter</div></div>
       <div class="lp-stat" data-reveal><div class="lp-stat__n">&lt;€6,000</div><div class="lp-stat__l">Typical EU public tuition/yr</div></div>
       <div class="lp-stat" data-reveal><div class="lp-stat__n">€0</div><div class="lp-stat__l">What students pay us</div></div>
@@ -146,6 +146,23 @@
       </div>
     </section>
 
+    <!-- ============ Mission ============ -->
+    <section class="lp-mission" id="mission">
+      <div class="lp-wrap" data-reveal>
+        <p class="lp-mission__kicker">Why we built this</p>
+        <blockquote class="lp-mission__quote">
+          "Choosing a university abroad is a one-shot decision — most people never get a do-over.
+          And right now that shot goes to whoever has an agent, a counselor, or an older sibling
+          who already made it. We came to Finland as international students ourselves, then spent
+          months talking to every one of Finland's 37 higher-education institutions. The pattern
+          was always the same: students with someone to ask landed somewhere right for them, and
+          students without were guessing. Universo exists to close that gap — same information,
+          same tools, same chance, whoever you are."
+        </blockquote>
+        <p class="lp-mission__by">— Odko &amp; Mir, founders of Universo</p>
+      </div>
+    </section>
+
     <!-- ============ Trust ============ -->
     <section class="lp-wrap lp-section">
       <h2 class="lp-h2" data-reveal>Built to be trusted, not just used</h2>
@@ -165,6 +182,31 @@
           <h3>Matched to you</h3>
           <p>Your profile drives recommendations that explain themselves — "English-taught, EU, offers your Master's" — not a black box.</p>
         </div>
+      </div>
+    </section>
+
+    <!-- ============ For universities ============ -->
+    <section class="lp-wrap lp-section" id="universities">
+      <h2 class="lp-h2" data-reveal>For universities</h2>
+      <p class="lp-lede" data-reveal>Your international recruitment budget goes into fairs, agents and ranking-site placements — none of which show you the students who <em>didn't</em> convert. Universo is built to give you that view: what prospective students search, what they compare you against, where they drop off — plus a direct channel to the ones actively deciding. We're onboarding a small group of pilot universities; talk to us about joining.</p>
+      <form class="lp-uni-form" id="uni-form" data-reveal novalidate>
+        <div class="hp-field" aria-hidden="true">
+          <label for="company_website">Leave this field blank</label>
+          <input id="company_website" name="company_website" type="text" tabindex="-1" autocomplete="off" />
+        </div>
+        <div class="field"><label for="uf-name">Your name *</label><input id="uf-name" required maxlength="120" /></div>
+        <div class="field"><label for="uf-email">Work email *</label><input id="uf-email" type="email" required maxlength="254" /></div>
+        <div class="field"><label for="uf-uni">University *</label><input id="uf-uni" required maxlength="160" /></div>
+        <div class="field"><label for="uf-country">Country</label><input id="uf-country" maxlength="80" placeholder="e.g. Finland" /></div>
+        <div class="field lp-uni-form__wide"><label for="uf-msg">Anything we should know? (optional)</label><textarea id="uf-msg" rows="3" maxlength="1000"></textarea></div>
+        <div class="lp-uni-form__wide">
+          <button type="submit" class="btn btn--primary" id="uf-submit">Talk to us</button>
+          <p class="lp-uni-form__err" id="uf-error" hidden></p>
+        </div>
+      </form>
+      <div class="lp-uni-form__done" id="uni-form-done" hidden data-reveal>
+        <h3>Got it — thank you.</h3>
+        <p>We reply to every pilot request within 2 business days. Urgent, or prefer email? Write to <a href="mailto:hello@universo.app">hello@universo.app</a>.</p>
       </div>
     </section>
 
@@ -194,13 +236,13 @@
       <nav class="lp-footer__links" aria-label="Footer" id="lp-footer-logged-out">
         <a href="/account">Log in</a>
         <a href="/account?mode=register&src=footer-nav">Sign up</a>
-        <a href="/join#universities">For universities</a>
+        <a href="#universities">For universities</a>
         <a href="/privacy">Privacy</a>
       </nav>
       <nav class="lp-footer__links" aria-label="Footer" id="lp-footer-logged-in" hidden>
         <a href="/discover">Discover</a>
         <a href="/saved">Saved</a>
-        <a href="/join#universities">For universities</a>
+        <a href="#universities">For universities</a>
         <a href="/privacy">Privacy</a>
       </nav>
       <p class="lp-footer__copy">© 2026 Universo. Same Start. Equal Chance.</p>
@@ -276,6 +318,44 @@
       window.addEventListener('scroll', function () {
         header.classList.toggle('is-scrolled', window.scrollY > 8);
       }, { passive: true });
+
+      // ---- university contact form (POST /api/pilot-leads) -----------------
+      var uniForm = document.getElementById('uni-form');
+      uniForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var btn = document.getElementById('uf-submit');
+        var errEl = document.getElementById('uf-error');
+        errEl.hidden = true;
+        btn.disabled = true;
+        btn.textContent = 'Sending…';
+        fetch('/api/pilot-leads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({
+            contact_name: document.getElementById('uf-name').value,
+            work_email: document.getElementById('uf-email').value,
+            university_name: document.getElementById('uf-uni').value,
+            country: document.getElementById('uf-country').value,
+            message: document.getElementById('uf-msg').value,
+            company_website: document.getElementById('company_website').value, // honeypot
+          }),
+        }).then(function (r) {
+          return r.json().catch(function () { return {}; }).then(function (data) {
+            if (!r.ok) throw new Error(data.error || 'Something went wrong. Try again.');
+            uniForm.hidden = true;
+            var done = document.getElementById('uni-form-done');
+            done.hidden = false;
+            done.classList.add('is-visible'); // reveal immediately, don't wait for scroll
+          });
+        }).catch(function (err) {
+          errEl.textContent = err.message;
+          errEl.hidden = false;
+        }).finally(function () {
+          btn.disabled = false;
+          btn.textContent = 'Talk to us';
+        });
+      });
     })();
   </script>
 </body>

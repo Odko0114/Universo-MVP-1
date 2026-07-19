@@ -618,8 +618,8 @@
         <div class="auth-card__brand">
           <span class="brand__mark" aria-hidden="true">
             <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-              <path fill="currentColor" d="M14 34 C14 96 44 150 100 184 C96 128 94 66 92 12 C64 16 38 24 14 34 Z"/>
-              <path fill="currentColor" d="M186 34 C186 96 156 150 100 184 C104 128 106 66 108 12 C136 16 162 24 186 34 Z"/>
+              <path fill="currentColor" d="M18 20 C -6 80 40 165 100 190 C 96 140 90 60 88 15 Z"/>
+              <path fill="currentColor" d="M182 20 C 206 80 160 165 100 190 C 104 140 110 60 112 15 Z"/>
             </svg>
           </span>
           <div>
@@ -648,7 +648,7 @@
   }
 
   function registerForm() {
-    return `<h2>Create your free account</h2><p class="muted" style="margin-top:0">Search 12,000+ universities, save a shortlist, and get matches for your profile.</p>
+    return `<h2>Create your free account</h2><p class="muted" style="margin-top:0">300 verified EU profiles plus a 12,000-strong worldwide directory — save a shortlist and get matches for your profile.</p>
       <form id="register-form">
         <div class="form-group"><label>Full name *</label><input type="text" name="full_name" required autocomplete="name" /></div>
         <div class="form-group"><label>Email *</label><input type="email" name="email" required autocomplete="email" /></div>
@@ -657,6 +657,7 @@
         <div class="form-group"><label>Field of interest</label><input type="text" name="field_of_interest" placeholder="e.g. Computer Science" /></div>
         <div class="form-group"><label>Target degree level</label><select name="target_degree_level"><option value="">Select…</option><option>Bachelor</option><option>Master</option><option>PhD</option></select></div>
         <div class="form-group"><label class="consent"><input type="checkbox" name="consent" /><span>I have read and accept the <a href="/privacy">privacy policy</a>, and consent to Universo storing my account data. *</span></label></div>
+        <div class="form-group"><label class="consent"><input type="checkbox" name="updates_optin" /><span>Email me when new universities and scholarships are added. <span class="muted">(optional, unsubscribe any time)</span></span></label></div>
         <button class="btn btn--primary btn--block" type="submit" id="register-submit">Create account</button>
         <p class="muted auth-fineprint">Free for students, always. We never sell your data.</p>
       </form>`;
@@ -697,6 +698,7 @@
           full_name: fd.get('full_name'), email: fd.get('email'), password: fd.get('password'),
           country_of_origin: fd.get('country_of_origin'), field_of_interest: fd.get('field_of_interest'),
           target_degree_level: fd.get('target_degree_level'), consent: fd.get('consent') === 'on',
+          updates_optin: fd.get('updates_optin') === 'on',
           src: authCtx.src || undefined,
         }));
       } catch (err) { showAuthError(err.message); btn.disabled = false; btn.textContent = 'Create account'; }
