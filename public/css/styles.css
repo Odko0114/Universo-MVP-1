@@ -785,3 +785,22 @@ img { max-width: 100%; display: block; }
 /* Honeypot: off-screen, not display:none (some bots skip hidden inputs
    entirely; off-screen keeps it in the DOM for the ones that fill everything). */
 .hp-field { position: absolute; left: -9999px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+
+/* ---------- Public-discover additions ---------- */
+/* Slim signup strip above the grid for logged-out visitors — a banner, not a hero. */
+.signup-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: var(--navy-900); color: #fff;
+  border-radius: var(--radius); padding: 10px 14px; margin-bottom: 12px;
+  font-size: 0.88rem;
+}
+.signup-banner strong { color: var(--gold-500); }
+.signup-banner .btn { flex: 0 0 auto; }
+@media (max-width: 560px) { .signup-banner { flex-direction: column; align-items: stretch; text-align: center; } }
+
+/* "Claim this profile" pointer on unclaimed university pages */
+.claim-cta {
+  background: var(--teal-050); border: 1px dashed var(--teal-500);
+  border-radius: var(--radius-sm); padding: 10px 14px;
+  font-size: 0.86rem; color: var(--navy-800);
+}

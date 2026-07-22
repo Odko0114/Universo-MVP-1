@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="/favicon.svg" />
+  <title>Universo — Partner dashboard</title>
+  <style>
+    :root { --navy:#0B1F3A; --navy2:#12294d; --teal:#14b8a6; --teal2:#0d9488; --gold:#E9B949; --line:#e4e8ef; --ink:#10233f; --faint:#7a879b; --danger:#d64550; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:#f5f7fb; color:var(--ink); }
+    header { background:var(--navy); color:#fff; padding:18px 20px; }
+    header .inner { max-width:1000px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    header h1 { margin:0; font-size:1.15rem; }
+    header .sub { color:#c7d2e2; font-size:.82rem; margin-top:2px; }
+    header a { color:var(--gold); text-decoration:none; font-weight:600; font-size:.85rem; }
+    .wrap { max-width:1000px; margin:0 auto; padding:20px; }
+    .panel { background:#fff; border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:18px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:18px; }
+    .stat { background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px 16px; }
+    .stat .n { font-size:1.6rem; font-weight:800; }
+    .stat .l { color:var(--faint); font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; margin-top:2px; }
+    .stat.primary { background:linear-gradient(135deg,var(--teal2),var(--teal)); color:#fff; border:none; }
+    .stat.primary .l { color:rgba(255,255,255,.85); }
+    .stat.gold { background:linear-gradient(135deg,var(--gold),#d4a017); border:none; }
+    h2 { font-size:1rem; margin:22px 0 10px; }
+    .chart { display:flex; align-items:flex-end; gap:2px; height:120px; padding-top:8px; }
+    .chart .col { flex:1; display:flex; flex-direction:column; justify-content:flex-end; height:100%; position:relative; }
+    .chart .bar { background:var(--teal); border-radius:3px 3px 0 0; min-height:2px; transition:height .3s ease; }
+    .chart .bar.gold { background:var(--gold); }
+    .chart .bar.navy { background:var(--navy2); }
+    .chart .col:hover .bar { opacity:.75; }
+    .chart .col .tip {
+      display:none; position:absolute; bottom:calc(100% + 4px); left:50%; transform:translateX(-50%);
+      background:var(--navy); color:#fff; font-size:.68rem; padding:3px 7px; border-radius:6px; white-space:nowrap; z-index:5;
+    }
+    .chart .col:hover .tip { display:block; }
+    .chart-x { display:flex; justify-content:space-between; color:var(--faint); font-size:.7rem; margin-top:4px; }
+    table { width:100%; border-collapse:collapse; font-size:.86rem; }
+    th { text-align:left; color:var(--faint); font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; padding:6px 8px; border-bottom:1px solid var(--line); }
+    td { padding:8px; border-bottom:1px solid var(--line); }
+    td.num { text-align:right; font-variant-numeric:tabular-nums; }
+    .bar-inline { display:inline-block; height:8px; background:var(--teal); border-radius:4px; margin-right:8px; vertical-align:middle; }
+    .empty-note { color:var(--faint); font-size:.85rem; }
+    .foot { color:var(--faint); font-size:.75rem; }
+    /* login gate */
+    .gate { max-width:400px; margin:60px auto; background:#fff; border:1px solid var(--line); border-radius:16px; padding:26px; }
+    .gate h2 { margin:0 0 4px; font-size:1.1rem; }
+    .gate p { color:var(--faint); font-size:.85rem; margin:0 0 16px; }
+    .gate label { display:block; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--faint); margin:12px 0 4px; }
+    .gate input { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px; font-size:.95rem; }
+    .gate input:focus { outline:none; border-color:var(--teal); box-shadow:0 0 0 3px #e6f7f4; }
+    .gate button { width:100%; margin-top:16px; padding:11px; border:none; border-radius:999px; background:var(--teal2); color:#fff; font-weight:700; font-size:.95rem; cursor:pointer; }
+    .gate .err { color:var(--danger); font-size:.85rem; margin-top:10px; display:none; }
+    .gate .hint { color:var(--faint); font-size:.78rem; margin-top:14px; }
+    .gate .hint a { color:var(--teal2); }
+    .refresh { background:var(--gold); border:none; border-radius:999px; padding:7px 14px; font-weight:700; font-size:.8rem; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="inner">
+      <div>
+        <h1>Universo — Partner dashboard</h1>
+        <div class="sub" id="uni-name">Engagement analytics for your university.</div>
+      </div>
+      <a href="#" id="logout-link" style="display:none">Log out ↦</a>
+    </div>
+  </header>
+
+  <div class="gate" id="login-gate">
+    <h2>Partner sign in</h2>
+    <p>For universities with a claimed profile. Each account sees its own university's data only.</p>
+    <form id="login-form">
+      <label for="p-email">Email</label>
+      <input id="p-email" type="email" required autocomplete="email" />
+      <label for="p-password">Password</label>
+      <input id="p-password" type="password" required autocomplete="current-password" />
+      <button type="submit">Sign in</button>
+      <p class="err" id="login-error"></p>
+    </form>
+    <p class="hint">No account yet? <a href="/for-universities#claim">Claim your university's profile</a> — we verify every claim by hand and set up your access.</p>
+  </div>
+
+  <div class="wrap" id="dashboard" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <span class="foot" id="range-note">Last 30 days</span>
+      <button class="refresh" id="refresh-btn">↻ Refresh</button>
+    </div>
+
+    <div id="stats" class="grid"></div>
+
+    <h2>Profile views per day</h2>
+    <div class="panel"><div class="chart" id="chart-views"></div><div class="chart-x" id="x-views"></div></div>
+
+    <h2>Saves per day</h2>
+    <div class="panel"><div class="chart" id="chart-saves"></div><div class="chart-x" id="x-saves"></div></div>
+
+    <h2>Apply clicks per day</h2>
+    <div class="panel"><div class="chart" id="chart-applies"></div><div class="chart-x" id="x-applies"></div></div>
+
+    <h2>Where your viewers come from</h2>
+    <div class="panel">
+      <div id="countries"></div>
+      <p class="foot" style="margin-top:8px">Country is known only for viewers with a student profile that lists one — anonymous visitors count as “Unknown”. No personal data is ever shown.</p>
+    </div>
+  </div>
+
+  <script>
+    const gate = document.getElementById('login-gate');
+    const dash = document.getElementById('dashboard');
+    const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const nfmt = (n) => Number(n || 0).toLocaleString('en-US');
+
+    async function api(path, opts) {
+      const res = await fetch(path, { credentials: 'same-origin', ...opts });
+      if (res.status === 401) { showGate(); throw new Error('unauthorized'); }
+      if (!res.ok) throw new Error('Request failed: ' + res.status);
+      return res.json();
+    }
+    function showGate() { gate.style.display = 'block'; dash.style.display = 'none'; document.getElementById('logout-link').style.display = 'none'; }
+    function showDash() { gate.style.display = 'none'; dash.style.display = 'block'; document.getElementById('logout-link').style.display = 'inline'; }
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const err = document.getElementById('login-error');
+      err.style.display = 'none';
+      try {
+        const res = await fetch('/api/uni/login', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin',
+          body: JSON.stringify({ email: document.getElementById('p-email').value, password: document.getElementById('p-password').value }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Login failed');
+        showDash();
+        load();
+      } catch (ex) { err.textContent = ex.message; err.style.display = 'block'; }
+    });
+    document.getElementById('logout-link').addEventListener('click', async (e) => {
+      e.preventDefault();
+      try { await fetch('/api/uni/logout', { method: 'POST', credentials: 'same-origin' }); } catch {}
+      showGate();
+    });
+    document.getElementById('refresh-btn').addEventListener('click', () => load());
+
+    function chart(elId, xId, series, key, cls) {
+      const max = Math.max(1, ...series.map(r => r[key]));
+      document.getElementById(elId).innerHTML = series.map(r => `
+        <div class="col">
+          <span class="tip">${esc(r.date.slice(5))} · ${nfmt(r[key])}</span>
+          <div class="bar ${cls || ''}" style="height:${Math.round(r[key] / max * 100)}%"></div>
+        </div>`).join('');
+      document.getElementById(xId).innerHTML = `<span>${esc(series[0].date.slice(5))}</span><span>${esc(series[series.length - 1].date.slice(5))}</span>`;
+    }
+
+    async function load() {
+      const d = await api('/api/uni/stats?days=30');
+      document.getElementById('uni-name').textContent = d.university.name;
+      document.getElementById('range-note').textContent = `Last ${d.days} days · all-time totals shown in cards`;
+      document.getElementById('stats').innerHTML = [
+        ['primary', d.totals.views, 'Profile views'],
+        ['', d.totals.unique_viewers, 'Unique viewers'],
+        ['gold', d.totals.saves, 'Saves'],
+        ['', d.totals.applies, 'Apply clicks'],
+      ].map(([cls, n, l]) => `<div class="stat ${cls}"><div class="n">${nfmt(n)}</div><div class="l">${l}</div></div>`).join('');
+      chart('chart-views', 'x-views', d.series, 'views');
+      chart('chart-saves', 'x-saves', d.series, 'saves', 'gold');
+      chart('chart-applies', 'x-applies', d.series, 'applies', 'navy');
+      const cs = d.viewer_countries || [];
+      const cmax = Math.max(1, ...cs.map(c => c.viewers));
+      document.getElementById('countries').innerHTML = cs.length
+        ? `<table><thead><tr><th>Country</th><th style="text-align:right">Unique viewers</th></tr></thead>
+           <tbody>${cs.map(c => `<tr><td>${esc(c.country)}</td><td class="num"><span class="bar-inline" style="width:${Math.round(c.viewers / cmax * 80)}px"></span>${nfmt(c.viewers)}</td></tr>`).join('')}</tbody></table>`
+        : '<p class="empty-note">No viewer data yet — this fills in as students view your profile.</p>';
+    }
+
+    // Session check on load: if already signed in, skip the gate.
+    api('/api/uni/me').then(() => { showDash(); load(); }).catch(() => showGate());
+  </script>
+</body>
+</html>

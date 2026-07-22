@@ -123,11 +123,15 @@
   }
 
   // Intercept same-origin link clicks so navigation stays a SPA transition.
+  // Standalone pages (B2B pitch, partner dashboard, admin) are NOT SPA routes —
+  // those need a real page load.
+  const STANDALONE_PATHS = ['/for-universities', '/partners', '/admin'];
   document.addEventListener('click', (e) => {
     const a = e.target.closest('a');
     if (!a) return;
     const href = a.getAttribute('href');
     if (!href || !href.startsWith('/') || a.target === '_blank' || a.hasAttribute('download')) return;
+    if (STANDALONE_PATHS.some((p) => href === p || href.startsWith(p + '#') || href.startsWith(p + '?'))) return;
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
     e.preventDefault();
     navigate(href);
@@ -210,8 +214,11 @@
 
   async function handleSaveClick(id, btn) {
     if (!state.user) {
-      toast('Create a free account to save universities', true);
-      go(`/account?mode=register&next=${encodeURIComponent(location.pathname)}`);
+      // Lightweight inline prompt, not a hard redirect: the button itself
+      // becomes the sign-up link so the visitor keeps their place in the list.
+      const next = encodeURIComponent(location.pathname);
+      btn.outerHTML = `<a class="btn btn--sm btn--gold" style="flex:1" href="/account?mode=register&src=save-prompt&next=${next}">Sign up to save →</a>`;
+      toast('Saving needs a free account — it takes 30 seconds');
       return;
     }
     const wasSaved = state.savedIds.has(id);
@@ -234,11 +241,10 @@
   // Views
   // =========================================================================
   async function renderDiscover() {
-    // The app requires an account (mirrors the server-side gate on /discover,
-    // for SPA navigations that never hit the server route).
-    if (!state.user) { navigate('/account?mode=register&src=gate&next=%2Fdiscover', true); return; }
+    // Browsing is public — no account needed. Only actions (saving,
+    // recommendations) gate on login, at the moment of the action.
     setActiveNav('discover');
-    document.title = 'Discover universities abroad — Universo';
+    document.title = 'Discover universities in Europe — Universo';
     const d = state.discover;
 
     if (!state.filterMeta) {
@@ -255,15 +261,20 @@
     const totalN = counts.total ? nfmt(counts.total) : '12,500+';
 
     view.innerHTML = `
+      ${!state.user ? `
+      <div class="signup-banner">
+        <span><strong>Same Start. Equal Chance.</strong> Save a shortlist and get matched — free, always.</span>
+        <a class="btn btn--gold btn--sm" href="/account?mode=register&src=banner">Sign up free</a>
+      </div>` : ''}
       <section class="hero">
         <p class="hero__tagline">Same Start. Equal Chance.</p>
-        <h1>Find your university <span class="accent">abroad</span></h1>
-        <p><strong>${verifiedN}</strong> verified EU university profiles — real photos, official enrollment data, scholarships — plus a worldwide directory of <strong>${totalN}</strong> institutions when you need it.</p>
+        <h1>Find your university <span class="accent">in Europe</span></h1>
+        <p><strong>${verifiedN}</strong> verified EU university profiles — real photos, official enrollment data, scholarships — plus a directory of <strong>${totalN}</strong> European institutions.</p>
       </section>
 
       <div class="scope-row" role="group" aria-label="Result scope">
         <button class="niche-btn ${d.scope === 'verified' ? 'is-active' : ''}" id="scope-verified" type="button">✓ Verified profiles (${verifiedN})</button>
-        <button class="niche-btn ${d.scope === 'all' ? 'is-active' : ''}" id="scope-all" type="button">Include worldwide directory (${totalN})</button>
+        <button class="niche-btn ${d.scope === 'all' ? 'is-active' : ''}" id="scope-all" type="button">Include full directory (${totalN})</button>
       </div>
 
       <button class="niche-btn ${niche ? 'is-active' : ''}" id="niche-toggle" type="button">
@@ -488,7 +499,7 @@
 
       ${state.user ? '' : `
         <div class="signup-nudge">
-          <div><strong>Comparing schools?</strong> Create a free account to save this university, get matched to programs that fit you, and search all 12,000+.</div>
+          <div><strong>Comparing schools?</strong> Create a free account to save this university and get matched to programs that fit you.</div>
           <a class="btn btn--primary btn--sm" href="/account?mode=register&src=profile&next=${encodeURIComponent('/university/' + u.id)}">Sign up free</a>
         </div>`}
 
@@ -504,6 +515,8 @@
         <p class="muted" style="margin:0 0 10px">${isCurated ? 'Ready to start your application?' : 'Continue on the official university website'}</p>
         <button class="btn btn--gold btn--block" id="apply-btn-2">${isCurated ? 'Apply on official site ↗' : 'Visit official website ↗'}</button>
       </div>
+      ${u.claimed_status === 'claimed' ? '' : `
+        <p class="claim-cta">Work at ${esc(u.name)}? <a href="/for-universities#claim">Claim this profile</a> to reach students directly and see your engagement analytics.</p>`}
       <p class="source-note muted">Source: ${sourceNote}${u.data_fetched_at ? ` · data as of ${esc(String(u.data_fetched_at).slice(0, 10))}` : ''}.</p>`;
 
     const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(u.name + ' university official site')}`;
@@ -648,7 +661,7 @@
   }
 
   function registerForm() {
-    return `<h2>Create your free account</h2><p class="muted" style="margin-top:0">300 verified EU profiles plus a 12,000-strong worldwide directory — save a shortlist and get matches for your profile.</p>
+    return `<h2>Create your free account</h2><p class="muted" style="margin-top:0">300 verified EU profiles plus 4,000 more European institutions — save a shortlist and get matches for your profile.</p>
       <form id="register-form">
         <div class="form-group"><label>Full name *</label><input type="text" name="full_name" required autocomplete="name" /></div>
         <div class="form-group"><label>Email *</label><input type="email" name="email" required autocomplete="email" /></div>
@@ -734,8 +747,13 @@
 
     // Profile views are tracked inside renderProfile (with the university id,
     // once it's confirmed to exist); every other route is a generic pageview.
+    // The very first render is skipped for /discover — the server records that
+    // pageview itself (so anonymous first visits are counted even without JS),
+    // and beaconing here too would double-count it.
     const isProfile = parts[0] === 'university' && parts[1];
-    if (!isProfile) trackPageview(location.pathname);
+    const serverCounted = !render._ranOnce && parts[0] === 'discover';
+    render._ranOnce = true;
+    if (!isProfile && !serverCounted) trackPageview(location.pathname);
 
     let p;
     try {

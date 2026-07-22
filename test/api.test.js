@@ -54,34 +54,28 @@ test('GET /api/universities/filters returns facets', async () => {
   assert.ok(r.json.institution_types.length >= 1);
 });
 
-test('GET / serves the marketing landing page for anonymous visitors', async () => {
-  const r = await req('GET', '/');
+test('GET / permanently redirects to the public directory (the homepage IS the product)', async () => {
+  const res = await fetch(base + '/', { redirect: 'manual' });
+  assert.equal(res.status, 301);
+  assert.equal(res.headers.get('location'), '/discover');
+});
+
+test('GET /discover is public and server-rendered — no auth wall, no redirect', async () => {
+  const res = await fetch(base + '/discover', { redirect: 'manual' }); // no cookies at all
+  assert.equal(res.status, 200);
+  const html = await res.text();
+  assert.match(html, /<title>Discover universities in Europe/);
+  assert.match(html, /rel="canonical"/);
+  assert.match(html, /Same Start\. Equal Chance\./); // slim signup banner in the SSR snapshot
+});
+
+test('GET /for-universities serves the B2B page (mission + claim form)', async () => {
+  const r = await req('GET', '/for-universities');
   assert.equal(r.status, 200);
-  assert.match(r.text, /<title>Universo/);
-  assert.match(r.text, /Sign up free/);
-  // Two-sided page: the university section (the /join redirect target) and
-  // the founders' mission story both live on the landing page now.
-  assert.match(r.text, /id="universities"/);
+  assert.match(r.text, /<title>For universities/);
   assert.match(r.text, /id="mission"/);
+  assert.match(r.text, /id="claim"/);
   assert.match(r.text, /id="uni-form"/);
-});
-
-test('GET /discover bounces anonymous visitors to sign-up (the app is account-gated)', async () => {
-  const res = await fetch(base + '/discover', { redirect: 'manual' });
-  assert.equal(res.status, 302);
-  assert.match(res.headers.get('location'), /^\/account\?mode=register/);
-});
-
-test('GET /discover is server-rendered for a logged-in student', async () => {
-  const email = `disc_${Date.now()}@example.com`;
-  const reg = await req('POST', '/api/auth/register', { full_name: 'Discover Test', email, password: 'password123', consent: true });
-  assert.equal(reg.status, 201);
-
-  const r = await req('GET', '/discover');
-  assert.match(r.text, /<title>Discover universities abroad/);
-  assert.match(r.text, /rel="canonical"/);
-
-  await req('DELETE', '/api/me'); // clean up
 });
 
 test('university profile pages stay public for anonymous visitors (SEO surface)', async () => {
@@ -91,20 +85,13 @@ test('university profile pages stay public for anonymous visitors (SEO surface)'
   assert.match(await res.text(), /rel="canonical"/);
 });
 
-test('/ stays reachable (200, not a redirect) for a logged-in visitor', async () => {
-  // The landing page used to force-redirect logged-in visitors straight into
-  // /discover — which meant there was no way to ever see it again once
-  // you'd signed in even once. It's a real page for both audiences now; the
-  // page itself swaps its CTAs client-side based on auth state.
-  const email = `landing_${Date.now()}@example.com`;
-  const reg = await req('POST', '/api/auth/register', { full_name: 'Landing Test', email, password: 'password123', consent: true });
-  assert.equal(reg.status, 201);
-
-  const res = await fetch(base + '/', { headers: { Cookie: cookieHeader() }, redirect: 'manual' });
-  assert.equal(res.status, 200);
-  assert.match(await res.text(), /Study in Europe/);
-
-  await req('DELETE', '/api/me'); // clean up the test account
+test('the dataset is Europe-only and every record carries region:europe', async () => {
+  const r = await req('GET', '/api/universities?limit=200');
+  assert.ok(r.json.universities.every((u) => u.region === 'europe'));
+  const filters = await req('GET', '/api/universities/filters');
+  assert.ok(!filters.json.countries.includes('United States'));
+  assert.ok(!filters.json.countries.includes('Japan'));
+  assert.ok(filters.json.countries.includes('Germany'));
 });
 
 test('GET /robots.txt references the sitemap', async () => {
@@ -183,10 +170,10 @@ test('a filled honeypot field is accepted (looks like success) but not persisted
   assert.equal(store.read('pilot_leads').length, before); // ...but nothing was actually stored
 });
 
-test('GET /join permanently redirects to the landing page (waitlist retired)', async () => {
+test('GET /join permanently redirects to the B2B page (waitlist long retired)', async () => {
   const res = await fetch(base + '/join', { redirect: 'manual' });
   assert.equal(res.status, 301);
-  assert.equal(res.headers.get('location'), '/#universities');
+  assert.equal(res.headers.get('location'), '/for-universities');
 });
 
 test('the verified filter narrows results to the complete-profile tier', async () => {

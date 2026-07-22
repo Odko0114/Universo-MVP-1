@@ -22,6 +22,7 @@ const store = require('./lib/store');
 const { buildDataset } = require('./lib/dataset');
 const auth = require('./lib/auth');
 const adminAuth = require('./lib/admin-auth');
+const uniAuth = require('./lib/uni-auth');
 const search = require('./lib/search');
 const match = require('./lib/match');
 const events = require('./lib/events');
@@ -42,7 +43,12 @@ store.init('admins', []);
 store.init('clicks', {});   // { universityId: count } — kept separate so a click
                             // never rewrites the ~12k-record universities file.
 store.init('photos', {});   // { id: { photo_url|null, attribution, cached_at } }
-store.init('pilot_leads', []);  // university contact/pilot-interest leads (landing page form)
+store.init('pilot_leads', []);  // university contact/pilot/claim leads (/for-universities form)
+store.init('uni_accounts', []); // partner logins, each bound to one university_id
+store.init('claims', {});   // { universityId: { account_id, claimed_at } } — kept
+                            // separate from the universities file because that
+                            // one is DERIVED (rebuilt every boot); a claim must
+                            // survive deploys.
 adminAuth.bootstrapFromEnv(); // creates one admin from ADMIN_EMAIL/ADMIN_PASSWORD if none exist yet
 events.rotateIfLarge().catch((e) => log.warn('startup event-log rotation check failed', { error: e.message }));
 
@@ -64,6 +70,12 @@ const photoOf = (id) => {
   return p && !p.none ? p.photo_url || null : null;
 };
 const withPhoto = (u) => ({ ...u, cover_photo_url: photoOf(u.id) });
+
+// Claim status is stored in its own collection (see the claims init note) and
+// overlaid at read time, since the universities file is rebuilt from seed at
+// every boot and would lose a stored flag.
+const claimedStatusOf = (id) => (store.read('claims')[id] ? 'claimed' : 'unclaimed');
+const withClaim = (u) => ({ ...u, claimed_status: claimedStatusOf(u.id) });
 
 // ---------------------------------------------------------------------------
 // App + global middleware
@@ -204,7 +216,7 @@ api.get('/universities', (req, res) => {
 api.get('/universities/:id', (req, res) => {
   const uni = BY_ID.get(req.params.id);
   if (!uni) return res.status(404).json({ error: 'University not found.' });
-  res.json({ university: withPhoto({ ...uni, click_count: clickOf(uni.id) }) });
+  res.json({ university: withClaim(withPhoto({ ...uni, click_count: clickOf(uni.id) })) });
 });
 
 // Anonymous Apply-Now click — bumps a counter in the separate clicks store and
@@ -492,6 +504,62 @@ api.post('/pilot-leads', leadLimiter, (req, res) => {
   res.status(201).json({ ok: true });
 });
 
+// ---- University partner auth + analytics ------------------------------------
+//
+// One shared dashboard build (/partners); every endpoint below scopes to the
+// university bound to the SESSION's account — the client never supplies a
+// university id. That server-side scoping is the row-level-security equivalent
+// for this storage layer: frontend checks are cosmetic, this is the enforcement.
+
+const uniLoginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: 'Too many attempts. Try again in a few minutes.' });
+
+api.post('/uni/login', uniLoginLimiter, async (req, res) => {
+  const { email, password } = req.body || {};
+  const account = uniAuth.findByEmail(email);
+  const hash = account ? account.password_hash : '$2a$10$invalidinvalidinvalidinvalidinvalidinvalidinvalidinva';
+  const ok = await bcrypt.compare(String(password || ''), hash);
+  if (!account || !ok) return res.status(401).json({ error: 'Incorrect email or password.' });
+  uniAuth.setUniCookie(res, account);
+  res.json({ account: { email: account.email, university_id: account.university_id, university_name: account.university_name } });
+});
+
+api.post('/uni/logout', (_req, res) => { uniAuth.clearUniCookie(res); res.json({ ok: true }); });
+
+api.get('/uni/me', uniAuth.requireUni, (req, res) => {
+  const a = req.uniAccount;
+  res.json({ account: { email: a.email, university_id: a.university_id, university_name: a.university_name } });
+});
+
+// Daily views/saves/apply-clicks for the session's OWN university, plus a
+// viewer-country breakdown (event anon ids joined to student profiles where
+// that link exists; everyone else counts as "Unknown").
+api.get('/uni/stats', uniAuth.requireUni, (req, res) => {
+  const days = Math.min(90, Math.max(7, parseInt(String(req.query.days || ''), 10) || 30));
+  const uni = BY_ID.get(req.uniAccount.university_id);
+  const ts = events.uniTimeseries(req.uniAccount.university_id, { days });
+
+  const anonToCountry = new Map();
+  for (const s of store.read('students')) {
+    for (const anon of s.anon_ids || []) anonToCountry.set(anon, s.country_of_origin || 'Unknown');
+  }
+  const countryCounts = new Map();
+  for (const anon of ts.viewer_anons) {
+    const c = anonToCountry.get(anon) || 'Unknown';
+    countryCounts.set(c, (countryCounts.get(c) || 0) + 1);
+  }
+  const viewer_countries = [...countryCounts.entries()]
+    .sort((a, b) => b[1] - a[1]).slice(0, 12)
+    .map(([country, viewers]) => ({ country: country || 'Unknown', viewers }));
+
+  res.json({
+    university: { id: req.uniAccount.university_id, name: uni ? uni.name : req.uniAccount.university_name },
+    days: ts.days,
+    series: ts.series,
+    totals: { ...ts.totals, unique_viewers: ts.viewer_anons.length },
+    viewer_countries,
+  });
+});
+
 // ---- Admin auth -------------------------------------------------------------
 
 const adminLoginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: 'Too many attempts. Try again in a few minutes.' });
@@ -590,6 +658,25 @@ adminApi.get('/leads', (_req, res) => {
   res.json({ count: leads.length, leads });
 });
 
+// Create a partner login for a verified claim: binds an email+password to one
+// university and marks that university claimed. This IS the claim-approval
+// step — a human (admin) checks the requester actually works there first.
+adminApi.post('/uni-accounts', async (req, res) => {
+  const { email, password, university_id } = req.body || {};
+  const uni = BY_ID.get(String(university_id || ''));
+  if (!uni) return res.status(404).json({ error: 'University not found. Pass a valid university_id.' });
+  try {
+    const account = await uniAuth.createUniAccount({ email, password, university_id: uni.id, university_name: uni.name });
+    const claims = store.read('claims');
+    claims[uni.id] = { account_id: account.account_id, claimed_at: new Date().toISOString() };
+    await store.write('claims', claims);
+    log.info('university claimed', { university: uni.id });
+    res.status(201).json({ account, university: { id: uni.id, name: uni.name, claimed_status: 'claimed' } });
+  } catch (e) {
+    res.status(400).json({ error: e.message });
+  }
+});
+
 // Product-update subscribers (students who opted in at sign-up), as CSV — lets
 // the founders send an update through any mail tool today. This is the seam
 // where a real email provider (Resend/Postmark/SES) plugs in later: same list,
@@ -617,7 +704,7 @@ app.get('/healthz', (_req, res) => res.json({ status: 'ok', universities: UNIVER
 // ---------------------------------------------------------------------------
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const SHELL = fs.readFileSync(path.join(PUBLIC_DIR, 'index.html'), 'utf8');
-const LANDING = fs.readFileSync(path.join(PUBLIC_DIR, 'landing.html'), 'utf8');
+const FOR_UNIVERSITIES = fs.readFileSync(path.join(PUBLIC_DIR, 'for-universities.html'), 'utf8');
 // redirect:false — public/join is a real directory (the built React app), and
 // the default directory-redirect (/join → /join/) would 301 every request to
 // that route before it ever reaches the app.get('/join') handler below.
@@ -625,10 +712,26 @@ app.use(express.static(PUBLIC_DIR, { index: false, redirect: false }));
 
 app.get('/admin', (_req, res) => res.sendFile(path.join(PUBLIC_DIR, 'admin.html')));
 
-// The old two-sided pitch page merged into the landing page proper — students
-// sign up directly (no waitlist), universities get a contact section on "/".
-// Permanent redirect so any shared /join links keep working.
-app.get('/join', (_req, res) => res.redirect(301, '/#universities'));
+// Partner dashboard — one shared static page for every university account;
+// which university's data it shows is decided by the session server-side.
+app.get('/partners', (_req, res) => res.sendFile(path.join(PUBLIC_DIR, 'partners.html')));
+
+// The B2B pitch (analytics, claim-a-profile, pilot contact form) lives on its
+// own page, off the student-facing homepage.
+app.get('/for-universities', (req, res) => {
+  events.record('pageview', {
+    anon: req.anon,
+    path: '/for-universities',
+    ref: refDomain(req),
+    lang: (req.get('Accept-Language') || '').split(',')[0].split(';')[0].trim().slice(0, 10),
+    device: /mobile/i.test(req.get('User-Agent') || '') ? 'mobile' : 'desktop',
+  });
+  res.send(FOR_UNIVERSITIES);
+});
+
+// Old routes that used to carry this content — permanent redirects so shared
+// links keep working.
+app.get('/join', (_req, res) => res.redirect(301, '/for-universities'));
 
 app.get('/robots.txt', (req, res) => {
   const base = `${req.protocol}://${req.get('host')}`;
@@ -639,9 +742,9 @@ let sitemapCache = null; // dataset is static — build once
 app.get('/sitemap.xml', (req, res) => {
   const base = `${req.protocol}://${req.get('host')}`;
   if (!sitemapCache) {
-    // /discover is login-gated (302 for crawlers) so it's deliberately absent;
-    // the landing page + the ~12.5k public profile pages are the SEO surface.
-    const urls = ['', ...UNIVERSITIES.map((u) => `university/${u.id}`)]
+    // Public surface: the (now account-free) directory, the B2B page, and
+    // every university profile page.
+    const urls = ['discover', 'for-universities', ...UNIVERSITIES.map((u) => `university/${u.id}`)]
       .map((p) => `  <url><loc>${base}/${p}</loc></url>`).join('\n');
     sitemapCache = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
   }
@@ -666,47 +769,34 @@ app.get('/university/:id', (req, res) => {
       description: uni.short_description || `${uni.name} — discover programs, facts and how to apply.`,
       canonical: `${baseUrl(req)}/university/${uni.id}`,
     }),
-    viewHtml: ssr.profileView(uni),
+    viewHtml: ssr.profileView(withClaim(uni)),
   }));
 });
 
-// Marketing landing page. A returning student with a valid session skips
-// straight past the pitch into the app — no reason to re-sell them. The page
-// itself is static/no-JS, so its pageview is recorded HERE, server-side —
-// otherwise the top of the funnel would be invisible in analytics.
-// The marketing page is always reachable at "/" — logged-in visitors are no
-// longer force-redirected away from it. That redirect made the landing page
-// permanently unreachable once you'd signed in even once (you can't "go back"
-// to a page that bounces you on arrival). Instead the page detects its own
-// auth state client-side and swaps its CTAs (Sign up/Log in → Continue to
-// Discover), so it works as a real home page for both audiences.
-app.get('/', (req, res) => {
+// The homepage IS the product: visitors see real, browsable university data
+// immediately instead of a marketing page. Permanent redirect keeps one
+// canonical URL for the directory.
+app.get('/', (_req, res) => res.redirect(301, '/discover'));
+
+// Public, account-free directory — browsing and searching require nothing.
+// Only actions gate on login (saving, recommendations), enforced at their own
+// endpoints; the page itself is open and server-rendered for crawlers. Its
+// pageview is recorded server-side so anonymous first visits (the top of the
+// funnel) aren't invisible to analytics.
+app.get('/discover', (req, res) => {
   events.record('pageview', {
     anon: req.anon,
-    path: '/',
+    path: '/discover',
     ref: refDomain(req),
     lang: (req.get('Accept-Language') || '').split(',')[0].split(';')[0].trim().slice(0, 10),
     device: /mobile/i.test(req.get('User-Agent') || '') ? 'mobile' : 'desktop',
   });
-  res.send(LANDING);
-});
-
-// The app proper requires an account: anonymous visitors get bounced to
-// sign-up (with a `next` so they land back here after). University profile
-// pages stay public — they're the shareable/SEO surface; the gate lives on
-// the interactive tool. Gate bounces are recorded so the funnel can show how
-// many visitors hit the wall vs. converted.
-app.get('/discover', (req, res) => {
-  if (!auth.loadStudent(req)) {
-    events.record('gate', { anon: req.anon, path: '/discover' });
-    return res.redirect(302, '/account?mode=register&src=gate&next=%2Fdiscover');
-  }
   // SSR mirrors the client default: verified profiles first impression.
   const list = search.query(INDEX, { limit: 50, verified: '1' }, clickOf).universities;
   res.send(ssr.injectSSR(SHELL, {
     metaHtml: ssr.metaTags({
-      title: 'Discover universities abroad — Universo',
-      description: `${VERIFIED_COUNT} verified EU university profiles — tuition, scholarships and apply links — plus a directory of ${UNIVERSITIES.length.toLocaleString('en-US')} institutions worldwide.`,
+      title: 'Discover universities in Europe — Universo',
+      description: `${VERIFIED_COUNT} verified EU university profiles — tuition, scholarships and apply links — in a directory of ${UNIVERSITIES.length.toLocaleString('en-US')} European institutions. Free to browse.`,
       canonical: `${baseUrl(req)}/discover`,
     }),
     viewHtml: ssr.directoryView(list, UNIVERSITIES.length),

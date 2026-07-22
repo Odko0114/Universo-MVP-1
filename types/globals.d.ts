@@ -12,6 +12,8 @@ declare global {
       student?: any;
       /** authenticated admin, attached by requireAdmin */
       admin?: any;
+      /** authenticated university-partner account, attached by requireUni */
+      uniAccount?: any;
       /** memoised parsed cookies */
       _cookies?: Record<string, string>;
     }

@@ -8,6 +8,8 @@ data/metrics.json
 data/photos.json
 data/clicks.json
 data/pilot_leads.json
+data/claims.json
+data/uni_accounts.json
 data/events.jsonl
 data/cache/
 
