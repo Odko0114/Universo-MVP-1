@@ -56,6 +56,8 @@ const UNIVERSITIES = store.read('universities');
 const INDEX = search.buildIndex(UNIVERSITIES);         // built once (dataset is static)
 const FILTERS = search.buildFilters(UNIVERSITIES);     // cached
 const BY_ID = new Map(UNIVERSITIES.map((u) => [u.id, u]));
+// Old slugs of deduplicated records → their surviving slug (301s, never 404s).
+const SLUG_REDIRECTS = require('./lib/dataset').slugRedirects();
 const VERIFIED_COUNT = UNIVERSITIES.filter((u) => u.verified).length;
 FILTERS.counts = { total: UNIVERSITIES.length, verified: VERIFIED_COUNT };
 
@@ -214,6 +216,9 @@ api.get('/universities', (req, res) => {
 });
 
 api.get('/universities/:id', (req, res) => {
+  if (SLUG_REDIRECTS[req.params.id]) {
+    return res.redirect(301, `/api/universities/${encodeURIComponent(SLUG_REDIRECTS[req.params.id])}`);
+  }
   const uni = BY_ID.get(req.params.id);
   if (!uni) return res.status(404).json({ error: 'University not found.' });
   res.json({ university: withClaim(withPhoto({ ...uni, click_count: clickOf(uni.id) })) });
@@ -735,7 +740,18 @@ app.get('/join', (_req, res) => res.redirect(301, '/for-universities'));
 
 app.get('/robots.txt', (req, res) => {
   const base = `${req.protocol}://${req.get('host')}`;
-  res.type('text/plain').send(`User-agent: *\nAllow: /\nSitemap: ${base}/sitemap.xml\n`);
+  // Operational/account surfaces carry no unique public content — keep
+  // crawlers out of them (they're also noindex'd at the page level).
+  res.type('text/plain').send([
+    'User-agent: *',
+    'Disallow: /admin',
+    'Disallow: /partners',
+    'Disallow: /saved',
+    'Disallow: /account',
+    'Allow: /',
+    `Sitemap: ${base}/sitemap.xml`,
+    '',
+  ].join('\n'));
 });
 
 let sitemapCache = null; // dataset is static — build once
@@ -755,6 +771,9 @@ const baseUrl = (req) => `${req.protocol}://${req.get('host')}`;
 
 // Server-rendered profile pages (real HTML + per-page meta for crawlers).
 app.get('/university/:id', (req, res) => {
+  if (SLUG_REDIRECTS[req.params.id]) {
+    return res.redirect(301, `/university/${encodeURIComponent(SLUG_REDIRECTS[req.params.id])}`);
+  }
   const uni = BY_ID.get(req.params.id);
   if (!uni) {
     return res.status(404).send(ssr.injectSSR(SHELL, {
@@ -800,6 +819,52 @@ app.get('/discover', (req, res) => {
       canonical: `${baseUrl(req)}/discover`,
     }),
     viewHtml: ssr.directoryView(list, UNIVERSITIES.length),
+  }));
+});
+
+// /saved and /account previously fell through to the bare SPA shell: empty
+// <main>, stale default meta, and indexable. They now ship real fallback
+// content (visible before/without JS — the SPA replaces it on hydrate),
+// page-appropriate meta, and noindex (no unique public content on either).
+app.get('/saved', (_req, res) => {
+  res.send(ssr.injectSSR(SHELL, {
+    metaHtml: ssr.metaTags({
+      title: 'Your saved universities — Universo',
+      description: 'Your personal shortlist of European universities on Universo.',
+      noindex: true,
+    }),
+    viewHtml: `
+      <section class="ssr">
+        <h1>Your saved universities</h1>
+        <p>Sign in to see your shortlist — saving universities is free, always.</p>
+        <p><a href="/account">Sign in</a> · <a href="/account?mode=register&src=saved-ssr">Create a free account</a></p>
+      </section>`,
+  }));
+});
+
+app.get('/account', (_req, res) => {
+  res.send(ssr.injectSSR(SHELL, {
+    metaHtml: ssr.metaTags({
+      title: 'Sign in or create your free account — Universo',
+      description: 'Log in to Universo or create a free student account to save universities and get matched to programs across Europe.',
+      noindex: true,
+    }),
+    viewHtml: `
+      <section class="ssr">
+        <h1>Sign in or create your free account</h1>
+        <p>Save a shortlist of European universities and get matches for your profile. Free for students, always.</p>
+        <form>
+          <!-- Disabled until the app's JS takes over: a plain-HTML submit would
+               put credentials in the URL (GET) or POST them nowhere. The SPA
+               replaces this whole view with the working form on load. -->
+          <fieldset disabled>
+            <p><label>Email<br /><input type="email" name="email" autocomplete="email" /></label></p>
+            <p><label>Password<br /><input type="password" name="password" autocomplete="current-password" /></label></p>
+            <p><button type="submit">Log in</button></p>
+          </fieldset>
+        </form>
+        <p>New here? <a href="/account?mode=register">Create a free account</a>. Signing in requires JavaScript.</p>
+      </section>`,
   }));
 });
 

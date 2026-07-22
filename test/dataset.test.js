@@ -2,7 +2,20 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { mergeSources, hostKey, cleanName, describeEter } = require('../lib/dataset');
+const { mergeSources, hostKey, cleanName, describeEter, dedupeByNameCountry } = require('../lib/dataset');
+
+test('dedupeByNameCountry keeps the highest-priority source and maps dropped slugs', () => {
+  const rows = [
+    { id: 'aarhus', source: 'curated', name: 'Aarhus University', country: 'Denmark' },
+    { id: 'g-au-dk', source: 'global', name: 'Aarhus University', country: 'Denmark' },
+    { id: 'eter-x', source: 'eter', name: 'Twin University', country: 'France' },
+    { id: 'g-twin', source: 'global', name: 'Twin  University', country: 'France' }, // extra space normalizes equal
+    { id: 'solo', source: 'global', name: 'Aarhus University', country: 'Germany' }, // same name, other country — kept
+  ];
+  const { kept, redirects } = dedupeByNameCountry(rows);
+  assert.deepEqual(kept.map((u) => u.id).sort(), ['aarhus', 'eter-x', 'solo']);
+  assert.deepEqual(redirects, { 'g-au-dk': 'aarhus', 'g-twin': 'eter-x' });
+});
 
 test('cleanName strips registry quote artifacts', () => {
   assert.equal(cleanName('"Agora" University of Oradea'), 'Agora University of Oradea');

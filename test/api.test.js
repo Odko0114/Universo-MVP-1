@@ -85,6 +85,66 @@ test('university profile pages stay public for anonymous visitors (SEO surface)'
   assert.match(await res.text(), /rel="canonical"/);
 });
 
+test('deduplicated slugs 301 to their surviving record (HTML and API)', async () => {
+  // 'g-au-dk' (global source) collapsed into the hand-curated 'aarhus'.
+  const html = await fetch(base + '/university/g-au-dk', { redirect: 'manual' });
+  assert.equal(html.status, 301);
+  assert.equal(html.headers.get('location'), '/university/aarhus');
+
+  const api = await fetch(base + '/api/universities/g-au-dk', { redirect: 'manual' });
+  assert.equal(api.status, 301);
+  assert.equal(api.headers.get('location'), '/api/universities/aarhus');
+});
+
+test('no name+country duplicates survive the build', async () => {
+  const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+  const all = [];
+  let offset = 0;
+  for (;;) {
+    const r = await req('GET', `/api/universities?limit=200&offset=${offset}`);
+    all.push(...r.json.universities);
+    if (!r.json.has_more) break;
+    offset += 200;
+  }
+  const seen = new Set();
+  for (const u of all) {
+    const key = `${norm(u.name)}|${u.country}`;
+    assert.ok(!seen.has(key), `duplicate: ${key}`);
+    seen.add(key);
+  }
+});
+
+test('tuition figures display only for curated research; estimates say check official site', async () => {
+  const curated = (await req('GET', '/api/universities/tum')).json.university;
+  assert.equal(curated.tuition_source, 'curated_research');
+
+  const eter = (await req('GET', '/api/universities?source=eter&limit=1')).json.universities[0];
+  const full = (await req('GET', `/api/universities/${eter.id}`)).json.university;
+  assert.equal(full.tuition_source, 'country_estimate');
+
+  const ssrPage = await req('GET', `/university/${eter.id}`);
+  assert.match(ssrPage.text, /Check official site/);
+  assert.ok(!/Tuition \(intl\)<\/dt><dd>~?€/.test(ssrPage.text), 'no fabricated € figure in SSR facts');
+});
+
+test('/saved and /account ship real fallback content, page meta and noindex', async () => {
+  const saved = await req('GET', '/saved');
+  assert.match(saved.text, /<title>Your saved universities/);
+  assert.match(saved.text, /noindex, nofollow/);
+  assert.match(saved.text, /Sign in to see your shortlist/);
+
+  const account = await req('GET', '/account');
+  assert.match(account.text, /<title>Sign in or create your free account/);
+  assert.match(account.text, /noindex, nofollow/);
+  assert.match(account.text, /<fieldset disabled>/);
+});
+
+test('robots.txt disallows operational surfaces and references the sitemap', async () => {
+  const r = await req('GET', '/robots.txt');
+  for (const p of ['/admin', '/partners', '/saved', '/account']) assert.match(r.text, new RegExp(`Disallow: ${p}`));
+  assert.match(r.text, /Sitemap:/);
+});
+
 test('the dataset is Europe-only and every record carries region:europe', async () => {
   const r = await req('GET', '/api/universities?limit=200');
   assert.ok(r.json.universities.every((u) => u.region === 'europe'));

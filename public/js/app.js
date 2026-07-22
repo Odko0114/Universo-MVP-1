@@ -146,10 +146,11 @@
     if (u.ranking && u.ranking.world_rank) {
       chips.push(`<span class="chip chip--rank">🏆 #${esc(u.ranking.world_rank)} world</span>`);
     }
+    // Tuition chip only for hand-researched figures — estimate ranges are not
+    // shown as numbers anywhere (see the profile view's "Check official site").
     const t = money(u.tuition_range);
-    if (t) {
-      const prefix = u.tuition_range.estimated ? '~' : '';
-      chips.push(`<span class="chip chip--gold">${prefix}${esc(t)}</span>`);
+    if (t && u.tuition_source === 'curated_research') {
+      chips.push(`<span class="chip chip--gold">${esc(t)}</span>`);
     }
     const langs = (u.language_of_instruction || []).slice(0, 2).join(', ');
     if (langs) chips.push(`<span class="chip chip--plain">${esc(langs)}</span>`);
@@ -440,8 +441,16 @@
       const nat = u.ranking.national_rank ? ` · #${u.ranking.national_rank} nationally` : '';
       facts.push(['Ranking', `🏆 #${u.ranking.world_rank} world${nat} (${u.ranking.provider})`]);
     }
+    // A specific tuition figure is shown ONLY when it comes from hand-curated
+    // research (tuition_source 'curated_research'). Country-level estimate
+    // ranges stay internal (they power the budget filter) — displaying them as
+    // numbers reads as fabricated per-university data, which it isn't.
     const tuit = money(u.tuition_range);
-    if (tuit) facts.push([`Tuition (intl)${u.tuition_range.estimated ? ' · est.' : ''}`, u.tuition_range.estimated ? `~${tuit}` : tuit]);
+    if (tuit && u.tuition_source === 'curated_research') {
+      facts.push(['Tuition (intl)', tuit]);
+    } else if (u.website || u.application_link) {
+      facts.push(['Tuition (intl)', `<a href="${esc(u.website || u.application_link)}" target="_blank" rel="noopener">Check official site ↗</a>`]);
+    }
     const living = money(u.estimated_living_cost);
     if (living) facts.push([`Living cost${u.estimated_living_cost.estimated ? ' · est.' : ''}`, u.estimated_living_cost.estimated ? `~${living}` : living]);
     if (u.institution_type) facts.push(['Institution type', u.institution_type]);
@@ -453,7 +462,8 @@
     if (u.application_deadline) facts.push(['Application deadline', u.application_deadline]);
     if (u.website) facts.push(['Website', `<a href="${esc(u.website)}" target="_blank" rel="noopener">${esc(domainOf(u))} ↗</a>`]);
 
-    const factCards = facts.map(([k, v]) => `<div class="info-item"><div class="k">${esc(k)}</div><div class="v">${k === 'Website' ? v : esc(v)}</div></div>`).join('');
+    const HTML_FACTS = new Set(['Website', 'Tuition (intl)']); // rows whose value is pre-built, trusted markup
+    const factCards = facts.map(([k, v]) => `<div class="info-item"><div class="k">${esc(k)}</div><div class="v">${HTML_FACTS.has(k) ? v : esc(v)}</div></div>`).join('');
     const section = (title, inner) => inner ? `<div class="info-card"><h3>${esc(title)}</h3>${inner}</div>` : '';
     const taglist = (arr, cls) => (arr || []).length ? `<div class="taglist">${arr.map((p) => `<span class="chip ${cls}">${esc(p)}</span>`).join('')}</div>` : '';
 
@@ -505,7 +515,7 @@
 
       ${u.data_verified ? '' : `<div class="verify-flag"><span>⚠️</span><span>${banner}</span></div>`}
       <div class="info-card"><h3>Overview</h3><p id="overview-text" style="margin:0;color:var(--ink-soft)">${esc(u.short_description || '')}</p></div>
-      ${facts.length ? `<div class="info-card"><h3>Key facts</h3><div class="info-grid">${factCards}</div>${(u.tuition_range && u.tuition_range.estimated) || u.language_estimated ? '<p class="muted" style="margin:10px 0 0;font-size:.82rem">~ / “est.” / “typical” = <strong>country-level estimate</strong>, not verified per-university. Confirm with the university.</p>' : ''}</div>` : ''}
+      ${facts.length ? `<div class="info-card"><h3>Key facts</h3><div class="info-grid">${factCards}</div>${(u.estimated_living_cost && u.estimated_living_cost.estimated) || u.language_estimated ? '<p class="muted" style="margin:10px 0 0;font-size:.82rem">~ / “est.” / “typical” = <strong>country-level estimate</strong>, not verified per-university. Confirm with the university.</p>' : ''}</div>` : ''}
       ${section('Programs offered', taglist(u.programs_offered, 'chip'))}
       ${section('Fields of study', taglist(u.fields_of_study, 'chip--gold'))}
       ${section('Admission requirements', u.acceptance_requirements ? `<p style="margin:0;color:var(--ink-soft)">${esc(u.acceptance_requirements)}</p>` : '')}

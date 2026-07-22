@@ -48,13 +48,23 @@ test('profileView renders name, location and escapes injected content (XSS-safe)
   assert.match(html, /Paris, France/);
 });
 
-test('profileView includes ranking and tuition facts when present', () => {
-  const html = ssr.profileView({
-    name: 'X', ranking: { world_rank: 5, provider: 'CWUR' },
+test('profileView shows a tuition figure only for curated research', () => {
+  const curated = ssr.profileView({
+    name: 'X', ranking: { world_rank: 5, provider: 'CWUR' }, tuition_source: 'curated_research',
+    tuition_range: { min: 0, max: 3000, period: 'year' },
+  });
+  assert.match(curated, /#5 world/);
+  assert.match(curated, /€0–€3,000\/year/);
+
+  // A country-level estimate must NOT render as a number — it points at the
+  // official site instead (the range stays internal for the budget filter).
+  const estimated = ssr.profileView({
+    name: 'Y', website: 'https://y.example',
+    tuition_source: 'country_estimate',
     tuition_range: { min: 0, max: 3000, period: 'year', estimated: true },
   });
-  assert.match(html, /#5 world/);
-  assert.match(html, /est\./);
+  assert.match(estimated, /Check official site/);
+  assert.ok(!estimated.includes('€3,000'), 'estimate range not displayed');
 });
 
 test('directoryView lists universities with links and escapes names', () => {
