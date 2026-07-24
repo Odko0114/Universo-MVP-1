@@ -2,61 +2,85 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { scoreUniversity, recommend } = require('../lib/match');
+const { matchUniversity, scoreUniversity, recommend, hasProfile } = require('../lib/match');
 
-const student = { target_degree_level: 'Master', field_of_interest: 'Computer Science' };
+const student = {
+  fields_of_interest: ['Computer Science'],
+  degree_level: 'Master',
+  budget_max_eur_year: 5000,
+  preferred_languages: ['English'],
+  city_preference: 'large',
+  country_preference: ['Germany'],
+};
 
 const strongFit = {
-  id: 'a', name: 'Strong Fit University', country: 'Germany', source: 'curated',
-  degree_levels: ['Master'], fields_of_study: ['Computer Science & IT'],
-  language_of_instruction: ['English'], tuition_range: { min: 0, max: 0 },
+  id: 'a', name: 'Strong Fit University', country: 'Germany', source: 'curated', verified: true,
+  degree_levels: ['Bachelor', 'Master', 'PhD'], fields_offered: ['Computer Science', 'Engineering'],
+  language_of_instruction: ['English', 'German'], tuition_intl_min: 0, tuition_source: 'curated_research',
+  city_size_category: 'large',
 };
-const weakFit = {
-  id: 'b', name: 'Weak Fit University', country: 'United States', source: 'global',
-  degree_levels: ['Bachelor'], fields_of_study: ['Law'],
-  language_of_instruction: ['English'], tuition_range: { min: 30000, max: 50000 },
+const wrongDegree = { ...strongFit, id: 'b', degree_levels: ['Bachelor'] };
+const overBudget = {
+  id: 'c', name: 'Pricey University', country: 'Germany', source: 'curated', verified: true,
+  degree_levels: ['Master'], fields_offered: ['Computer Science'], language_of_instruction: ['English'],
+  tuition_intl_min: 30000, tuition_source: 'curated_research', city_size_category: 'large',
 };
-const noData = {
-  id: 'c', name: 'No Data University', country: 'Brazil', source: 'global',
-  degree_levels: [], fields_of_study: [], language_of_instruction: [], tuition_range: null,
+const sparse = {
+  id: 'd', name: 'Sparse University', country: 'Poland', source: 'eter', verified: false,
+  degree_levels: [], fields_offered: [], language_of_instruction: [], tuition_source: 'country_estimate',
+  tuition_intl_min: 2000, city_size_category: null,
 };
 
-test('a strong EU/affordable/English/field/degree match scores far higher than a weak one', () => {
-  const strong = scoreUniversity(student, strongFit);
-  const weak = scoreUniversity(student, weakFit);
-  assert.ok(strong.score > weak.score, `expected strong (${strong.score}) > weak (${weak.score})`);
+test('hasProfile is false for empty, true once a field/degree/budget is set', () => {
+  assert.equal(hasProfile({}), false);
+  assert.equal(hasProfile({ fields_of_interest: ['Business'] }), true);
+  assert.equal(hasProfile({ degree_level: 'PhD' }), true);
 });
 
-test('wrong degree level scores zero on the degree factor (reflected in a lower total)', () => {
-  const right = scoreUniversity(student, strongFit);
-  const wrongDegree = scoreUniversity(student, { ...strongFit, degree_levels: ['Bachelor'] });
-  assert.ok(right.score > wrongDegree.score);
+test('a strong fit passes hard filters and scores high with cited components', () => {
+  const m = matchUniversity(student, strongFit);
+  assert.equal(m.passed, true);
+  assert.ok(m.score >= 90, `expected a high score, got ${m.score}`);
+  const keys = m.components.map((c) => c.key);
+  assert.deepEqual(new Set(keys), new Set(['field', 'city', 'country', 'verified', 'budget']));
 });
 
-test('missing data is scored neutrally, not penalized to zero', () => {
-  const { score } = scoreUniversity(student, noData);
-  assert.ok(score > 0 && score < 60, `expected a middling neutral score, got ${score}`);
+test('HARD FILTER: wrong degree is eliminated entirely', () => {
+  assert.equal(matchUniversity(student, wrongDegree).passed, false);
 });
 
-test('reasons explain the match in plain language', () => {
+test('HARD FILTER: over-budget (confirmed tuition) is eliminated', () => {
+  assert.equal(matchUniversity(student, overBudget).passed, false);
+});
+
+test('unconfirmed data is KEPT and flagged, never hidden', () => {
+  const m = matchUniversity(student, sparse);
+  assert.equal(m.passed, true, 'sparse record with unknown degree/language survives');
+  assert.ok(m.flags.includes('degree_unconfirmed'));
+  assert.ok(m.flags.includes('language_unconfirmed'));
+  assert.ok(m.flags.includes('tuition_unconfirmed'), 'estimate tuition is not treated as confirmed');
+});
+
+test('inferred fields never hard-filter (field is soft-only)', () => {
+  // A student who only stated a field still matches a school whose fields don't
+  // overlap — they just score 0 on the field component, not eliminated.
+  const fieldOnly = { fields_of_interest: ['Law'] };
+  const m = matchUniversity(fieldOnly, strongFit); // strongFit offers CS/Eng, not Law
+  assert.equal(m.passed, true);
+  assert.ok(!m.components.some((c) => c.key === 'field'));
+});
+
+test('scoreUniversity returns reason labels for the profile page', () => {
   const { reasons } = scoreUniversity(student, strongFit);
-  assert.ok(reasons.length > 0);
-  assert.ok(reasons.some((r) => /Master/.test(r)));
+  assert.ok(reasons.some((r) => /Computer Science/.test(r)));
 });
 
-test('recommend() sorts descending and respects the limit', () => {
-  const results = recommend(student, [weakFit, strongFit, noData], { limit: 2 });
-  assert.equal(results.length, 2);
-  assert.equal(results[0].id, 'a'); // strongFit should win
-  assert.ok(results[0].match_score >= results[1].match_score);
-});
+test('recommend() hard-filters, sorts by score desc, respects limit and exclusions', () => {
+  const results = recommend(student, [wrongDegree, sparse, strongFit], { limit: 5 });
+  assert.equal(results[0].id, 'a'); // strong fit ranks first
+  assert.ok(!results.some((r) => r.id === 'b'), 'wrong-degree filtered out');
+  assert.ok(results.every((r, i, arr) => i === 0 || arr[i - 1].match_score >= r.match_score));
 
-test('recommend() excludes already-saved universities', () => {
-  const results = recommend(student, [strongFit, weakFit], { excludeIds: new Set(['a']) });
-  assert.ok(!results.some((r) => r.id === 'a'));
-});
-
-test('an empty student profile still returns neutral, non-crashing scores', () => {
-  const { score } = scoreUniversity({}, strongFit);
-  assert.ok(score >= 0 && score <= 100);
+  const excluded = recommend(student, [strongFit, sparse], { excludeIds: new Set(['a']) });
+  assert.ok(!excluded.some((r) => r.id === 'a'));
 });

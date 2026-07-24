@@ -99,11 +99,40 @@ test('a logged-in student sees rule-based match reasons on a profile; logged-out
   const email = `fit_${Date.now()}@example.com`;
   await req('POST', '/api/auth/register', {
     full_name: 'Fit Test', email, password: 'password123', consent: true,
-    field_of_interest: 'Computer Science', target_degree_level: 'Master',
+    fields_of_interest: ['Computer Science'], degree_level: 'Master',
   });
   const withUser = await req('GET', '/api/universities/tum');
   assert.ok(Array.isArray(withUser.json.university.match_reasons));
   assert.ok(withUser.json.university.match_reasons.length >= 1);
+  assert.equal(typeof withUser.json.university.match_explanation, 'string');
+  await req('DELETE', '/api/me');
+});
+
+test('PATCH /api/me/profile stores matching fields and flips profile_completed', async () => {
+  const email = `prof_${Date.now()}@example.com`;
+  const reg = await req('POST', '/api/auth/register', { full_name: 'Prof T', email, password: 'password123', consent: true });
+  assert.equal(reg.status, 201);
+  assert.equal(reg.json.student.profile_completed, false);
+
+  const upd = await req('PATCH', '/api/me/profile', {
+    fields_of_interest: ['Computer Science', 'Engineering', 'Law', 'Business'], // 4 → capped to 3
+    budget_max_eur_year: 8000,
+    preferred_languages: ['English'],
+    degree_level: 'Master',
+    city_preference: 'large',
+    country_preference: ['Germany'],
+    home_country: 'Mongolia',
+  });
+  assert.equal(upd.status, 200);
+  assert.equal(upd.json.student.profile_completed, true);
+  assert.equal(upd.json.student.fields_of_interest.length, 3, 'capped to 3');
+  assert.equal(upd.json.student.budget_max_eur_year, 8000);
+
+  // sort=match now yields a compressed per-card reason for this student.
+  const disc = await req('GET', '/api/universities?limit=5');
+  assert.equal(disc.json.sort, 'match', 'profiled student defaults to fit ranking');
+  assert.ok(disc.json.universities.some((u) => Array.isArray(u.match_reasons) && u.match_reasons.length));
+
   await req('DELETE', '/api/me');
 });
 

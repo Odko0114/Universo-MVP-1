@@ -25,6 +25,7 @@ const adminAuth = require('./lib/admin-auth');
 const uniAuth = require('./lib/uni-auth');
 const search = require('./lib/search');
 const match = require('./lib/match');
+const explain = require('./lib/explain');
 const events = require('./lib/events');
 const validate = require('./lib/validate');
 const ssr = require('./lib/ssr');
@@ -122,10 +123,17 @@ app.use(auth.anon); // ensures req.anon (anonymous analytics id)
 
 const api = express.Router();
 
+// A matching profile is "complete enough" to switch the matching layer on once
+// the student has stated at least a field of interest OR a degree OR a budget —
+// the inputs the scorer actually needs. Kept deliberately low so a half-filled
+// onboarding still gets ranked results.
+const profileCompleted = (s) =>
+  !!s && ((s.fields_of_interest || []).length > 0 || !!s.degree_level || s.budget_max_eur_year != null);
+
 const publicStudent = (s) => {
   if (!s) return null;
   const { password_hash, token_version, anon_ids, ...safe } = s;
-  return safe;
+  return { ...safe, profile_completed: profileCompleted(s) };
 };
 
 // ---- Auth -----------------------------------------------------------------
@@ -147,9 +155,19 @@ api.post('/auth/register', authLimiter, async (req, res) => {
     full_name: v.full_name,
     email: v.email,
     password_hash: await bcrypt.hash(v.password, cfg.BCRYPT_ROUNDS),
+    // Legacy single-value fields kept for backward compatibility; the matching
+    // profile below is the canonical source going forward.
     country_of_origin: v.country_of_origin,
     field_of_interest: v.field_of_interest,
-    target_degree_level: v.target_degree_level,
+    target_degree_level: v.degree_level || v.target_degree_level,
+    // Matching profile (may be empty at signup; filled via onboarding/account).
+    fields_of_interest: v.fields_of_interest,
+    budget_max_eur_year: v.budget_max_eur_year,
+    preferred_languages: v.preferred_languages,
+    degree_level: v.degree_level,
+    city_preference: v.city_preference,
+    country_preference: v.country_preference,
+    home_country: v.home_country || v.country_of_origin,
     saved_universities: [],
     consent_accepted: true,
     consent_date: now,
@@ -210,13 +228,53 @@ api.get('/auth/me', auth.requireAuth, (req, res) => {
   res.json({ student: publicStudent(req.student) });
 });
 
+// Update the matching profile (onboarding wizard + /account editor). Every
+// field optional; replaces the profile wholesale with the validated set.
+api.patch('/me/profile', auth.requireAuth, (req, res) => {
+  const result = validate.profile(req.body);
+  if (!result.ok) return res.status(400).json({ error: result.error });
+  const p = result.value;
+
+  const students = store.read('students');
+  const student = students.find((s) => s.student_id === req.student.student_id);
+  Object.assign(student, p, {
+    // keep the legacy mirrors in sync so older readers don't drift
+    target_degree_level: p.degree_level || student.target_degree_level,
+    field_of_interest: p.fields_of_interest[0] || student.field_of_interest,
+    country_of_origin: p.home_country || student.country_of_origin,
+  });
+  store.write('students', students);
+  events.record('profile_update', { anon: req.anon });
+  res.json({ student: publicStudent(student) });
+});
+
 // ---- Universities ---------------------------------------------------------
 
 api.get('/universities/filters', (_req, res) => res.json(FILTERS));
 
 api.get('/universities', (req, res) => {
-  const result = search.query(INDEX, req.query, clickOf);
-  result.universities = result.universities.map(withPhoto);
+  // A logged-in student with a matching profile gets fit-ranked results by
+  // default (the ranking is self-explanatory via a per-card reason). Anonymous
+  // or profile-less visitors keep the plain browse ordering. Explicit sorts
+  // the user picks always win.
+  const student = auth.loadStudent(req);
+  const profiled = student && match.hasProfile(student);
+  const params = { ...req.query };
+  if (profiled && !params.sort && !params.q) params.sort = 'match';
+  const scoreFn = profiled ? (u) => match.matchUniversity(student, u).score : undefined;
+
+  const result = search.query(INDEX, params, clickOf, { scoreFn });
+  result.universities = result.universities.map((u) => {
+    const withP = withPhoto(u);
+    // Attach a compressed per-card reason only when we actually ranked by fit.
+    if (profiled && params.sort === 'match') {
+      const m = match.matchUniversity(student, u);
+      const reason = explain.compressedReason(m.components);
+      if (reason) withP.match_reasons = [reason];
+    }
+    return withP;
+  });
+  result.sort = params.sort || (req.query.q ? 'relevance' : 'name');
   const q = String(req.query.q || '').trim();
   if (q) {
     events.record('search', { anon: req.anon, results: result.count, q: q.slice(0, 80) });
@@ -224,19 +282,27 @@ api.get('/universities', (req, res) => {
   res.json(result);
 });
 
-api.get('/universities/:id', (req, res) => {
+api.get('/universities/:id', async (req, res) => {
   if (SLUG_REDIRECTS[req.params.id]) {
     return res.redirect(301, `/api/universities/${encodeURIComponent(SLUG_REDIRECTS[req.params.id])}`);
   }
   const uni = BY_ID.get(req.params.id);
   if (!uni) return res.status(404).json({ error: 'University not found.' });
-  let out = withClaim(withPhoto({ ...uni, click_count: clickOf(uni.id) }));
-  // A logged-in student gets the transparent, rule-based "why this fits you"
-  // reasons (budget/field/degree/language/EU) computed by the same match
-  // engine that powers recommendations — the directory's actual differentiator,
-  // surfaced on every profile, not just the recommendations rail.
+  const out = withClaim(withPhoto({ ...uni, click_count: clickOf(uni.id) }));
+
+  // A logged-in student with a matching profile gets the transparent, rule-based
+  // "why this fits you" — the fired components plus a one-line explanation
+  // (structured today; a cached model sentence once the LLM seam is switched
+  // on). No profile / anonymous → the client shows plain structured facts with
+  // no personalization claim.
   const student = auth.loadStudent(req);
-  if (student) out.match_reasons = match.scoreUniversity(student, uni).reasons;
+  if (student && match.hasProfile(student)) {
+    const m = match.scoreUniversity(student, uni);
+    out.match_components = m.components;
+    out.match_reasons = m.components.map((c) => c.label);
+    out.match_flags = m.flags;
+    out.match_explanation = await explain.generate(student, uni, m.components, m.flags);
+  }
   res.json({ university: out });
 });
 

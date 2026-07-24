@@ -816,3 +816,29 @@ img { max-width: 100%; display: block; }
 .fit-card h3 { margin: 0 0 8px; font-size: 1rem; color: var(--teal-600); }
 .fit-list { margin: 0; padding-left: 18px; }
 .fit-list li { margin: 2px 0; color: var(--navy-800); font-size: 0.9rem; }
+
+/* ---------- Matching: onboarding wizard + chip selects ---------- */
+.onb { max-width: 560px; margin: 0 auto; }
+.onb-progress { display: flex; gap: 6px; margin-bottom: 14px; }
+.onb-progress span { flex: 1; height: 4px; border-radius: 2px; background: var(--line); }
+.onb-progress span.on { background: var(--teal-500); }
+.onb-label { display: block; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-faint); margin: 0 0 8px; }
+.onb-input {
+  width: 100%; padding: 11px 13px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+  font-size: 1rem; color: var(--ink); background: var(--surface);
+}
+.onb-input:focus { outline: none; border-color: var(--teal-500); box-shadow: 0 0 0 3px var(--teal-050); }
+.onb-nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 22px; }
+.onb-nav .btn { flex: 1; }
+
+.chip-select { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip-select .pick {
+  border: 1.5px solid var(--line); background: var(--surface); color: var(--ink);
+  border-radius: 999px; padding: 8px 14px; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+.chip-select .pick:hover { border-color: var(--teal-500); }
+.chip-select .pick.is-on { background: var(--teal-500); border-color: var(--teal-500); color: #fff; }
+
+.fit-sentence { margin: 0; color: var(--navy-800); font-size: 0.95rem; line-height: 1.5; }
+.quick-facts { margin: 0 0 12px; font-size: 0.9rem; }

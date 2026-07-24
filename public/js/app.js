@@ -6,6 +6,23 @@
   const view = document.getElementById('view');
   const PAGE_SIZE = 48;
 
+  // Matching-profile option lists — the field list MUST mirror lib/fields.js
+  // (both sides of the match draw from the same closed set).
+  const MATCH = {
+    FIELDS: ['Computer Science', 'Engineering', 'Business', 'Law', 'Medicine', 'Natural Sciences',
+      'Social Sciences', 'Arts & Design', 'Education', 'Agriculture & Veterinary', 'Hospitality & Services'],
+    LANGUAGES: ['English', 'German', 'French', 'Spanish', 'Italian', 'Dutch', 'Polish', 'Portuguese',
+      'Danish', 'Swedish', 'Finnish', 'Czech', 'Hungarian', 'Romanian', 'Greek'],
+    DEGREES: ['Bachelor', 'Master', 'PhD'],
+    CITY: [['large', 'Large city'], ['mid', 'Mid-size city'], ['small', 'Small town']],
+  };
+  // Working copy of the profile while an onboarding/edit form is open.
+  let draft = null;
+  const emptyDraft = () => ({
+    fields_of_interest: [], budget_max_eur_year: '', preferred_languages: [],
+    degree_level: '', city_preference: '', country_preference: [], home_country: '',
+  });
+
   const state = {
     user: null,
     savedIds: new Set(),
@@ -91,6 +108,20 @@
     const fmt = (n) => `€${nfmt(n)}`;
     return r.min === r.max ? `${fmt(r.min)}/${r.period}` : `${fmt(r.min)}–${fmt(r.max)}/${r.period}`;
   };
+
+  // Neutral, non-personalized facts line shown to anonymous visitors on a
+  // profile — no "fits you" claim (they have no profile). Tuition is only a
+  // figure when hand-researched (honest-tuition rule); estimates are omitted.
+  function quickFactsLine(u) {
+    const bits = [];
+    const langs = (u.language_of_instruction || []).slice(0, 2).join(', ');
+    if (langs) bits.push(`Teaches in ${langs}`);
+    if (u.legal_status) bits.push(`${u.legal_status} ${(u.institution_type || 'university').toLowerCase()}`);
+    else if (u.institution_type) bits.push(u.institution_type);
+    const t = money(u.tuition_range);
+    if (t && u.tuition_source === 'curated_research') bits.push(t);
+    return bits.map(esc).join(' · ');
+  }
 
   let toastTimer;
   function toast(msg, isError) {
@@ -236,6 +267,7 @@
   document.addEventListener('click', (e) => {
     const saveBtn = e.target.closest('[data-save]');
     if (saveBtn) handleSaveClick(saveBtn.dataset.save, saveBtn);
+    if (e.target.closest('[data-chip]')) onDraftClick(e);
   });
 
   // =========================================================================
@@ -507,17 +539,24 @@
         <button class="btn btn--gold" id="apply-btn">Apply Now ↗</button>
       </div>
 
-      ${state.user && (u.match_reasons || []).length ? `
+      ${u.match_explanation ? `
         <div class="fit-card">
           <h3>🎯 Why this might fit you</h3>
-          <ul class="fit-list">${u.match_reasons.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>
-          <p class="muted" style="margin:6px 0 0;font-size:.8rem">Based on your profile (field, degree, budget). Update it in <a href="/account">your account</a>.</p>
-        </div>` : ''}
-      ${!state.user ? `
+          <p class="fit-sentence">${esc(u.match_explanation)}</p>
+          ${(u.match_reasons || []).length ? `<div class="taglist" style="margin-top:8px">${u.match_reasons.map((r) => `<span class="chip chip--gold">${esc(r)}</span>`).join('')}</div>` : ''}
+          <p class="muted" style="margin:8px 0 0;font-size:.8rem">Based on your profile. <a href="/onboarding">Update it</a> to refine your matches.</p>
+        </div>`
+      : state.user ? `
+        <div class="fit-card">
+          <p style="margin:0">Set up your matching profile to see why this university does or doesn't fit you.</p>
+          <a class="btn btn--primary btn--sm" href="/onboarding" style="margin-top:8px">Set up matching (30 sec)</a>
+        </div>`
+      : `
+        <p class="quick-facts muted">${quickFactsLine(u)}</p>
         <div class="signup-nudge">
           <div><strong>Comparing schools?</strong> Create a free account to save this university and see why it fits your field, budget and target degree.</div>
           <a class="btn btn--primary btn--sm" href="/account?mode=register&src=profile&next=${encodeURIComponent('/university/' + u.id)}">Sign up free</a>
-        </div>` : ''}
+        </div>`}
 
       ${u.data_verified ? '' : `<div class="verify-flag"><span>⚠️</span><span>${banner}</span></div>`}
       <div class="info-card"><h3>Overview</h3><p id="overview-text" style="margin:0;color:var(--ink-soft)">${esc(u.short_description || '')}</p></div>
@@ -594,12 +633,20 @@
           <div class="avatar">${esc(initials(u.full_name))}</div>
           <div><h2 style="margin:0;font-size:1.2rem">${esc(u.full_name)}</h2><div class="muted">${esc(u.email)}</div></div>
         </div>
+        <div class="section-head" style="margin:14px 2px 8px"><h3 style="font-size:.95rem;margin:0">Matching profile</h3><button class="link-btn" id="edit-profile">Edit</button></div>
+        ${u.profile_completed ? `
         <div class="profile-facts">
-          <div class="info-item"><div class="k">Country of origin</div><div class="v">${esc(u.country_of_origin || '—')}</div></div>
-          <div class="info-item"><div class="k">Field of interest</div><div class="v">${esc(u.field_of_interest || '—')}</div></div>
-          <div class="info-item"><div class="k">Target degree</div><div class="v">${esc(u.target_degree_level || '—')}</div></div>
-          <div class="info-item"><div class="k">Saved universities</div><div class="v">${savedCount}</div></div>
-        </div>
+          <div class="info-item"><div class="k">Fields of interest</div><div class="v">${(u.fields_of_interest || []).map(esc).join(', ') || '—'}</div></div>
+          <div class="info-item"><div class="k">Target degree</div><div class="v">${esc(u.degree_level || '—')}</div></div>
+          <div class="info-item"><div class="k">Budget (max €/yr)</div><div class="v">${u.budget_max_eur_year != null ? '€' + nfmt(u.budget_max_eur_year) : '—'}</div></div>
+          <div class="info-item"><div class="k">Study languages</div><div class="v">${(u.preferred_languages || []).map(esc).join(', ') || '—'}</div></div>
+          <div class="info-item"><div class="k">City preference</div><div class="v">${esc((MATCH.CITY.find((c) => c[0] === u.city_preference) || [,'—'])[1])}</div></div>
+          <div class="info-item"><div class="k">Countries</div><div class="v">${(u.country_preference || []).map(esc).join(', ') || 'No preference'}</div></div>
+        </div>` : `
+        <div class="fit-card" style="margin-top:0">
+          <p style="margin:0">Set your profile to switch on personalized matching — ranked results and a "why this fits" line on every university.</p>
+          <button class="btn btn--primary btn--sm" id="start-onboarding" style="margin-top:10px">Set up matching (30 sec)</button>
+        </div>`}
         <div style="margin-top:18px;display:flex;gap:10px">
           <a class="btn btn--ghost" href="/saved" style="flex:1">View saved (${savedCount})</a>
           <button class="btn btn--primary" id="logout" style="flex:1">Log out</button>
@@ -631,6 +678,129 @@
       if (!confirm('Permanently delete your account and saved list? This cannot be undone.')) return;
       try { await API.deleteAccount(); state.user = null; state.savedIds = new Set(); toast('Account deleted'); location.href = '/'; }
       catch (e) { toast(e.message, true); }
+    });
+    const startBtn = document.getElementById('start-onboarding');
+    if (startBtn) startBtn.addEventListener('click', () => go('/onboarding'));
+    document.getElementById('edit-profile').addEventListener('click', () => go('/onboarding'));
+  }
+
+  // ---- matching profile: control builders ---------------------------------
+  // A toggle-chip multi-select backed by the module-level `draft`. Clicks are
+  // handled by one delegated listener that mutates draft and re-renders.
+  function chips(key, options, opts) {
+    const max = opts && opts.max;
+    const sel = draft[key];
+    return `<div class="chip-select" data-chipset="${key}">${options.map((o) => {
+      const [val, label] = Array.isArray(o) ? o : [o, o];
+      const on = Array.isArray(sel) ? sel.includes(val) : sel === val;
+      return `<button type="button" class="pick ${on ? 'is-on' : ''}" data-chip="${key}" data-val="${esc(val)}"${max ? ` data-max="${max}"` : ''}>${esc(label)}</button>`;
+    }).join('')}</div>`;
+  }
+
+  function onDraftClick(e) {
+    const chip = e.target.closest('[data-chip]');
+    if (!chip) return;
+    const key = chip.dataset.chip;
+    const val = chip.dataset.val;
+    const cur = draft[key];
+    if (Array.isArray(cur)) {
+      const i = cur.indexOf(val);
+      if (i >= 0) cur.splice(i, 1);
+      else { const max = Number(chip.dataset.max || 0); if (!max || cur.length < max) cur.push(val); else toast(`Pick up to ${max}`, true); }
+    } else {
+      draft[key] = cur === val ? '' : val; // single-select toggle
+    }
+    render(); // cheap re-render of the current onboarding step / editor
+  }
+
+  // ---- onboarding wizard (also the /account editor) -----------------------
+  const ONBOARD_STEPS = [
+    { key: 'fields', title: 'What do you want to study?', sub: 'Pick up to 3 — this drives your matches.' },
+    { key: 'degree', title: 'Level & budget', sub: 'What are you aiming for, and what can you afford per year?' },
+    { key: 'langs', title: 'Which languages can you study in?', sub: 'Not your nationality — the languages you could take a degree in.' },
+    { key: 'place', title: 'Where would you like to be?', sub: 'All optional — leave blank for no preference.' },
+  ];
+
+  async function renderOnboarding() {
+    if (!state.user) { navigate('/account?mode=register&next=%2Fonboarding', true); return; }
+    setActiveNav('account');
+    document.title = 'Set up matching — Universo';
+    // The country step needs the facet list — load it once, then re-render.
+    if (!state.filterMeta) {
+      try { state.filterMeta = await API.filters(); render(); return; } catch { state.filterMeta = { countries: [] }; }
+    }
+    if (!draft) {
+      const u = state.user;
+      draft = {
+        fields_of_interest: [...(u.fields_of_interest || [])],
+        budget_max_eur_year: u.budget_max_eur_year != null ? String(u.budget_max_eur_year) : '',
+        preferred_languages: [...(u.preferred_languages || [])],
+        degree_level: u.degree_level || '',
+        city_preference: u.city_preference || '',
+        country_preference: [...(u.country_preference || [])],
+        home_country: u.home_country || u.country_of_origin || '',
+      };
+      draft._step = 0;
+    }
+    const step = ONBOARD_STEPS[draft._step];
+    const countries = (state.filterMeta && state.filterMeta.countries) || [];
+
+    let body = '';
+    if (step.key === 'fields') {
+      body = chips('fields_of_interest', MATCH.FIELDS, { max: 3 });
+    } else if (step.key === 'degree') {
+      body = `<label class="onb-label">Target degree</label>${chips('degree_level', MATCH.DEGREES)}
+        <label class="onb-label" style="margin-top:16px">Max tuition you can afford (€ / year)</label>
+        <input id="onb-budget" type="number" min="0" step="500" inputmode="numeric" placeholder="e.g. 6000" value="${esc(draft.budget_max_eur_year)}" class="onb-input" />`;
+    } else if (step.key === 'langs') {
+      body = chips('preferred_languages', MATCH.LANGUAGES, { max: 6 });
+    } else {
+      body = `<label class="onb-label">City size</label>${chips('city_preference', MATCH.CITY)}
+        <label class="onb-label" style="margin-top:16px">Countries (optional — pick any)</label>${chips('country_preference', countries)}
+        <label class="onb-label" style="margin-top:16px">Home country (for language/visa context only)</label>
+        <input id="onb-home" type="text" placeholder="e.g. Mongolia" value="${esc(draft.home_country)}" class="onb-input" />`;
+    }
+
+    const last = draft._step === ONBOARD_STEPS.length - 1;
+    view.innerHTML = `
+      <div class="onb">
+        <div class="onb-progress">${ONBOARD_STEPS.map((_, i) => `<span class="${i <= draft._step ? 'on' : ''}"></span>`).join('')}</div>
+        <p class="muted" style="margin:0 0 2px">Step ${draft._step + 1} of ${ONBOARD_STEPS.length}</p>
+        <h2 style="margin:0 0 4px">${esc(step.title)}</h2>
+        <p class="muted" style="margin:0 0 16px">${esc(step.sub)}</p>
+        ${body}
+        <div class="onb-nav">
+          ${draft._step > 0 ? '<button class="btn btn--ghost" id="onb-back">Back</button>' : '<a class="btn btn--ghost" href="/discover">Skip for now</a>'}
+          <button class="btn btn--primary" id="onb-next">${last ? 'Save & see matches' : 'Next'}</button>
+        </div>
+      </div>`;
+
+    const budgetEl = document.getElementById('onb-budget');
+    if (budgetEl) budgetEl.addEventListener('input', (e) => { draft.budget_max_eur_year = e.target.value; });
+    const homeEl = document.getElementById('onb-home');
+    if (homeEl) homeEl.addEventListener('input', (e) => { draft.home_country = e.target.value; });
+    const backBtn = document.getElementById('onb-back');
+    if (backBtn) backBtn.addEventListener('click', () => { draft._step--; render(); });
+    document.getElementById('onb-next').addEventListener('click', async () => {
+      if (!last) { draft._step++; render(); return; }
+      const btn = document.getElementById('onb-next');
+      btn.disabled = true; btn.textContent = 'Saving…';
+      try {
+        const payload = {
+          fields_of_interest: draft.fields_of_interest,
+          budget_max_eur_year: draft.budget_max_eur_year === '' ? null : Number(draft.budget_max_eur_year),
+          preferred_languages: draft.preferred_languages,
+          degree_level: draft.degree_level,
+          city_preference: draft.city_preference,
+          country_preference: draft.country_preference,
+          home_country: draft.home_country,
+        };
+        const { student } = await API.updateProfile(payload);
+        state.user = student;
+        draft = null;
+        toast('Matching is on — results are now ranked for you');
+        go('/discover');
+      } catch (e) { toast(e.message, true); btn.disabled = false; btn.textContent = 'Save & see matches'; }
     });
   }
 
@@ -694,11 +864,15 @@
 
   function showAuthError(msg) { const box = document.getElementById('auth-error'); box.textContent = msg; box.hidden = !msg; }
 
-  async function afterAuth(data) {
+  async function afterAuth(data, isNew) {
     state.user = data.student;
     state.savedIds = new Set(data.student.saved_universities || []);
     toast(`Welcome, ${data.student.full_name.split(' ')[0]}!`);
-    go(authCtx.next || '/discover');
+    // A brand-new account with no matching profile yet goes through onboarding
+    // once (unless they were mid-flow toward a specific page). Everyone else
+    // lands where they were headed.
+    const next = authCtx.next || (isNew && !data.student.profile_completed ? '/onboarding' : '/discover');
+    go(next);
     authCtx = { next: '', src: '' };
   }
 
@@ -729,7 +903,7 @@
           target_degree_level: fd.get('target_degree_level'), consent: fd.get('consent') === 'on',
           updates_optin: fd.get('updates_optin') === 'on',
           src: authCtx.src || undefined,
-        }));
+        }), true);
       } catch (err) { showAuthError(err.message); btn.disabled = false; btn.textContent = 'Create account'; }
     });
   }
@@ -775,6 +949,7 @@
     try {
       if (parts[0] === 'discover') p = renderDiscover();
       else if (parts[0] === 'saved') p = renderSaved();
+      else if (parts[0] === 'onboarding') p = renderOnboarding();
       else if (parts[0] === 'account') p = renderAccount(new URLSearchParams(location.search).get('mode'));
       else if (parts[0] === 'privacy') p = renderPrivacy();
       else if (isProfile) p = renderProfile(decodeURIComponent(parts[1]));

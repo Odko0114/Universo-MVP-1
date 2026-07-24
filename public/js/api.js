@@ -62,6 +62,7 @@
     login: (payload) => request('POST', '/auth/login', payload),
     logout: () => request('POST', '/auth/logout'),
     me: () => request('GET', '/auth/me'),
+    updateProfile: (payload) => request('PATCH', '/me/profile', payload),
     exportData: () => request('GET', '/me/export'),
     deleteAccount: () => request('DELETE', '/me'),
     // Universities
