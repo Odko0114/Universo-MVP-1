@@ -69,13 +69,24 @@ test('GET /discover is public and server-rendered — no auth wall, no redirect'
   assert.match(html, /Same Start\. Equal Chance\./); // slim signup banner in the SSR snapshot
 });
 
-test('GET /for-universities serves the B2B page (mission + claim form)', async () => {
+test('GET /for-universities serves the B2B page (mission, claim, pricing, testimonials, demo link)', async () => {
   const r = await req('GET', '/for-universities');
   assert.equal(r.status, 200);
   assert.match(r.text, /<title>For universities/);
   assert.match(r.text, /id="mission"/);
   assert.match(r.text, /id="claim"/);
   assert.match(r.text, /id="uni-form"/);
+  assert.match(r.text, /id="pricing"/);
+  assert.match(r.text, /€990/);            // D.2 pricing figure
+  assert.match(r.text, /id="testimonials"/); // E.2 scaffold
+  assert.match(r.text, /\/partners\/demo/);  // D.1 demo link
+});
+
+test('GET /partners/demo is a public, clearly-labelled example dashboard', async () => {
+  const r = await req('GET', '/partners/demo');
+  assert.equal(r.status, 200);
+  assert.match(r.text, /Example data/);
+  assert.match(r.text, /noindex, nofollow/);
 });
 
 test('for-universities stat counters render the real number, never a bare 0, and match /discover', async () => {

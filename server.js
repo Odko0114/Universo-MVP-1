@@ -813,6 +813,10 @@ app.get('/admin', (_req, res) => res.sendFile(path.join(PUBLIC_DIR, 'admin.html'
 // which university's data it shows is decided by the session server-side.
 app.get('/partners', (_req, res) => res.sendFile(path.join(PUBLIC_DIR, 'partners.html')));
 
+// Public, no-login SALES demo of the partner dashboard — clearly labelled
+// "example data, not live". Sells the value prop before a university claims.
+app.get('/partners/demo', (_req, res) => res.sendFile(path.join(PUBLIC_DIR, 'partners-demo.html')));
+
 // The B2B pitch (analytics, claim-a-profile, pilot contact form) lives on its
 // own page, off the student-facing homepage.
 app.get('/for-universities', (req, res) => {
@@ -975,7 +979,7 @@ app.use((err, req, res, _next) => {
 // ---------------------------------------------------------------------------
 if (require.main === module) {
   const server = app.listen(cfg.PORT, () => {
-    log.info('listening', { url: `http://localhost:${cfg.PORT}`, universities: UNIVERSITIES.length });
+    log.info('listening', { url: `http://localhost:${cfg.PORT}`, universities: UNIVERSITIES.length, errorMonitoring: log.errorMonitoringEnabled, aiExplanations: explain.LLM_ENABLED });
     process.stdout.write(`\n  Universo → http://localhost:${cfg.PORT}   (admin: /admin)\n  ${UNIVERSITIES.length.toLocaleString('en-US')} universities loaded\n\n`);
   });
   if (!process.env.SKIP_PHOTO_PREWARM) warmVerifiedPhotos().catch((e) => log.warn('photo prewarm failed', { error: e.message }));

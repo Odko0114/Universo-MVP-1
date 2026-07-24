@@ -842,3 +842,29 @@ img { max-width: 100%; display: block; }
 
 .fit-sentence { margin: 0; color: var(--navy-800); font-size: 0.95rem; line-height: 1.5; }
 .quick-facts { margin: 0 0 12px; font-size: 0.9rem; }
+
+/* ---------- For-universities: pricing + testimonials ---------- */
+.lp-pricing { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.lp-pricing__card {
+  background: var(--navy-800); color: #fff; border-radius: var(--radius);
+  padding: 22px; border: 1px solid rgba(255,255,255,0.08);
+}
+.lp-pricing__card--pilot { background: var(--navy-900); border-color: var(--gold-500); }
+.lp-pricing__tag {
+  color: var(--gold-500); font-weight: 700; font-size: 0.72rem;
+  letter-spacing: 0.12em; text-transform: uppercase; margin: 0 0 6px;
+}
+.lp-pricing__price { font-size: 2rem; font-weight: 800; margin: 0 0 4px; color: #fff; }
+.lp-pricing__price span { font-size: 1rem; font-weight: 600; color: #c7d2e2; }
+.lp-pricing .muted { color: #a9b6ca; }
+.lp-pricing__card .lp-checklist--dark li { color: #dbe4f0; }
+@media (max-width: 640px) { .lp-pricing { grid-template-columns: 1fr; } }
+
+.lp-testimonials { display: grid; grid-template-columns: 1fr; gap: 14px; }
+.lp-testimonial {
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 20px;
+}
+.lp-testimonial--empty { border-style: dashed; text-align: center; }
+.lp-testimonial__quote { font-size: 1.05rem; font-style: italic; color: var(--navy-800); margin: 0 0 8px; }
+.lp-testimonial__by { color: var(--ink-faint); font-size: 0.86rem; margin: 0; }

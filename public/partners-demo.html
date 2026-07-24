@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="icon" href="/favicon.svg" />
+  <title>Partner dashboard — example — Universo</title>
+  <style>
+    :root { --navy:#0B1F3A; --navy2:#12294d; --teal:#14b8a6; --teal2:#0d9488; --gold:#E9B949; --line:#e4e8ef; --ink:#10233f; --faint:#7a879b; --danger:#d64550; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:#f5f7fb; color:var(--ink); }
+    header { background:var(--navy); color:#fff; padding:18px 20px; }
+    header .inner { max-width:1000px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    header h1 { margin:0; font-size:1.15rem; }
+    header .sub { color:#c7d2e2; font-size:.82rem; margin-top:2px; }
+    header a { color:var(--gold); text-decoration:none; font-weight:600; font-size:.85rem; }
+    .demo-banner {
+      background:var(--gold); color:var(--navy); text-align:center; font-weight:700;
+      padding:10px 16px; font-size:.9rem;
+    }
+    .wrap { max-width:1000px; margin:0 auto; padding:20px; }
+    .panel { background:#fff; border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:18px; }
+    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:18px; }
+    .stat { background:#fff; border:1px solid var(--line); border-radius:14px; padding:14px 16px; }
+    .stat .n { font-size:1.6rem; font-weight:800; }
+    .stat .l { color:var(--faint); font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; margin-top:2px; }
+    .stat.primary { background:linear-gradient(135deg,var(--teal2),var(--teal)); color:#fff; border:none; }
+    .stat.primary .l { color:rgba(255,255,255,.85); }
+    .stat.gold { background:linear-gradient(135deg,var(--gold),#d4a017); border:none; }
+    h2 { font-size:1rem; margin:22px 0 10px; }
+    .chart { display:flex; align-items:flex-end; gap:2px; height:120px; padding-top:8px; }
+    .chart .col { flex:1; display:flex; flex-direction:column; justify-content:flex-end; height:100%; position:relative; }
+    .chart .bar { background:var(--teal); border-radius:3px 3px 0 0; min-height:2px; }
+    .chart .bar.gold { background:var(--gold); }
+    .chart .bar.navy { background:var(--navy2); }
+    .chart-x { display:flex; justify-content:space-between; color:var(--faint); font-size:.7rem; margin-top:4px; }
+    table { width:100%; border-collapse:collapse; font-size:.86rem; }
+    th { text-align:left; color:var(--faint); font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; padding:6px 8px; border-bottom:1px solid var(--line); }
+    td { padding:8px; border-bottom:1px solid var(--line); }
+    td.num { text-align:right; font-variant-numeric:tabular-nums; }
+    .bar-inline { display:inline-block; height:8px; background:var(--teal); border-radius:4px; margin-right:8px; vertical-align:middle; }
+    .foot { color:var(--faint); font-size:.75rem; }
+    .cta { display:block; text-align:center; background:var(--navy); color:#fff; text-decoration:none; font-weight:700; border-radius:999px; padding:13px; margin-top:8px; }
+  </style>
+</head>
+<body>
+  <div class="demo-banner">📊 Example data — not a live account. This is what your dashboard would show once you claim your profile.</div>
+  <header>
+    <div class="inner">
+      <div>
+        <h1>Universo — Partner dashboard</h1>
+        <div class="sub" id="uni-name">Example University of Technology</div>
+      </div>
+      <a href="/for-universities#claim">Claim your profile →</a>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="foot" style="margin-bottom:14px">Last 30 days · illustrative figures</div>
+    <div id="stats" class="grid"></div>
+
+    <h2>Profile views per day</h2>
+    <div class="panel"><div class="chart" id="chart-views"></div><div class="chart-x" id="x-views"></div></div>
+
+    <h2>Saves per day</h2>
+    <div class="panel"><div class="chart" id="chart-saves"></div><div class="chart-x" id="x-saves"></div></div>
+
+    <h2>Apply clicks per day</h2>
+    <div class="panel"><div class="chart" id="chart-applies"></div><div class="chart-x" id="x-applies"></div></div>
+
+    <h2>Where your viewers come from</h2>
+    <div class="panel"><div id="countries"></div></div>
+
+    <a class="cta" href="/for-universities#claim">This could be your university — claim your profile</a>
+  </div>
+
+  <script>
+    const nfmt = (n) => Number(n || 0).toLocaleString('en-US');
+    const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+    // Deterministic pseudo-random so the demo looks realistic but stable across
+    // reloads (no Math.random flicker). A gentle upward trend with weekly waves.
+    function series(base, amp, growth) {
+      const days = 30, out = [];
+      const today = new Date();
+      for (let i = days - 1; i >= 0; i--) {
+        const d = new Date(today.getTime() - i * 86400000);
+        const t = (days - 1 - i) / (days - 1);
+        const weekly = Math.sin((days - i) * 0.9) * 0.35 + 0.65;
+        const val = Math.max(0, Math.round((base + amp * weekly + growth * t * base) * (0.85 + 0.3 * ((i * 7) % 5) / 5)));
+        out.push({ date: d.toISOString().slice(0, 10), v: val });
+      }
+      return out;
+    }
+
+    const views = series(38, 22, 1.4);
+    const saves = series(9, 6, 1.1);
+    const applies = series(3, 3, 1.6);
+    const sum = (s) => s.reduce((a, b) => a + b.v, 0);
+
+    const stats = [
+      ['primary', sum(views), 'Profile views'],
+      ['', Math.round(sum(views) * 0.62), 'Unique viewers'],
+      ['gold', sum(saves), 'Saves'],
+      ['', sum(applies), 'Apply clicks'],
+    ];
+    document.getElementById('stats').innerHTML = stats.map(([cls, n, l]) =>
+      `<div class="stat ${cls}"><div class="n">${nfmt(n)}</div><div class="l">${l}</div></div>`).join('');
+
+    function chart(elId, xId, s, cls) {
+      const max = Math.max(1, ...s.map(r => r.v));
+      document.getElementById(elId).innerHTML = s.map(r =>
+        `<div class="col"><div class="bar ${cls || ''}" style="height:${Math.round(r.v / max * 100)}%"></div></div>`).join('');
+      document.getElementById(xId).innerHTML = `<span>${s[0].date.slice(5)}</span><span>${s[s.length - 1].date.slice(5)}</span>`;
+    }
+    chart('chart-views', 'x-views', views);
+    chart('chart-saves', 'x-saves', saves, 'gold');
+    chart('chart-applies', 'x-applies', applies, 'navy');
+
+    const countries = [
+      ['India', 214], ['Nigeria', 168], ['Vietnam', 121], ['Mongolia', 96],
+      ['Brazil', 88], ['Pakistan', 74], ['Indonesia', 61], ['Turkey', 52],
+      ['Iran', 44], ['Bangladesh', 39],
+    ];
+    const cmax = Math.max(...countries.map(c => c[1]));
+    document.getElementById('countries').innerHTML =
+      `<table><thead><tr><th>Country</th><th style="text-align:right">Unique viewers</th></tr></thead><tbody>${
+        countries.map(([c, n]) => `<tr><td>${esc(c)}</td><td class="num"><span class="bar-inline" style="width:${Math.round(n / cmax * 80)}px"></span>${nfmt(n)}</td></tr>`).join('')
+      }</tbody></table>`;
+  </script>
+</body>
+</html>
