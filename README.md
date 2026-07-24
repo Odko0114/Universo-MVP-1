@@ -151,13 +151,15 @@ This is powered by a first-party, **PII-free** event log (`data/events.jsonl`) �
 
 ### Admin setup
 
-The dashboard has **no default account** — create one before `/admin` is usable:
+The dashboard has **no default account** — create one before `/admin` is usable. Pass only the email; the script prompts for the password interactively with echo suppressed, so it never lands in shell history or `ps` output:
 
 ```bash
-npm run create-admin -- you@example.com "a strong password"
+npm run create-admin -- you@example.com
 ```
 
 Or set `ADMIN_EMAIL` + `ADMIN_PASSWORD` in the environment before the **first** boot (auto-creates one admin if none exist yet). If the dev server is already running when you create an admin via the CLI, **restart it** — the in-memory store only reads `data/admins.json` at boot.
+
+The `/admin` sign-in page deliberately does **not** describe this on-page (it's a public URL, even if login-gated) — this README is the source of truth for admin provisioning.
 
 ---
 
@@ -245,7 +247,7 @@ Or set `ADMIN_EMAIL` + `ADMIN_PASSWORD` in the environment before the **first** 
 | `PORT` | `3000` | HTTP port |
 | `NODE_ENV` | — | Set to `production` to require a stable secret and mark cookies `Secure`. |
 | `UNIVERSO_JWT_SECRET` | random per boot (dev) | **Required in production** (boot fails without it). A random dev secret signs everyone out on restart and can't be shared across instances. |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | — | If set and no admin exists yet, auto-creates one admin account on boot. Otherwise use `npm run create-admin -- email password`. |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | — | If set and no admin exists yet, auto-creates one admin account on boot. Otherwise use `npm run create-admin -- email` (prompts for the password). |
 | `UNIVERSO_DATA_DIR` | `./data` | Where runtime data (accounts, clicks, events, caches) lives. In production, point at a **persistent volume outside the repo tree** — see [DEPLOYMENT.md](DEPLOYMENT.md). Seed data (`data/seed/*`) always ships with the code and is unaffected. |
 | `LOG_LEVEL` | `info` | `debug` \| `info` \| `warn` \| `error`. |
 

@@ -53,7 +53,7 @@
           <ul class="lp-checklist" aria-label="Key facts">
             <li>✓ Your profile is already listed — claiming it puts you in control</li>
             <li>✓ Engagement analytics: views, saves, apply clicks, viewer countries</li>
-            <li>✓ Pilot program: free while we build with a small founding group</li>
+            <li>✓ Free for the first 10 universities to join the pilot — paid plans after</li>
           </ul>
         </div>
       </div>
@@ -62,9 +62,12 @@
 
     <!-- ============ Stats ============ -->
     <section class="lp-wrap lp-stats" aria-label="Platform statistics">
-      <div class="lp-stat" data-reveal><div class="lp-stat__n" data-count="4069">0</div><div class="lp-stat__l">European institutions listed</div></div>
-      <div class="lp-stat" data-reveal><div class="lp-stat__n" data-count="300">0</div><div class="lp-stat__l">Verified profiles</div></div>
-      <div class="lp-stat" data-reveal><div class="lp-stat__n" data-count="32">0</div><div class="lp-stat__l">Countries covered</div></div>
+      <!-- data-count drives the JS count-up; the visible text is the real
+           number so the stat never shows 0 without/before JS. Both are
+           injected at boot from the live dataset (see server.js). -->
+      <div class="lp-stat" data-reveal><div class="lp-stat__n" data-count="{{TOTAL_RAW}}">{{TOTAL}}</div><div class="lp-stat__l">European institutions listed</div></div>
+      <div class="lp-stat" data-reveal><div class="lp-stat__n" data-count="{{VERIFIED_RAW}}">{{VERIFIED}}</div><div class="lp-stat__l">Verified profiles</div></div>
+      <div class="lp-stat" data-reveal><div class="lp-stat__n" data-count="{{COUNTRIES_RAW}}">{{COUNTRIES}}</div><div class="lp-stat__l">Countries covered</div></div>
       <div class="lp-stat" data-reveal><div class="lp-stat__n">37</div><div class="lp-stat__l">Finnish HEIs interviewed first</div></div>
     </section>
 
@@ -108,6 +111,7 @@
     <section class="lp-wrap lp-section" id="claim">
       <h2 class="lp-h2" data-reveal>Claim your profile</h2>
       <p class="lp-lede" data-reveal>Tell us who you are and which institution you represent. We verify every claim by hand (that's the point), then set up your partner access — analytics dashboard included. We reply within 2 business days.</p>
+      <p class="lp-lede" data-reveal style="font-size:0.95rem"><strong>Pricing:</strong> free for founding pilot universities. Paid plans begin after the pilot — we'll walk you through them on our first call, no commitment to claim your profile now.</p>
       <form class="lp-uni-form" id="uni-form" data-reveal novalidate>
         <div class="hp-field" aria-hidden="true">
           <label for="company_website">Leave this field blank</label>
@@ -173,6 +177,12 @@
       // ---- count-up stats ---------------------------------------------------
       function countUp(el) {
         var target = parseInt(el.dataset.count, 10);
+        // The real number is already server-rendered into the element (so it
+        // never shows 0 without JS). Only animate up from 0 when the element
+        // is actually starting from empty/zero — never flash the real number
+        // back down to 0 first.
+        var current = parseInt((el.textContent || '').replace(/[^0-9]/g, ''), 10);
+        if (current === target) return;
         if (reduceMotion || !target) { el.textContent = target ? target.toLocaleString('en-US') : el.textContent; return; }
         var start = performance.now(), duration = 1200;
         function tick(now) {

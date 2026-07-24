@@ -78,6 +78,41 @@ test('GET /for-universities serves the B2B page (mission + claim form)', async (
   assert.match(r.text, /id="uni-form"/);
 });
 
+test('for-universities stat counters render the real number, never a bare 0, and match /discover', async () => {
+  const filters = (await req('GET', '/api/universities/filters')).json;
+  const total = filters.counts.total; // e.g. 4004
+  const verified = filters.counts.verified; // e.g. 300
+  const page = (await req('GET', '/for-universities')).text;
+  // The visible fallback text is the real, comma-formatted number (not "0"),
+  // injected from the same counts the API/discover use — no template tokens
+  // leak, no stale hardcoded value.
+  assert.ok(!page.includes('{{TOTAL}}'), 'no unreplaced token');
+  assert.match(page, new RegExp(`>${total.toLocaleString('en-US')}</div>`));
+  assert.match(page, new RegExp(`data-count="${verified}"`));
+});
+
+test('a logged-in student sees rule-based match reasons on a profile; logged-out does not', async () => {
+  const anon = await fetch(base + '/api/universities/tum'); // no cookies
+  const anonJson = await anon.json();
+  assert.equal(anonJson.university.match_reasons, undefined);
+
+  const email = `fit_${Date.now()}@example.com`;
+  await req('POST', '/api/auth/register', {
+    full_name: 'Fit Test', email, password: 'password123', consent: true,
+    field_of_interest: 'Computer Science', target_degree_level: 'Master',
+  });
+  const withUser = await req('GET', '/api/universities/tum');
+  assert.ok(Array.isArray(withUser.json.university.match_reasons));
+  assert.ok(withUser.json.university.match_reasons.length >= 1);
+  await req('DELETE', '/api/me');
+});
+
+test('admin sign-in page no longer prints the create-admin command', async () => {
+  const r = await req('GET', '/admin');
+  assert.ok(!/create-admin/.test(r.text), 'setup command must not be in public HTML');
+  assert.match(r.text, /Contact the founder for access/);
+});
+
 test('university profile pages stay public for anonymous visitors (SEO surface)', async () => {
   const anyId = (await req('GET', '/api/universities?limit=1')).json.universities[0].id;
   const res = await fetch(`${base}/university/${anyId}`); // no cookies

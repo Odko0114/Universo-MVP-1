@@ -270,7 +270,7 @@
       <section class="hero">
         <p class="hero__tagline">Same Start. Equal Chance.</p>
         <h1>Find your university <span class="accent">in Europe</span></h1>
-        <p><strong>${verifiedN}</strong> verified EU university profiles — real photos, official enrollment data, scholarships — plus a directory of <strong>${totalN}</strong> European institutions.</p>
+        <p><strong>${totalN}</strong> European universities listed — <strong>${verifiedN}</strong> with verified, university-confirmed details (photos, official enrollment, scholarships). The rest are register-sourced directory listings; open any profile to see exactly what's known.</p>
       </section>
 
       <div class="scope-row" role="group" aria-label="Result scope">
@@ -507,11 +507,17 @@
         <button class="btn btn--gold" id="apply-btn">Apply Now ↗</button>
       </div>
 
-      ${state.user ? '' : `
+      ${state.user && (u.match_reasons || []).length ? `
+        <div class="fit-card">
+          <h3>🎯 Why this might fit you</h3>
+          <ul class="fit-list">${u.match_reasons.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>
+          <p class="muted" style="margin:6px 0 0;font-size:.8rem">Based on your profile (field, degree, budget). Update it in <a href="/account">your account</a>.</p>
+        </div>` : ''}
+      ${!state.user ? `
         <div class="signup-nudge">
-          <div><strong>Comparing schools?</strong> Create a free account to save this university and get matched to programs that fit you.</div>
+          <div><strong>Comparing schools?</strong> Create a free account to save this university and see why it fits your field, budget and target degree.</div>
           <a class="btn btn--primary btn--sm" href="/account?mode=register&src=profile&next=${encodeURIComponent('/university/' + u.id)}">Sign up free</a>
-        </div>`}
+        </div>` : ''}
 
       ${u.data_verified ? '' : `<div class="verify-flag"><span>⚠️</span><span>${banner}</span></div>`}
       <div class="info-card"><h3>Overview</h3><p id="overview-text" style="margin:0;color:var(--ink-soft)">${esc(u.short_description || '')}</p></div>

@@ -59,7 +59,16 @@ const BY_ID = new Map(UNIVERSITIES.map((u) => [u.id, u]));
 // Old slugs of deduplicated records → their surviving slug (301s, never 404s).
 const SLUG_REDIRECTS = require('./lib/dataset').slugRedirects();
 const VERIFIED_COUNT = UNIVERSITIES.filter((u) => u.verified).length;
-FILTERS.counts = { total: UNIVERSITIES.length, verified: VERIFIED_COUNT };
+// Single source of truth for the headline platform numbers — the filters API,
+// the /discover copy AND the /for-universities stat counters all read from
+// here, so they can never drift apart (they used to: a hardcoded "4069" on the
+// B2B page outlived the dedup that made it 4004).
+const PLATFORM_COUNTS = {
+  total: UNIVERSITIES.length,
+  verified: VERIFIED_COUNT,
+  countries: FILTERS.countries.length,
+};
+FILTERS.counts = { total: PLATFORM_COUNTS.total, verified: PLATFORM_COUNTS.verified };
 
 const clickOf = (id) => store.read('clicks')[id] || 0;
 
@@ -221,7 +230,14 @@ api.get('/universities/:id', (req, res) => {
   }
   const uni = BY_ID.get(req.params.id);
   if (!uni) return res.status(404).json({ error: 'University not found.' });
-  res.json({ university: withClaim(withPhoto({ ...uni, click_count: clickOf(uni.id) })) });
+  let out = withClaim(withPhoto({ ...uni, click_count: clickOf(uni.id) }));
+  // A logged-in student gets the transparent, rule-based "why this fits you"
+  // reasons (budget/field/degree/language/EU) computed by the same match
+  // engine that powers recommendations — the directory's actual differentiator,
+  // surfaced on every profile, not just the recommendations rail.
+  const student = auth.loadStudent(req);
+  if (student) out.match_reasons = match.scoreUniversity(student, uni).reasons;
+  res.json({ university: out });
 });
 
 // Anonymous Apply-Now click — bumps a counter in the separate clicks store and
@@ -709,7 +725,17 @@ app.get('/healthz', (_req, res) => res.json({ status: 'ok', universities: UNIVER
 // ---------------------------------------------------------------------------
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const SHELL = fs.readFileSync(path.join(PUBLIC_DIR, 'index.html'), 'utf8');
-const FOR_UNIVERSITIES = fs.readFileSync(path.join(PUBLIC_DIR, 'for-universities.html'), 'utf8');
+const FOR_UNIVERSITIES = (() => {
+  const raw = fs.readFileSync(path.join(PUBLIC_DIR, 'for-universities.html'), 'utf8');
+  const fmt = (n) => n.toLocaleString('en-US');
+  return raw
+    .replace(/\{\{TOTAL_RAW\}\}/g, String(PLATFORM_COUNTS.total))
+    .replace(/\{\{TOTAL\}\}/g, fmt(PLATFORM_COUNTS.total))
+    .replace(/\{\{VERIFIED_RAW\}\}/g, String(PLATFORM_COUNTS.verified))
+    .replace(/\{\{VERIFIED\}\}/g, fmt(PLATFORM_COUNTS.verified))
+    .replace(/\{\{COUNTRIES_RAW\}\}/g, String(PLATFORM_COUNTS.countries))
+    .replace(/\{\{COUNTRIES\}\}/g, fmt(PLATFORM_COUNTS.countries));
+})();
 // redirect:false — public/join is a real directory (the built React app), and
 // the default directory-redirect (/join → /join/) would 301 every request to
 // that route before it ever reaches the app.get('/join') handler below.

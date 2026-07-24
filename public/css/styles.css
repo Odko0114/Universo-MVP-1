@@ -804,3 +804,15 @@ img { max-width: 100%; display: block; }
   border-radius: var(--radius-sm); padding: 10px 14px;
   font-size: 0.86rem; color: var(--navy-800);
 }
+
+/* ---------- Profile: "why this fits you" ---------- */
+.fit-card {
+  background: var(--teal-050);
+  border: 1px solid rgba(20, 184, 166, 0.25);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.fit-card h3 { margin: 0 0 8px; font-size: 1rem; color: var(--teal-600); }
+.fit-list { margin: 0; padding-left: 18px; }
+.fit-list li { margin: 2px 0; color: var(--navy-800); font-size: 0.9rem; }
