@@ -53,7 +53,7 @@
           <ul class="lp-checklist" aria-label="Key facts">
             <li>✓ Your profile is already listed — claiming it puts you in control</li>
             <li>✓ Engagement analytics: views, saves, apply clicks, viewer countries</li>
-            <li>✓ Free for the first 10 universities to join the pilot — paid plans after</li>
+            <li>✓ Free for founding pilot partners — €990/month per institution after the pilot</li>
           </ul>
         </div>
       </div>
@@ -65,10 +65,15 @@
       <!-- data-count drives the JS count-up; the visible text is the real
            number so the stat never shows 0 without/before JS. Both are
            injected at boot from the live dataset (see server.js). -->
-      <div class="lp-stat" data-reveal><div class="lp-stat__n" data-count="{{TOTAL_RAW}}">{{TOTAL}}</div><div class="lp-stat__l">European institutions listed</div></div>
+      <!-- The raw directory total (4,004) is deliberately NOT shown here.
+           Advertising it beside the verified count tells a buyer that most of
+           the catalogue is thin — the opposite of the intended message. -->
       <div class="lp-stat" data-reveal><div class="lp-stat__n" data-count="{{VERIFIED_RAW}}">{{VERIFIED}}</div><div class="lp-stat__l">Verified profiles</div></div>
       <div class="lp-stat" data-reveal><div class="lp-stat__n" data-count="{{COUNTRIES_RAW}}">{{COUNTRIES}}</div><div class="lp-stat__l">Countries covered</div></div>
-      <div class="lp-stat" data-reveal><div class="lp-stat__n">37</div><div class="lp-stat__l">Finnish HEIs interviewed first</div></div>
+      <!-- PLACEHOLDER: replace with the real count of COMPLETED conversations.
+           Left un-invented on purpose — this is a factual claim on a public
+           B2B page. -->
+      <div class="lp-stat" data-reveal><div class="lp-stat__n">[EXACT_NUMBER_OF_COMPLETED_CONVERSATIONS]</div><div class="lp-stat__l">Finnish institutions we spoke to</div></div>
     </section>
 
     <!-- ============ What you get ============ -->
@@ -107,7 +112,7 @@
         <div class="lp-pricing__card lp-pricing__card--pilot">
           <p class="lp-pricing__tag">Founding pilot</p>
           <p class="lp-pricing__price">Free</p>
-          <p class="muted" style="margin:0 0 12px">For the first 10 universities to join, while we build with you.</p>
+          <p class="muted" style="margin:0 0 12px">For founding pilot partners, while we build with you.</p>
           <ul class="lp-checklist lp-checklist--dark">
             <li>✓ Full analytics dashboard</li>
             <li>✓ Direct input on what we build next</li>
@@ -147,13 +152,39 @@
     <section class="lp-mission" id="mission">
       <div class="lp-wrap" data-reveal>
         <p class="lp-mission__kicker">Why we built this</p>
+        <!-- PLACEHOLDER: the previous quote claimed we "spent months talking to
+             every one of Finland's 37 higher-education institutions". That
+             overstates what actually happened, so it has been pulled rather
+             than softened. Replace the line below with your own wording —
+             whatever is literally true. -->
         <blockquote class="lp-mission__quote">
-          "We came to Finland as international students, then spent months talking to every one
-          of Finland's 37 higher-education institutions. Universities told us the same thing
-          students did, from the other side: the channels between them are expensive, opaque,
-          and blind to everyone who falls through. Universo exists to close that gap for both."
+          [FOUNDER_QUOTE_REWRITE]
         </blockquote>
         <p class="lp-mission__by">— Odko &amp; Mir, founders of Universo</p>
+      </div>
+    </section>
+
+    <!-- ============ Data handling (GDPR) ============ -->
+    <section class="lp-wrap lp-section" id="data-handling">
+      <h2 class="lp-h2" data-reveal>How we handle data</h2>
+      <div class="lp-datacard" data-reveal>
+        <p>Universo is built so a university can use it without ever receiving personal data about a
+        student who hasn't chosen to contact them. Partner analytics are aggregate counts only —
+        there is no screen anywhere in the product that shows you an individual student.</p>
+        <ul>
+          <li><strong>What we collect:</strong> anonymous engagement events (profile views, saves, apply clicks, searches) tied to a random client id stored in a first-party cookie — never a name or email.</li>
+          <li><strong>What partners can see:</strong> aggregate counts and trends for your own institution only — views, saves, apply clicks, and viewer countries. Never an individual student, and never another institution's numbers.</li>
+          <!-- ⚠ DO NOT fill this in with "EU" until the service actually runs in
+               an EU region. As of now render.yaml declares no region, so the
+               service and its disk run in Render's DEFAULT region: Oregon, US.
+               Claiming EU residency here would be a false statement in the
+               exact section a German or Finnish DPO will read first.
+               Fix = add `region: frankfurt` in render.yaml and recreate the
+               service, then replace this placeholder with the EU wording. -->
+          <li><strong>Where it is stored:</strong> [DATA_RESIDENCY_STATUS — see note in page source before publishing]</li>
+          <li><strong>Legal basis:</strong> legitimate interest (GDPR Art. 6(1)(f)) for anonymous product analytics; explicit consent (Art. 6(1)(a)) for any student who creates an account or opts into email updates. Students can export or permanently delete their data, including their event history, at any time.</li>
+        </ul>
+        <p class="muted" style="margin:12px 0 0">Full details in our <a href="/privacy">privacy policy</a>. Questions from your DPO are welcome before you claim — email <a href="mailto:hello@universo.app">hello@universo.app</a>.</p>
       </div>
     </section>
 

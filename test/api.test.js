@@ -97,9 +97,28 @@ test('for-universities stat counters render the real number, never a bare 0, and
   // The visible fallback text is the real, comma-formatted number (not "0"),
   // injected from the same counts the API/discover use — no template tokens
   // leak, no stale hardcoded value.
-  assert.ok(!page.includes('{{TOTAL}}'), 'no unreplaced token');
-  assert.match(page, new RegExp(`>${total.toLocaleString('en-US')}</div>`));
-  assert.match(page, new RegExp(`data-count="${verified}"`));
+  assert.ok(!page.includes('{{TOTAL}}') && !page.includes('{{VERIFIED}}'), 'no unreplaced token');
+  assert.match(page, new RegExp(`data-count="${verified}"`), 'verified count is injected live');
+  // The raw directory total is deliberately absent from the B2B page: shown
+  // next to the verified count it advertises how much of the catalogue is thin.
+  assert.ok(!page.includes(`>${total.toLocaleString('en-US')}</div>`), 'directory total must not appear');
+});
+
+test('/for-universities carries a data-handling section and no un-evidenced claims', async () => {
+  const page = (await req('GET', '/for-universities')).text;
+  assert.match(page, /id="data-handling"/);
+  assert.match(page, /What we collect/);
+  assert.match(page, /Legal basis/);
+  assert.match(page, /href="\/privacy"/);
+  // Residency must not claim the EU while the service runs in Render's default
+  // US region — see the note in for-universities.html.
+  assert.ok(!/EU-hosted|Frankfurt region/.test(page), 'no unverified EU-residency claim');
+  // Factual claims that were overstated are placeholders until the founder
+  // supplies real numbers/wording.
+  assert.match(page, /\[EXACT_NUMBER_OF_COMPLETED_CONVERSATIONS\]/);
+  assert.match(page, /\[FOUNDER_QUOTE_REWRITE\]/);
+  assert.ok(!/first 10 universities/.test(page), 'countdown wording removed');
+  assert.match(page, /Free for founding pilot partners/);
 });
 
 test('a logged-in student sees rule-based match reasons on a profile; logged-out does not', async () => {
@@ -215,7 +234,7 @@ test('no name+country duplicates survive the build', async () => {
   }
 });
 
-test('tuition figures display only for curated research; estimates say check official site', async () => {
+test('unresearched tuition is omitted entirely and replaced by an honest register notice', async () => {
   const curated = (await req('GET', '/api/universities/tum')).json.university;
   assert.equal(curated.tuition_source, 'curated_research');
 
@@ -224,8 +243,33 @@ test('tuition figures display only for curated research; estimates say check off
   assert.equal(full.tuition_source, 'country_estimate');
 
   const ssrPage = await req('GET', `/university/${eter.id}`);
-  assert.match(ssrPage.text, /Check official site/);
   assert.ok(!/Tuition \(intl\)<\/dt><dd>~?€/.test(ssrPage.text), 'no fabricated € figure in SSR facts');
+  assert.ok(!/Check official site/.test(ssrPage.text), 'no pseudo-answer in the tuition slot');
+  assert.match(ssrPage.text, /have not verified tuition, programs or entry requirements/);
+});
+
+test('thin register profiles are noindex,follow; verified profiles stay indexable', async () => {
+  const eter = (await req('GET', '/api/universities?source=eter&limit=1')).json.universities[0];
+  const thin = await req('GET', `/university/${eter.id}`);
+  assert.match(thin.text, /content="noindex, follow"/, 'thin page must be noindex but still followed');
+
+  const verified = await req('GET', '/university/tum'); // curated + verified
+  assert.ok(!/name="robots"/.test(verified.text), 'verified profile must stay indexable');
+});
+
+test('sitemap lists only verified profiles, not the full register', async () => {
+  const r = await req('GET', '/sitemap.xml');
+  const count = (r.text.match(/\/university\//g) || []).length;
+  const filters = (await req('GET', '/api/universities/filters')).json;
+  assert.equal(count, filters.counts.verified, 'one sitemap entry per verified profile');
+  assert.ok(count < filters.counts.total, 'thin records are excluded');
+});
+
+test('outbound university links are https and truncated register names are corrected', async () => {
+  const rwth = (await req('GET', '/api/universities/eter-de0069')).json.university;
+  assert.equal(rwth.name, 'RWTH Aachen University');
+  assert.equal(rwth.name_register, 'Aachen University', 'original register name kept for provenance');
+  assert.ok(rwth.website.startsWith('https://'));
 });
 
 test('/saved and /account ship real fallback content, page meta and noindex', async () => {

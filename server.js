@@ -860,9 +860,13 @@ let sitemapCache = null; // dataset is static — build once
 app.get('/sitemap.xml', (req, res) => {
   const base = `${req.protocol}://${req.get('host')}`;
   if (!sitemapCache) {
-    // Public surface: the (now account-free) directory, the B2B page, and
-    // every university profile page.
-    const urls = ['discover', 'for-universities', ...UNIVERSITIES.map((u) => `university/${u.id}`)]
+    // Only VERIFIED profiles are submitted for indexing. The ~3,700
+    // register-only records are near-duplicate boilerplate (name, city, type,
+    // enrolment) with no tuition, programs or entry requirements — asking
+    // Google to index them invites a thin-content judgement on the whole
+    // domain. They stay reachable and crawlable (noindex,follow on the page
+    // itself), so their outbound links still pass, but they're not advertised.
+    const urls = ['discover', 'for-universities', ...UNIVERSITIES.filter((u) => u.verified).map((u) => `university/${u.id}`)]
       .map((p) => `  <url><loc>${base}/${p}</loc></url>`).join('\n');
     sitemapCache = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
   }
@@ -889,6 +893,10 @@ app.get('/university/:id', (req, res) => {
       title: `${uni.name}${loc ? ' — ' + loc : ''} | Universo`,
       description: uni.short_description || `${uni.name} — discover programs, facts and how to apply.`,
       canonical: `${baseUrl(req)}/university/${uni.id}`,
+      // Unverified = register-only boilerplate. noindex,FOLLOW: keep it out of
+      // the index without orphaning the links on it. A profile becomes
+      // indexable the moment it earns real content (or a university claims it).
+      noindex: uni.verified ? false : 'follow',
     }),
     viewHtml: ssr.profileView(withClaim(uni)),
   }));

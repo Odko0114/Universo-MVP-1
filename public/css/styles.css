@@ -868,3 +868,44 @@ img { max-width: 100%; display: block; }
 .lp-testimonial--empty { border-style: dashed; text-align: center; }
 .lp-testimonial__quote { font-size: 1.05rem; font-style: italic; color: var(--navy-800); margin: 0 0 8px; }
 .lp-testimonial__by { color: var(--ink-faint); font-size: 0.86rem; margin: 0; }
+
+/* ---------- Unverified profile: honest register-source notice ---------- */
+/* Replaces the old "Check official site" pseudo-answer in the tuition row. */
+.unverified-note {
+  background: #fdf7e6;
+  border: 1px solid rgba(233, 185, 73, 0.45);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--navy-800);
+}
+.unverified-note strong { display: block; margin-bottom: 2px; }
+
+/* ---------- For-universities: data-handling (GDPR) card ---------- */
+.lp-datacard {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--teal-500);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+}
+.lp-datacard p { margin: 0 0 12px; color: var(--ink-soft); font-size: 0.94rem; line-height: 1.6; }
+.lp-datacard ul { margin: 0; padding-left: 20px; }
+.lp-datacard li { margin: 8px 0; color: var(--ink-soft); font-size: 0.92rem; line-height: 1.55; }
+.lp-datacard li strong { color: var(--navy-900); }
+
+/* ---------- Discover: numbered pagination ---------- */
+.pager { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; margin: 20px 0 8px; }
+.pager__btn {
+  min-width: 40px; padding: 9px 12px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink);
+  border-radius: var(--radius-sm); font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  transition: border-color 0.12s ease, background 0.12s ease, color 0.12s ease;
+}
+.pager__btn:hover:not(:disabled):not(.is-current) { border-color: var(--teal-500); color: var(--teal-600); }
+.pager__btn.is-current { background: var(--teal-500); border-color: var(--teal-500); color: #fff; cursor: default; }
+.pager__btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.pager__gap { color: var(--ink-faint); padding: 0 2px; }
+@media (max-width: 480px) { .pager__btn { min-width: 36px; padding: 8px 9px; font-size: 0.85rem; } }

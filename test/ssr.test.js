@@ -56,15 +56,26 @@ test('profileView shows a tuition figure only for curated research', () => {
   assert.match(curated, /#5 world/);
   assert.match(curated, /€0–€3,000\/year/);
 
-  // A country-level estimate must NOT render as a number — it points at the
-  // official site instead (the range stays internal for the budget filter).
+  // A country-level estimate must NOT render as a number, and must NOT render a
+  // "check official site" link in the value slot either — a row that looks
+  // answered but isn't. The row is omitted; an honest notice explains why.
   const estimated = ssr.profileView({
-    name: 'Y', website: 'https://y.example',
+    name: 'Y', website: 'https://y.example', source: 'eter',
     tuition_source: 'country_estimate',
     tuition_range: { min: 0, max: 3000, period: 'year', estimated: true },
   });
-  assert.match(estimated, /Check official site/);
   assert.ok(!estimated.includes('€3,000'), 'estimate range not displayed');
+  assert.ok(!/<dt>Tuition \(intl\)<\/dt>/.test(estimated), 'no tuition row at all when unresearched');
+  assert.match(estimated, /have not verified tuition, programs or entry requirements/);
+  assert.match(estimated, /official European register/);
+});
+
+test('profileView omits the unverified notice on curated profiles', () => {
+  const curated = ssr.profileView({
+    name: 'X', source: 'curated', tuition_source: 'curated_research',
+    tuition_range: { min: 0, max: 3000, period: 'year' },
+  });
+  assert.ok(!/have not verified tuition/.test(curated));
 });
 
 test('directoryView lists universities with links and escapes names', () => {

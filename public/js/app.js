@@ -28,8 +28,12 @@
     savedIds: new Set(),
     filterMeta: null,
     // scope 'verified' (default) shows the complete-profile tier; 'all' adds
-    // the full worldwide directory (thin records, clearly labeled).
-    discover: { q: '', scope: 'verified', country: '', region: '', type: '', field: '', language: '', degree: '', maxTuition: '', sort: 'name' },
+    // the full register (thin records, clearly labeled).
+    // sort '' means "let the server decide" — which is match-ranking for a
+    // student with a profile. It used to default to 'name', which silently
+    // suppressed match ranking in the UI because an explicit sort always wins.
+    // page is 1-based and drives the offset sent to the API.
+    discover: { q: '', scope: 'verified', country: '', region: '', type: '', field: '', language: '', degree: '', maxTuition: '', sort: '', page: 1 },
     results: { items: [], total: 0, offset: 0, hasMore: false, loading: false },
   };
 
@@ -273,9 +277,43 @@
   // =========================================================================
   // Views
   // =========================================================================
+  // ---- Discover state <-> URL --------------------------------------------
+  // Filters, search, scope, sort and page live in the query string, so a
+  // filtered view is shareable and survives a reload/refresh.
+  function discoverFromUrl() {
+    const p = new URLSearchParams(location.search);
+    const d = state.discover;
+    d.q = p.get('q') || '';
+    d.scope = p.get('scope') === 'all' ? 'all' : 'verified';
+    d.country = p.get('country') || '';
+    d.region = p.get('region') || '';
+    d.type = p.get('type') || '';
+    d.field = p.get('field') || '';
+    d.language = p.get('language') || '';
+    d.degree = p.get('degree') || '';
+    d.maxTuition = p.get('maxTuition') || '';
+    d.sort = p.get('sort') || '';
+    d.page = Math.max(1, parseInt(p.get('page'), 10) || 1);
+  }
+
+  function syncDiscoverUrl() {
+    const d = state.discover;
+    const p = new URLSearchParams();
+    // Only non-default values are written, so a clean browse stays at /discover.
+    if (d.q) p.set('q', d.q);
+    if (d.scope === 'all') p.set('scope', 'all');
+    ['country', 'region', 'type', 'field', 'language', 'degree', 'maxTuition', 'sort'].forEach((k) => {
+      if (d[k]) p.set(k, d[k]);
+    });
+    if (d.page > 1) p.set('page', String(d.page));
+    const qs = p.toString();
+    history.replaceState({}, '', '/discover' + (qs ? `?${qs}` : ''));
+  }
+
   async function renderDiscover() {
     // Browsing is public — no account needed. Only actions (saving,
     // recommendations) gate on login, at the moment of the action.
+    discoverFromUrl();
     setActiveNav('discover');
     document.title = 'Discover universities in Europe — Universo';
     const d = state.discover;
@@ -291,7 +329,9 @@
     const niche = d.region === 'EU' && d.language === 'English' && d.maxTuition === '6000';
     const counts = m.counts || {};
     const verifiedN = counts.verified ? nfmt(counts.verified) : '300';
-    const totalN = counts.total ? nfmt(counts.total) : '12,500+';
+    const totalN = counts.total ? nfmt(counts.total) : '4,000+';
+    const registerN = counts.total && counts.verified ? nfmt(counts.total - counts.verified) : '3,700+';
+    const profiled = !!(state.user && state.user.profile_completed);
 
     view.innerHTML = `
       ${!state.user ? `
@@ -302,12 +342,12 @@
       <section class="hero">
         <p class="hero__tagline">Same Start. Equal Chance.</p>
         <h1>Find your university <span class="accent">in Europe</span></h1>
-        <p><strong>${totalN}</strong> European universities listed — <strong>${verifiedN}</strong> with verified, university-confirmed details (photos, official enrollment, scholarships). The rest are register-sourced directory listings; open any profile to see exactly what's known.</p>
+        <p><strong>${totalN}</strong> European universities listed — <strong>${verifiedN}</strong> with a complete, checked profile (photo, official enrolment data, scholarships). The rest are entries from the official European register; open any profile to see exactly what we do and don't know about it.</p>
       </section>
 
       <div class="scope-row" role="group" aria-label="Result scope">
         <button class="niche-btn ${d.scope === 'verified' ? 'is-active' : ''}" id="scope-verified" type="button">✓ Verified profiles (${verifiedN})</button>
-        <button class="niche-btn ${d.scope === 'all' ? 'is-active' : ''}" id="scope-all" type="button">Include full directory (${totalN})</button>
+        <button class="niche-btn ${d.scope === 'all' ? 'is-active' : ''}" id="scope-all" type="button">Include unverified register entries (${registerN})</button>
       </div>
 
       <button class="niche-btn ${niche ? 'is-active' : ''}" id="niche-toggle" type="button">
@@ -329,6 +369,7 @@
         <div class="field"><label for="f-degree">Degree level</label><select id="f-degree"><option value="">Any degree</option>${opts(m.degree_levels, d.degree)}</select></div>
         <div class="field"><label for="f-budget">Tuition budget</label><select id="f-budget">${budgets.map(([v, l]) => `<option value="${v}" ${v === d.maxTuition ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
         <div class="field"><label for="f-sort">Sort by</label><select id="f-sort">
+          <option value="" ${d.sort === '' ? 'selected' : ''}>${profiled ? 'Best match (your profile)' : 'Verified first, then A–Z'}</option>
           <option value="name" ${d.sort === 'name' ? 'selected' : ''}>Name (A–Z)</option>
           <option value="size" ${d.sort === 'size' ? 'selected' : ''}>Largest (students)</option>
           <option value="tuition" ${d.sort === 'tuition' ? 'selected' : ''}>Lowest tuition</option>
@@ -344,25 +385,31 @@
       <div id="results" class="grid">${'<div class="skeleton"></div>'.repeat(6)}</div>
       <div id="loadmore-wrap" class="loadmore-wrap"></div>`;
 
+    // Any filter change resets to page 1 — staying on page 7 of a narrower
+    // result set would land the visitor on an empty page.
+    const applyChange = () => { d.page = 1; syncDiscoverUrl(); loadResults(true); };
+
     const qEl = document.getElementById('q');
     let searchTimer;
-    qEl.addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { d.q = qEl.value.trim(); loadResults(true); }, 300); });
-    const bind = (id, key) => { const el = document.getElementById(id); if (el) el.addEventListener('change', (e) => { d[key] = e.target.value; if (e.target.value) trackFilter(key, e.target.value); loadResults(true); }); };
+    qEl.addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { d.q = qEl.value.trim(); applyChange(); }, 300); });
+    const bind = (id, key) => { const el = document.getElementById(id); if (el) el.addEventListener('change', (e) => { d[key] = e.target.value; if (e.target.value) trackFilter(key, e.target.value); applyChange(); }); };
     bind('f-country', 'country'); bind('f-type', 'type'); bind('f-field', 'field');
     bind('f-language', 'language'); bind('f-degree', 'degree'); bind('f-budget', 'maxTuition'); bind('f-sort', 'sort');
     document.getElementById('clear-filters').addEventListener('click', () => {
-      state.discover = { q: '', scope: 'verified', country: '', region: '', type: '', field: '', language: '', degree: '', maxTuition: '', sort: 'name' };
+      history.replaceState({}, '', '/discover'); // drop every param, then re-read
       renderDiscover();
     });
     document.getElementById('scope-verified').addEventListener('click', () => {
-      if (d.scope !== 'verified') { d.scope = 'verified'; trackFilter('scope', 'verified'); renderDiscover(); }
+      if (d.scope !== 'verified') { d.scope = 'verified'; d.page = 1; trackFilter('scope', 'verified'); syncDiscoverUrl(); renderDiscover(); }
     });
     document.getElementById('scope-all').addEventListener('click', () => {
-      if (d.scope !== 'all') { d.scope = 'all'; trackFilter('scope', 'all'); renderDiscover(); }
+      if (d.scope !== 'all') { d.scope = 'all'; d.page = 1; trackFilter('scope', 'all'); syncDiscoverUrl(); renderDiscover(); }
     });
     document.getElementById('niche-toggle').addEventListener('click', () => {
       if (niche) { d.region = ''; d.language = ''; d.maxTuition = ''; }
       else { d.region = 'EU'; d.language = 'English'; d.maxTuition = '6000'; trackFilter('niche', 'eu-affordable-english'); }
+      d.page = 1;
+      syncDiscoverUrl();
       renderDiscover();
     });
 
@@ -385,6 +432,30 @@
     } catch { wrap.innerHTML = ''; }
   }
 
+  /**
+   * Numbered pager: « Prev, a sliding window of page numbers around the
+   * current one (with ellipses and always-visible first/last), Next ».
+   */
+  function pagerHtml(page, totalPages) {
+    const btn = (p, label, opts = {}) =>
+      `<button class="pager__btn ${opts.current ? 'is-current' : ''}" ${opts.disabled ? 'disabled' : `data-page="${p}"`} ${opts.current ? 'aria-current="page"' : ''}>${label}</button>`;
+    const gap = '<span class="pager__gap">…</span>';
+
+    const nums = [];
+    const windowSize = 2; // pages either side of the current one
+    const lo = Math.max(1, page - windowSize);
+    const hi = Math.min(totalPages, page + windowSize);
+    if (lo > 1) { nums.push(btn(1, '1')); if (lo > 2) nums.push(gap); }
+    for (let p = lo; p <= hi; p++) nums.push(btn(p, String(p), { current: p === page }));
+    if (hi < totalPages) { if (hi < totalPages - 1) nums.push(gap); nums.push(btn(totalPages, String(totalPages))); }
+
+    return `<nav class="pager" aria-label="Pagination">
+      ${btn(page - 1, '‹ Prev', { disabled: page === 1 })}
+      ${nums.join('')}
+      ${btn(page + 1, 'Next ›', { disabled: page === totalPages })}
+    </nav>`;
+  }
+
   async function loadResults(reset) {
     const d = state.discover;
     const box = document.getElementById('results');
@@ -394,37 +465,49 @@
     if (!box) return;
 
     if (reset) { state.results = { items: [], total: 0, offset: 0, hasMore: false, loading: true }; box.innerHTML = '<div class="skeleton"></div>'.repeat(6); }
+    const offset = (d.page - 1) * PAGE_SIZE;
     if (hintEl) {
       const narrowing = d.field || d.language || d.degree || d.maxTuition;
       hintEl.textContent = narrowing ? 'Field, language, degree and tuition filters apply to in-depth curated profiles only.' : '';
     }
 
     try {
-      const res = await API.universities({ q: d.q, verified: d.scope === 'verified' ? '1' : '', country: d.country, region: d.region, type: d.type, field: d.field, language: d.language, degree: d.degree, maxTuition: d.maxTuition, sort: d.sort, offset: state.results.offset, limit: PAGE_SIZE });
+      const res = await API.universities({ q: d.q, verified: d.scope === 'verified' ? '1' : '', country: d.country, region: d.region, type: d.type, field: d.field, language: d.language, degree: d.degree, maxTuition: d.maxTuition, sort: d.sort, offset, limit: PAGE_SIZE });
       state.results.total = res.count;
-      state.results.hasMore = res.has_more;
-      state.results.items = reset ? res.universities : state.results.items.concat(res.universities);
+      state.results.items = res.universities; // one page at a time, not accumulated
 
-      countEl.textContent = `${nfmt(res.count)} ${res.count === 1 ? 'university' : 'universities'}`;
+      const totalPages = Math.max(1, Math.ceil(res.count / PAGE_SIZE));
+      // A stale deep link (e.g. ?page=40 after narrowing) lands past the end —
+      // bounce back to the last real page instead of showing nothing.
+      if (d.page > totalPages && res.count > 0) { d.page = totalPages; syncDiscoverUrl(); return loadResults(true); }
+
+      const from = res.count ? offset + 1 : 0;
+      const to = Math.min(offset + PAGE_SIZE, res.count);
+      countEl.textContent = res.count
+        ? `${nfmt(res.count)} ${res.count === 1 ? 'university' : 'universities'} · showing ${nfmt(from)}–${nfmt(to)} (page ${d.page} of ${nfmt(totalPages)})`
+        : 'No universities';
+
       box.innerHTML = state.results.items.length
         ? state.results.items.map(uniCard).join('')
         : `<div style="grid-column:1/-1">${emptyState({
             iconName: 'search',
-            title: 'No matches for that combination',
-            sub: 'Try a broader search term, or clear one of the active filters.',
-            secondary: '<button class="btn btn--ghost" id="empty-clear">Clear all filters</button>',
+            title: 'No universities match these filters',
+            sub: 'Nothing in the catalogue matches that combination. Try a broader search term, or clear the filters to start again.',
+            secondary: '<button class="btn btn--primary" id="empty-clear">Clear all filters</button>',
           })}</div>`;
       const emptyClear = document.getElementById('empty-clear');
       if (emptyClear) emptyClear.addEventListener('click', () => {
-        state.discover = { q: '', country: '', region: '', type: '', field: '', language: '', degree: '', maxTuition: '', sort: 'name' };
+        history.replaceState({}, '', '/discover');
         renderDiscover();
       });
 
-      moreWrap.innerHTML = state.results.hasMore
-        ? `<button class="btn btn--ghost" id="load-more">Load more (${nfmt(state.results.total - state.results.items.length)} more)</button>`
-        : (state.results.items.length > PAGE_SIZE ? '<p class="muted end-note">That’s all of them.</p>' : '');
-      const moreBtn = document.getElementById('load-more');
-      if (moreBtn) moreBtn.addEventListener('click', () => { state.results.offset += PAGE_SIZE; loadResults(false); });
+      moreWrap.innerHTML = totalPages > 1 ? pagerHtml(d.page, totalPages) : '';
+      moreWrap.querySelectorAll('[data-page]').forEach((b) => b.addEventListener('click', () => {
+        d.page = Number(b.dataset.page);
+        syncDiscoverUrl();
+        loadResults(true);
+        document.querySelector('.searchbar').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }));
     } catch (e) {
       countEl.textContent = '';
       box.innerHTML = `<div style="grid-column:1/-1">${emptyState({ iconName: 'alert', title: 'Something went wrong loading results', sub: e.message })}</div>`;
@@ -477,12 +560,11 @@
     // research (tuition_source 'curated_research'). Country-level estimate
     // ranges stay internal (they power the budget filter) — displaying them as
     // numbers reads as fabricated per-university data, which it isn't.
+    // If we don't have a researched figure, the row is OMITTED rather than
+    // filled with a "Check official site" link — a row that looks answered but
+    // isn't isn't honest. The unverified notice below carries that message once.
     const tuit = money(u.tuition_range);
-    if (tuit && u.tuition_source === 'curated_research') {
-      facts.push(['Tuition (intl)', tuit]);
-    } else if (u.website || u.application_link) {
-      facts.push(['Tuition (intl)', `<a href="${esc(u.website || u.application_link)}" target="_blank" rel="noopener">Check official site ↗</a>`]);
-    }
+    if (tuit && u.tuition_source === 'curated_research') facts.push(['Tuition (intl)', tuit]);
     const living = money(u.estimated_living_cost);
     if (living) facts.push([`Living cost${u.estimated_living_cost.estimated ? ' · est.' : ''}`, u.estimated_living_cost.estimated ? `~${living}` : living]);
     if (u.institution_type) facts.push(['Institution type', u.institution_type]);
@@ -558,7 +640,13 @@
           <a class="btn btn--primary btn--sm" href="/account?mode=register&src=profile&next=${encodeURIComponent('/university/' + u.id)}">Sign up free</a>
         </div>`}
 
-      ${u.data_verified ? '' : `<div class="verify-flag"><span>⚠️</span><span>${banner}</span></div>`}
+      ${isCurated
+        ? `<div class="verify-flag"><span>⚠️</span><span>${banner}</span></div>`
+        : `<div class="unverified-note">
+             <strong>We have not verified tuition, programs or entry requirements for this university yet.</strong>
+             Everything on this page comes from the official European register (ETER).
+             ${u.website ? `Check <a href="${esc(u.website)}" target="_blank" rel="noopener">the official website</a> for fees and admission details.` : ''}
+           </div>`}
       <div class="info-card"><h3>Overview</h3><p id="overview-text" style="margin:0;color:var(--ink-soft)">${esc(u.short_description || '')}</p></div>
       ${facts.length ? `<div class="info-card"><h3>Key facts</h3><div class="info-grid">${factCards}</div>${(u.estimated_living_cost && u.estimated_living_cost.estimated) || u.language_estimated ? '<p class="muted" style="margin:10px 0 0;font-size:.82rem">~ / “est.” / “typical” = <strong>country-level estimate</strong>, not verified per-university. Confirm with the university.</p>' : ''}</div>` : ''}
       ${section('Programs offered', taglist(u.programs_offered, 'chip'))}
