@@ -147,10 +147,36 @@ test('PATCH /api/me/profile stores matching fields and flips profile_completed',
   await req('DELETE', '/api/me');
 });
 
-test('admin sign-in page no longer prints the create-admin command', async () => {
+test('signed-out /admin HTML leaks nothing: no setup command, no hint copy, no export URL', async () => {
   const r = await req('GET', '/admin');
   assert.ok(!/create-admin/.test(r.text), 'setup command must not be in public HTML');
-  assert.match(r.text, /Contact the founder for access/);
+  assert.ok(!/Contact the founder/.test(r.text), 'no provisioning hint copy');
+  assert.ok(!/subscribers\.csv/.test(r.text), 'export URL is injected only after auth');
+  // The gate itself still renders: title + both fields + the button.
+  assert.match(r.text, /Admin sign in/);
+  assert.match(r.text, /id="admin-email"/);
+  assert.match(r.text, /id="admin-password"/);
+});
+
+test('every /api/admin/* and partner route rejects unauthenticated access with JSON 401', async () => {
+  const adminRoutes = ['/api/admin/me', '/api/admin/stats', '/api/admin/traffic', '/api/admin/funnel',
+    '/api/admin/retention', '/api/admin/searches', '/api/admin/leads', '/api/admin/subscribers.csv'];
+  for (const path of adminRoutes) {
+    const res = await fetch(base + path); // no cookies
+    assert.equal(res.status, 401, `${path} must be 401 when signed out`);
+    const body = await res.text();
+    assert.ok(!/university|email|@/i.test(body) || /authentication required/i.test(body), `${path} leaked data`);
+  }
+  for (const path of ['/api/uni/me', '/api/uni/stats']) {
+    const res = await fetch(base + path);
+    assert.equal(res.status, 401, `${path} must be 401 when signed out`);
+  }
+  // Admin-only mutation route too.
+  const post = await fetch(base + '/api/admin/uni-accounts', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: 'x@y.edu', password: 'whatever12345', university_id: 'tum' }),
+  });
+  assert.equal(post.status, 401);
 });
 
 test('university profile pages stay public for anonymous visitors (SEO surface)', async () => {

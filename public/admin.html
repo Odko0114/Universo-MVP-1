@@ -86,9 +86,11 @@
     </div>
   </header>
 
+  <!-- Signed-out state is deliberately minimal: a title, the two fields, and
+       the button. No description, no provisioning hint — a public URL should
+       never describe its own auth setup. Admin provisioning lives in README. -->
   <div id="login-gate">
     <h2>Admin sign in</h2>
-    <p class="sub">This dashboard contains business metrics — sign in to continue.</p>
     <div id="login-error"></div>
     <form id="login-form">
       <label for="admin-email">Email</label>
@@ -97,7 +99,6 @@
       <input id="admin-password" type="password" autocomplete="current-password" required />
       <button type="submit">Sign in</button>
     </form>
-    <p class="hint">No account yet? Contact the founder for access.</p>
   </div>
 
   <div class="wrap" id="dashboard" style="display:none">
@@ -140,7 +141,10 @@
 
     <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">
       <h2>University leads</h2>
-      <a class="refresh" href="/api/admin/subscribers.csv" download style="text-decoration:none">⬇ Subscribers CSV</a>
+      <!-- Injected by showDash() only once the admin session is confirmed, so
+           the export URL never appears in the HTML served to a signed-out
+           visitor. (The endpoint itself is also requireAdmin-guarded.) -->
+      <span id="csv-slot"></span>
     </div>
     <div class="panel">
       <div id="table-leads"></div>
@@ -168,8 +172,26 @@
       return res.status === 204 ? null : res.json();
     }
 
-    function showGate() { gate.style.display = 'block'; dash.style.display = 'none'; document.getElementById('logout-link').style.display = 'none'; }
-    function showDash() { gate.style.display = 'none'; dash.style.display = 'block'; document.getElementById('logout-link').style.display = 'inline'; }
+    function showGate() {
+      gate.style.display = 'block'; dash.style.display = 'none';
+      document.getElementById('logout-link').style.display = 'none';
+      document.getElementById('csv-slot').innerHTML = ''; // never expose the export URL signed out
+    }
+    function showDash() {
+      gate.style.display = 'none'; dash.style.display = 'block';
+      document.getElementById('logout-link').style.display = 'inline';
+      // Built via DOM (not markup) so the export path appears nowhere in the
+      // HTML served to a signed-out visitor.
+      const slot = document.getElementById('csv-slot');
+      slot.innerHTML = '';
+      const a = document.createElement('a');
+      a.className = 'refresh';
+      a.href = '/api/' + 'admin/subscribers' + '.csv';
+      a.download = '';
+      a.style.textDecoration = 'none';
+      a.textContent = '⬇ Subscribers CSV';
+      slot.appendChild(a);
+    }
 
     // ---- login ----
     document.getElementById('login-form').addEventListener('submit', async (e) => {

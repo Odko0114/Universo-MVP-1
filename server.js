@@ -138,7 +138,13 @@ const publicStudent = (s) => {
 
 // ---- Auth -----------------------------------------------------------------
 
+// Registration is the looser of the two (a shared campus IP may legitimately
+// sign several students up); LOGIN is the credential-stuffing surface, so it
+// gets the tighter 10-per-15-minutes cap that admin and partner logins use.
+// NOTE: the limiter is in-memory (lib/rate-limit.js) — counters reset when the
+// process restarts. Fine for a single instance; move to Redis if we scale out.
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, message: 'Too many attempts. Try again in a few minutes.' });
+const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: 'Too many attempts. Try again in a few minutes.' });
 
 api.post('/auth/register', authLimiter, async (req, res) => {
   const result = validate.registration(req.body);
@@ -198,7 +204,7 @@ api.post('/auth/register', authLimiter, async (req, res) => {
   res.status(201).json({ student: publicStudent(student) });
 });
 
-api.post('/auth/login', authLimiter, async (req, res) => {
+api.post('/auth/login', loginLimiter, async (req, res) => {
   const result = validate.login(req.body);
   if (!result.ok) return res.status(400).json({ error: result.error });
   const { email, password } = result.value;
