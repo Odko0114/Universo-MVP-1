@@ -18,6 +18,8 @@ data/cache/
 
 # Local env / secrets
 .env
+.env.local
+.env.*.local
 *.log
 .DS_Store
 
