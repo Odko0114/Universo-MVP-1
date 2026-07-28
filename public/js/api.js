@@ -65,6 +65,7 @@
     updateProfile: (payload) => request('PATCH', '/me/profile', payload),
     exportData: () => request('GET', '/me/export'),
     deleteAccount: () => request('DELETE', '/me'),
+    logoutEverywhere: () => request('POST', '/me/logout-everywhere'),
     // Universities
     filters: () => request('GET', '/universities/filters'),
     universities: (params) => request('GET', `/universities${toQuery(params)}`),

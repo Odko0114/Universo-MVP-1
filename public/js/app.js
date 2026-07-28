@@ -740,6 +740,10 @@
           <button class="btn btn--primary" id="logout" style="flex:1">Log out</button>
         </div>
         <hr class="divider" />
+        <h3 style="font-size:.95rem;margin:0 0 8px">Security</h3>
+        <p class="muted" style="margin:0 0 10px;font-size:.85rem">Signed in somewhere you don't recognize, or lost a device? End every other session — you'll need to log back in here too.</p>
+        <button class="btn btn--ghost btn--sm" id="logout-everywhere" style="width:100%">Log out of all devices</button>
+        <hr class="divider" />
         <h3 style="font-size:.95rem;margin:0 0 8px">Your data (GDPR)</h3>
         <p class="muted" style="margin:0 0 10px;font-size:.85rem">Download everything we store about you, or delete your account permanently.</p>
         <div style="display:flex;gap:10px">
@@ -751,6 +755,15 @@
     document.getElementById('logout').addEventListener('click', async () => {
       try { await API.logout(); } catch { /* ignore */ }
       state.user = null; state.savedIds = new Set(); toast('Logged out'); go('/discover');
+    });
+    document.getElementById('logout-everywhere').addEventListener('click', async () => {
+      if (!confirm("End every other session? You'll be logged out here too and need to log back in.")) return;
+      try {
+        await API.logoutEverywhere();
+        state.user = null; state.savedIds = new Set();
+        toast('Logged out everywhere');
+        go('/discover');
+      } catch (e) { toast(e.message, true); }
     });
     document.getElementById('export-data').addEventListener('click', async () => {
       try {

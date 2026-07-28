@@ -254,11 +254,38 @@ api.patch('/me/profile', auth.requireAuth, (req, res) => {
   res.json({ student: publicStudent(student) });
 });
 
+// Invalidate every outstanding session for this student (e.g. "this wasn't me"
+// on a shared/lost device) by bumping token_version — every JWT signed before
+// this call carries the old version and is rejected by auth.loadStudent.
+// Clears the cookie on THIS device too, so the user re-authenticates
+// everywhere, including here.
+api.post('/me/logout-everywhere', auth.requireAuth, (req, res) => {
+  const students = store.read('students');
+  const student = students.find((s) => s.student_id === req.student.student_id);
+  student.token_version = (student.token_version || 0) + 1;
+  store.write('students', students);
+  auth.clearAuthCookie(res);
+  events.record('logout_everywhere', { anon: req.anon });
+  res.json({ ok: true });
+});
+
 // ---- Universities ---------------------------------------------------------
+
+// The two highest-traffic public routes previously had no limiter at all,
+// unlike every other route below. Limits are generous — this is normal browse
+// traffic (filter changes, pagination, search-as-you-type), not an auth
+// surface — just enough to blunt a scraping/DoS burst from one IP.
+// NOTE: the detail route's bucket key includes req.path (see lib/rate-limit.js),
+// so it's effectively keyed per (ip, university id) — the same partitioning
+// photoLimiter already has. It stops a hammer on one profile; it doesn't stop
+// a slow crawl across many different ids from one IP. Accepted for now,
+// consistent with the existing limiter's design; revisit if that's ever abused.
+const universitiesLimiter = rateLimit({ windowMs: 60 * 1000, max: 180 });
+const universityDetailLimiter = rateLimit({ windowMs: 60 * 1000, max: 120 });
 
 api.get('/universities/filters', (_req, res) => res.json(FILTERS));
 
-api.get('/universities', (req, res) => {
+api.get('/universities', universitiesLimiter, (req, res) => {
   // A logged-in student with a matching profile gets fit-ranked results by
   // default (the ranking is self-explanatory via a per-card reason). Anonymous
   // or profile-less visitors keep the plain browse ordering. Explicit sorts
@@ -288,7 +315,7 @@ api.get('/universities', (req, res) => {
   res.json(result);
 });
 
-api.get('/universities/:id', async (req, res) => {
+api.get('/universities/:id', universityDetailLimiter, async (req, res) => {
   if (SLUG_REDIRECTS[req.params.id]) {
     return res.redirect(301, `/api/universities/${encodeURIComponent(SLUG_REDIRECTS[req.params.id])}`);
   }

@@ -48,6 +48,27 @@ test('GET /api/universities paginates', async () => {
   assert.equal(r.json.has_more, true);
 });
 
+test('GET /api/universities is rate limited (previously had none at all)', async () => {
+  // Distinct X-Forwarded-For so this test's bucket never overlaps with any
+  // other test in the file hitting the same route from the default IP.
+  const headers = { 'X-Forwarded-For': 'rl-test-list-1' };
+  let last;
+  for (let i = 0; i < 180; i++) last = await fetch(base + '/api/universities?limit=1', { headers });
+  assert.equal(last.status, 200, 'the 180th request within the window still succeeds');
+  const blocked = await fetch(base + '/api/universities?limit=1', { headers });
+  assert.equal(blocked.status, 429);
+});
+
+test('GET /api/universities/:id is rate limited (previously had none at all)', async () => {
+  const id = (await req('GET', '/api/universities?limit=1')).json.universities[0].id;
+  const headers = { 'X-Forwarded-For': 'rl-test-detail-1' };
+  let last;
+  for (let i = 0; i < 120; i++) last = await fetch(`${base}/api/universities/${id}`, { headers });
+  assert.equal(last.status, 200, 'the 120th request within the window still succeeds');
+  const blocked = await fetch(`${base}/api/universities/${id}`, { headers });
+  assert.equal(blocked.status, 429);
+});
+
 test('GET /api/universities/filters returns facets', async () => {
   const r = await req('GET', '/api/universities/filters');
   assert.ok(Array.isArray(r.json.countries));
@@ -333,6 +354,34 @@ test('auth round-trip: register → me → save → export → delete', async ()
   assert.equal(del.status, 200);
   const meGone = await req('GET', '/api/auth/me');
   assert.equal(meGone.status, 401); // session cleared + account gone
+});
+
+test('POST /me/logout-everywhere revokes this session AND every previously issued token', async () => {
+  const email = `logout_${Date.now()}@example.com`;
+  const reg = await req('POST', '/api/auth/register', { full_name: 'Logout Test', email, password: 'password123', consent: true });
+  assert.equal(reg.status, 201);
+  const staleToken = jar.uv_token;
+  assert.ok(staleToken, 'auth cookie set');
+
+  const out = await req('POST', '/api/me/logout-everywhere');
+  assert.equal(out.status, 200);
+  assert.equal(out.json.ok, true);
+
+  const meAfter = await req('GET', '/api/auth/me');
+  assert.equal(meAfter.status, 401, 'this session is logged out too');
+
+  // The real security property: a JWT signed before the call is rejected
+  // everywhere, not just the cookie the test jar happens to hold now.
+  const stale = await fetch(base + '/api/auth/me', { headers: { Cookie: `uv_token=${staleToken}` } });
+  assert.equal(stale.status, 401);
+
+  await req('POST', '/api/auth/login', { email, password: 'password123' });
+  await req('DELETE', '/api/me'); // cleanup
+});
+
+test('POST /me/logout-everywhere requires authentication', async () => {
+  const clean = await fetch(base + '/api/me/logout-everywhere', { method: 'POST' }); // no cookies
+  assert.equal(clean.status, 401);
 });
 
 test('register requires consent', async () => {
