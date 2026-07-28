@@ -123,6 +123,12 @@ app.use(auth.anon); // ensures req.anon (anonymous analytics id)
 
 const api = express.Router();
 
+// Express 4 does not forward a rejected promise from an async handler to the
+// error middleware below — an unhandled one just hangs the request instead of
+// returning the normal 500. Wrap any async handler that can genuinely throw
+// (bcrypt, store writes, the dormant LLM call) so failures reach it.
+const asyncRoute = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+
 // A matching profile is "complete enough" to switch the matching layer on once
 // the student has stated at least a field of interest OR a degree OR a budget —
 // the inputs the scorer actually needs. Kept deliberately low so a half-filled
@@ -146,7 +152,7 @@ const publicStudent = (s) => {
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, message: 'Too many attempts. Try again in a few minutes.' });
 const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: 'Too many attempts. Try again in a few minutes.' });
 
-api.post('/auth/register', authLimiter, async (req, res) => {
+api.post('/auth/register', authLimiter, asyncRoute(async (req, res) => {
   const result = validate.registration(req.body);
   if (!result.ok) return res.status(400).json({ error: result.error });
   const v = result.value;
@@ -202,9 +208,9 @@ api.post('/auth/register', authLimiter, async (req, res) => {
 
   auth.setAuthCookie(res, student);
   res.status(201).json({ student: publicStudent(student) });
-});
+}));
 
-api.post('/auth/login', loginLimiter, async (req, res) => {
+api.post('/auth/login', loginLimiter, asyncRoute(async (req, res) => {
   const result = validate.login(req.body);
   if (!result.ok) return res.status(400).json({ error: result.error });
   const { email, password } = result.value;
@@ -223,7 +229,7 @@ api.post('/auth/login', loginLimiter, async (req, res) => {
   auth.setAuthCookie(res, student);
   events.record('login', { anon: req.anon });
   res.json({ student: publicStudent(student) });
-});
+}));
 
 api.post('/auth/logout', (req, res) => {
   auth.clearAuthCookie(res);
@@ -315,7 +321,7 @@ api.get('/universities', universitiesLimiter, (req, res) => {
   res.json(result);
 });
 
-api.get('/universities/:id', universityDetailLimiter, async (req, res) => {
+api.get('/universities/:id', universityDetailLimiter, asyncRoute(async (req, res) => {
   if (SLUG_REDIRECTS[req.params.id]) {
     return res.redirect(301, `/api/universities/${encodeURIComponent(SLUG_REDIRECTS[req.params.id])}`);
   }
@@ -337,7 +343,7 @@ api.get('/universities/:id', universityDetailLimiter, async (req, res) => {
     out.match_explanation = await explain.generate(student, uni, m.components, m.flags);
   }
   res.json({ university: out });
-});
+}));
 
 // Anonymous Apply-Now click — bumps a counter in the separate clicks store and
 // records a deduplicable event. No personal data attached.
@@ -583,7 +589,7 @@ api.get('/me/export', auth.requireAuth, (req, res) => {
   res.json({ exported_at: new Date().toISOString(), account: publicStudent(req.student) });
 });
 
-api.delete('/me', auth.requireAuth, async (req, res) => {
+api.delete('/me', auth.requireAuth, asyncRoute(async (req, res) => {
   const anonIds = new Set(req.student.anon_ids || []);
   if (req.anon) anonIds.add(req.anon);
 
@@ -598,7 +604,7 @@ api.delete('/me', auth.requireAuth, async (req, res) => {
   log.info('account deleted', { events_purged: removed });
 
   res.json({ ok: true });
-});
+}));
 
 // ---- University lead capture ------------------------------------------------
 //
@@ -633,7 +639,7 @@ api.post('/pilot-leads', leadLimiter, (req, res) => {
 
 const uniLoginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: 'Too many attempts. Try again in a few minutes.' });
 
-api.post('/uni/login', uniLoginLimiter, async (req, res) => {
+api.post('/uni/login', uniLoginLimiter, asyncRoute(async (req, res) => {
   const { email, password } = req.body || {};
   const account = uniAuth.findByEmail(email);
   const hash = account ? account.password_hash : '$2a$10$invalidinvalidinvalidinvalidinvalidinvalidinvalidinva';
@@ -641,7 +647,7 @@ api.post('/uni/login', uniLoginLimiter, async (req, res) => {
   if (!account || !ok) return res.status(401).json({ error: 'Incorrect email or password.' });
   uniAuth.setUniCookie(res, account);
   res.json({ account: { email: account.email, university_id: account.university_id, university_name: account.university_name } });
-});
+}));
 
 api.post('/uni/logout', (_req, res) => { uniAuth.clearUniCookie(res); res.json({ ok: true }); });
 
@@ -684,7 +690,7 @@ api.get('/uni/stats', uniAuth.requireUni, (req, res) => {
 
 const adminLoginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: 'Too many attempts. Try again in a few minutes.' });
 
-api.post('/admin/login', adminLoginLimiter, async (req, res) => {
+api.post('/admin/login', adminLoginLimiter, asyncRoute(async (req, res) => {
   const { email, password } = req.body || {};
   const admin = adminAuth.findAdminByEmail(email);
   const hash = admin ? admin.password_hash : '$2a$10$invalidinvalidinvalidinvalidinvalidinvalidinvalidinva';
@@ -693,7 +699,7 @@ api.post('/admin/login', adminLoginLimiter, async (req, res) => {
 
   adminAuth.setAdminCookie(res, admin);
   res.json({ admin: { email: admin.email } });
-});
+}));
 
 api.post('/admin/logout', (_req, res) => { adminAuth.clearAdminCookie(res); res.json({ ok: true }); });
 

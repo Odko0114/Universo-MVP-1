@@ -331,6 +331,22 @@ test('unknown API route 404s as JSON', async () => {
   assert.equal(r.json.error, 'Not found.');
 });
 
+test('an unhandled async rejection (e.g. bcrypt failing) returns a clean 500, not a hang', async () => {
+  // Express 4 doesn't forward a rejected promise from an async handler to the
+  // error middleware on its own — server.js's asyncRoute wrapper closes that
+  // gap. Prove it end-to-end by making a real dependency throw mid-request.
+  const bcrypt = require('bcryptjs');
+  const original = bcrypt.compare;
+  bcrypt.compare = () => Promise.reject(new Error('simulated bcrypt failure'));
+  try {
+    const r = await req('POST', '/api/auth/login', { email: 'nobody@example.com', password: 'whatever123' });
+    assert.equal(r.status, 500);
+    assert.equal(r.json.error, 'Something went wrong.');
+  } finally {
+    bcrypt.compare = original;
+  }
+});
+
 test('auth round-trip: register → me → save → export → delete', async () => {
   const email = `test_${Date.now()}@example.com`;
 
