@@ -23,8 +23,11 @@ seeds at every boot, so it never goes stale on the volume.
 
 1. Push this repository to GitHub.
 2. Render dashboard → **New → Blueprint** → select the repo. `render.yaml`
-   provisions the service, the 1 GB disk at `/var/data`, and a generated
-   `UNIVERSO_JWT_SECRET` automatically.
+   provisions the service, the 1 GB disk at `/var/data`, a generated
+   `UNIVERSO_JWT_SECRET`, and the `frankfurt` region automatically — set that
+   before your first deploy, not after: Render has no in-place region change,
+   so fixing it later means standing up a second service and cutting over
+   (see the comment above the `region:` line in `render.yaml`).
 3. Before the first deploy, add two env vars in the dashboard:
    `ADMIN_EMAIL` and `ADMIN_PASSWORD` (10+ chars). The first boot creates your
    admin account from them.
@@ -53,7 +56,11 @@ The image sets `UNIVERSO_DATA_DIR=/data`; mount your volume there.
 
 - [ ] `UNIVERSO_JWT_SECRET` set to a stable value (server refuses to boot in
       production without it — random-per-boot would log everyone out on restart)
-- [ ] Persistent volume mounted at `UNIVERSO_DATA_DIR`
+- [ ] Persistent volume mounted at `UNIVERSO_DATA_DIR` (server also refuses to
+      boot in production without this var set at all, so a missing volume
+      fails loudly at startup instead of silently writing into the image)
+- [ ] Region set correctly for your users before the first deploy — see the
+      note in `render.yaml`; it can't be changed in place later
 - [ ] Admin account created; bootstrap env vars removed
 - [ ] `/healthz` wired to the host's health check
 - [ ] HTTPS termination at the platform edge (Render/Fly do this automatically)

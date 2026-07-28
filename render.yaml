@@ -1,9 +1,27 @@
 # Render blueprint — one-click deploy with persistent storage.
 # In the Render dashboard: New → Blueprint → point at this repository.
+# Region: no region was ever set here, so Render defaulted the live service to
+# Oregon (US). That's wrong for a product whose users and (eventually) GDPR
+# obligations are EU-based. Render has no in-place "move region" — a service's
+# region is fixed at creation — so setting `region: frankfurt` below only
+# affects services created FROM THIS FILE from now on; it does NOT move the
+# currently-running service. To actually migrate:
+#   1. Render dashboard → New → Blueprint → this repo. It will create a
+#      second "universo" service (name it e.g. universo-eu) in Frankfurt with
+#      its own empty persistent disk.
+#   2. Set ADMIN_EMAIL/ADMIN_PASSWORD on the new service, boot it, confirm it
+#      works, then export data from the old service (admin CSV export /
+#      `npm run seed`-style backup) and import it — there is no automatic
+#      disk copy between services.
+#   3. Point the custom domain at the new service, confirm traffic, THEN
+#      delete the old Oregon service.
+# This is a real cutover with a maintenance window, not a config edit — do it
+# deliberately, not as part of a routine deploy.
 services:
   - type: web
     name: universo
     runtime: node
+    region: frankfurt         # see note above: applies to new services only
     plan: starter            # smallest paid tier; required for a persistent disk
     buildCommand: npm ci
     startCommand: node server.js
