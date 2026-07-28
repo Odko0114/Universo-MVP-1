@@ -549,7 +549,6 @@ img { max-width: 100%; display: block; }
 .lp-footer__copy { color: var(--ink-faint); font-size: 0.8rem; margin: 0; }
 
 @media (min-width: 720px) {
-  .lp-stats { grid-template-columns: repeat(4, 1fr); }
   .lp-steps { flex-direction: row; }
   .lp-step { flex: 1; }
   .lp-trust { flex-direction: row; }

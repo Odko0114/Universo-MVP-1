@@ -134,10 +134,13 @@ test('/for-universities carries a data-handling section and no un-evidenced clai
   // Residency must not claim the EU while the service runs in Render's default
   // US region — see the note in for-universities.html.
   assert.ok(!/EU-hosted|Frankfurt region/.test(page), 'no unverified EU-residency claim');
-  // Factual claims that were overstated are placeholders until the founder
-  // supplies real numbers/wording.
-  assert.match(page, /\[EXACT_NUMBER_OF_COMPLETED_CONVERSATIONS\]/);
-  assert.match(page, /\[FOUNDER_QUOTE_REWRITE\]/);
+  // The unearned "conversations we've had" stat was dropped rather than
+  // filled with an invented or bare-zero number — no placeholder should
+  // remain, and the real founder quote has replaced the earlier overstated one.
+  assert.ok(!page.includes('EXACT_NUMBER_OF_COMPLETED_CONVERSATIONS'), 'stale stat placeholder removed');
+  assert.ok(!page.includes('FOUNDER_QUOTE_REWRITE'), 'stale quote placeholder removed');
+  assert.match(page, /where you're born shouldn't determine how you begin/);
+  assert.match(page, /Odgerel Batdelger, founder and CEO, Universo/);
   assert.ok(!/first 10 universities/.test(page), 'countdown wording removed');
   assert.match(page, /Free for founding pilot partners/);
 });
