@@ -365,6 +365,50 @@ test('an unhandled async rejection (e.g. bcrypt failing) returns a clean 500, no
   }
 });
 
+test('GET /me/journey requires auth', async () => {
+  const clean = await fetch(base + '/api/me/journey'); // no cookies
+  assert.equal(clean.status, 401);
+});
+
+test('GET /me/journey assembles the dashboard and gains match picks once a profile is set', async () => {
+  const testAddr = `journey_${Date.now()}@example.com`;
+  await req('POST', '/api/auth/register', {
+    full_name: 'Journey Flow', email: testAddr, password: 'password123', consent: true,
+    country_of_origin: 'Mongolia',
+  });
+
+  // No matching profile yet: completeness low, no picks, but next actions guide.
+  const before = await req('GET', '/api/me/journey');
+  assert.equal(before.status, 200);
+  assert.equal(before.json.has_profile, false);
+  assert.equal(before.json.completeness.total, 6);
+  assert.equal(before.json.picks.length, 0, 'no ranked picks without a profile');
+  assert.ok(Array.isArray(before.json.next_actions) && before.json.next_actions.length >= 1);
+  assert.equal(before.json.next_actions[0].key, 'complete_profile');
+  // Scholarship pointers surfaced from home country (non-EU → no Erasmus Mundus).
+  assert.ok(before.json.scholarships.length >= 1, 'scholarship pointers surfaced for the home country');
+  assert.ok(before.json.scholarships.every((s) => s.verify === true), 'every pointer is flagged verify');
+
+  // Set a matching profile → picks appear, each with a "why" reason.
+  await req('PATCH', '/api/me/profile', {
+    fields_of_interest: ['Computer Science & IT'], degree_level: 'Master', budget_max_eur_year: 8000,
+  });
+  const after = await req('GET', '/api/me/journey');
+  assert.equal(after.json.has_profile, true);
+  assert.ok(after.json.completeness.percent > before.json.completeness.percent, 'completeness rose');
+  assert.ok(after.json.picks.length >= 1, 'ranked picks now returned');
+  assert.ok(after.json.picks[0].match_reasons && after.json.picks[0].match_reasons.length, 'picks carry a why reason');
+
+  await req('DELETE', '/api/me');
+});
+
+test('GET /journey SSR fallback is noindex and prompts sign-in', async () => {
+  const r = await req('GET', '/journey');
+  assert.equal(r.status, 200);
+  assert.match(r.text, /content="noindex/);
+  assert.match(r.text, /My Journey/);
+});
+
 test('auth round-trip: register → me → save → export → delete', async () => {
   const email = `test_${Date.now()}@example.com`;
 

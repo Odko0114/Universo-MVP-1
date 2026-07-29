@@ -515,6 +515,94 @@
     }
   }
 
+  // ---- My Journey ---------------------------------------------------------
+  // A single-call personalized dashboard built from data we already have
+  // (profile, saved list, matcher, scholarship pointers). No new API round
+  // trips per section — the server assembles it in one GET /me/journey.
+  async function renderJourney() {
+    if (!state.user) { navigate('/account?src=gate&next=%2Fjourney', true); return; }
+    setActiveNav('journey');
+    document.title = 'My Journey — Universo';
+    const first = esc((state.user.full_name || '').split(' ')[0] || 'there');
+    view.innerHTML = `
+      <div class="journey">
+        <div class="section-head"><h2>Your journey, ${first}</h2></div>
+        <div class="journey-skel">${'<div class="skeleton skeleton--block"></div>'.repeat(3)}</div>
+      </div>`;
+    let data;
+    try {
+      data = await API.journey();
+    } catch (e) {
+      view.innerHTML = emptyState({ iconName: 'alert', title: 'Couldn’t load your journey', sub: e.message, ctaHref: '/discover', ctaLabel: 'Back to discover' });
+      return;
+    }
+    state.savedIds = new Set((data.saved.universities || []).map((u) => u.id));
+
+    const pct = data.completeness.percent;
+    const progressCard = `
+      <div class="card journey-progress">
+        <div class="journey-progress__head">
+          <h3>Your matching profile</h3>
+          <span class="journey-progress__pct">${pct}%</span>
+        </div>
+        <div class="progress" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="Profile completeness">
+          <div class="progress__bar" style="width:${pct}%"></div>
+        </div>
+        <p class="muted" style="margin:10px 0 0">
+          ${pct === 100
+            ? 'Complete — every university is ranked for your profile.'
+            : `${data.completeness.filled} of ${data.completeness.total} set. Add ${esc((data.completeness.missing[0] || '').toLowerCase())} to sharpen your matches.`}
+        </p>
+      </div>`;
+
+    const actionsCard = data.next_actions.length ? `
+      <div class="section-head" style="margin-top:22px"><h3 style="margin:0">Your next steps</h3></div>
+      <div class="journey-actions">
+        ${data.next_actions.map((a) => `
+          <div class="journey-action">
+            <div class="journey-action__body">
+              <strong>${esc(a.title)}</strong>
+              <p class="muted">${esc(a.body)}</p>
+            </div>
+            <a class="btn btn--primary btn--sm" href="${esc(a.href)}">${esc(a.cta)}</a>
+          </div>`).join('')}
+      </div>` : '';
+
+    const picksCard = data.has_profile && data.picks.length ? `
+      <div class="section-head" style="margin-top:26px"><h3 style="margin:0">Matched to your profile</h3><a class="link-btn" href="/discover">See all</a></div>
+      <div class="grid">${data.picks.map(uniCard).join('')}</div>` : '';
+
+    const savedCard = `
+      <div class="section-head" style="margin-top:26px"><h3 style="margin:0">Your shortlist (${data.saved.count})</h3>${data.saved.count ? '<a class="link-btn" href="/saved">View all</a>' : ''}</div>
+      ${data.saved.count
+        ? `<div class="grid">${data.saved.universities.map(uniCard).join('')}</div>`
+        : `<div class="card"><p class="muted" style="margin:0">Nothing saved yet — tap “Save” on any university to start comparing your options here.</p></div>`}`;
+
+    const scholarshipsCard = data.scholarships.length ? `
+      <div class="section-head" style="margin-top:26px"><h3 style="margin:0">Scholarship pointers</h3></div>
+      <div class="card">
+        <p class="muted" style="margin:0 0 12px">Real, named funding schemes for students from <strong>${esc(data.home_country)}</strong>. Always confirm current eligibility, amounts and deadlines on the official page.</p>
+        <ul class="journey-scholarships">
+          ${data.scholarships.map((s) => `
+            <li>
+              <div><strong>${esc(s.name)}</strong> <span class="chip chip--plain">verify</span></div>
+              <p class="muted">${esc(s.note)}</p>
+              ${s.website ? `<a href="${esc(s.website)}" target="_blank" rel="noopener noreferrer">Official page ↗</a>` : ''}
+            </li>`).join('')}
+        </ul>
+      </div>` : '';
+
+    view.innerHTML = `
+      <div class="journey">
+        <div class="section-head"><h2>Your journey, ${first}</h2></div>
+        ${progressCard}
+        ${actionsCard}
+        ${picksCard}
+        ${savedCard}
+        ${scholarshipsCard}
+      </div>`;
+  }
+
   async function renderSaved() {
     if (!state.user) { navigate('/account?src=gate&next=%2Fsaved', true); return; }
     setActiveNav('saved');
@@ -1219,6 +1307,7 @@
     let p;
     try {
       if (parts[0] === 'discover') p = renderDiscover();
+      else if (parts[0] === 'journey') p = renderJourney();
       else if (parts[0] === 'saved') p = renderSaved();
       else if (parts[0] === 'onboarding') p = renderOnboarding();
       else if (parts[0] === 'account') p = renderAccount(new URLSearchParams(location.search).get('mode'));

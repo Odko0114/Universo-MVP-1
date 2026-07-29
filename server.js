@@ -26,6 +26,8 @@ const uniAuth = require('./lib/uni-auth');
 const search = require('./lib/search');
 const match = require('./lib/match');
 const explain = require('./lib/explain');
+const journey = require('./lib/journey');
+const { scholarshipsFor } = require('./lib/scholarships');
 const events = require('./lib/events');
 const validate = require('./lib/validate');
 const ssr = require('./lib/ssr');
@@ -788,6 +790,57 @@ api.get('/me/recommendations', auth.requireAuth, (req, res) => {
   res.json({ universities: results });
 });
 
+// ---- My Journey ------------------------------------------------------------
+//
+// One call assembles the whole personalized dashboard (the client makes a
+// single request, not five). Everything is derived from data we already have:
+// the student's matching profile, their saved list, the deterministic matcher,
+// and the honest country-level scholarship pointers (lib/scholarships.js — real
+// named schemes, flagged verify:true, never fabricated per-university amounts).
+// No new university-side data, no invented milestones.
+api.get('/me/journey', auth.requireAuth, (req, res) => {
+  const student = req.student;
+  const savedIds = student.saved_universities || [];
+
+  // Saved (resolved to full records, capped for the summary card).
+  const saved = savedIds
+    .map((id) => BY_ID.get(id))
+    .filter(Boolean)
+    .map((u) => withPhoto({ ...u, click_count: clickOf(u.id) }));
+
+  const completeness = journey.profileCompleteness(student);
+  const profiled = match.hasProfile(student);
+
+  // Match-ranked next picks (excludes what's already saved). Each carries a
+  // compressed "why" reason, exactly like the Discover cards — same matcher,
+  // same explanation layer, no duplicated ranking logic.
+  const excludeIds = new Set(savedIds);
+  const picks = profiled
+    ? match.recommend(student, UNIVERSITIES, { limit: 4, excludeIds }).map((u) => {
+        const withP = withPhoto({ ...u, click_count: clickOf(u.id) });
+        const m = match.scoreUniversity(student, u);
+        const reason = explain.compressedReason(m.components);
+        if (reason) withP.match_reasons = [reason];
+        return withP;
+      })
+    : [];
+
+  // Scholarship pointers for the student's home country (finally surfaced —
+  // lib/scholarships.js had tests but no live endpoint until now).
+  const homeCountry = student.home_country || student.country_of_origin || '';
+  const scholarships = homeCountry ? scholarshipsFor(homeCountry) : [];
+
+  res.json({
+    completeness,
+    has_profile: profiled,
+    saved: { count: saved.length, universities: saved.slice(0, 6) },
+    picks,
+    scholarships,
+    home_country: homeCountry,
+    next_actions: journey.nextActions(saved.length, completeness),
+  });
+});
+
 // ---- GDPR: data export + account deletion ---------------------------------
 
 api.get('/me/export', auth.requireAuth, (req, res) => {
@@ -1185,6 +1238,22 @@ app.get('/saved', (_req, res) => {
         <h1>Your saved universities</h1>
         <p>Sign in to see your shortlist — saving universities is free, always.</p>
         <p><a href="/account">Sign in</a> · <a href="/account?mode=register&src=saved-ssr">Create a free account</a></p>
+      </section>`,
+  }));
+});
+
+app.get('/journey', (_req, res) => {
+  res.send(ssr.injectSSR(SHELL, {
+    metaHtml: ssr.metaTags({
+      title: 'My Journey — Universo',
+      description: 'Your personal study-abroad dashboard on Universo: matches, saved universities, scholarships and your next steps.',
+      noindex: true,
+    }),
+    viewHtml: `
+      <section class="ssr">
+        <h1>My Journey</h1>
+        <p>Sign in to see your matches, saved universities, scholarship pointers and your next steps — free, always.</p>
+        <p><a href="/account">Sign in</a> · <a href="/account?mode=register&src=journey-ssr">Create a free account</a></p>
       </section>`,
   }));
 });
