@@ -29,6 +29,7 @@ const explain = require('./lib/explain');
 const events = require('./lib/events');
 const validate = require('./lib/validate');
 const ssr = require('./lib/ssr');
+const email = require('./lib/email');
 const { rateLimit } = require('./lib/rate-limit');
 const { fetchWithResilience } = require('./lib/http');
 
@@ -129,6 +130,8 @@ const api = express.Router();
 // (bcrypt, store writes, the dormant LLM call) so failures reach it.
 const asyncRoute = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
+const baseUrl = (req) => `${req.protocol}://${req.get('host')}`;
+
 // A matching profile is "complete enough" to switch the matching layer on once
 // the student has stated at least a field of interest OR a degree OR a budget —
 // the inputs the scorer actually needs. Kept deliberately low so a half-filled
@@ -138,8 +141,21 @@ const profileCompleted = (s) =>
 
 const publicStudent = (s) => {
   if (!s) return null;
-  const { password_hash, token_version, anon_ids, ...safe } = s;
-  return { ...safe, profile_completed: profileCompleted(s) };
+  const {
+    password_hash, token_version, anon_ids,
+    email_verify_token_hash, email_verify_expires, email_verify_last_sent,
+    password_reset_token_hash, password_reset_expires,
+    ...safe
+  } = s;
+  return {
+    ...safe,
+    profile_completed: profileCompleted(s),
+    // Computed per response, not stored: whether verification is actually
+    // enforced right now (dormant until RESEND_API_KEY is set — see
+    // lib/email.js). Lets the client show/hide the verify-gate correctly
+    // without ever nagging a user about a link that can't be delivered.
+    email_verification_required: email.ENABLED,
+  };
 };
 
 // ---- Auth -----------------------------------------------------------------
@@ -152,6 +168,15 @@ const publicStudent = (s) => {
 const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, message: 'Too many attempts. Try again in a few minutes.' });
 const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: 'Too many attempts. Try again in a few minutes.' });
 
+// Gates content-creating actions on a verified email — a strict no-op while
+// email.ENABLED is false (see lib/email.js), so this has zero effect on the
+// app's current real users until a provider key is added. Applied after
+// requireAuth, never in place of it.
+function requireVerifiedEmail(req, res, next) {
+  if (!email.ENABLED || req.student.email_verified) return next();
+  res.status(403).json({ error: 'Please verify your email to continue.', code: 'EMAIL_NOT_VERIFIED' });
+}
+
 api.post('/auth/register', authLimiter, asyncRoute(async (req, res) => {
   const result = validate.registration(req.body);
   if (!result.ok) return res.status(400).json({ error: result.error });
@@ -162,11 +187,20 @@ api.post('/auth/register', authLimiter, asyncRoute(async (req, res) => {
   }
 
   const now = new Date().toISOString();
+  const verifyToken = auth.generateToken();
   const student = {
     student_id: crypto.randomUUID(),
     full_name: v.full_name,
     email: v.email,
     password_hash: await bcrypt.hash(v.password, cfg.BCRYPT_ROUNDS),
+    // Email verification. Dormant until email.ENABLED (lib/email.js) — the
+    // token is always generated and stored so turning verification on later
+    // doesn't require a data migration, but login/actions are never gated on
+    // it while dormant (see requireVerifiedEmail below).
+    email_verified: false,
+    email_verify_token_hash: auth.hashToken(verifyToken),
+    email_verify_expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    email_verify_last_sent: now,
     // Legacy single-value fields kept for backward compatibility; the matching
     // profile below is the canonical source going forward.
     country_of_origin: v.country_of_origin,
@@ -206,6 +240,11 @@ api.post('/auth/register', authLimiter, asyncRoute(async (req, res) => {
   events.record('signup', { anon: req.anon, ...(src ? { src } : {}) });
   log.info('signup', { students: students.length }); // count only — never the email
 
+  // Fire-and-forget: sendVerificationEmail never throws (lib/email.js catches
+  // its own failures), and registration must succeed regardless of whether
+  // mail delivery does.
+  email.sendVerificationEmail(student, `${baseUrl(req)}/verify-email?token=${verifyToken}`).catch(() => {});
+
   auth.setAuthCookie(res, student);
   res.status(201).json({ student: publicStudent(student) });
 }));
@@ -240,9 +279,109 @@ api.get('/auth/me', auth.requireAuth, (req, res) => {
   res.json({ student: publicStudent(req.student) });
 });
 
+// ---- Email verification -----------------------------------------------------
+
+api.post('/auth/verify-email', asyncRoute(async (req, res) => {
+  const result = validate.token(req.body);
+  if (!result.ok) return res.status(400).json({ error: result.error });
+
+  const students = store.read('students');
+  const tokenHash = auth.hashToken(result.value.token);
+  const student = students.find((s) => s.email_verify_token_hash === tokenHash);
+
+  if (!student || !student.email_verify_expires || new Date(student.email_verify_expires) < new Date()) {
+    return res.status(400).json({ error: 'This verification link is invalid or has expired.' });
+  }
+
+  student.email_verified = true;
+  student.email_verify_token_hash = null;
+  student.email_verify_expires = null;
+  store.write('students', students);
+  events.record('email_verified', { anon: req.anon });
+
+  email.sendEmailVerifiedEmail(student).catch(() => {});
+  res.json({ ok: true });
+}));
+
+const resendVerificationLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 5, message: 'Too many attempts. Try again in a few minutes.' });
+const RESEND_COOLDOWN_MS = 60 * 1000;
+
+api.post('/me/resend-verification', auth.requireAuth, resendVerificationLimiter, asyncRoute(async (req, res) => {
+  if (!email.ENABLED) return res.status(400).json({ error: 'Email verification is not enabled.' });
+  if (req.student.email_verified) return res.json({ ok: true, already_verified: true });
+
+  const students = store.read('students');
+  const student = students.find((s) => s.student_id === req.student.student_id);
+  const lastSent = student.email_verify_last_sent ? new Date(student.email_verify_last_sent).getTime() : 0;
+  if (Date.now() - lastSent < RESEND_COOLDOWN_MS) {
+    return res.status(429).json({ error: 'Please wait a minute before requesting another email.' });
+  }
+
+  const verifyToken = auth.generateToken();
+  student.email_verify_token_hash = auth.hashToken(verifyToken);
+  student.email_verify_expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  student.email_verify_last_sent = new Date().toISOString();
+  store.write('students', students);
+
+  await email.sendVerificationEmail(student, `${baseUrl(req)}/verify-email?token=${verifyToken}`);
+  res.json({ ok: true });
+}));
+
+// ---- Password reset ---------------------------------------------------------
+
+const forgotPasswordLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 5, message: 'Too many attempts. Try again in a few minutes.' });
+
+api.post('/auth/forgot-password', forgotPasswordLimiter, asyncRoute(async (req, res) => {
+  const result = validate.forgotPassword(req.body);
+  if (!result.ok) return res.status(400).json({ error: result.error });
+
+  const students = store.read('students');
+  const student = students.find((s) => s.email === result.value.email);
+  // Always the same response whether or not the account exists — the account
+  // lookup and email send only happen on the real path, but the response
+  // never tells a caller which case they hit (avoid enumeration).
+  if (student) {
+    const resetToken = auth.generateToken();
+    student.password_reset_token_hash = auth.hashToken(resetToken);
+    student.password_reset_expires = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    store.write('students', students);
+    email.sendPasswordResetEmail(student, `${baseUrl(req)}/reset-password?token=${resetToken}`).catch(() => {});
+  }
+  res.json({ ok: true });
+}));
+
+const resetPasswordLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: 'Too many attempts. Try again in a few minutes.' });
+
+api.post('/auth/reset-password', resetPasswordLimiter, asyncRoute(async (req, res) => {
+  const result = validate.resetPassword(req.body);
+  if (!result.ok) return res.status(400).json({ error: result.error });
+
+  const students = store.read('students');
+  const tokenHash = auth.hashToken(result.value.token);
+  const student = students.find((s) => s.password_reset_token_hash === tokenHash);
+
+  if (!student || !student.password_reset_expires || new Date(student.password_reset_expires) < new Date()) {
+    return res.status(400).json({ error: 'This reset link is invalid or has expired.' });
+  }
+
+  student.password_hash = await bcrypt.hash(result.value.password, cfg.BCRYPT_ROUNDS);
+  student.password_reset_token_hash = null;
+  student.password_reset_expires = null;
+  // Every outstanding session (this device and any other) is signed with the
+  // old token_version and is now rejected — the same revocation path Phase 2
+  // added for "log out everywhere", triggered here for the first time by a
+  // real password change.
+  student.token_version = (student.token_version || 0) + 1;
+  store.write('students', students);
+  auth.clearAuthCookie(res);
+  events.record('password_reset', { anon: req.anon });
+
+  res.json({ ok: true });
+}));
+
 // Update the matching profile (onboarding wizard + /account editor). Every
 // field optional; replaces the profile wholesale with the validated set.
-api.patch('/me/profile', auth.requireAuth, (req, res) => {
+api.patch('/me/profile', auth.requireAuth, requireVerifiedEmail, (req, res) => {
   const result = validate.profile(req.body);
   if (!result.ok) return res.status(400).json({ error: result.error });
   const p = result.value;
@@ -905,8 +1044,6 @@ app.get('/sitemap.xml', (req, res) => {
   }
   res.type('application/xml').send(sitemapCache);
 });
-
-const baseUrl = (req) => `${req.protocol}://${req.get('host')}`;
 
 // Server-rendered profile pages (real HTML + per-page meta for crawlers).
 app.get('/university/:id', (req, res) => {

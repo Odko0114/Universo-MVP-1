@@ -70,6 +70,7 @@
     lock: '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
     user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/>',
     alert: '<path d="M12 3 2 21h20L12 3z"/><path d="M12 10v5"/><circle cx="12" cy="18" r=".5"/>',
+    check: '<circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.5 2.5L16 9"/>',
     spark: '<path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.5 2.5M16.5 16.5 19 19M19 5l-2.5 2.5M7.5 16.5 5 19"/>',
   };
   const icon = (name, size = 44) =>
@@ -721,6 +722,11 @@
           <div class="avatar">${esc(initials(u.full_name))}</div>
           <div><h2 style="margin:0;font-size:1.2rem">${esc(u.full_name)}</h2><div class="muted">${esc(u.email)}</div></div>
         </div>
+        ${u.email_verification_required && !u.email_verified ? `
+        <div class="auth-gate-note" style="margin-top:14px">
+          ${icon('alert', 16)}
+          <span>Please verify your email — check your inbox for the link, or <button class="link-btn" id="resend-verification" style="font:inherit">resend it</button>.</span>
+        </div>` : ''}
         <div class="section-head" style="margin:14px 2px 8px"><h3 style="font-size:.95rem;margin:0">Matching profile</h3><button class="link-btn" id="edit-profile">Edit</button></div>
         ${u.profile_completed ? `
         <div class="profile-facts">
@@ -752,6 +758,18 @@
         </div>
       </div>`;
 
+    const resendBtn = document.getElementById('resend-verification');
+    if (resendBtn) resendBtn.addEventListener('click', async () => {
+      resendBtn.disabled = true;
+      try {
+        await API.resendVerification();
+        toast('Verification email sent');
+      } catch (e) {
+        toast(e.message, true);
+      } finally {
+        resendBtn.disabled = false;
+      }
+    });
     document.getElementById('logout').addEventListener('click', async () => {
       try { await API.logout(); } catch { /* ignore */ }
       state.user = null; state.savedIds = new Set(); toast('Logged out'); go('/discover');
@@ -944,6 +962,7 @@
         <div class="form-group"><label>Email</label><input type="email" name="email" required autocomplete="email" /></div>
         <div class="form-group"><label>Password</label><input type="password" name="password" required autocomplete="current-password" /></div>
         <button class="btn btn--primary btn--block" type="submit" id="login-submit">Log in</button>
+        <p class="auth-fineprint"><a href="/forgot-password">Forgot your password?</a></p>
       </form>`;
   }
 
@@ -1024,6 +1043,120 @@
   }
 
   // =========================================================================
+  // Email verification + password reset
+  // =========================================================================
+
+  async function renderVerifyEmail() {
+    setActiveNav('account');
+    document.title = 'Verify email — Universo';
+    const token = new URLSearchParams(location.search).get('token') || '';
+    if (!token) {
+      view.innerHTML = emptyState({
+        iconName: 'alert', title: 'Missing verification link',
+        sub: 'This link looks incomplete. Open the link from your email again, or request a new one from your account.',
+        ctaHref: '/account', ctaLabel: 'Go to account',
+      });
+      return;
+    }
+    view.innerHTML = `<div class="empty-card"><div class="empty-card__icon">${icon('spark')}</div><h3>Verifying your email…</h3></div>`;
+    try {
+      await API.verifyEmail(token);
+      if (state.user) state.user.email_verified = true;
+      toast('Email verified');
+      view.innerHTML = emptyState({
+        iconName: 'check', title: "You're verified",
+        sub: 'Your Universo account is fully active.',
+        ctaHref: state.user ? '/account' : '/account?mode=login',
+        ctaLabel: state.user ? 'Go to account' : 'Log in',
+      });
+    } catch (e) {
+      view.innerHTML = emptyState({
+        iconName: 'alert', title: 'This link is invalid or has expired', sub: e.message,
+        ctaHref: '/account', ctaLabel: 'Go to account',
+      });
+    }
+  }
+
+  function renderForgotPassword() {
+    setActiveNav('account');
+    document.title = 'Reset your password — Universo';
+    view.innerHTML = `
+      <div class="auth-card">
+        <div class="card auth-card__body">
+          <h2>Reset your password</h2>
+          <p class="muted" style="margin-top:0">Enter your account email — we'll send a reset link if it matches an account.</p>
+          <div id="auth-error" class="form-error" hidden></div>
+          <div id="forgot-success" class="form-success" hidden>Check your email for a reset link. It expires in 1 hour.</div>
+          <form id="forgot-form">
+            <div class="form-group"><label>Email</label><input type="email" name="email" required autocomplete="email" /></div>
+            <button class="btn btn--primary btn--block" type="submit" id="forgot-submit">Send reset link</button>
+          </form>
+          <p class="auth-fineprint"><a href="/account?mode=login">Back to log in</a></p>
+        </div>
+      </div>`;
+    const form = document.getElementById('forgot-form');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      showAuthError('');
+      const btn = document.getElementById('forgot-submit');
+      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+      const fd = new FormData(form);
+      try {
+        await API.forgotPassword(fd.get('email'));
+        form.hidden = true;
+        document.getElementById('forgot-success').hidden = false;
+      } catch (err) {
+        showAuthError(err.message);
+        btn.disabled = false; btn.textContent = 'Send reset link';
+      }
+    });
+  }
+
+  function renderResetPassword() {
+    setActiveNav('account');
+    document.title = 'Choose a new password — Universo';
+    const token = new URLSearchParams(location.search).get('token') || '';
+    if (!token) {
+      view.innerHTML = emptyState({
+        iconName: 'alert', title: 'Missing reset link',
+        sub: 'Open the link from your email again, or request a new one.',
+        ctaHref: '/forgot-password', ctaLabel: 'Request a new link',
+      });
+      return;
+    }
+    view.innerHTML = `
+      <div class="auth-card">
+        <div class="card auth-card__body">
+          <h2>Choose a new password</h2>
+          <div id="auth-error" class="form-error" hidden></div>
+          <form id="reset-form">
+            <div class="form-group"><label>New password <span class="muted">(min 8 characters)</span></label><input type="password" name="password" required minlength="8" autocomplete="new-password" /></div>
+            <button class="btn btn--primary btn--block" type="submit" id="reset-submit">Set new password</button>
+          </form>
+        </div>
+      </div>`;
+    document.getElementById('reset-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      showAuthError('');
+      const form = e.target;
+      const btn = document.getElementById('reset-submit');
+      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+      const fd = new FormData(form);
+      try {
+        await API.resetPassword(token, fd.get('password'));
+        // The server clears the session on reset — every device (including
+        // this one) needs to log in fresh with the new password.
+        state.user = null; state.savedIds = new Set();
+        toast('Password updated — log in with your new password');
+        navigate('/account?mode=login', true);
+      } catch (err) {
+        showAuthError(err.message);
+        btn.disabled = false; btn.textContent = 'Set new password';
+      }
+    });
+  }
+
+  // =========================================================================
   // Router + error boundary
   // =========================================================================
   function render() {
@@ -1053,6 +1186,9 @@
       else if (parts[0] === 'onboarding') p = renderOnboarding();
       else if (parts[0] === 'account') p = renderAccount(new URLSearchParams(location.search).get('mode'));
       else if (parts[0] === 'privacy') p = renderPrivacy();
+      else if (parts[0] === 'verify-email') p = renderVerifyEmail();
+      else if (parts[0] === 'forgot-password') p = renderForgotPassword();
+      else if (parts[0] === 'reset-password') p = renderResetPassword();
       else if (isProfile) p = renderProfile(decodeURIComponent(parts[1]));
       else p = renderDiscover();
     } catch (e) { return showCrash(e); }

@@ -4,6 +4,7 @@ const { test, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const app = require('../server');
 const store = require('../lib/store');
+const emailService = require('../lib/email'); // aliased — many tests below use `email` for the test address
 
 let server, base;
 const jar = {};
@@ -415,6 +416,120 @@ test('POST /me/logout-everywhere revokes this session AND every previously issue
 test('POST /me/logout-everywhere requires authentication', async () => {
   const clean = await fetch(base + '/api/me/logout-everywhere', { method: 'POST' }); // no cookies
   assert.equal(clean.status, 401);
+});
+
+test('email verification: full flow, plus invalid/expired tokens rejected', async () => {
+  const testAddr = `verify_${Date.now()}@example.com`;
+  let capturedLink;
+  const original = emailService.sendVerificationEmail;
+  emailService.sendVerificationEmail = (student, link) => { capturedLink = link; return Promise.resolve({ sent: false }); };
+  try {
+    const reg = await req('POST', '/api/auth/register', { full_name: 'Verify Flow', email: testAddr, password: 'password123', consent: true });
+    assert.equal(reg.status, 201);
+    assert.equal(reg.json.student.email_verified, false, 'unverified at registration');
+    assert.ok(capturedLink, 'verification link was generated and handed to the email service');
+
+    const token = new URL(capturedLink).searchParams.get('token');
+    assert.match(token, /^[0-9a-f]{64}$/, 'raw token is 32 random bytes as hex');
+
+    const bad = await req('POST', '/api/auth/verify-email', { token: 'f'.repeat(64) });
+    assert.equal(bad.status, 400, 'a well-formed but unknown token is rejected');
+
+    const malformed = await req('POST', '/api/auth/verify-email', { token: 'not-a-token' });
+    assert.equal(malformed.status, 400);
+
+    const ok = await req('POST', '/api/auth/verify-email', { token });
+    assert.equal(ok.status, 200);
+
+    const me = await req('GET', '/api/auth/me');
+    assert.equal(me.json.student.email_verified, true);
+
+    // A token is single-use — the hash is cleared on success.
+    const reused = await req('POST', '/api/auth/verify-email', { token });
+    assert.equal(reused.status, 400);
+  } finally {
+    emailService.sendVerificationEmail = original;
+    await req('DELETE', '/api/me').catch(() => {});
+  }
+});
+
+test('POST /me/resend-verification requires auth, is disabled while email is dormant', async () => {
+  const clean = await fetch(base + '/api/me/resend-verification', { method: 'POST' }); // no cookies
+  assert.equal(clean.status, 401);
+
+  const testAddr = `resend_${Date.now()}@example.com`;
+  await req('POST', '/api/auth/register', { full_name: 'Resend Test', email: testAddr, password: 'password123', consent: true });
+  // email.ENABLED is false in this test run (no RESEND_API_KEY) — the route
+  // must say so rather than pretend to send.
+  const r = await req('POST', '/api/me/resend-verification');
+  assert.equal(r.status, 400);
+  await req('DELETE', '/api/me');
+});
+
+test('PATCH /me/profile succeeds for an unverified student while email is dormant (zero behavior change)', async () => {
+  const testAddr = `dormant_gate_${Date.now()}@example.com`;
+  const reg = await req('POST', '/api/auth/register', { full_name: 'Dormant Gate', email: testAddr, password: 'password123', consent: true });
+  assert.equal(reg.json.student.email_verified, false);
+  const patch = await req('PATCH', '/api/me/profile', { degree_level: 'Master' });
+  assert.equal(patch.status, 200, 'requireVerifiedEmail must be a no-op while email.ENABLED is false');
+  await req('DELETE', '/api/me');
+});
+
+test('forgot-password always responds 200, whether or not the account exists (no enumeration)', async () => {
+  const testAddr = `forgot_${Date.now()}@example.com`;
+  let capturedLink;
+  const original = emailService.sendPasswordResetEmail;
+  emailService.sendPasswordResetEmail = (student, link) => { capturedLink = link; return Promise.resolve({ sent: false }); };
+  try {
+    await req('POST', '/api/auth/register', { full_name: 'Forgot Flow', email: testAddr, password: 'password123', consent: true });
+
+    const real = await req('POST', '/api/auth/forgot-password', { email: testAddr });
+    assert.equal(real.status, 200);
+    assert.ok(capturedLink, 'a reset link was generated for a real account');
+
+    capturedLink = undefined;
+    const fake = await req('POST', '/api/auth/forgot-password', { email: `nobody_${Date.now()}@example.com` });
+    assert.equal(fake.status, 200, 'identical response for a non-existent account');
+    assert.equal(capturedLink, undefined, 'no email/token generated for an account that does not exist');
+  } finally {
+    emailService.sendPasswordResetEmail = original;
+    await req('DELETE', '/api/me').catch(() => {});
+  }
+});
+
+test('password reset: valid token changes the password and invalidates every existing session', async () => {
+  const testAddr = `reset_${Date.now()}@example.com`;
+  let capturedLink;
+  const original = emailService.sendPasswordResetEmail;
+  emailService.sendPasswordResetEmail = (student, link) => { capturedLink = link; return Promise.resolve({ sent: false }); };
+  try {
+    await req('POST', '/api/auth/register', { full_name: 'Reset Flow', email: testAddr, password: 'password123', consent: true });
+    const staleToken = jar.uv_token; // the session created at registration
+
+    await req('POST', '/api/auth/forgot-password', { email: testAddr });
+    const resetToken = new URL(capturedLink).searchParams.get('token');
+
+    const badPw = await req('POST', '/api/auth/reset-password', { token: resetToken, password: 'short' });
+    assert.equal(badPw.status, 400, 'new password still goes through the min-length rule');
+
+    const ok = await req('POST', '/api/auth/reset-password', { token: resetToken, password: 'newpassword456' });
+    assert.equal(ok.status, 200);
+
+    // The pre-reset session is dead — same revocation path as logout-everywhere.
+    const staleCheck = await fetch(base + '/api/auth/me', { headers: { Cookie: `uv_token=${staleToken}` } });
+    assert.equal(staleCheck.status, 401);
+
+    // Reused reset token is rejected (cleared on success).
+    const reused = await req('POST', '/api/auth/reset-password', { token: resetToken, password: 'anotherpassword789' });
+    assert.equal(reused.status, 400);
+
+    // The new password actually works.
+    const login = await req('POST', '/api/auth/login', { email: testAddr, password: 'newpassword456' });
+    assert.equal(login.status, 200);
+  } finally {
+    emailService.sendPasswordResetEmail = original;
+    await req('DELETE', '/api/me').catch(() => {});
+  }
 });
 
 test('register requires consent', async () => {

@@ -328,6 +328,7 @@ img { max-width: 100%; display: block; }
 .consent { display: flex; gap: 10px; align-items: flex-start; font-size: 0.85rem; color: var(--ink-soft); }
 .consent input { margin-top: 3px; flex: 0 0 auto; width: 18px; height: 18px; accent-color: var(--teal-500); }
 .form-error { background: #fdecee; color: var(--danger); border: 1px solid #f6c9ce; padding: 10px 12px; border-radius: var(--radius-sm); font-size: 0.88rem; margin-bottom: 14px; }
+.form-success { background: var(--teal-050); color: var(--success); border: 1px solid #bfe8d5; padding: 10px 12px; border-radius: var(--radius-sm); font-size: 0.88rem; margin-bottom: 14px; }
 .switch-auth { text-align: center; margin-top: 14px; font-size: 0.9rem; color: var(--ink-soft); }
 .switch-auth button { background: none; border: none; color: var(--teal-600); font-weight: 700; cursor: pointer; font-size: 0.9rem; }
 

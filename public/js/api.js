@@ -66,6 +66,10 @@
     exportData: () => request('GET', '/me/export'),
     deleteAccount: () => request('DELETE', '/me'),
     logoutEverywhere: () => request('POST', '/me/logout-everywhere'),
+    verifyEmail: (token) => request('POST', '/auth/verify-email', { token }),
+    resendVerification: () => request('POST', '/me/resend-verification'),
+    forgotPassword: (email) => request('POST', '/auth/forgot-password', { email }),
+    resetPassword: (token, password) => request('POST', '/auth/reset-password', { token, password }),
     // Universities
     filters: () => request('GET', '/universities/filters'),
     universities: (params) => request('GET', `/universities${toQuery(params)}`),
