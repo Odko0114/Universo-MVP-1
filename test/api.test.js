@@ -532,6 +532,78 @@ test('password reset: valid token changes the password and invalidates every exi
   }
 });
 
+test('change-email: full flow — requires correct password, resets verification, notifies the old address, invalidates other sessions', async () => {
+  const oldAddr = `changeold_${Date.now()}@example.com`;
+  const newAddr = `changenew_${Date.now()}@example.com`;
+  let verifyLink, noticeTo, noticeOld, noticeNew;
+  const originalVerify = emailService.sendVerificationEmail;
+  const originalNotice = emailService.sendEmailChangedNotice;
+  emailService.sendVerificationEmail = (student, link) => { verifyLink = link; return Promise.resolve({ sent: false }); };
+  emailService.sendEmailChangedNotice = (name, o, n) => { noticeTo = o; noticeOld = o; noticeNew = n; return Promise.resolve({ sent: false }); };
+  try {
+    await req('POST', '/api/auth/register', { full_name: 'Change Email Flow', email: oldAddr, password: 'password123', consent: true });
+    const preChangeToken = jar.uv_token;
+
+    const wrongPw = await req('POST', '/api/me/change-email', { new_email: newAddr, password: 'wrongpassword' });
+    assert.equal(wrongPw.status, 401);
+
+    const ok = await req('POST', '/api/me/change-email', { new_email: newAddr, password: 'password123' });
+    assert.equal(ok.status, 200);
+    assert.equal(ok.json.student.email, newAddr);
+    assert.equal(ok.json.student.email_verified, false, 'the new address is unverified until proven');
+
+    // Notice went to the OLD address, verification link is for the NEW one.
+    assert.equal(noticeTo, oldAddr);
+    assert.equal(noticeNew, newAddr);
+    assert.ok(verifyLink, 'a fresh verification email was sent to the new address');
+
+    // This request's own session survives (cookie was reissued)...
+    const meNow = await req('GET', '/api/auth/me');
+    assert.equal(meNow.status, 200);
+    assert.equal(meNow.json.student.email, newAddr);
+
+    // ...but a session token issued BEFORE the change is dead.
+    const staleCheck = await fetch(base + '/api/auth/me', { headers: { Cookie: `uv_token=${preChangeToken}` } });
+    assert.equal(staleCheck.status, 401);
+
+    // The re-verification token actually works.
+    const token = new URL(verifyLink).searchParams.get('token');
+    const verify = await req('POST', '/api/auth/verify-email', { token });
+    assert.equal(verify.status, 200);
+    const meVerified = await req('GET', '/api/auth/me');
+    assert.equal(meVerified.json.student.email_verified, true);
+
+    // The old email now works for a fresh login attempt only via 404-equivalent (account no longer under that address).
+    const loginOld = await req('POST', '/api/auth/login', { email: oldAddr, password: 'password123' });
+    assert.equal(loginOld.status, 401);
+    const loginNew = await req('POST', '/api/auth/login', { email: newAddr, password: 'password123' });
+    assert.equal(loginNew.status, 200);
+  } finally {
+    emailService.sendVerificationEmail = originalVerify;
+    emailService.sendEmailChangedNotice = originalNotice;
+    await req('DELETE', '/api/me').catch(() => {});
+  }
+});
+
+test('change-email requires authentication and rejects an email already in use', async () => {
+  const clean = await fetch(base + '/api/me/change-email', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ new_email: 'x@example.com', password: 'x' }),
+  });
+  assert.equal(clean.status, 401);
+
+  const addrA = `dupA_${Date.now()}@example.com`;
+  const addrB = `dupB_${Date.now()}@example.com`;
+  await req('POST', '/api/auth/register', { full_name: 'A', email: addrA, password: 'password123', consent: true });
+  await req('POST', '/api/auth/logout');
+  await req('POST', '/api/auth/register', { full_name: 'B', email: addrB, password: 'password123', consent: true });
+  // Logged in as B — try to change to A's email.
+  const clash = await req('POST', '/api/me/change-email', { new_email: addrA, password: 'password123' });
+  assert.equal(clash.status, 409);
+  await req('DELETE', '/api/me'); // deletes B
+  await req('POST', '/api/auth/login', { email: addrA, password: 'password123' });
+  await req('DELETE', '/api/me'); // deletes A
+});
+
 test('register requires consent', async () => {
   const r = await req('POST', '/api/auth/register', { full_name: 'X Y', email: `n_${Date.now()}@e.com`, password: 'password123', consent: false });
   assert.equal(r.status, 400);

@@ -327,6 +327,49 @@ api.post('/me/resend-verification', auth.requireAuth, resendVerificationLimiter,
   res.json({ ok: true });
 }));
 
+// Changing the account email is security-sensitive (it's the account-recovery
+// identifier), so it requires re-entering the current password even though
+// the request is already authenticated — a hijacked session cookie alone
+// isn't enough to take the account over this way. Same rate-limit tier as
+// login since it does the same bcrypt.compare against a real password.
+const changeEmailLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, message: 'Too many attempts. Try again in a few minutes.' });
+
+api.post('/me/change-email', auth.requireAuth, changeEmailLimiter, asyncRoute(async (req, res) => {
+  const result = validate.changeEmail(req.body);
+  if (!result.ok) return res.status(400).json({ error: result.error });
+  const { new_email, password } = result.value;
+
+  const students = store.read('students');
+  const student = students.find((s) => s.student_id === req.student.student_id);
+  const ok = await bcrypt.compare(password, student.password_hash);
+  if (!ok) return res.status(401).json({ error: 'Incorrect password.' });
+
+  if (new_email === student.email) return res.status(400).json({ error: 'That is already your email address.' });
+  if (students.some((s) => s.email === new_email)) return res.status(409).json({ error: 'An account with this email already exists.' });
+
+  const oldEmail = student.email;
+  const verifyToken = auth.generateToken();
+  student.email = new_email;
+  // The new address hasn't been proven yet — re-verification is mandatory,
+  // not optional, regardless of whether the account was verified before.
+  student.email_verified = false;
+  student.email_verify_token_hash = auth.hashToken(verifyToken);
+  student.email_verify_expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  student.email_verify_last_sent = new Date().toISOString();
+  // Invalidate every OTHER session (same mechanism as password reset). This
+  // request's own session is kept alive by re-issuing its cookie below with
+  // the bumped version, so the user making the change isn't logged out.
+  student.token_version = (student.token_version || 0) + 1;
+  store.write('students', students);
+  events.record('email_changed', { anon: req.anon });
+
+  email.sendVerificationEmail(student, `${baseUrl(req)}/verify-email?token=${verifyToken}`).catch(() => {});
+  email.sendEmailChangedNotice(student.full_name, oldEmail, new_email).catch(() => {});
+
+  auth.setAuthCookie(res, student);
+  res.json({ student: publicStudent(student) });
+}));
+
 // ---- Password reset ---------------------------------------------------------
 
 const forgotPasswordLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 5, message: 'Too many attempts. Try again in a few minutes.' });

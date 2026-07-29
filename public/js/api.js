@@ -68,6 +68,7 @@
     logoutEverywhere: () => request('POST', '/me/logout-everywhere'),
     verifyEmail: (token) => request('POST', '/auth/verify-email', { token }),
     resendVerification: () => request('POST', '/me/resend-verification'),
+    changeEmail: (new_email, password) => request('POST', '/me/change-email', { new_email, password }),
     forgotPassword: (email) => request('POST', '/auth/forgot-password', { email }),
     resetPassword: (token, password) => request('POST', '/auth/reset-password', { token, password }),
     // Universities

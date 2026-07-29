@@ -720,8 +720,19 @@
       <div class="card">
         <div class="account-head">
           <div class="avatar">${esc(initials(u.full_name))}</div>
-          <div><h2 style="margin:0;font-size:1.2rem">${esc(u.full_name)}</h2><div class="muted">${esc(u.email)}</div></div>
+          <div><h2 style="margin:0;font-size:1.2rem">${esc(u.full_name)}</h2>
+            <div class="muted">${esc(u.email)} <button class="link-btn" id="change-email-toggle" style="font-size:.85em">Change</button></div>
+          </div>
         </div>
+        <form id="change-email-form" hidden style="margin-top:10px">
+          <div id="change-email-error" class="form-error" hidden></div>
+          <div class="form-group"><label style="font-size:.85rem">New email</label><input type="email" name="new_email" required autocomplete="email" /></div>
+          <div class="form-group"><label style="font-size:.85rem">Current password</label><input type="password" name="password" required autocomplete="current-password" /></div>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn--primary btn--sm" type="submit" id="change-email-submit" style="flex:1">Update email</button>
+            <button class="btn btn--ghost btn--sm" type="button" id="change-email-cancel" style="flex:1">Cancel</button>
+          </div>
+        </form>
         ${u.email_verification_required && !u.email_verified ? `
         <div class="auth-gate-note" style="margin-top:14px">
           ${icon('alert', 16)}
@@ -757,6 +768,32 @@
           <button class="btn btn--sm btn--danger" id="delete-account" style="flex:1">Delete account</button>
         </div>
       </div>`;
+
+    const changeEmailForm = document.getElementById('change-email-form');
+    document.getElementById('change-email-toggle').addEventListener('click', () => {
+      changeEmailForm.hidden = !changeEmailForm.hidden;
+    });
+    document.getElementById('change-email-cancel').addEventListener('click', () => {
+      changeEmailForm.hidden = true; changeEmailForm.reset();
+      document.getElementById('change-email-error').hidden = true;
+    });
+    changeEmailForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errBox = document.getElementById('change-email-error');
+      errBox.hidden = true;
+      const fd = new FormData(changeEmailForm);
+      const btn = document.getElementById('change-email-submit');
+      btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>';
+      try {
+        const { student } = await API.changeEmail(fd.get('new_email'), fd.get('password'));
+        state.user = student;
+        toast(student.email_verification_required ? 'Email updated — check your inbox to verify it' : 'Email updated');
+        renderAccountLoggedIn();
+      } catch (err) {
+        errBox.textContent = err.message; errBox.hidden = false;
+        btn.disabled = false; btn.textContent = 'Update email';
+      }
+    });
 
     const resendBtn = document.getElementById('resend-verification');
     if (resendBtn) resendBtn.addEventListener('click', async () => {
