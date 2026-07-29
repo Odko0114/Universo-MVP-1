@@ -418,6 +418,16 @@ test('POST /me/logout-everywhere requires authentication', async () => {
   assert.equal(clean.status, 401);
 });
 
+test('POST /auth/verify-email is rate limited (found missing during security review)', async () => {
+  const headers = { 'Content-Type': 'application/json', 'X-Forwarded-For': 'rl-test-verify-email' };
+  const body = JSON.stringify({ token: 'a'.repeat(64) });
+  let last;
+  for (let i = 0; i < 20; i++) last = await fetch(base + '/api/auth/verify-email', { method: 'POST', headers, body });
+  assert.equal(last.status, 400, 'the 20th attempt is still processed (just rejected as an unknown token)');
+  const blocked = await fetch(base + '/api/auth/verify-email', { method: 'POST', headers, body });
+  assert.equal(blocked.status, 429);
+});
+
 test('email verification: full flow, plus invalid/expired tokens rejected', async () => {
   const testAddr = `verify_${Date.now()}@example.com`;
   let capturedLink;

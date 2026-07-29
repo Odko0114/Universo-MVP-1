@@ -52,6 +52,16 @@ store.init('claims', {});   // { universityId: { account_id, claimed_at } } — 
                             // one is DERIVED (rebuilt every boot); a claim must
                             // survive deploys.
 adminAuth.bootstrapFromEnv(); // creates one admin from ADMIN_EMAIL/ADMIN_PASSWORD if none exist yet
+
+// Same fail-fast philosophy as UNIVERSO_JWT_SECRET/UNIVERSO_DATA_DIR (see
+// lib/config.js, lib/store.js): once email is actually live in production,
+// verification/reset links MUST come from a trusted, configured origin, not
+// the request's spoofable Host header (see appOrigin() below) — silently
+// falling back would ship a real password-reset-poisoning vector. Scoped to
+// email.ENABLED so this doesn't block booting while email stays dormant.
+if (cfg.PROD && email.ENABLED && !process.env.UNIVERSO_APP_URL) {
+  throw new Error('UNIVERSO_APP_URL must be set in production once RESEND_API_KEY is set — verification/reset links would otherwise be built from the spoofable request Host header.');
+}
 events.rotateIfLarge().catch((e) => log.warn('startup event-log rotation check failed', { error: e.message }));
 
 const UNIVERSITIES = store.read('universities');
@@ -131,6 +141,15 @@ const api = express.Router();
 const asyncRoute = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
 const baseUrl = (req) => `${req.protocol}://${req.get('host')}`;
+
+// Security-sensitive links (email verification, password reset) must NOT be
+// built from the request's Host header — it's client-supplied and can be
+// spoofed (a classic "password reset poisoning" vector: an attacker submits
+// a victim's email with a forged Host, and the victim's own inbox delivers a
+// link pointing at the attacker's domain, tokens and all). UNIVERSO_APP_URL
+// is a trusted, server-configured origin; baseUrl(req) is only a fallback
+// for local dev where that env var typically isn't set.
+const appOrigin = (req) => (process.env.UNIVERSO_APP_URL || baseUrl(req)).replace(/\/+$/, '');
 
 // A matching profile is "complete enough" to switch the matching layer on once
 // the student has stated at least a field of interest OR a degree OR a budget —
@@ -243,7 +262,7 @@ api.post('/auth/register', authLimiter, asyncRoute(async (req, res) => {
   // Fire-and-forget: sendVerificationEmail never throws (lib/email.js catches
   // its own failures), and registration must succeed regardless of whether
   // mail delivery does.
-  email.sendVerificationEmail(student, `${baseUrl(req)}/verify-email?token=${verifyToken}`).catch(() => {});
+  email.sendVerificationEmail(student, `${appOrigin(req)}/verify-email?token=${verifyToken}`).catch(() => {});
 
   auth.setAuthCookie(res, student);
   res.status(201).json({ student: publicStudent(student) });
@@ -281,7 +300,12 @@ api.get('/auth/me', auth.requireAuth, (req, res) => {
 
 // ---- Email verification -----------------------------------------------------
 
-api.post('/auth/verify-email', asyncRoute(async (req, res) => {
+// Token entropy (32 random bytes) already makes guessing infeasible, but this
+// stays consistent with every other public mutating route in the app having
+// a limiter — defense in depth against volumetric abuse, not brute-forcing.
+const verifyEmailLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, message: 'Too many attempts. Try again in a few minutes.' });
+
+api.post('/auth/verify-email', verifyEmailLimiter, asyncRoute(async (req, res) => {
   const result = validate.token(req.body);
   if (!result.ok) return res.status(400).json({ error: result.error });
 
@@ -323,7 +347,7 @@ api.post('/me/resend-verification', auth.requireAuth, resendVerificationLimiter,
   student.email_verify_last_sent = new Date().toISOString();
   store.write('students', students);
 
-  await email.sendVerificationEmail(student, `${baseUrl(req)}/verify-email?token=${verifyToken}`);
+  await email.sendVerificationEmail(student, `${appOrigin(req)}/verify-email?token=${verifyToken}`);
   res.json({ ok: true });
 }));
 
@@ -363,7 +387,7 @@ api.post('/me/change-email', auth.requireAuth, changeEmailLimiter, asyncRoute(as
   store.write('students', students);
   events.record('email_changed', { anon: req.anon });
 
-  email.sendVerificationEmail(student, `${baseUrl(req)}/verify-email?token=${verifyToken}`).catch(() => {});
+  email.sendVerificationEmail(student, `${appOrigin(req)}/verify-email?token=${verifyToken}`).catch(() => {});
   email.sendEmailChangedNotice(student.full_name, oldEmail, new_email).catch(() => {});
 
   auth.setAuthCookie(res, student);
@@ -388,7 +412,7 @@ api.post('/auth/forgot-password', forgotPasswordLimiter, asyncRoute(async (req, 
     student.password_reset_token_hash = auth.hashToken(resetToken);
     student.password_reset_expires = new Date(Date.now() + 60 * 60 * 1000).toISOString();
     store.write('students', students);
-    email.sendPasswordResetEmail(student, `${baseUrl(req)}/reset-password?token=${resetToken}`).catch(() => {});
+    email.sendPasswordResetEmail(student, `${appOrigin(req)}/reset-password?token=${resetToken}`).catch(() => {});
   }
   res.json({ ok: true });
 }));
