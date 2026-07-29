@@ -633,16 +633,24 @@
       if (n) { n.next = true; data.timeline.next_key = n.key; } else { data.timeline.next_key = null; }
     }
 
+    // Keys with an in-flight toggle. Guards against rapid clicks racing: a
+    // fast done→undo→done could otherwise resolve out of order and leave the
+    // server in the wrong state. Persists across paint() (renderJourney scope).
+    const milestoneBusy = new Set();
+
     async function onMilestone(key) {
       const stage = data.timeline.stages.find((s) => s.key === key);
-      if (!stage || stage.kind !== 'self') return;
+      if (!stage || stage.kind !== 'self' || milestoneBusy.has(key)) return;
       const target = !stage.done;
+      milestoneBusy.add(key);
       stage.done = target; recomputeNext(); paint(); // optimistic
       try {
         await API.toggleMilestone(key, target);
       } catch (e) {
         stage.done = !target; recomputeNext(); paint();
         toast(e.message, true);
+      } finally {
+        milestoneBusy.delete(key);
       }
     }
 
