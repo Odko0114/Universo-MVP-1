@@ -536,7 +536,10 @@
       view.innerHTML = emptyState({ iconName: 'alert', title: 'Couldn’t load your journey', sub: e.message, ctaHref: '/discover', ctaLabel: 'Back to discover' });
       return;
     }
-    state.savedIds = new Set((data.saved.universities || []).map((u) => u.id));
+    // NB: do NOT rebuild state.savedIds from data.saved.universities — that list
+    // is capped at 6 for the preview card. state.savedIds is the authoritative
+    // full set (loaded at boot); overwriting it here would drop saved-state for
+    // anyone with more than 6 saved. The preview cards read the full set fine.
 
     const pct = data.completeness.percent;
     const progressCard = `
