@@ -48,6 +48,46 @@ test('nextActions: empty profile + no saved → set up profile, then save first'
   assert.equal(actions[1].key, 'save_first');
 });
 
+test('buildTimeline: fresh student has only account_created done, profile_set is next', () => {
+  const t = journey.buildTimeline(false, 0, []);
+  assert.equal(t.stages.length, 9);
+  assert.equal(t.stages[0].key, 'account_created');
+  assert.equal(t.stages[0].done, true);
+  assert.equal(t.stages[1].done, false);
+  assert.equal(t.next_key, 'profile_set');
+  assert.equal(t.stages.find((s) => s.key === 'profile_set').next, true);
+});
+
+test('buildTimeline: auto stages reflect real state (profiled + saved)', () => {
+  const t = journey.buildTimeline(true, 3, []);
+  assert.equal(t.stages.find((s) => s.key === 'profile_set').done, true);
+  assert.equal(t.stages.find((s) => s.key === 'shortlist_started').done, true);
+  assert.equal(t.next_key, 'scholarships_researched', 'first self stage is next once autos are done');
+});
+
+test('buildTimeline: self-reported milestones mark their stage done', () => {
+  const t = journey.buildTimeline(true, 1, ['scholarships_researched', 'application_started']);
+  assert.equal(t.stages.find((s) => s.key === 'scholarships_researched').done, true);
+  assert.equal(t.stages.find((s) => s.key === 'application_started').done, true);
+  assert.equal(t.next_key, 'application_submitted');
+});
+
+test('buildTimeline: next is the FIRST incomplete stage even if a later one is marked', () => {
+  // A student who ticked "arrived" but never set a profile: arrived shows done,
+  // but the roadmap still points them at the first real gap.
+  const t = journey.buildTimeline(false, 0, ['arrived']);
+  assert.equal(t.stages.find((s) => s.key === 'arrived').done, true);
+  assert.equal(t.next_key, 'profile_set');
+});
+
+test('SELF_MILESTONE_KEYS excludes the auto stages (they are never client-settable)', () => {
+  assert.ok(!journey.SELF_MILESTONE_KEYS.has('account_created'));
+  assert.ok(!journey.SELF_MILESTONE_KEYS.has('profile_set'));
+  assert.ok(!journey.SELF_MILESTONE_KEYS.has('shortlist_started'));
+  assert.ok(journey.SELF_MILESTONE_KEYS.has('application_submitted'));
+  assert.ok(journey.SELF_MILESTONE_KEYS.has('arrived'));
+});
+
 test('nextActions: complete profile hides the profile action; saved count drives the shortlist action', () => {
   const full = journey.profileCompleteness({
     fields_of_interest: ['CS'], degree_level: 'Master', budget_max_eur_year: 5000,

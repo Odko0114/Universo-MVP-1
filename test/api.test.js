@@ -402,6 +402,40 @@ test('GET /me/journey assembles the dashboard and gains match picks once a profi
   await req('DELETE', '/api/me');
 });
 
+test('POST /me/milestone: auth-gated, validates the key, persists, and reflects in the timeline', async () => {
+  const unauth = await fetch(base + '/api/me/milestone', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'arrived', done: true }),
+  });
+  assert.equal(unauth.status, 401);
+
+  const testAddr = `milestone_${Date.now()}@example.com`;
+  await req('POST', '/api/auth/register', { full_name: 'Milestone Flow', email: testAddr, password: 'password123', consent: true });
+
+  // Auto stages are never client-settable.
+  const auto = await req('POST', '/api/me/milestone', { key: 'profile_set', done: true });
+  assert.equal(auto.status, 400, 'auto stages cannot be toggled by the client');
+  const bogus = await req('POST', '/api/me/milestone', { key: 'not_a_stage', done: true });
+  assert.equal(bogus.status, 400);
+
+  // Fresh timeline: account done, profile_set is next.
+  const t0 = (await req('GET', '/api/me/journey')).json.timeline;
+  assert.equal(t0.stages.length, 9);
+  assert.equal(t0.next_key, 'profile_set');
+
+  // Mark a self stage → persists and shows done in the timeline.
+  const set = await req('POST', '/api/me/milestone', { key: 'application_submitted', done: true });
+  assert.equal(set.status, 200);
+  assert.ok(set.json.milestones.includes('application_submitted'));
+  const t1 = (await req('GET', '/api/me/journey')).json.timeline;
+  assert.equal(t1.stages.find((s) => s.key === 'application_submitted').done, true);
+
+  // Unmark → removed.
+  const unset = await req('POST', '/api/me/milestone', { key: 'application_submitted', done: false });
+  assert.ok(!unset.json.milestones.includes('application_submitted'));
+
+  await req('DELETE', '/api/me');
+});
+
 test('GET /journey SSR fallback is noindex and prompts sign-in', async () => {
   const r = await req('GET', '/journey');
   assert.equal(r.status, 200);

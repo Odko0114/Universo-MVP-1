@@ -83,6 +83,7 @@
     unsave: (id) => request('DELETE', `/me/saved/${encodeURIComponent(id)}`),
     recommendations: (limit) => request('GET', `/me/recommendations${toQuery({ limit })}`),
     journey: () => request('GET', '/me/journey'),
+    toggleMilestone: (key, done) => request('POST', '/me/milestone', { key, done }),
     // Logo served through our caching proxy (no third-party hotlinking).
     logoUrl: (domain) => `/api/logo?domain=${encodeURIComponent(domain)}`,
   };

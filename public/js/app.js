@@ -541,69 +541,119 @@
     // full set (loaded at boot); overwriting it here would drop saved-state for
     // anyone with more than 6 saved. The preview cards read the full set fine.
 
-    const pct = data.completeness.percent;
-    const progressCard = `
-      <div class="card journey-progress">
-        <div class="journey-progress__head">
-          <h3>Your matching profile</h3>
-          <span class="journey-progress__pct">${pct}%</span>
-        </div>
-        <div class="progress" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="Profile completeness">
-          <div class="progress__bar" style="width:${pct}%"></div>
-        </div>
-        <p class="muted" style="margin:10px 0 0">
-          ${pct === 100
-            ? 'Complete — every university is ranked for your profile.'
-            : `${data.completeness.filled} of ${data.completeness.total} set. Add ${esc((data.completeness.missing[0] || '').toLowerCase())} to sharpen your matches.`}
-        </p>
-      </div>`;
+    // ---- build the view (rebuilt in place when a milestone toggles) --------
+    function build() {
+      const pct = data.completeness.percent;
+      const progressCard = `
+        <div class="card journey-progress">
+          <div class="journey-progress__head">
+            <h3>Your matching profile</h3>
+            <span class="journey-progress__pct">${pct}%</span>
+          </div>
+          <div class="progress" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="Profile completeness">
+            <div class="progress__bar" style="width:${pct}%"></div>
+          </div>
+          <p class="muted" style="margin:10px 0 0">
+            ${pct === 100
+              ? 'Complete — every university is ranked for your profile.'
+              : `${data.completeness.filled} of ${data.completeness.total} set. Add ${esc((data.completeness.missing[0] || '').toLowerCase())} to sharpen your matches.`}
+          </p>
+        </div>`;
 
-    const actionsCard = data.next_actions.length ? `
-      <div class="section-head" style="margin-top:22px"><h3 style="margin:0">Your next steps</h3></div>
-      <div class="journey-actions">
-        ${data.next_actions.map((a) => `
-          <div class="journey-action">
-            <div class="journey-action__body">
-              <strong>${esc(a.title)}</strong>
-              <p class="muted">${esc(a.body)}</p>
-            </div>
-            <a class="btn btn--primary btn--sm" href="${esc(a.href)}">${esc(a.cta)}</a>
-          </div>`).join('')}
-      </div>` : '';
+      const actionsCard = data.next_actions.length ? `
+        <div class="section-head" style="margin-top:22px"><h3 style="margin:0">Your next steps</h3></div>
+        <div class="journey-actions">
+          ${data.next_actions.map((a) => `
+            <div class="journey-action">
+              <div class="journey-action__body">
+                <strong>${esc(a.title)}</strong>
+                <p class="muted">${esc(a.body)}</p>
+              </div>
+              <a class="btn btn--primary btn--sm" href="${esc(a.href)}">${esc(a.cta)}</a>
+            </div>`).join('')}
+        </div>` : '';
 
-    const picksCard = data.has_profile && data.picks.length ? `
-      <div class="section-head" style="margin-top:26px"><h3 style="margin:0">Matched to your profile</h3><a class="link-btn" href="/discover">See all</a></div>
-      <div class="grid">${data.picks.map(uniCard).join('')}</div>` : '';
+      const timelineCard = `
+        <div class="section-head" style="margin-top:26px"><h3 style="margin:0">Your roadmap</h3></div>
+        <div class="card">
+          <ol class="timeline">
+            ${data.timeline.stages.map((s) => `
+              <li class="timeline__stage${s.done ? ' is-done' : ''}${s.next ? ' is-next' : ''}">
+                <span class="timeline__dot" aria-hidden="true">${s.done ? '✓' : ''}</span>
+                <div class="timeline__body">
+                  <div class="timeline__label">${esc(s.label)}${s.next ? ' <span class="chip chip--gold">next</span>' : ''}</div>
+                  ${s.next && s.hint ? `<p class="muted timeline__hint">${esc(s.hint)}</p>` : ''}
+                </div>
+                ${s.kind === 'self'
+                  ? `<button type="button" class="btn btn--sm ${s.done ? 'btn--ghost' : 'btn--primary'}" data-milestone="${esc(s.key)}">${s.done ? 'Undo' : 'Mark done'}</button>`
+                  : ''}
+              </li>`).join('')}
+          </ol>
+        </div>`;
 
-    const savedCard = `
-      <div class="section-head" style="margin-top:26px"><h3 style="margin:0">Your shortlist (${data.saved.count})</h3>${data.saved.count ? '<a class="link-btn" href="/saved">View all</a>' : ''}</div>
-      ${data.saved.count
-        ? `<div class="grid">${data.saved.universities.map(uniCard).join('')}</div>`
-        : `<div class="card"><p class="muted" style="margin:0">Nothing saved yet — tap “Save” on any university to start comparing your options here.</p></div>`}`;
+      const picksCard = data.has_profile && data.picks.length ? `
+        <div class="section-head" style="margin-top:26px"><h3 style="margin:0">Matched to your profile</h3><a class="link-btn" href="/discover">See all</a></div>
+        <div class="grid">${data.picks.map(uniCard).join('')}</div>` : '';
 
-    const scholarshipsCard = data.scholarships.length ? `
-      <div class="section-head" style="margin-top:26px"><h3 style="margin:0">Scholarship pointers</h3></div>
-      <div class="card">
-        <p class="muted" style="margin:0 0 12px">Real, named funding schemes for students from <strong>${esc(data.home_country)}</strong>. Always confirm current eligibility, amounts and deadlines on the official page.</p>
-        <ul class="journey-scholarships">
-          ${data.scholarships.map((s) => `
-            <li>
-              <div><strong>${esc(s.name)}</strong> <span class="chip chip--plain">verify</span></div>
-              <p class="muted">${esc(s.note)}</p>
-              ${s.website ? `<a href="${esc(s.website)}" target="_blank" rel="noopener noreferrer">Official page ↗</a>` : ''}
-            </li>`).join('')}
-        </ul>
-      </div>` : '';
+      const savedCard = `
+        <div class="section-head" style="margin-top:26px"><h3 style="margin:0">Your shortlist (${data.saved.count})</h3>${data.saved.count ? '<a class="link-btn" href="/saved">View all</a>' : ''}</div>
+        ${data.saved.count
+          ? `<div class="grid">${data.saved.universities.map(uniCard).join('')}</div>`
+          : `<div class="card"><p class="muted" style="margin:0">Nothing saved yet — tap “Save” on any university to start comparing your options here.</p></div>`}`;
 
-    view.innerHTML = `
-      <div class="journey">
-        <div class="section-head"><h2>Your journey, ${first}</h2></div>
-        ${progressCard}
-        ${actionsCard}
-        ${picksCard}
-        ${savedCard}
-        ${scholarshipsCard}
-      </div>`;
+      const scholarshipsCard = data.scholarships.length ? `
+        <div class="section-head" style="margin-top:26px"><h3 style="margin:0">Scholarship pointers</h3></div>
+        <div class="card">
+          <p class="muted" style="margin:0 0 12px">Real, named funding schemes for students from <strong>${esc(data.home_country)}</strong>. Always confirm current eligibility, amounts and deadlines on the official page.</p>
+          <ul class="journey-scholarships">
+            ${data.scholarships.map((s) => `
+              <li>
+                <div><strong>${esc(s.name)}</strong> <span class="chip chip--plain">verify</span></div>
+                <p class="muted">${esc(s.note)}</p>
+                ${s.website ? `<a href="${esc(s.website)}" target="_blank" rel="noopener noreferrer">Official page ↗</a>` : ''}
+              </li>`).join('')}
+          </ul>
+        </div>` : '';
+
+      return `
+        <div class="journey">
+          <div class="section-head"><h2>Your journey, ${first}</h2></div>
+          ${progressCard}
+          ${actionsCard}
+          ${timelineCard}
+          ${picksCard}
+          ${savedCard}
+          ${scholarshipsCard}
+        </div>`;
+    }
+
+    function recomputeNext() {
+      data.timeline.stages.forEach((s) => { s.next = false; });
+      const n = data.timeline.stages.find((s) => !s.done);
+      if (n) { n.next = true; data.timeline.next_key = n.key; } else { data.timeline.next_key = null; }
+    }
+
+    async function onMilestone(key) {
+      const stage = data.timeline.stages.find((s) => s.key === key);
+      if (!stage || stage.kind !== 'self') return;
+      const target = !stage.done;
+      stage.done = target; recomputeNext(); paint(); // optimistic
+      try {
+        await API.toggleMilestone(key, target);
+      } catch (e) {
+        stage.done = !target; recomputeNext(); paint();
+        toast(e.message, true);
+      }
+    }
+
+    function paint() {
+      view.innerHTML = build();
+      view.querySelectorAll('[data-milestone]').forEach((btn) => {
+        btn.addEventListener('click', () => onMilestone(btn.dataset.milestone));
+      });
+    }
+
+    paint();
   }
 
   async function renderSaved() {

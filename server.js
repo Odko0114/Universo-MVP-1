@@ -236,6 +236,10 @@ api.post('/auth/register', authLimiter, asyncRoute(async (req, res) => {
     country_preference: v.country_preference,
     home_country: v.home_country || v.country_of_origin,
     saved_universities: [],
+    // Self-reported study-abroad milestones (the Timeline's "self" stages).
+    // Older accounts predating this field read as [] everywhere (defensive
+    // reads in lib/journey.js and the milestone endpoint) — no migration.
+    milestones: [],
     consent_accepted: true,
     consent_date: now,
     // Separate opt-in for product-update emails (new universities,
@@ -838,7 +842,26 @@ api.get('/me/journey', auth.requireAuth, (req, res) => {
     scholarships,
     home_country: homeCountry,
     next_actions: journey.nextActions(saved.length, completeness),
+    timeline: journey.buildTimeline(profiled, saved.length, student.milestones),
   });
+});
+
+// Toggle a self-reported timeline milestone. Only the "self" keys are
+// settable — the auto stages (account/profile/shortlist) reflect real state
+// and are never client-writable.
+api.post('/me/milestone', auth.requireAuth, (req, res) => {
+  const key = typeof req.body.key === 'string' ? req.body.key : '';
+  if (!journey.SELF_MILESTONE_KEYS.has(key)) return res.status(400).json({ error: 'Unknown milestone.' });
+  const done = req.body.done === true;
+
+  const students = store.read('students');
+  const student = students.find((s) => s.student_id === req.student.student_id);
+  const set = new Set(Array.isArray(student.milestones) ? student.milestones : []);
+  if (done) set.add(key); else set.delete(key);
+  student.milestones = [...set];
+  store.write('students', students);
+  events.record('milestone', { anon: req.anon, ...(done ? { set: key } : {}) });
+  res.json({ milestones: student.milestones });
 });
 
 // ---- GDPR: data export + account deletion ---------------------------------

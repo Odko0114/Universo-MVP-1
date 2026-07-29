@@ -374,6 +374,20 @@ img { max-width: 100%; display: block; }
 .journey-scholarships li { padding-bottom: 14px; border-bottom: 1px solid var(--line); }
 .journey-scholarships li:last-child { padding-bottom: 0; border-bottom: none; }
 .journey-scholarships p { margin: 4px 0 6px; font-size: 0.86rem; }
+
+/* Timeline (study-abroad roadmap) — vertical stepper with a connector line. */
+.timeline { list-style: none; margin: 0; padding: 0; }
+.timeline__stage { position: relative; display: flex; align-items: flex-start; gap: 14px; padding: 0 0 18px 0; }
+.timeline__stage:not(:last-child)::before { content: ""; position: absolute; left: 12px; top: 26px; bottom: 0; width: 2px; background: var(--line); }
+.timeline__stage.is-done:not(:last-child)::before { background: var(--teal-500); }
+.timeline__dot { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--line); background: var(--surface); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; color: #fff; z-index: 1; }
+.timeline__stage.is-done .timeline__dot { background: var(--teal-500); border-color: var(--teal-500); }
+.timeline__stage.is-next .timeline__dot { border-color: var(--teal-500); box-shadow: 0 0 0 4px var(--teal-050); }
+.timeline__body { flex: 1; min-width: 0; padding-top: 2px; }
+.timeline__label { font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.timeline__stage:not(.is-done):not(.is-next) .timeline__label { color: var(--ink-soft); font-weight: 500; }
+.timeline__hint { margin: 4px 0 0; font-size: 0.85rem; }
+.timeline__stage .btn { flex: 0 0 auto; }
 @media (max-width: 560px) {
   .journey-action { flex-direction: column; align-items: stretch; }
   .journey-action .btn { width: 100%; }
