@@ -400,6 +400,13 @@ test('GET /me/journey assembles the dashboard and gains match picks once a profi
   assert.ok(after.json.picks.length >= 1, 'ranked picks now returned');
   assert.ok(after.json.picks[0].match_reasons && after.json.picks[0].match_reasons.length, 'picks carry a why reason');
 
+  // Dream Plan payload present and honest.
+  assert.ok(Array.isArray(after.json.readiness) && after.json.readiness.length >= 3, 'readiness dimensions present');
+  assert.ok(after.json.next_best_action && after.json.next_best_action.title, 'a next best action is surfaced');
+  assert.ok(Array.isArray(after.json.documents) && after.json.documents.length === 6, 'document checklist present');
+  assert.ok(after.json.documents.every((d) => d.done === false), 'no documents marked yet');
+  assert.ok(after.json.dream && 'target_intake' in after.json.dream, 'dream fields present');
+
   await req('DELETE', '/api/me');
 });
 
@@ -479,11 +486,53 @@ test('POST /me/milestone: auth-gated, validates the key, persists, and reflects 
   await req('DELETE', '/api/me');
 });
 
+test('Dream Plan: dream fields and document checklist persist, drive readiness, and are auth-gated', async () => {
+  const clean = await fetch(base + '/api/me/dream', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: '{}' });
+  assert.equal(clean.status, 401);
+  const cleanDoc = await fetch(base + '/api/me/document', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'transcript', done: true }) });
+  assert.equal(cleanDoc.status, 401);
+
+  const testAddr = `dream_${Date.now()}@example.com`;
+  await req('POST', '/api/auth/register', { full_name: 'Dream Flow', email: testAddr, password: 'password123', consent: true });
+
+  // Dream fields: valid intake accepted, garbage intake dropped to empty.
+  const dream = await req('PATCH', '/api/me/dream', { target_intake: 'Fall 2027', career_goal: 'Become a doctor', scholarship_required: true });
+  assert.equal(dream.status, 200);
+  assert.equal(dream.json.student.target_intake, 'Fall 2027');
+  assert.equal(dream.json.student.scholarship_required, true);
+  const badIntake = await req('PATCH', '/api/me/dream', { target_intake: 'whenever', career_goal: '', scholarship_required: false });
+  assert.equal(badIntake.json.student.target_intake, '', 'invalid intake is rejected, not stored');
+
+  // scholarship_required=true now adds a scholarship readiness dimension.
+  let j = await req('GET', '/api/me/journey');
+  // (badIntake set scholarship_required false again) set it true for the check
+  await req('PATCH', '/api/me/dream', { target_intake: 'Fall 2027', scholarship_required: true });
+  j = await req('GET', '/api/me/journey');
+  assert.ok(j.json.readiness.some((r) => r.key === 'scholarship'), 'scholarship readiness appears when required');
+
+  // Documents: unknown rejected, valid persists and lifts document readiness.
+  const bad = await req('POST', '/api/me/document', { key: 'not_a_doc', done: true });
+  assert.equal(bad.status, 400);
+  const before = (await req('GET', '/api/me/journey')).json.readiness.find((r) => r.key === 'documents').score;
+  await req('POST', '/api/me/document', { key: 'transcript', done: true });
+  await req('POST', '/api/me/document', { key: 'passport', done: true });
+  const jj = await req('GET', '/api/me/journey');
+  assert.equal(jj.json.documents.filter((d) => d.done).length, 2);
+  const after = jj.json.readiness.find((r) => r.key === 'documents').score;
+  assert.ok(after > before, 'document readiness rose after marking documents');
+
+  // Unmark clears it.
+  const un = await req('POST', '/api/me/document', { key: 'transcript', done: false });
+  assert.ok(!un.json.documents.transcript);
+
+  await req('DELETE', '/api/me');
+});
+
 test('GET /journey SSR fallback is noindex and prompts sign-in', async () => {
   const r = await req('GET', '/journey');
   assert.equal(r.status, 200);
   assert.match(r.text, /content="noindex/);
-  assert.match(r.text, /My Journey/);
+  assert.match(r.text, /Dream Plan/);
 });
 
 test('auth round-trip: register → me → save → export → delete', async () => {

@@ -259,6 +259,12 @@ api.post('/auth/register', authLimiter, asyncRoute(async (req, res) => {
     // Per-saved-university application status { uniId: status }. Older accounts
     // read as {} everywhere — no migration.
     applications: {},
+    // Dream Plan: the explicit dream fields + self-tracked document checklist.
+    // Older accounts default to empty/false/{} via defensive reads — no migration.
+    target_intake: '',
+    career_goal: '',
+    scholarship_required: false,
+    documents: {},
     consent_accepted: true,
     consent_date: now,
     // Separate opt-in for product-update emails (new universities,
@@ -880,10 +886,38 @@ api.get('/me/journey', auth.requireAuth, (req, res) => {
   const homeCountry = student.home_country || student.country_of_origin || '';
   const scholarships = homeCountry ? scholarshipsFor(homeCountry) : [];
 
+  // ---- Dream Plan additions ----
+  const sCounts = journey.statusCounts(apps, savedIds);
+  const docsState = (student.documents && typeof student.documents === 'object') ? student.documents : {};
+  const documents = journey.DOCUMENTS.map((d) => ({ ...d, done: docsState[d.key] === true }));
+  const docsDone = documents.filter((d) => d.done).length;
+  const scholarshipsResearched = Array.isArray(student.milestones) && student.milestones.includes('scholarships_researched');
+
+  const readiness = journey.readiness({
+    completenessPercent: completeness.percent,
+    missingProfile: completeness.missing,
+    savedCount: saved.length,
+    statusCounts: sCounts,
+    docsDone,
+    scholarshipRequired: student.scholarship_required === true,
+    scholarshipsResearched,
+  });
+
   res.json({
     completeness,
     has_profile: profiled,
-    saved: { count: saved.length, universities: saved.slice(0, 6), status_counts: journey.statusCounts(apps, savedIds) },
+    dream: {
+      fields_of_interest: student.fields_of_interest || [],
+      degree_level: student.degree_level || '',
+      country_preference: student.country_preference || [],
+      target_intake: student.target_intake || '',
+      career_goal: student.career_goal || '',
+      scholarship_required: student.scholarship_required === true,
+    },
+    readiness,
+    next_best_action: journey.nextBestAction(readiness),
+    documents,
+    saved: { count: saved.length, universities: saved.slice(0, 6), status_counts: sCounts },
     picks,
     scholarships,
     home_country: homeCountry,
@@ -908,6 +942,36 @@ api.post('/me/milestone', auth.requireAuth, (req, res) => {
   store.write('students', students);
   events.record('milestone', { anon: req.anon, ...(done ? { set: key } : {}) });
   res.json({ milestones: student.milestones });
+});
+
+// ---- Dream Plan: dream fields + document checklist -------------------------
+
+// Update the explicit "dream" fields (kept separate from the matching profile
+// so neither save wipes the other).
+api.patch('/me/dream', auth.requireAuth, (req, res) => {
+  const result = validate.dream(req.body);
+  if (!result.ok) return res.status(400).json({ error: result.error });
+  const students = store.read('students');
+  const student = students.find((s) => s.student_id === req.student.student_id);
+  Object.assign(student, result.value);
+  store.write('students', students);
+  events.record('dream_update', { anon: req.anon });
+  res.json({ student: publicStudent(student) });
+});
+
+// Toggle a document in the self-tracked checklist (powers Document readiness).
+api.post('/me/document', auth.requireAuth, (req, res) => {
+  const key = typeof req.body.key === 'string' ? req.body.key : '';
+  if (!journey.DOCUMENT_KEYS.has(key)) return res.status(400).json({ error: 'Unknown document.' });
+  const done = req.body.done === true;
+
+  const students = store.read('students');
+  const student = students.find((s) => s.student_id === req.student.student_id);
+  if (!student.documents || typeof student.documents !== 'object') student.documents = {};
+  if (done) student.documents[key] = true; else delete student.documents[key];
+  store.write('students', students);
+  events.record('document', { anon: req.anon, ...(done ? { set: key } : {}) });
+  res.json({ documents: student.documents });
 });
 
 // ---- GDPR: data export + account deletion ---------------------------------
@@ -1337,14 +1401,14 @@ app.get('/saved', (_req, res) => {
 app.get('/journey', (_req, res) => {
   res.send(ssr.injectSSR(SHELL, {
     metaHtml: ssr.metaTags({
-      title: 'My Journey — Universo',
-      description: 'Your personal study-abroad dashboard on Universo: matches, saved universities, scholarships and your next steps.',
+      title: 'Dream Plan — Universo',
+      description: 'Your personal study-abroad roadmap on Universo: your dream, readiness, next best step, documents, matches and scholarships.',
       noindex: true,
     }),
     viewHtml: `
       <section class="ssr">
-        <h1>My Journey</h1>
-        <p>Sign in to see your matches, saved universities, scholarship pointers and your next steps — free, always.</p>
+        <h1>Your Dream Plan</h1>
+        <p>Sign in to see your dream, how ready you are, your next best step, your document checklist, matches and scholarships — free, always.</p>
         <p><a href="/account">Sign in</a> · <a href="/account?mode=register&src=journey-ssr">Create a free account</a></p>
       </section>`,
   }));

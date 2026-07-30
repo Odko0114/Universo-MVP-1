@@ -80,6 +80,42 @@ test('buildTimeline: next is the FIRST incomplete stage even if a later one is m
   assert.equal(t.next_key, 'profile_set');
 });
 
+test('readiness: computes profile/application/documents dimensions from real state', () => {
+  const dims = journey.readiness({
+    completenessPercent: 50, missingProfile: ['Budget', 'Study language'],
+    savedCount: 2, statusCounts: { considering: 1, applied: 1 },
+    docsDone: 3, scholarshipRequired: false, scholarshipsResearched: false,
+  });
+  const by = Object.fromEntries(dims.map((d) => [d.key, d.score]));
+  assert.equal(by.profile, 50);
+  assert.equal(by.application, 75, 'an applied status lifts application readiness');
+  assert.equal(by.documents, 50, '3 of 6 documents');
+  assert.ok(!('scholarship' in by), 'scholarship dimension only appears when required');
+  assert.ok(dims.find((d) => d.key === 'profile').detail.length > 0, 'every dimension explains what to do');
+});
+
+test('readiness: scholarship dimension appears only when required', () => {
+  const withReq = journey.readiness({ completenessPercent: 100, missingProfile: [], savedCount: 1, statusCounts: { considering: 1 }, docsDone: 6, scholarshipRequired: true, scholarshipsResearched: true });
+  assert.ok(withReq.some((d) => d.key === 'scholarship' && d.score === 100));
+});
+
+test('nextBestAction: picks the lowest-scoring incomplete dimension; null when all complete', () => {
+  const dims = journey.readiness({ completenessPercent: 30, missingProfile: ['Budget'], savedCount: 0, statusCounts: {}, docsDone: 6, scholarshipRequired: false, scholarshipsResearched: false });
+  const nba = journey.nextBestAction(dims);
+  // application is 0 (no saved) which is lower than profile 30 → application leads
+  assert.equal(nba.key, 'application');
+
+  const allDone = journey.readiness({ completenessPercent: 100, missingProfile: [], savedCount: 1, statusCounts: { offer: 1 }, docsDone: 6, scholarshipRequired: false, scholarshipsResearched: false });
+  assert.equal(journey.nextBestAction(allDone), null, 'nothing left to do → no next action');
+});
+
+test('DOCUMENT_KEYS holds the checklist keys and excludes unknowns', () => {
+  assert.ok(journey.DOCUMENT_KEYS.has('transcript'));
+  assert.ok(journey.DOCUMENT_KEYS.has('english_test'));
+  assert.ok(!journey.DOCUMENT_KEYS.has('nonsense'));
+  assert.equal(journey.DOCUMENTS.length, journey.DOCUMENT_KEYS.size);
+});
+
 test('statusCounts: unset saved unis count as the default (considering)', () => {
   const counts = journey.statusCounts({ a: 'applied', b: 'offer' }, ['a', 'b', 'c', 'd']);
   assert.equal(counts.applied, 1);

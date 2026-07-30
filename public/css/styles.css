@@ -382,6 +382,30 @@ img { max-width: 100%; display: block; }
 .app-status__select { flex: 1; min-width: 0; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); font-size: 0.85rem; color: var(--ink); }
 .app-status__select:disabled { opacity: 0.6; }
 
+/* ---- Dream Plan ---- */
+.dream-statement { margin: 0; font-size: 1.02rem; line-height: 1.55; color: var(--ink); }
+.dream-statement strong { color: var(--navy-900); }
+.dream-form { margin-top: 14px; }
+
+.next-best { border: 1px solid var(--teal-500); background: linear-gradient(180deg, var(--teal-050), var(--surface)); margin-top: 14px; }
+.next-best__eyebrow { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--teal-600); }
+.next-best__title { margin: 6px 0 0; font-size: 1.15rem; }
+
+.readiness { display: flex; flex-direction: column; gap: 16px; }
+.readiness__head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; font-weight: 600; }
+.readiness__pct { font-variant-numeric: tabular-nums; color: var(--teal-600); font-weight: 800; }
+.readiness__detail { margin: 6px 0 0; font-size: 0.85rem; }
+
+.doc-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.doc-item { display: flex; align-items: flex-start; gap: 12px; }
+.doc-check { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 8px; border: 2px solid var(--line); background: var(--surface); color: #fff; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s, border-color 0.15s; }
+.doc-check:hover { border-color: var(--teal-500); }
+.doc-item.is-done .doc-check { background: var(--teal-500); border-color: var(--teal-500); }
+.doc-body { flex: 1; min-width: 0; }
+.doc-body strong { display: block; }
+.doc-item.is-done .doc-body strong { text-decoration: line-through; color: var(--ink-soft); }
+.doc-body p { margin: 2px 0 0; font-size: 0.85rem; }
+
 /* Timeline (study-abroad roadmap) — vertical stepper with a connector line. */
 .timeline { list-style: none; margin: 0; padding: 0; }
 .timeline__stage { position: relative; display: flex; align-items: flex-start; gap: 14px; padding: 0 0 18px 0; }

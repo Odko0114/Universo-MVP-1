@@ -527,11 +527,11 @@
   async function renderJourney() {
     if (!state.user) { navigate('/account?src=gate&next=%2Fjourney', true); return; }
     setActiveNav('journey');
-    document.title = 'My Journey — Universo';
+    document.title = 'Dream Plan — Universo';
     const first = esc((state.user.full_name || '').split(' ')[0] || 'there');
     view.innerHTML = `
       <div class="journey">
-        <div class="section-head"><h2>Your journey, ${first}</h2></div>
+        <div class="section-head"><h2>Your Dream Plan, ${first}</h2></div>
         <div class="journey-skel">${'<div class="skeleton skeleton--block"></div>'.repeat(3)}</div>
       </div>`;
     let data;
@@ -548,35 +548,68 @@
 
     // ---- build the view (rebuilt in place when a milestone toggles) --------
     function build() {
-      const pct = data.completeness.percent;
-      const progressCard = `
-        <div class="card journey-progress">
-          <div class="journey-progress__head">
-            <h3>Your matching profile</h3>
-            <span class="journey-progress__pct">${pct}%</span>
-          </div>
-          <div class="progress" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100" aria-label="Profile completeness">
-            <div class="progress__bar" style="width:${pct}%"></div>
-          </div>
-          <p class="muted" style="margin:10px 0 0">
-            ${pct === 100
-              ? 'Complete — every university is ranked for your profile.'
-              : `${data.completeness.filled} of ${data.completeness.total} set. Add ${esc((data.completeness.missing[0] || '').toLowerCase())} to sharpen your matches.`}
-          </p>
+      const d = data.dream || {};
+      const hasDream = (d.fields_of_interest || []).length || d.degree_level || (d.country_preference || []).length || d.target_intake || d.career_goal;
+      const dreamCard = `
+        <div class="card dream-card">
+          <div class="section-head" style="margin:0 0 6px"><h3 style="margin:0">Your dream</h3><button class="link-btn" id="edit-dream">${hasDream ? 'Edit' : 'Define'}</button></div>
+          ${hasDream
+            ? `<p class="dream-statement">${dreamStatement(d)}</p>`
+            : `<p class="muted" style="margin:0">Tell us your goal — what to study, at what level, where, and when — so your plan is built around it.</p>`}
+          <form id="dream-form" hidden class="dream-form">
+            <label class="onb-label">Target intake</label>
+            <select name="target_intake" class="onb-input">${intakeOptions(d.target_intake)}</select>
+            <label class="onb-label" style="margin-top:12px">Career goal <span class="muted">(optional)</span></label>
+            <input name="career_goal" class="onb-input" maxlength="120" placeholder="e.g. Become a data scientist" value="${esc(d.career_goal || '')}" />
+            <label class="consent" style="margin-top:12px"><input type="checkbox" name="scholarship_required"${d.scholarship_required ? ' checked' : ''} /><span>I need a scholarship to make this possible</span></label>
+            <div style="display:flex;gap:10px;margin-top:14px">
+              <button class="btn btn--primary btn--sm" type="submit" style="flex:1">Save dream</button>
+              <button class="btn btn--ghost btn--sm" type="button" id="dream-cancel" style="flex:1">Cancel</button>
+            </div>
+            <p class="muted" style="font-size:.82rem;margin:10px 0 0">Field, degree and countries come from your <a href="/onboarding">matching profile</a>.</p>
+          </form>
         </div>`;
 
-      const actionsCard = data.next_actions.length ? `
-        <div class="section-head" style="margin-top:22px"><h3 style="margin:0">Your next steps</h3></div>
-        <div class="journey-actions">
-          ${data.next_actions.map((a) => `
-            <div class="journey-action">
-              <div class="journey-action__body">
-                <strong>${esc(a.title)}</strong>
-                <p class="muted">${esc(a.body)}</p>
-              </div>
-              <a class="btn btn--primary btn--sm" href="${esc(a.href)}">${esc(a.cta)}</a>
-            </div>`).join('')}
-        </div>` : '';
+      const nba = data.next_best_action;
+      const nextBestCard = nba ? `
+        <div class="card next-best">
+          <div class="next-best__eyebrow">Your next best step</div>
+          <h3 class="next-best__title">${esc(nba.title)}</h3>
+          <p class="muted" style="margin:6px 0 14px">${esc(nba.body)}</p>
+          <a class="btn btn--primary" href="${esc(nba.href)}">${esc(nba.cta)}</a>
+        </div>` : `
+        <div class="card next-best">
+          <div class="next-best__eyebrow">You're on track</div>
+          <h3 class="next-best__title">Everything's ready 🎉</h3>
+          <p class="muted" style="margin:6px 0 0">Profile, applications, documents and scholarships are all in good shape.</p>
+        </div>`;
+
+      const readinessCard = `
+        <div class="section-head" style="margin-top:22px"><h3 style="margin:0">How ready are you?</h3></div>
+        <div class="card">
+          <div class="readiness">
+            ${data.readiness.map((r) => `
+              <div class="readiness__row">
+                <div class="readiness__head"><span>${esc(r.label)}</span><span class="readiness__pct">${r.score}%</span></div>
+                <div class="progress" role="progressbar" aria-valuenow="${r.score}" aria-valuemin="0" aria-valuemax="100" aria-label="${esc(r.label)} readiness"><div class="progress__bar" style="width:${r.score}%"></div></div>
+                <p class="muted readiness__detail">${esc(r.detail)}</p>
+              </div>`).join('')}
+          </div>
+          <p class="muted" style="font-size:.8rem;margin:14px 0 0">These show how prepared you are — not your chance of admission, which no one can honestly predict.</p>
+        </div>`;
+
+      const documentsCard = `
+        <div class="section-head" style="margin-top:26px" id="documents"><h3 style="margin:0">Document checklist</h3></div>
+        <div class="card">
+          <ul class="doc-list">
+            ${data.documents.map((doc) => `
+              <li class="doc-item${doc.done ? ' is-done' : ''}">
+                <button type="button" class="doc-check" data-document="${esc(doc.key)}" aria-pressed="${doc.done}" title="${doc.done ? 'Mark not ready' : 'Mark ready'}">${doc.done ? '✓' : ''}</button>
+                <div class="doc-body"><strong>${esc(doc.label)}</strong><p class="muted">${esc(doc.hint)}</p></div>
+              </li>`).join('')}
+          </ul>
+          <p class="muted" style="font-size:.8rem;margin:12px 0 0">You track these yourself — Universo never sees or stores your actual documents.</p>
+        </div>`;
 
       const timelineCard = `
         <div class="section-head" style="margin-top:26px"><h3 style="margin:0">Your roadmap</h3></div>
@@ -624,10 +657,12 @@
 
       return `
         <div class="journey">
-          <div class="section-head"><h2>Your journey, ${first}</h2></div>
-          ${progressCard}
-          ${actionsCard}
+          <div class="section-head"><h2>Your Dream Plan, ${first}</h2></div>
+          ${dreamCard}
+          ${nextBestCard}
+          ${readinessCard}
           ${timelineCard}
+          ${documentsCard}
           ${picksCard}
           ${savedCard}
           ${scholarshipsCard}
@@ -661,11 +696,65 @@
       }
     }
 
+    // Documents change the Documents-readiness bar and possibly the next-best
+    // action, so after a successful toggle we refresh the journey payload (one
+    // GET) and repaint — keeping readiness + next-best consistent rather than
+    // recomputing that logic on the client.
+    const docBusy = new Set();
+    async function onDocument(key) {
+      const doc = data.documents.find((x) => x.key === key);
+      if (!doc || docBusy.has(key)) return;
+      const target = !doc.done;
+      docBusy.add(key);
+      doc.done = target; paint(); // optimistic check
+      try {
+        await API.toggleDocument(key, target);
+        data = await API.journey();
+        paint();
+      } catch (e) {
+        doc.done = !target; paint();
+        toast(e.message, true);
+      } finally {
+        docBusy.delete(key);
+      }
+    }
+
+    async function onDreamSave(form) {
+      const fd = new FormData(form);
+      const btn = form.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      try {
+        const { student } = await API.updateDream({
+          target_intake: fd.get('target_intake'),
+          career_goal: fd.get('career_goal'),
+          scholarship_required: fd.get('scholarship_required') === 'on',
+        });
+        state.user = student;
+        data = await API.journey(); // scholarship_required feeds readiness
+        paint();
+        toast('Dream updated');
+      } catch (e) {
+        btn.disabled = false;
+        toast(e.message, true);
+      }
+    }
+
     function paint() {
       view.innerHTML = build();
       view.querySelectorAll('[data-milestone]').forEach((btn) => {
         btn.addEventListener('click', () => onMilestone(btn.dataset.milestone));
       });
+      view.querySelectorAll('[data-document]').forEach((btn) => {
+        btn.addEventListener('click', () => onDocument(btn.dataset.document));
+      });
+      const editDream = document.getElementById('edit-dream');
+      const dreamForm = document.getElementById('dream-form');
+      if (editDream && dreamForm) {
+        editDream.addEventListener('click', () => { dreamForm.hidden = !dreamForm.hidden; });
+        const cancel = document.getElementById('dream-cancel');
+        if (cancel) cancel.addEventListener('click', () => { dreamForm.hidden = true; });
+        dreamForm.addEventListener('submit', (e) => { e.preventDefault(); onDreamSave(dreamForm); });
+      }
     }
 
     paint();
@@ -707,6 +796,29 @@
         </select>
       </label>
     </div>`;
+  }
+
+  // An honest one-line dream statement — only the parts the student has set.
+  function dreamStatement(d) {
+    const fields = (d.fields_of_interest || []).join(', ');
+    const countries = (d.country_preference || []).join(', ');
+    let s = 'Study';
+    s += fields ? ` <strong>${esc(fields)}</strong>` : ' <strong>(pick a field)</strong>';
+    if (d.degree_level) s += ` at <strong>${esc(d.degree_level)}</strong> level`;
+    if (countries) s += ` in <strong>${esc(countries)}</strong>`;
+    if (d.target_intake) s += `, starting <strong>${esc(d.target_intake)}</strong>`;
+    s += '.';
+    if (d.career_goal) s += ` Career goal: <strong>${esc(d.career_goal)}</strong>.`;
+    if (d.scholarship_required) s += ' <span class="chip chip--gold">scholarship needed</span>';
+    return s;
+  }
+
+  // Upcoming Fall/Spring intakes for the next ~2.5 years, chronological.
+  function intakeOptions(current) {
+    const y = new Date().getFullYear();
+    const opts = [['', 'Not sure yet']];
+    for (let i = 0; i < 3; i++) { opts.push([`Fall ${y + i}`, `Fall ${y + i}`]); opts.push([`Spring ${y + i + 1}`, `Spring ${y + i + 1}`]); }
+    return opts.map(([v, l]) => `<option value="${v}"${v === current ? ' selected' : ''}>${esc(l)}</option>`).join('');
   }
 
   // "2 considering · 1 applied · 1 offer" — ordered, zero counts skipped.

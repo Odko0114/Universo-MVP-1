@@ -85,6 +85,8 @@
     recommendations: (limit) => request('GET', `/me/recommendations${toQuery({ limit })}`),
     journey: () => request('GET', '/me/journey'),
     toggleMilestone: (key, done) => request('POST', '/me/milestone', { key, done }),
+    updateDream: (payload) => request('PATCH', '/me/dream', payload),
+    toggleDocument: (key, done) => request('POST', '/me/document', { key, done }),
     // Logo served through our caching proxy (no third-party hotlinking).
     logoUrl: (domain) => `/api/logo?domain=${encodeURIComponent(domain)}`,
   };
