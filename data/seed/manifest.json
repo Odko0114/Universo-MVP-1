@@ -1,9 +1,9 @@
 {
   "eter": {
-    "fetched_at": "2026-07-16T12:49:34.241Z",
-    "count": 3401,
-    "checksum": "fea1f3ee601fa4e5",
-    "ref_year": 2022,
+    "fetched_at": "2026-07-30T11:36:36.562Z",
+    "count": 3172,
+    "checksum": "57a98df6b8a3d627",
+    "ref_year": 2023,
     "source_api": "https://eter-project.com/api/4.0/HEIs/query/flattened"
   },
   "global": {

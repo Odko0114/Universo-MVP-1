@@ -52,11 +52,14 @@ test('lastVerifiedAt uses real provenance, never invents a date', () => {
   assert.equal(dq.lastVerifiedAt({ source: 'global' }), null, 'no source date → null, not fabricated');
 });
 
-test('isStale: old or undated verification is stale, recent is not', () => {
-  const now = new Date('2026-07-30');
-  assert.equal(dq.isStale('2022-01-01', now), true);
-  assert.equal(dq.isStale('2026-01-01', now), false);
-  assert.equal(dq.isStale(null, now), true);
+test('isStale: an ETER record behind the latest available ref year is stale; at latest it is not', () => {
+  const latest = dq.SOURCE_LATEST_REFYEAR.eter;
+  assert.equal(dq.isStale({ source: 'eter', ref_year: latest - 1 }), true, 'a newer snapshot exists → refreshable');
+  assert.equal(dq.isStale({ source: 'eter', ref_year: latest }), false, 'already on the newest ETER snapshot');
+  // Undated/community sources are surfaced via verification_status=Unknown, not
+  // as "stale" — there is no newer versioned snapshot to refresh them to.
+  assert.equal(dq.isStale({ source: 'global' }), false);
+  assert.equal(dq.isStale({ source: 'curated' }), false);
 });
 
 test('auditDataset aggregates distribution, status, staleness and missing counts', () => {

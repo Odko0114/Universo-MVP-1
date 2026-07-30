@@ -26,7 +26,10 @@ const path = require('path');
 const curated = require('../data/seed/universities');
 const manifest = require('../lib/manifest');
 
-const YEAR = Number(process.argv[2]) || 2022;
+// Default to the newest ETER reference year known to be published (2023 as of
+// 2026-07; 2024 not yet available). Override with `npm run import:eter -- 2024`
+// once ETER releases it. Keep in sync with lib/data-quality.js SOURCE_LATEST_REFYEAR.
+const YEAR = Number(process.argv[2]) || 2023;
 const API = 'https://eter-project.com/api/4.0/HEIs/query/flattened';
 
 // Field-of-education (ISCED-F) buckets → friendly "field of study" names.
