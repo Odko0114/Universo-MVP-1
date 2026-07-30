@@ -1291,13 +1291,27 @@ app.get('/join', (_req, res) => res.redirect(301, '/for-universities'));
 app.get('/robots.txt', (req, res) => {
   const base = `${req.protocol}://${req.get('host')}`;
   // Operational/account surfaces carry no unique public content — keep
-  // crawlers out of them (they're also noindex'd at the page level).
+  // crawlers out of them (they're also noindex'd at the page level). Public
+  // pages (/, /discover, /university/*) are open to everyone.
+  //
+  // AI assistants (ChatGPT/GPTBot, etc.) already fall under `*` and are
+  // welcome; they're named explicitly below so the intent is unambiguous.
+  // A named user-agent group does NOT inherit the `*` rules, so the same
+  // Disallow lines are repeated in each group — otherwise those crawlers
+  // would get no restrictions at all.
+  const disallow = ['Disallow: /admin', 'Disallow: /partners', 'Disallow: /saved', 'Disallow: /account'];
   res.type('text/plain').send([
+    '# AI assistants — explicitly welcome on public pages.',
+    'User-agent: GPTBot',
+    'User-agent: ChatGPT-User',
+    'User-agent: OAI-SearchBot',
+    'User-agent: PerplexityBot',
+    'User-agent: Google-Extended',
+    'Allow: /',
+    ...disallow,
+    '',
     'User-agent: *',
-    'Disallow: /admin',
-    'Disallow: /partners',
-    'Disallow: /saved',
-    'Disallow: /account',
+    ...disallow,
     'Allow: /',
     `Sitemap: ${base}/sitemap.xml`,
     '',

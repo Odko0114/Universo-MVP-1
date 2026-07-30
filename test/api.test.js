@@ -330,6 +330,18 @@ test('robots.txt disallows operational surfaces and references the sitemap', asy
   assert.match(r.text, /Sitemap:/);
 });
 
+test('robots.txt explicitly welcomes AI crawlers on public pages (with the same private-surface guards)', async () => {
+  const r = await req('GET', '/robots.txt');
+  assert.match(r.text, /User-agent: GPTBot/);
+  assert.match(r.text, /User-agent: ChatGPT-User/);
+  assert.match(r.text, /User-agent: OAI-SearchBot/);
+  // The named AI group must still guard the private surfaces (a named group
+  // does not inherit the * rules) — so /account etc. appear at least twice.
+  assert.ok((r.text.match(/Disallow: \/account/g) || []).length >= 2, 'private surfaces guarded in every group');
+  // Public root stays allowed.
+  assert.match(r.text, /Allow: \//);
+});
+
 test('the dataset is Europe-only and every record carries region:europe', async () => {
   const r = await req('GET', '/api/universities?limit=200');
   assert.ok(r.json.universities.every((u) => u.region === 'europe'));
