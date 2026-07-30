@@ -402,6 +402,48 @@ test('GET /me/journey assembles the dashboard and gains match picks once a profi
   await req('DELETE', '/api/me');
 });
 
+test('application status: requires the uni saved, validates status, persists, rolls up, clears on unsave', async () => {
+  const testAddr = `appstatus_${Date.now()}@example.com`;
+  await req('POST', '/api/auth/register', { full_name: 'App Status', email: testAddr, password: 'password123', consent: true });
+  const id = (await req('GET', '/api/universities?limit=1')).json.universities[0].id;
+
+  // Can't set a status on a uni that isn't saved.
+  const notSaved = await req('POST', `/api/me/saved/${id}/status`, { status: 'applied' });
+  assert.equal(notSaved.status, 400);
+
+  await req('POST', `/api/me/saved/${id}`); // save it
+
+  // Unknown status rejected.
+  const bad = await req('POST', `/api/me/saved/${id}/status`, { status: 'enrolled' });
+  assert.equal(bad.status, 400);
+
+  // Valid status persists and shows on /me/saved.
+  const set = await req('POST', `/api/me/saved/${id}/status`, { status: 'applied' });
+  assert.equal(set.status, 200);
+  const saved = await req('GET', '/api/me/saved');
+  assert.equal(saved.json.universities.find((u) => u.id === id).application_status, 'applied');
+
+  // Journey rolls it up.
+  const journeyData = await req('GET', '/api/me/journey');
+  assert.equal(journeyData.json.saved.status_counts.applied, 1);
+  assert.equal(journeyData.json.saved.universities.find((u) => u.id === id).application_status, 'applied');
+
+  // Unsaving clears the status (so it can't resurrect on re-save).
+  await req('DELETE', `/api/me/saved/${id}`);
+  await req('POST', `/api/me/saved/${id}`);
+  const reSaved = await req('GET', '/api/me/saved');
+  assert.equal(reSaved.json.universities.find((u) => u.id === id).application_status, 'considering', 'status reset after unsave/re-save');
+
+  await req('DELETE', '/api/me');
+});
+
+test('application status endpoint requires authentication', async () => {
+  const clean = await fetch(base + '/api/me/saved/tum/status', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'applied' }),
+  });
+  assert.equal(clean.status, 401);
+});
+
 test('POST /me/milestone: auth-gated, validates the key, persists, and reflects in the timeline', async () => {
   const unauth = await fetch(base + '/api/me/milestone', {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: 'arrived', done: true }),

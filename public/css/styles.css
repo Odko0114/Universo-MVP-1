@@ -375,6 +375,13 @@ img { max-width: 100%; display: block; }
 .journey-scholarships li:last-child { padding-bottom: 0; border-bottom: none; }
 .journey-scholarships p { margin: 4px 0 6px; font-size: 0.86rem; }
 
+/* Saved-list cell: card + editable application status underneath. */
+.saved-cell { display: flex; flex-direction: column; gap: 0; }
+.app-status { display: flex; align-items: center; gap: 8px; margin-top: 8px; padding: 8px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); font-size: 0.85rem; }
+.app-status__label { color: var(--ink-soft); font-weight: 600; white-space: nowrap; }
+.app-status__select { flex: 1; min-width: 0; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); font-size: 0.85rem; color: var(--ink); }
+.app-status__select:disabled { opacity: 0.6; }
+
 /* Timeline (study-abroad roadmap) — vertical stepper with a connector line. */
 .timeline { list-style: none; margin: 0; padding: 0; }
 .timeline__stage { position: relative; display: flex; align-items: flex-start; gap: 14px; padding: 0 0 18px 0; }

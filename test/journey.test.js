@@ -80,6 +80,24 @@ test('buildTimeline: next is the FIRST incomplete stage even if a later one is m
   assert.equal(t.next_key, 'profile_set');
 });
 
+test('statusCounts: unset saved unis count as the default (considering)', () => {
+  const counts = journey.statusCounts({ a: 'applied', b: 'offer' }, ['a', 'b', 'c', 'd']);
+  assert.equal(counts.applied, 1);
+  assert.equal(counts.offer, 1);
+  assert.equal(counts.considering, 2, 'c and d have no explicit status → considering');
+});
+
+test('statusCounts: empty saved list yields no counts', () => {
+  assert.deepEqual(journey.statusCounts({}, []), {});
+});
+
+test('APPLICATION_STATUS_KEYS holds exactly the five valid statuses', () => {
+  assert.equal(journey.APPLICATION_STATUS_KEYS.size, 5);
+  assert.ok(journey.APPLICATION_STATUS_KEYS.has('considering'));
+  assert.ok(journey.APPLICATION_STATUS_KEYS.has('offer'));
+  assert.ok(!journey.APPLICATION_STATUS_KEYS.has('enrolled'));
+});
+
 test('SELF_MILESTONE_KEYS excludes the auto stages (they are never client-settable)', () => {
   assert.ok(!journey.SELF_MILESTONE_KEYS.has('account_created'));
   assert.ok(!journey.SELF_MILESTONE_KEYS.has('profile_set'));

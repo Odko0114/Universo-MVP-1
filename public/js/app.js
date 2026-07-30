@@ -16,6 +16,11 @@
     DEGREES: ['Bachelor', 'Master', 'PhD'],
     CITY: [['large', 'Large city'], ['mid', 'Mid-size city'], ['small', 'Small town']],
   };
+  // Per-university application status (mirrors lib/journey.js#APPLICATION_STATUSES).
+  const APP_STATUSES = [
+    ['considering', 'Considering'], ['researching', 'Researching'], ['applied', 'Applied'],
+    ['offer', 'Offer received'], ['rejected', 'Not accepted'],
+  ];
   // Working copy of the profile while an onboarding/edit form is open.
   let draft = null;
   const emptyDraft = () => ({
@@ -595,8 +600,10 @@
         <div class="section-head" style="margin-top:26px"><h3 style="margin:0">Matched to your profile</h3><a class="link-btn" href="/discover">See all</a></div>
         <div class="grid">${data.picks.map(uniCard).join('')}</div>` : '';
 
+      const rollup = statusRollup(data.saved.status_counts);
       const savedCard = `
         <div class="section-head" style="margin-top:26px"><h3 style="margin:0">Your shortlist (${data.saved.count})</h3>${data.saved.count ? '<a class="link-btn" href="/saved">View all</a>' : ''}</div>
+        ${rollup ? `<p class="muted" style="margin:-4px 0 12px">${esc(rollup)}</p>` : ''}
         ${data.saved.count
           ? `<div class="grid">${data.saved.universities.map(uniCard).join('')}</div>`
           : `<div class="card"><p class="muted" style="margin:0">Nothing saved yet — tap “Save” on any university to start comparing your options here.</p></div>`}`;
@@ -672,17 +679,61 @@
     try {
       const { universities } = await API.saved();
       state.savedIds = new Set(universities.map((u) => u.id));
-      document.getElementById('results').innerHTML = universities.length
-        ? universities.map(uniCard).join('')
+      const results = document.getElementById('results');
+      results.innerHTML = universities.length
+        ? universities.map(savedCell).join('')
         : `<div style="grid-column:1/-1">${emptyState({
             iconName: 'bookmark',
             title: 'Your shortlist is empty',
             sub: 'Tap “Save” on any university to start comparing your options side by side.',
             ctaHref: '/discover', ctaLabel: 'Browse universities',
           })}</div>`;
+      wireStatusSelects(results);
     } catch (e) {
       view.innerHTML = emptyState({ iconName: 'alert', title: 'Couldn’t load your saved list', sub: e.message, ctaHref: '/discover', ctaLabel: 'Back to discover' });
     }
+  }
+
+  // A saved-list cell = the shared university card plus an editable application
+  // status (only shown on Saved — the card itself stays reusable for Discover).
+  function savedCell(u) {
+    const cur = u.application_status || 'considering';
+    return `<div class="saved-cell">
+      ${uniCard(u)}
+      <label class="app-status">
+        <span class="app-status__label">Application status</span>
+        <select class="app-status__select" data-status-for="${esc(u.id)}">
+          ${APP_STATUSES.map(([v, l]) => `<option value="${v}"${v === cur ? ' selected' : ''}>${esc(l)}</option>`).join('')}
+        </select>
+      </label>
+    </div>`;
+  }
+
+  // "2 considering · 1 applied · 1 offer" — ordered, zero counts skipped.
+  function statusRollup(counts) {
+    if (!counts) return '';
+    return APP_STATUSES.filter(([k]) => counts[k]).map(([k, l]) => `${counts[k]} ${l.toLowerCase()}`).join(' · ');
+  }
+
+  function wireStatusSelects(root) {
+    root.querySelectorAll('[data-status-for]').forEach((sel) => {
+      sel.dataset.prev = sel.value;
+      sel.addEventListener('change', async () => {
+        const id = sel.dataset.statusFor;
+        const prev = sel.dataset.prev;
+        sel.disabled = true;
+        try {
+          await API.setApplicationStatus(id, sel.value);
+          sel.dataset.prev = sel.value;
+          toast('Application status updated');
+        } catch (e) {
+          sel.value = prev; // revert on failure
+          toast(e.message, true);
+        } finally {
+          sel.disabled = false;
+        }
+      });
+    });
   }
 
   async function renderProfile(id) {

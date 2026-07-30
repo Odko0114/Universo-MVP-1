@@ -240,6 +240,9 @@ api.post('/auth/register', authLimiter, asyncRoute(async (req, res) => {
     // Older accounts predating this field read as [] everywhere (defensive
     // reads in lib/journey.js and the milestone endpoint) — no migration.
     milestones: [],
+    // Per-saved-university application status { uniId: status }. Older accounts
+    // read as {} everywhere — no migration.
+    applications: {},
     consent_accepted: true,
     consent_date: now,
     // Separate opt-in for product-update emails (new universities,
@@ -755,10 +758,11 @@ api.get('/logo', logoLimiter, async (req, res) => {
 // ---- Saved / bookmarks ----------------------------------------------------
 
 api.get('/me/saved', auth.requireAuth, (req, res) => {
+  const apps = req.student.applications || {};
   const saved = req.student.saved_universities
     .map((id) => BY_ID.get(id))
     .filter(Boolean)
-    .map((u) => withPhoto({ ...u, click_count: clickOf(u.id) }));
+    .map((u) => withPhoto({ ...u, click_count: clickOf(u.id), application_status: apps[u.id] || journey.DEFAULT_STATUS }));
   res.json({ count: saved.length, universities: saved });
 });
 
@@ -776,10 +780,34 @@ api.delete('/me/saved/:id', auth.requireAuth, (req, res) => {
   const before = req.student.saved_universities.length;
   req.student.saved_universities = req.student.saved_universities.filter((id) => id !== req.params.id);
   if (req.student.saved_universities.length !== before) {
+    // Drop any application status too — it's meaningless once unsaved, and
+    // leaving it would resurrect on re-save.
+    if (req.student.applications && req.student.applications[req.params.id]) delete req.student.applications[req.params.id];
     store.write('students', store.read('students'));
     events.record('unsave', { anon: req.anon, uni: req.params.id });
   }
   res.json({ saved_universities: req.student.saved_universities });
+});
+
+// Set the application status for a saved university (makes Saved active).
+api.post('/me/saved/:id/status', auth.requireAuth, (req, res) => {
+  const id = req.params.id;
+  if (!req.student.saved_universities.includes(id)) {
+    return res.status(400).json({ error: 'Save this university before setting an application status.' });
+  }
+  const status = typeof req.body.status === 'string' ? req.body.status : '';
+  if (!journey.APPLICATION_STATUS_KEYS.has(status)) return res.status(400).json({ error: 'Unknown status.' });
+
+  const students = store.read('students');
+  const student = students.find((s) => s.student_id === req.student.student_id);
+  if (!student.applications) student.applications = {};
+  // 'considering' is the implicit default — store it as absence to keep the map
+  // small, store anything else explicitly.
+  if (status === journey.DEFAULT_STATUS) delete student.applications[id];
+  else student.applications[id] = status;
+  store.write('students', students);
+  events.record('application_status', { anon: req.anon, uni: id, status });
+  res.json({ id, status });
 });
 
 // "Recommended for you" — a transparent weighted match against the student's
@@ -806,11 +834,13 @@ api.get('/me/journey', auth.requireAuth, (req, res) => {
   const student = req.student;
   const savedIds = student.saved_universities || [];
 
-  // Saved (resolved to full records, capped for the summary card).
+  // Saved (resolved to full records, capped for the summary card). Each carries
+  // its application status so the preview cards match the Saved page.
+  const apps = student.applications || {};
   const saved = savedIds
     .map((id) => BY_ID.get(id))
     .filter(Boolean)
-    .map((u) => withPhoto({ ...u, click_count: clickOf(u.id) }));
+    .map((u) => withPhoto({ ...u, click_count: clickOf(u.id), application_status: apps[u.id] || journey.DEFAULT_STATUS }));
 
   const completeness = journey.profileCompleteness(student);
   const profiled = match.hasProfile(student);
@@ -837,7 +867,7 @@ api.get('/me/journey', auth.requireAuth, (req, res) => {
   res.json({
     completeness,
     has_profile: profiled,
-    saved: { count: saved.length, universities: saved.slice(0, 6) },
+    saved: { count: saved.length, universities: saved.slice(0, 6), status_counts: journey.statusCounts(apps, savedIds) },
     picks,
     scholarships,
     home_country: homeCountry,
