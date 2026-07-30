@@ -27,6 +27,7 @@ const search = require('./lib/search');
 const match = require('./lib/match');
 const explain = require('./lib/explain');
 const journey = require('./lib/journey');
+const dataQuality = require('./lib/data-quality');
 const { scholarshipsFor } = require('./lib/scholarships');
 const events = require('./lib/events');
 const validate = require('./lib/validate');
@@ -70,6 +71,21 @@ const UNIVERSITIES = store.read('universities');
 const INDEX = search.buildIndex(UNIVERSITIES);         // built once (dataset is static)
 const FILTERS = search.buildFilters(UNIVERSITIES);     // cached
 const BY_ID = new Map(UNIVERSITIES.map((u) => [u.id, u]));
+
+// Internal data-quality audit — computed ONCE at boot (the dataset is static),
+// never per user request (Phase 10 / performance). Admin-only: the aggregate
+// and the per-record score index below are read only by requireAdmin routes,
+// never included in public university responses (Security requirement).
+const DATASET_AUDIT = dataQuality.auditDataset(UNIVERSITIES);
+const QUALITY_RECORDS = UNIVERSITIES.map((u) => {
+  const { score, band, missing } = dataQuality.scoreRecord(u);
+  return {
+    id: u.id, name: u.name, country: u.country, source: u.source,
+    verification_status: u.verification_status, last_verified_at: u.last_verified_at,
+    last_updated_at: u.last_updated_at, stale: u.stale,
+    score, band, missing: missing.map((m) => m.label),
+  };
+});
 // Old slugs of deduplicated records → their surviving slug (301s, never 404s).
 const SLUG_REDIRECTS = require('./lib/dataset').slugRedirects();
 const VERIFIED_COUNT = UNIVERSITIES.filter((u) => u.verified).length;
@@ -1094,6 +1110,29 @@ adminApi.get('/searches', (req, res) => {
 adminApi.get('/leads', (_req, res) => {
   const leads = [...store.read('pilot_leads')].reverse();
   res.json({ count: leads.length, leads });
+});
+
+// ---- Data-quality audit (admin-only, precomputed at boot) -------------------
+// The aggregate dataset audit. No per-request scanning — this is the cached
+// DATASET_AUDIT computed once at startup.
+adminApi.get('/data-quality', (_req, res) => res.json(DATASET_AUDIT));
+
+// Filterable record list for the audit table: by quality band, verification
+// status, staleness. Reads the precomputed QUALITY_RECORDS index (no rescan).
+adminApi.get('/data-quality/records', (req, res) => {
+  const band = typeof req.query.band === 'string' ? req.query.band : '';
+  const status = typeof req.query.status === 'string' ? req.query.status : '';
+  const staleOnly = req.query.stale === '1';
+  const limit = Math.min(200, Math.max(1, parseInt(String(req.query.limit || ''), 10) || 50));
+  const offset = Math.max(0, parseInt(String(req.query.offset || ''), 10) || 0);
+
+  let rows = QUALITY_RECORDS;
+  if (band) rows = rows.filter((r) => r.band === band);
+  if (status) rows = rows.filter((r) => r.verification_status === status);
+  if (staleOnly) rows = rows.filter((r) => r.stale);
+  // Lowest quality first — the records most in need of review lead the table.
+  const sorted = [...rows].sort((a, b) => a.score - b.score);
+  res.json({ count: sorted.length, records: sorted.slice(offset, offset + limit) });
 });
 
 // Create a partner login for a verified claim: binds an email+password to one

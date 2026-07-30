@@ -122,3 +122,39 @@ test('a duplicate partner email is rejected', async () => {
   });
   assert.equal(r.status, 400);
 });
+
+test('admin data-quality audit returns the aggregate over the full dataset', async () => {
+  const r = await req('admin', 'GET', '/api/admin/data-quality');
+  assert.equal(r.status, 200);
+  assert.ok(r.json.count > 3000, 'audits the whole dataset');
+  assert.ok(r.json.average_score >= 0 && r.json.average_score <= 100);
+  assert.ok(r.json.distribution.Excellent >= 0 && r.json.distribution.Incomplete >= 0);
+  assert.ok(r.json.by_status.Verified > 0);
+  assert.ok(Array.isArray(r.json.missing_fields) && r.json.missing_fields.length > 0);
+  assert.ok(Array.isArray(r.json.structurally_unavailable) && r.json.structurally_unavailable.length > 0,
+    'structurally-absent fields reported, never faked as missing-per-record');
+});
+
+test('admin data-quality records filter by band and stale flag', async () => {
+  const all = await req('admin', 'GET', '/api/admin/data-quality/records?limit=5');
+  assert.equal(all.status, 200);
+  assert.ok(all.json.records.length > 0 && all.json.records.length <= 5);
+  // lowest score first
+  assert.ok(all.json.records[0].score <= all.json.records[all.json.records.length - 1].score);
+
+  const excellent = await req('admin', 'GET', '/api/admin/data-quality/records?band=Excellent&limit=5');
+  assert.ok(excellent.json.records.every((r) => r.band === 'Excellent'));
+
+  const stale = await req('admin', 'GET', '/api/admin/data-quality/records?stale=1&limit=5');
+  assert.ok(stale.json.records.every((r) => r.stale === true));
+});
+
+test('SECURITY: the internal quality score is NOT exposed in public university responses', async () => {
+  const pub = await req('admin', 'GET', '/api/universities?limit=3'); // any caller
+  for (const u of pub.json.universities) {
+    assert.ok(!('score' in u), 'internal quality score must not leak publicly');
+    assert.ok(!('quality_score' in u), 'internal quality score must not leak publicly');
+    // provenance metadata IS allowed publicly (a trust signal, not audit data)
+    assert.ok('verification_status' in u && 'data_source' in u);
+  }
+});

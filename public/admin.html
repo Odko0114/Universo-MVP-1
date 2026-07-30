@@ -151,6 +151,29 @@
       <p class="foot" style="margin-top:4px">Submitted through the landing page's "For universities" form. The CSV button downloads students who opted into product-update emails — paste into any mail tool to send an update.</p>
     </div>
 
+    <h2 style="margin-top:24px">Data quality</h2>
+    <div id="dq-stats" class="grid"></div>
+    <div class="two-col" style="margin-top:14px">
+      <div>
+        <h3 style="font-size:.9rem;margin:0 0 8px">Most-missing fields</h3>
+        <div class="panel"><div id="dq-missing"></div></div>
+      </div>
+      <div>
+        <h3 style="font-size:.9rem;margin:0 0 8px">Quality distribution</h3>
+        <div class="panel"><div id="dq-distribution"></div></div>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:14px">
+      <div class="dq-filters" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px">
+        <label>Band <select id="dq-band"><option value="">All</option><option>Incomplete</option><option>Needs Improvement</option><option>Good</option><option>Excellent</option></select></label>
+        <label>Status <select id="dq-status"><option value="">All</option><option>Verified</option><option>Needs Review</option><option>Unknown</option></select></label>
+        <label><input type="checkbox" id="dq-stale" /> Stale only</label>
+        <span id="dq-records-count" class="foot"></span>
+      </div>
+      <div id="dq-records"></div>
+      <p class="foot" style="margin-top:6px" id="dq-note"></p>
+    </div>
+
     <h2 style="margin-top:24px">Top universities by Apply-Now clicks</h2>
     <div id="table-clicks"></div>
 
@@ -342,6 +365,61 @@
         : '<p class="empty-note">No university leads yet — they land here when the "For universities" form on the landing page is submitted.</p>';
     }
 
+    let dqWired = false;
+    async function loadDataQuality() {
+      const a = await api('/api/admin/data-quality');
+      const dist = a.distribution;
+      document.getElementById('dq-stats').innerHTML = [
+        ['', a.count, 'Universities'],
+        ['good', a.average_score + '%', 'Avg quality score'],
+        ['good', a.by_status.Verified || 0, 'Verified'],
+        ['', a.by_status.Unknown || 0, 'Unknown source'],
+        ['warn', a.stale_count, 'Stale (need review)'],
+        ['', a.researched_tuition, 'Researched tuition'],
+      ].map(([cls, n, l]) => `<div class="stat ${cls}"><div class="n">${typeof n === 'number' ? nfmt(n) : esc(n)}</div><div class="l">${esc(l)}</div></div>`).join('');
+
+      document.getElementById('dq-missing').innerHTML = barTable(
+        a.missing_fields.map(m => ({ label: m.label, missing: m.missing })),
+        [{ key: 'label', label: 'Field' }, { key: 'missing', label: 'Records missing', num: true }],
+      );
+      document.getElementById('dq-distribution').innerHTML = barTable(
+        [['Excellent', dist.Excellent], ['Good', dist.Good], ['Needs Improvement', dist['Needs Improvement']], ['Incomplete', dist.Incomplete]].map(([band, n]) => ({ band, n })),
+        [{ key: 'band', label: 'Band' }, { key: 'n', label: 'Universities', num: true }],
+      );
+      document.getElementById('dq-note').textContent =
+        'Not scored per record because no data source provides them per university (reported here, never faked): ' + a.structurally_unavailable.join(', ') + '.';
+
+      await loadDqRecords();
+      if (!dqWired) {
+        dqWired = true;
+        ['dq-band', 'dq-status', 'dq-stale'].forEach(id => document.getElementById(id).addEventListener('change', loadDqRecords));
+      }
+    }
+
+    async function loadDqRecords() {
+      const band = document.getElementById('dq-band').value;
+      const status = document.getElementById('dq-status').value;
+      const stale = document.getElementById('dq-stale').checked ? '1' : '';
+      const qs = new URLSearchParams({ limit: '50' });
+      if (band) qs.set('band', band);
+      if (status) qs.set('status', status);
+      if (stale) qs.set('stale', '1');
+      const d = await api('/api/admin/data-quality/records?' + qs);
+      document.getElementById('dq-records-count').textContent = nfmt(d.count) + ' match — showing up to 50 (lowest score first)';
+      document.getElementById('dq-records').innerHTML = d.records.length
+        ? `<table><thead><tr><th>Score</th><th>Band</th><th>University</th><th>Country</th><th>Status</th><th>Verified</th><th>Missing</th></tr></thead>
+           <tbody>${d.records.map(r => `<tr>
+             <td class="num">${r.score}%</td>
+             <td>${esc(r.band)}</td>
+             <td>${esc(r.name)}</td>
+             <td>${esc(r.country)}</td>
+             <td>${esc(r.verification_status)}${r.stale ? ' <span title="source data is old">· stale</span>' : ''}</td>
+             <td>${esc(r.last_verified_at || '—')}</td>
+             <td>${esc((r.missing || []).join(', ') || '—')}</td>
+           </tr>`).join('')}</tbody></table>`
+        : '<p class="empty-note">No records match this filter.</p>';
+    }
+
     async function loadRetention() {
       const d = await api('/api/admin/retention?weeks=6');
       if (!d.cohorts.length) { document.getElementById('retention').innerHTML = '<p class="empty-note">Not enough data yet — check back after a week of traffic.</p>'; return; }
@@ -360,7 +438,7 @@
 
     async function loadAll() {
       try {
-        await Promise.all([loadStats(), loadFunnel(), loadTraffic(), loadSearches(), loadRetention(), loadLeads()]);
+        await Promise.all([loadStats(), loadFunnel(), loadTraffic(), loadSearches(), loadRetention(), loadLeads(), loadDataQuality()]);
       } catch (e) {
         if (e.message !== 'unauthorized') console.error(e);
       }
