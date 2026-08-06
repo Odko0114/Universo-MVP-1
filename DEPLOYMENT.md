@@ -9,10 +9,10 @@ analytics.
 
 Two kinds of data, two locations:
 
-| Kind | Where | Persistence |
-|---|---|---|
+| Kind                                                             | Where                     | Persistence                                        |
+| ---------------------------------------------------------------- | ------------------------- | -------------------------------------------------- |
 | **Seed data** (`data/seed/*` — universities, rankings, manifest) | Ships with the code/image | Read-only input; updated by committing new imports |
-| **Runtime data** (accounts, clicks, events, photo/logo caches) | `UNIVERSO_DATA_DIR` | Must be a persistent volume in production |
+| **Runtime data** (accounts, clicks, events, photo/logo caches)   | `UNIVERSO_DATA_DIR`       | Must be a persistent volume in production          |
 
 `UNIVERSO_DATA_DIR` must point **outside the repo tree** (e.g. `/var/data`).
 Mounting a volume at the repo's own `data/` would hide the seed files baked

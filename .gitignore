@@ -1,4 +1,6 @@
 node_modules/
+test-results/
+playwright-report/
 
 # Runtime data (seeded/generated on first run — regenerate with `npm run seed`)
 data/universities.json

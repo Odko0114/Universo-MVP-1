@@ -6,11 +6,11 @@ Browse and search **12,000+ universities worldwide**, filter by country / instit
 
 ### Three tiers of data (merged, deduped by web domain)
 
-| Tier | Count | Source | What it has |
-|------|-------|--------|-------------|
-| **Curated** | 40 | Hand-built (`data/seed/universities.js`) | Full profiles: tuition, programs, admission requirements, deadlines, languages, degree levels |
-| **ETER** | ~3,400 | [European Tertiary Education Register](https://eter-project.com) v4 API | European register facts: city, coordinates, type, legal status, founding year, enrollment, website |
-| **Global** | ~9,000 | [Hipolabs world universities list](https://github.com/Hipo/university-domains-list) | Worldwide breadth: name, country, region, website/domain |
+| Tier        | Count  | Source                                                                              | What it has                                                                                        |
+| ----------- | ------ | ----------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| **Curated** | 40     | Hand-built (`data/seed/universities.js`)                                            | Full profiles: tuition, programs, admission requirements, deadlines, languages, degree levels      |
+| **ETER**    | ~3,400 | [European Tertiary Education Register](https://eter-project.com) v4 API             | European register facts: city, coordinates, type, legal status, founding year, enrollment, website |
+| **Global**  | ~9,000 | [Hipolabs world universities list](https://github.com/Hipo/university-domains-list) | Worldwide breadth: name, country, region, website/domain                                           |
 
 Total ≈ **12,500 universities across ~199 countries**. Priority on a domain clash is **curated → ETER → global**, so each university appears once, at its richest: a European university keeps its ETER detail, the rest of the world gets solid basics, and the 40 curated profiles always win.
 
@@ -18,12 +18,12 @@ Total ≈ **12,500 universities across ~199 countries**. Priority on a domain cl
 
 On top of the three tiers, every university is enriched at build/serve time — always **clearly labeled by confidence**:
 
-| Field | How it's filled | Confidence |
-|-------|-----------------|-----------|
-| **Degree levels & majors (fields)** | Derived from ETER's real enrollment-by-level (ISCED 6/7) and field-of-education data | **Real** (European ~3,400) |
-| **Ranking (world + national)** | Matched to the open **CWUR** dataset by name + country | **Real**, but only the ~top 2,000 exist anywhere; the rest are honestly "unranked" |
-| **Tuition, living cost, language** | Country-level typical bands (`lib/estimates.js`), applied only where no real value exists | **Estimate** — tagged `estimated`, shown with `~` / "est." / "typical" + a verify note |
-| **Overview** | Wikipedia article extract, fetched lazily and cached (like photos) | **Real** where a Wikipedia page exists |
+| Field                               | How it's filled                                                                           | Confidence                                                                             |
+| ----------------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| **Degree levels & majors (fields)** | Derived from ETER's real enrollment-by-level (ISCED 6/7) and field-of-education data      | **Real** (European ~3,400)                                                             |
+| **Ranking (world + national)**      | Matched to the open **CWUR** dataset by name + country                                    | **Real**, but only the ~top 2,000 exist anywhere; the rest are honestly "unranked"     |
+| **Tuition, living cost, language**  | Country-level typical bands (`lib/estimates.js`), applied only where no real value exists | **Estimate** — tagged `estimated`, shown with `~` / "est." / "typical" + a verify note |
+| **Overview**                        | Wikipedia article extract, fetched lazily and cached (like photos)                        | **Real** where a Wikipedia page exists                                                 |
 
 **Images (work for every university, worldwide):** a **logo** derived from the university's website domain (via `icons.duckduckgo.com`, with an initials-on-gradient fallback), plus a **cover photo from Wikipedia** on each profile — fetched lazily and cached in `data/photos.json`, so photos load only for universities people actually open (no upfront calls for 12,000 schools).
 
@@ -60,12 +60,12 @@ npm run seed               # rebuild data/universities.json (merge + enrich: est
 
 ## Tech stack
 
-| Layer     | Choice |
-|-----------|--------|
-| Backend   | Node.js + Express |
-| Storage   | File-based JSON (`/data/*.json`) via a small caching store (`lib/store.js`) |
-| Auth      | Email + password (bcrypt-hashed) with JWT bearer tokens |
-| Frontend  | Plain HTML/CSS/JS SPA (hash routing) — **no build step** |
+| Layer    | Choice                                                                      |
+| -------- | --------------------------------------------------------------------------- |
+| Backend  | Node.js + Express                                                           |
+| Storage  | File-based JSON (`/data/*.json`) via a small caching store (`lib/store.js`) |
+| Auth     | Email + password (bcrypt-hashed) with JWT bearer tokens                     |
+| Frontend | Plain HTML/CSS/JS SPA (hash routing) — **no build step**                    |
 
 Vanilla frontend was chosen over React deliberately: for an MVP of this size it keeps the whole thing runnable with a single `npm install` and zero build tooling, which is easier to trust and hand off.
 
@@ -115,13 +115,13 @@ Universo/
 
 ### Routing
 
-| Path | What it is |
-|------|------------|
-| `/` | Marketing landing page (`landing.html`, static). A visitor with a valid session is redirected straight to `/discover` — no re-selling returning students. |
-| `/discover` | The actual search/browse tool — **requires an account** (anonymous visitors are redirected to sign-up with a `next` back-link; the bounce is recorded as a `gate` event). Server-rendered for logged-in students. |
-| `/university/:id` | Server-rendered profile page. |
-| `/saved`, `/account`, `/privacy` | SPA routes (client-rendered). `/account?mode=register` opens straight to the sign-up tab. |
-| `/admin` | Login-gated admin dashboard, entirely separate auth from student accounts. |
+| Path                             | What it is                                                                                                                                                                                                        |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/`                              | Marketing landing page (`landing.html`, static). A visitor with a valid session is redirected straight to `/discover` — no re-selling returning students.                                                         |
+| `/discover`                      | The actual search/browse tool — **requires an account** (anonymous visitors are redirected to sign-up with a `next` back-link; the bounce is recorded as a `gate` event). Server-rendered for logged-in students. |
+| `/university/:id`                | Server-rendered profile page.                                                                                                                                                                                     |
+| `/saved`, `/account`, `/privacy` | SPA routes (client-rendered). `/account?mode=register` opens straight to the sign-up tab.                                                                                                                         |
+| `/admin`                         | Login-gated admin dashboard, entirely separate auth from student accounts.                                                                                                                                        |
 
 ---
 
@@ -133,6 +133,7 @@ Universo/
 4. **Saved / Bookmarks page** — the logged-in student's shortlist, tied to their account.
 
 ### Out of scope (intentionally not built)
+
 Short-form video feed, student-to-student chat/networking, and lead-capture forms that send personal data to universities.
 
 ---
@@ -165,34 +166,34 @@ The `/admin` sign-in page deliberately does **not** describe this on-page (it's 
 
 ## API reference
 
-| Method | Endpoint | Auth | Purpose |
-|--------|----------|------|---------|
-| `POST` | `/api/auth/register` | — | Create account (requires `consent: true`); sets httpOnly session cookie |
-| `POST` | `/api/auth/login` | — | Log in; sets httpOnly session cookie (rate-limited) |
-| `POST` | `/api/auth/logout` | — | Clear the session cookie |
-| `GET`  | `/api/auth/me` | ✅ | Current student |
-| `GET`  | `/api/universities` | — | List/search/filter/paginate (`q, country, region, type, field, language, degree, source, maxTuition, sort, offset, limit`; `region=EU` filters to the 27 EU member states) |
-| `GET`  | `/api/universities/filters` | — | Distinct filter values (countries, institution types, fields, languages, degrees) |
-| `GET`  | `/api/universities/:id` | — | University profile |
-| `POST` | `/api/universities/:id/apply-click` | — | Record an anonymous apply-click (rate-limited) |
-| `GET`  | `/api/universities/:id/photo` | — | Lazy Wikipedia cover photo + attribution + overview extract (cached) |
-| `GET`  | `/api/logo?domain=` | — | Cached logo proxy (no third-party hotlinking) |
-| `GET`  | `/api/me/saved` | ✅ | Saved universities |
-| `POST` / `DELETE` | `/api/me/saved/:id` | ✅ | Save / unsave |
-| `GET`  | `/api/me/recommendations?limit=` | ✅ | "Recommended for you" — weighted match against the student's profile (see `lib/match.js`); excludes already-saved universities |
-| `GET`  | `/api/me/export` | ✅ | **GDPR:** download all stored account data |
-| `DELETE` | `/api/me` | ✅ | **GDPR:** permanently delete the account **and its linked behavioral event history** |
-| `POST` | `/api/track` | — | First-party analytics beacon (`pageview` \| `profile_view` \| `filter_used`); rate-limited, no PII accepted |
-| `POST` | `/api/admin/login` | — | Admin sign-in (separate cookie/session from student auth; rate-limited) |
-| `POST` | `/api/admin/logout` | — | Clear the admin session |
-| `GET`  | `/api/admin/me` | 🔐 | Current admin |
-| `GET`  | `/api/admin/stats` | 🔐 | Totals, 24h/7d windows, top universities by clicks & by views |
-| `GET`  | `/api/admin/funnel?days=` | 🔐 | Visit→search→view→save→apply funnel with conversion % |
-| `GET`  | `/api/admin/retention?weeks=` | 🔐 | Weekly cohort retention grid |
-| `GET`  | `/api/admin/traffic?days=` | 🔐 | Visitors, pageviews, top pages/referrers/devices |
-| `GET`  | `/api/admin/searches?days=&limit=` | 🔐 | Most common search terms |
-| `GET`  | `/healthz` | — | Health check (status, dataset size, uptime) |
-| `GET`  | `/sitemap.xml`, `/robots.txt` | — | SEO |
+| Method            | Endpoint                            | Auth | Purpose                                                                                                                                                                    |
+| ----------------- | ----------------------------------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST`            | `/api/auth/register`                | —    | Create account (requires `consent: true`); sets httpOnly session cookie                                                                                                    |
+| `POST`            | `/api/auth/login`                   | —    | Log in; sets httpOnly session cookie (rate-limited)                                                                                                                        |
+| `POST`            | `/api/auth/logout`                  | —    | Clear the session cookie                                                                                                                                                   |
+| `GET`             | `/api/auth/me`                      | ✅   | Current student                                                                                                                                                            |
+| `GET`             | `/api/universities`                 | —    | List/search/filter/paginate (`q, country, region, type, field, language, degree, source, maxTuition, sort, offset, limit`; `region=EU` filters to the 27 EU member states) |
+| `GET`             | `/api/universities/filters`         | —    | Distinct filter values (countries, institution types, fields, languages, degrees)                                                                                          |
+| `GET`             | `/api/universities/:id`             | —    | University profile                                                                                                                                                         |
+| `POST`            | `/api/universities/:id/apply-click` | —    | Record an anonymous apply-click (rate-limited)                                                                                                                             |
+| `GET`             | `/api/universities/:id/photo`       | —    | Lazy Wikipedia cover photo + attribution + overview extract (cached)                                                                                                       |
+| `GET`             | `/api/logo?domain=`                 | —    | Cached logo proxy (no third-party hotlinking)                                                                                                                              |
+| `GET`             | `/api/me/saved`                     | ✅   | Saved universities                                                                                                                                                         |
+| `POST` / `DELETE` | `/api/me/saved/:id`                 | ✅   | Save / unsave                                                                                                                                                              |
+| `GET`             | `/api/me/recommendations?limit=`    | ✅   | "Recommended for you" — weighted match against the student's profile (see `lib/match.js`); excludes already-saved universities                                             |
+| `GET`             | `/api/me/export`                    | ✅   | **GDPR:** download all stored account data                                                                                                                                 |
+| `DELETE`          | `/api/me`                           | ✅   | **GDPR:** permanently delete the account **and its linked behavioral event history**                                                                                       |
+| `POST`            | `/api/track`                        | —    | First-party analytics beacon (`pageview` \| `profile_view` \| `filter_used`); rate-limited, no PII accepted                                                                |
+| `POST`            | `/api/admin/login`                  | —    | Admin sign-in (separate cookie/session from student auth; rate-limited)                                                                                                    |
+| `POST`            | `/api/admin/logout`                 | —    | Clear the admin session                                                                                                                                                    |
+| `GET`             | `/api/admin/me`                     | 🔐   | Current admin                                                                                                                                                              |
+| `GET`             | `/api/admin/stats`                  | 🔐   | Totals, 24h/7d windows, top universities by clicks & by views                                                                                                              |
+| `GET`             | `/api/admin/funnel?days=`           | 🔐   | Visit→search→view→save→apply funnel with conversion %                                                                                                                      |
+| `GET`             | `/api/admin/retention?weeks=`       | 🔐   | Weekly cohort retention grid                                                                                                                                               |
+| `GET`             | `/api/admin/traffic?days=`          | 🔐   | Visitors, pageviews, top pages/referrers/devices                                                                                                                           |
+| `GET`             | `/api/admin/searches?days=&limit=`  | 🔐   | Most common search terms                                                                                                                                                   |
+| `GET`             | `/healthz`                          | —    | Health check (status, dataset size, uptime)                                                                                                                                |
+| `GET`             | `/sitemap.xml`, `/robots.txt`       | —    | SEO                                                                                                                                                                        |
 
 ✅ = requires a student session · 🔐 = requires an **admin** session (separate login, see [Admin setup](#admin-setup))
 
@@ -226,30 +227,30 @@ The `/admin` sign-in page deliberately does **not** describe this on-page (it's 
 
 ## Quality & operations
 
-| Area | What's in place |
-|------|-----------------|
-| **Tests** | `npm test` — Node's built-in runner: 52 tests covering search/dedup/validation/enrichment logic, a full student API round-trip (auth, save, export, delete), admin auth (login/session/isolation from student sessions), and the funnel/retention/traffic/purge analytics math. |
-| **Types** | `npm run typecheck` — TypeScript `checkJs` over the backend (no build step) catches wrong arg counts, bad property access, and typos. |
-| **Auth** | Passwords bcrypt-hashed and never returned. Student and **admin sessions are fully separate** — different cookies (`uv_token` / `uv_admin`), different stores, different JWT claims — so a compromised student session can never reach `/api/admin/*`. Both are **httpOnly, SameSite, Secure-in-prod cookies** (not `localStorage`), with a per-user `token_version` for student-session revocation. |
-| **Input** | Every request body validated and length-capped (`lib/validate.js`); JSON body limit of 16 kB. |
-| **Rate limiting** | In-memory sliding-window limits on login/register, admin login, apply-clicks, the tracking beacon, photo lookups, and the logo proxy (`lib/rate-limit.js`). |
-| **Analytics** | Append-only, PII-free event log (pageviews, profile views, filters, search, save, apply-click) with deduplicated, time-windowed, funnel, retention, and traffic aggregation — all pure/unit-tested functions in `lib/events.js`. |
-| **Privacy (GDPR)** | Explicit consent, data **export**, **account deletion**, no PII in logs, and deleting an account **purges its linked anonymous event trail** (not just the account row) — see `DELETE /api/me`. |
-| **Resilience** | All outbound calls (ETER, Wikipedia, logos) go through a timeout + retry + circuit-breaker helper (`lib/http.js`); photos/logos are cached; concurrent first-lookups are de-duped. |
-| **Observability** | Structured JSON logs with request ids (`lib/log.js`), a `/healthz` endpoint, and graceful shutdown that flushes pending writes. |
-| **SEO** | Server-rendered `<title>`/description/Open-Graph tags and content for `/discover` and every `/university/:id`, plus a static, crawlable `/` landing page, `sitemap.xml`, and `robots.txt`. |
-| **Data pipeline** | Imports validate the fetched shape and **fail loudly** on junk, and write a provenance manifest (`data/seed/manifest.json`) with counts, checksums, and fetch dates. |
+| Area               | What's in place                                                                                                                                                                                                                                                                                                                                                                                      |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Tests**          | `npm test` — Node's built-in runner: 52 tests covering search/dedup/validation/enrichment logic, a full student API round-trip (auth, save, export, delete), admin auth (login/session/isolation from student sessions), and the funnel/retention/traffic/purge analytics math.                                                                                                                      |
+| **Types**          | `npm run typecheck` — TypeScript `checkJs` over the backend (no build step) catches wrong arg counts, bad property access, and typos.                                                                                                                                                                                                                                                                |
+| **Auth**           | Passwords bcrypt-hashed and never returned. Student and **admin sessions are fully separate** — different cookies (`uv_token` / `uv_admin`), different stores, different JWT claims — so a compromised student session can never reach `/api/admin/*`. Both are **httpOnly, SameSite, Secure-in-prod cookies** (not `localStorage`), with a per-user `token_version` for student-session revocation. |
+| **Input**          | Every request body validated and length-capped (`lib/validate.js`); JSON body limit of 16 kB.                                                                                                                                                                                                                                                                                                        |
+| **Rate limiting**  | In-memory sliding-window limits on login/register, admin login, apply-clicks, the tracking beacon, photo lookups, and the logo proxy (`lib/rate-limit.js`).                                                                                                                                                                                                                                          |
+| **Analytics**      | Append-only, PII-free event log (pageviews, profile views, filters, search, save, apply-click) with deduplicated, time-windowed, funnel, retention, and traffic aggregation — all pure/unit-tested functions in `lib/events.js`.                                                                                                                                                                     |
+| **Privacy (GDPR)** | Explicit consent, data **export**, **account deletion**, no PII in logs, and deleting an account **purges its linked anonymous event trail** (not just the account row) — see `DELETE /api/me`.                                                                                                                                                                                                      |
+| **Resilience**     | All outbound calls (ETER, Wikipedia, logos) go through a timeout + retry + circuit-breaker helper (`lib/http.js`); photos/logos are cached; concurrent first-lookups are de-duped.                                                                                                                                                                                                                   |
+| **Observability**  | Structured JSON logs with request ids (`lib/log.js`), a `/healthz` endpoint, and graceful shutdown that flushes pending writes.                                                                                                                                                                                                                                                                      |
+| **SEO**            | Server-rendered `<title>`/description/Open-Graph tags and content for `/discover` and every `/university/:id`, plus a static, crawlable `/` landing page, `sitemap.xml`, and `robots.txt`.                                                                                                                                                                                                           |
+| **Data pipeline**  | Imports validate the fetched shape and **fail loudly** on junk, and write a provenance manifest (`data/seed/manifest.json`) with counts, checksums, and fetch dates.                                                                                                                                                                                                                                 |
 
 ## Configuration
 
-| Env var | Default | Notes |
-|---------|---------|-------|
-| `PORT` | `3000` | HTTP port |
-| `NODE_ENV` | — | Set to `production` to require a stable secret and mark cookies `Secure`. |
-| `UNIVERSO_JWT_SECRET` | random per boot (dev) | **Required in production** (boot fails without it). A random dev secret signs everyone out on restart and can't be shared across instances. |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | — | If set and no admin exists yet, auto-creates one admin account on boot. Otherwise use `npm run create-admin -- email` (prompts for the password). |
-| `UNIVERSO_DATA_DIR` | `./data` | Where runtime data (accounts, clicks, events, caches) lives. In production, point at a **persistent volume outside the repo tree** — see [DEPLOYMENT.md](DEPLOYMENT.md). Seed data (`data/seed/*`) always ships with the code and is unaffected. |
-| `LOG_LEVEL` | `info` | `debug` \| `info` \| `warn` \| `error`. |
+| Env var                          | Default               | Notes                                                                                                                                                                                                                                            |
+| -------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `PORT`                           | `3000`                | HTTP port                                                                                                                                                                                                                                        |
+| `NODE_ENV`                       | —                     | Set to `production` to require a stable secret and mark cookies `Secure`.                                                                                                                                                                        |
+| `UNIVERSO_JWT_SECRET`            | random per boot (dev) | **Required in production** (boot fails without it). A random dev secret signs everyone out on restart and can't be shared across instances.                                                                                                      |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | —                     | If set and no admin exists yet, auto-creates one admin account on boot. Otherwise use `npm run create-admin -- email` (prompts for the password).                                                                                                |
+| `UNIVERSO_DATA_DIR`              | `./data`              | Where runtime data (accounts, clicks, events, caches) lives. In production, point at a **persistent volume outside the repo tree** — see [DEPLOYMENT.md](DEPLOYMENT.md). Seed data (`data/seed/*`) always ships with the code and is unaffected. |
+| `LOG_LEVEL`                      | `info`                | `debug` \| `info` \| `warn` \| `error`.                                                                                                                                                                                                          |
 
 ## Deployment
 
@@ -260,6 +261,7 @@ See **[DEPLOYMENT.md](DEPLOYMENT.md)** — a Render blueprint (`render.yaml`) an
 Logic lives in small modules under `lib/` (`auth`, `admin-auth`, `search`, `store`, `events`, `ssr`, `http`, `validate`, `rate-limit`, `manifest`, `config`, `log`), wired together by `server.js`. The `lib/store.js` repository seam is the key boundary: the app only calls `init/read/write/writeDebounced`, so the file-based JSON store can be swapped for **Postgres/SQLite** without touching route handlers.
 
 Two things are deliberately left as infra choices rather than code:
+
 - **Database.** The store's hot-path writes are now coalesced (a click never rewrites the 12k-record file; "last active" is throttled), and shutdown flushes cleanly — but a host with an **ephemeral filesystem won't persist data across restarts**, and a single process can't scale horizontally. Move to a database before real traffic; the seam makes it localized.
 - **Managed services.** Error monitoring routes through one `log.captureError` sink (wire Sentry there), and the in-memory rate limiter swaps for Redis when you run more than one instance.
 

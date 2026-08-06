@@ -1,23 +1,31 @@
-'use strict';
+"use strict";
 
-const { test } = require('node:test');
-const assert = require('node:assert/strict');
-const events = require('../lib/events');
-const { computeFunnel, computeRetention, computeTraffic, computeTopSearches, computeTopByUni } = events;
+const { test } = require("node:test");
+const assert = require("node:assert/strict");
+const events = require("../lib/events");
+const {
+  computeFunnel,
+  computeRetention,
+  computeTraffic,
+  computeTopSearches,
+  computeTopByUni,
+} = events;
 
 const now = () => new Date().toISOString();
 
-test('computeFunnel counts distinct anon reach per stage with conversion %', () => {
+test("computeFunnel counts distinct anon reach per stage with conversion %", () => {
   const evs = [
-    { type: 'pageview', anon: 'a', ts: now() },
-    { type: 'pageview', anon: 'b', ts: now() },
-    { type: 'pageview', anon: 'c', ts: now() },
-    { type: 'search', anon: 'a', ts: now() },
-    { type: 'search', anon: 'b', ts: now() },
-    { type: 'profile_view', anon: 'a', ts: now() },
-    { type: 'save', anon: 'a', ts: now() },
+    { type: "pageview", anon: "a", ts: now() },
+    { type: "pageview", anon: "b", ts: now() },
+    { type: "pageview", anon: "c", ts: now() },
+    { type: "search", anon: "a", ts: now() },
+    { type: "search", anon: "b", ts: now() },
+    { type: "profile_view", anon: "a", ts: now() },
+    { type: "save", anon: "a", ts: now() },
   ];
-  const byKey = Object.fromEntries(computeFunnel(evs, {}).map((s) => [s.key, s]));
+  const byKey = Object.fromEntries(
+    computeFunnel(evs, {}).map((s) => [s.key, s]),
+  );
   assert.equal(byKey.visit.count, 3);
   assert.equal(byKey.search.count, 2);
   assert.equal(byKey.profile_view.count, 1);
@@ -26,77 +34,109 @@ test('computeFunnel counts distinct anon reach per stage with conversion %', () 
   assert.equal(byKey.search.pct_of_first, Math.round((2 / 3) * 1000) / 10);
 });
 
-test('computeFunnel ignores events with no anon id', () => {
-  const evs = [{ type: 'pageview', ts: now() }]; // no anon
-  const byKey = Object.fromEntries(computeFunnel(evs, {}).map((s) => [s.key, s]));
+test("computeFunnel ignores events with no anon id", () => {
+  const evs = [{ type: "pageview", ts: now() }]; // no anon
+  const byKey = Object.fromEntries(
+    computeFunnel(evs, {}).map((s) => [s.key, s]),
+  );
   assert.equal(byKey.visit.count, 0);
 });
 
-test('computeRetention: a returning client shows up in the next week, a one-timer does not', () => {
+test("computeRetention: a returning client shows up in the next week, a one-timer does not", () => {
   const base = Date.now() - 14 * 86_400_000; // 2 weeks ago, safely in the past
   const evs = [
-    { ts: new Date(base).toISOString(), type: 'pageview', anon: 'a' },
-    { ts: new Date(base).toISOString(), type: 'pageview', anon: 'b' },
-    { ts: new Date(base + 7 * 86_400_000).toISOString(), type: 'pageview', anon: 'b' }, // b returns a week later
+    { ts: new Date(base).toISOString(), type: "pageview", anon: "a" },
+    { ts: new Date(base).toISOString(), type: "pageview", anon: "b" },
+    {
+      ts: new Date(base + 7 * 86_400_000).toISOString(),
+      type: "pageview",
+      anon: "b",
+    }, // b returns a week later
   ];
   const { cohorts, weeks } = computeRetention(evs, { weeks: 4 });
   assert.equal(weeks, 4);
   const cohort0 = cohorts.find((c) => c.size === 2);
-  assert.ok(cohort0, 'a and b are first seen together, forming one cohort of 2');
+  assert.ok(
+    cohort0,
+    "a and b are first seen together, forming one cohort of 2",
+  );
   assert.equal(cohort0.retention[0], 100); // everyone counts in their own first week
-  assert.equal(cohort0.retention[1], 50);  // only b returned the following week
+  assert.equal(cohort0.retention[1], 50); // only b returned the following week
 });
 
-test('computeRetention returns an empty cohort list for no events', () => {
+test("computeRetention returns an empty cohort list for no events", () => {
   assert.deepEqual(computeRetention([], {}).cohorts, []);
 });
 
-test('computeTraffic aggregates pageviews, unique visitors, top paths and device split', () => {
+test("computeTraffic aggregates pageviews, unique visitors, top paths and device split", () => {
   const evs = [
-    { ts: now(), type: 'pageview', anon: 'a', path: '/', ref: 'google.com', device: 'mobile' },
-    { ts: now(), type: 'pageview', anon: 'b', path: '/', ref: '', device: 'desktop' },
-    { ts: now(), type: 'profile_view', anon: 'a', path: '/university/x', uni: 'x', device: 'mobile' },
-    { ts: now(), type: 'search', anon: 'a', q: 'mit' }, // not a "view" — excluded from pageviews/paths
+    {
+      ts: now(),
+      type: "pageview",
+      anon: "a",
+      path: "/",
+      ref: "google.com",
+      device: "mobile",
+    },
+    {
+      ts: now(),
+      type: "pageview",
+      anon: "b",
+      path: "/",
+      ref: "",
+      device: "desktop",
+    },
+    {
+      ts: now(),
+      type: "profile_view",
+      anon: "a",
+      path: "/university/x",
+      uni: "x",
+      device: "mobile",
+    },
+    { ts: now(), type: "search", anon: "a", q: "mit" }, // not a "view" — excluded from pageviews/paths
   ];
   const t = computeTraffic(evs, {});
   assert.equal(t.pageviews, 3);
   assert.equal(t.unique_visitors, 2); // a, b — across all event types
-  assert.equal(t.top_paths[0].key, '/');
+  assert.equal(t.top_paths[0].key, "/");
   assert.equal(t.top_paths[0].count, 2);
   assert.equal(t.device_split.mobile, 2);
   assert.equal(t.device_split.desktop, 1);
-  assert.ok(t.top_referrers.some((r) => r.key === 'google.com' && r.count === 1));
+  assert.ok(
+    t.top_referrers.some((r) => r.key === "google.com" && r.count === 1),
+  );
 });
 
-test('computeTopSearches ranks by frequency, case-insensitive', () => {
+test("computeTopSearches ranks by frequency, case-insensitive", () => {
   const evs = [
-    { type: 'search', q: 'MIT', ts: now() },
-    { type: 'search', q: 'mit', ts: now() },
-    { type: 'search', q: 'Oxford', ts: now() },
+    { type: "search", q: "MIT", ts: now() },
+    { type: "search", q: "mit", ts: now() },
+    { type: "search", q: "Oxford", ts: now() },
   ];
   const top = computeTopSearches(evs, {});
-  assert.equal(top[0].q, 'mit');
+  assert.equal(top[0].q, "mit");
   assert.equal(top[0].count, 2);
 });
 
-test('computeTopByUni ranks universities by event count and reports unique clients', () => {
+test("computeTopByUni ranks universities by event count and reports unique clients", () => {
   const evs = [
-    { type: 'apply_click', uni: 'x', anon: 'a', ts: now() },
-    { type: 'apply_click', uni: 'x', anon: 'a', ts: now() }, // same client twice
-    { type: 'apply_click', uni: 'x', anon: 'b', ts: now() },
-    { type: 'apply_click', uni: 'y', anon: 'c', ts: now() },
+    { type: "apply_click", uni: "x", anon: "a", ts: now() },
+    { type: "apply_click", uni: "x", anon: "a", ts: now() }, // same client twice
+    { type: "apply_click", uni: "x", anon: "b", ts: now() },
+    { type: "apply_click", uni: "y", anon: "c", ts: now() },
   ];
-  const top = computeTopByUni(evs, 'apply_click', 5);
-  assert.equal(top[0].id, 'x');
+  const top = computeTopByUni(evs, "apply_click", 5);
+  assert.equal(top[0].id, "x");
   assert.equal(top[0].count, 3);
   assert.equal(top[0].unique, 2);
 });
 
-test('purgeAnon removes only events tied to the targeted anonymous ids', async () => {
+test("purgeAnon removes only events tied to the targeted anonymous ids", async () => {
   const marker = `test-anon-${Date.now()}`;
   const other = `test-anon-other-${Date.now()}`;
-  events.record('pageview', { anon: marker, path: '/x' });
-  events.record('pageview', { anon: other, path: '/y' });
+  events.record("pageview", { anon: marker, path: "/x" });
+  events.record("pageview", { anon: other, path: "/y" });
   await events.flush();
 
   let all = events.readAll();
@@ -107,8 +147,11 @@ test('purgeAnon removes only events tied to the targeted anonymous ids', async (
   assert.ok(removed >= 1);
 
   all = events.readAll();
-  assert.ok(!all.some((e) => e.anon === marker), 'targeted events were purged');
-  assert.ok(all.some((e) => e.anon === other), 'untargeted events were left alone');
+  assert.ok(!all.some((e) => e.anon === marker), "targeted events were purged");
+  assert.ok(
+    all.some((e) => e.anon === other),
+    "untargeted events were left alone",
+  );
 
   await events.purgeAnon([other]); // self-clean so this test leaves no residue
 });

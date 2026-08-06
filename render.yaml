@@ -21,8 +21,8 @@ services:
   - type: web
     name: universo
     runtime: node
-    region: frankfurt         # see note above: applies to new services only
-    plan: starter            # smallest paid tier; required for a persistent disk
+    region: frankfurt # see note above: applies to new services only
+    plan: starter # smallest paid tier; required for a persistent disk
     buildCommand: npm ci
     startCommand: node server.js
     healthCheckPath: /healthz
@@ -38,7 +38,7 @@ services:
       - key: UNIVERSO_DATA_DIR
         value: /var/data
       - key: UNIVERSO_JWT_SECRET
-        generateValue: true    # Render generates a stable random secret once
+        generateValue: true # Render generates a stable random secret once
       # Set these two in the dashboard for first boot to create your admin
       # account, then remove them (one-time bootstrap; see DEPLOYMENT.md):
       # - key: ADMIN_EMAIL

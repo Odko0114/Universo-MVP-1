@@ -1,71 +1,88 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#0B1F3A" />
-  <title>Universo — Discover universities abroad</title>
-  <meta name="description" content="Universo helps international students discover and compare universities abroad." />
-  <link rel="icon" href="/favicon.svg" />
-  <link rel="stylesheet" href="/css/styles.css" />
-</head>
-<body>
-  <a class="skip-link" href="#view">Skip to main content</a>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0B1F3A" />
+    <title>Universo — Discover universities abroad</title>
+    <meta
+      name="description"
+      content="Universo helps international students discover and compare universities abroad."
+    />
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#view">Skip to main content</a>
 
-  <!-- Top navbar (desktop) -->
-  <header class="topbar">
-    <div class="topbar__inner">
-      <a class="brand" href="/discover" data-link aria-label="Universo — Same Start. Equal Chance. Go to Discover">
-        <span class="brand__mark" aria-hidden="true">
-          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-            <path fill="currentColor" d="M18 20 C -6 80 40 165 100 190 C 96 140 90 60 88 15 Z"/>
-            <path fill="currentColor" d="M182 20 C 206 80 160 165 100 190 C 104 140 110 60 112 15 Z"/>
-          </svg>
-        </span>
-        <span class="brand__wordmark">
-          <span class="brand__name">Universo</span>
-          <span class="brand__tag">Same Start. Equal Chance.</span>
-        </span>
+    <!-- Top navbar (desktop) -->
+    <header class="topbar">
+      <div class="topbar__inner">
+        <a
+          class="brand"
+          href="/discover"
+          data-link
+          aria-label="Universo — Same Start. Equal Chance. Go to Discover"
+        >
+          <span class="brand__mark" aria-hidden="true">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+              <path
+                fill="currentColor"
+                d="M18 20 C -6 80 40 165 100 190 C 96 140 90 60 88 15 Z"
+              />
+              <path
+                fill="currentColor"
+                d="M182 20 C 206 80 160 165 100 190 C 104 140 110 60 112 15 Z"
+              />
+            </svg>
+          </span>
+          <span class="brand__wordmark">
+            <span class="brand__name">Universo</span>
+            <span class="brand__tag">Same Start. Equal Chance.</span>
+          </span>
+        </a>
+        <nav class="topnav" aria-label="Primary">
+          <a href="/discover" data-link data-nav="discover">Discover</a>
+          <a href="/journey" data-link data-nav="journey">Dream Plan</a>
+          <a href="/saved" data-link data-nav="saved">Saved</a>
+          <a href="/account" data-link data-nav="account">Account</a>
+          <a href="/for-universities">For universities</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Route outlet -->
+    <main id="view" class="view" tabindex="-1" aria-live="polite"></main>
+
+    <!-- Bottom tab navigation (mobile) -->
+    <nav class="tabbar" aria-label="Primary">
+      <a href="/discover" data-link data-nav="discover" class="tabbar__item">
+        <span class="tabbar__icon" aria-hidden="true">🔎</span>
+        <span class="tabbar__label">Discover</span>
       </a>
-      <nav class="topnav" aria-label="Primary">
-        <a href="/discover" data-link data-nav="discover">Discover</a>
-        <a href="/journey" data-link data-nav="journey">Dream Plan</a>
-        <a href="/saved" data-link data-nav="saved">Saved</a>
-        <a href="/account" data-link data-nav="account">Account</a>
-        <a href="/for-universities">For universities</a>
-      </nav>
-    </div>
-  </header>
+      <a href="/journey" data-link data-nav="journey" class="tabbar__item">
+        <span class="tabbar__icon" aria-hidden="true">🧭</span>
+        <span class="tabbar__label">Dream Plan</span>
+      </a>
+      <a href="/saved" data-link data-nav="saved" class="tabbar__item">
+        <span class="tabbar__icon" aria-hidden="true">🔖</span>
+        <span class="tabbar__label">Saved</span>
+      </a>
+      <a href="/account" data-link data-nav="account" class="tabbar__item">
+        <span class="tabbar__icon" aria-hidden="true">👤</span>
+        <span class="tabbar__label">Account</span>
+      </a>
+    </nav>
 
-  <!-- Route outlet -->
-  <main id="view" class="view" tabindex="-1" aria-live="polite"></main>
+    <!-- Toast host -->
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-  <!-- Bottom tab navigation (mobile) -->
-  <nav class="tabbar" aria-label="Primary">
-    <a href="/discover" data-link data-nav="discover" class="tabbar__item">
-      <span class="tabbar__icon" aria-hidden="true">🔎</span>
-      <span class="tabbar__label">Discover</span>
-    </a>
-    <a href="/journey" data-link data-nav="journey" class="tabbar__item">
-      <span class="tabbar__icon" aria-hidden="true">🧭</span>
-      <span class="tabbar__label">Dream Plan</span>
-    </a>
-    <a href="/saved" data-link data-nav="saved" class="tabbar__item">
-      <span class="tabbar__icon" aria-hidden="true">🔖</span>
-      <span class="tabbar__label">Saved</span>
-    </a>
-    <a href="/account" data-link data-nav="account" class="tabbar__item">
-      <span class="tabbar__icon" aria-hidden="true">👤</span>
-      <span class="tabbar__label">Account</span>
-    </a>
-  </nav>
-
-  <!-- Toast host -->
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-
-  <!-- defer: don't block first paint on the SPA bundle; api.js must still run
+    <!-- defer: don't block first paint on the SPA bundle; api.js must still run
        before app.js, and defer preserves document order. -->
-  <script src="/js/api.js" defer></script>
-  <script src="/js/app.js" defer></script>
-</body>
+    <script src="/js/api.js" defer></script>
+    <script src="/js/app.js" defer></script>
+  </body>
 </html>

@@ -1,457 +1,992 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="robots" content="noindex, nofollow" />
-  <link rel="icon" href="/favicon.svg" />
-  <title>Universo — Admin dashboard</title>
-  <style>
-    :root { --navy:#0B1F3A; --navy2:#12294d; --teal:#14b8a6; --teal2:#0d9488; --gold:#E9B949; --line:#e4e8ef; --ink:#10233f; --faint:#7a879b; --danger:#d64550; }
-    * { box-sizing: border-box; }
-    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:#f5f7fb; color:var(--ink); }
-    header { background:var(--navy); color:#fff; padding:18px 20px; }
-    header .row { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
-    header h1 { margin:0; font-size:1.2rem; }
-    header p { margin:4px 0 0; color:#c7d2e2; font-size:.85rem; }
-    a.back, a.logout-link { color:var(--gold); font-weight:600; text-decoration:none; font-size:.85rem; cursor:pointer; }
-    .wrap { max-width:1100px; margin:0 auto; padding:20px; }
-    .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:24px; }
-    .stat { background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px; box-shadow:0 1px 3px rgba(11,31,58,.06); }
-    .stat .n { font-size:2rem; font-weight:800; color:var(--navy); }
-    .stat .l { font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; color:var(--faint); font-weight:700; margin-top:2px; }
-    .stat.primary { background:linear-gradient(135deg,var(--teal),var(--teal2)); border:none; }
-    .stat.primary .n, .stat.primary .l { color:#fff; }
-    .stat.gold { background:linear-gradient(135deg,var(--gold),#d4a017); border:none; }
-    .stat.gold .n, .stat.gold .l { color:var(--navy); }
-    h2 { font-size:1.05rem; margin:28px 0 10px; }
-    h2:first-of-type { margin-top:0; }
-    .panel { background:#fff; border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:20px; box-shadow:0 1px 3px rgba(11,31,58,.06); }
-    table { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line); border-radius:14px; overflow:hidden; }
-    th, td { text-align:left; padding:10px 14px; border-bottom:1px solid var(--line); font-size:.87rem; }
-    th { background:#eef1f6; font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; color:var(--faint); }
-    tr:last-child td { border-bottom:none; }
-    td.num { text-align:right; font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap; }
-    .bar { display:inline-block; height:8px; background:var(--teal); border-radius:4px; vertical-align:middle; margin-right:8px; min-width:2px; }
-    .foot { color:var(--faint); font-size:.82rem; margin-top:16px; }
-    .windows { display:flex; gap:12px; flex-wrap:wrap; margin:-8px 0 22px; }
-    .win { background:#fff; border:1px solid var(--line); border-radius:10px; padding:8px 14px; font-size:.85rem; color:var(--ink); }
-    .refresh { background:var(--gold); color:var(--navy); border:none; border-radius:8px; padding:8px 14px; font-weight:700; cursor:pointer; }
-    .tabs { display:flex; gap:6px; margin-bottom:12px; }
-    .tabs button { background:#eef1f6; border:none; border-radius:999px; padding:6px 14px; font-size:.82rem; font-weight:700; color:var(--faint); cursor:pointer; }
-    .tabs button.active { background:var(--navy); color:#fff; }
-    .two-col { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
-    @media (max-width:720px) { .two-col { grid-template-columns:1fr; } }
-    .funnel-row { display:grid; grid-template-columns:150px 1fr 130px; gap:12px; align-items:center; margin-bottom:10px; font-size:.87rem; }
-    .funnel-track { background:#eef1f6; border-radius:8px; height:26px; position:relative; overflow:hidden; }
-    .funnel-fill { background:linear-gradient(90deg,var(--teal),var(--teal2)); height:100%; border-radius:8px; min-width:3px; }
-    .funnel-nums { text-align:right; font-variant-numeric:tabular-nums; color:var(--faint); font-size:.8rem; }
-    .device-row { display:flex; gap:16px; margin-top:6px; }
-    .device-item { flex:1; }
-    .device-track { background:#eef1f6; border-radius:8px; height:18px; overflow:hidden; margin-top:4px; }
-    .device-fill { background:var(--teal); height:100%; }
-    .retention-table td, .retention-table th { text-align:center; }
-    .retention-table td:first-child, .retention-table th:first-child { text-align:left; }
-    .ret-cell { border-radius:6px; padding:4px 6px; display:inline-block; min-width:44px; font-weight:700; font-variant-numeric:tabular-nums; }
-    .empty-note { color:var(--faint); font-size:.85rem; padding:14px; text-align:center; }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="icon" href="/favicon.svg" />
+    <title>Universo — Admin dashboard</title>
+    <style>
+      :root {
+        --navy: #0b1f3a;
+        --navy2: #12294d;
+        --teal: #14b8a6;
+        --teal2: #0d9488;
+        --gold: #e9b949;
+        --line: #e4e8ef;
+        --ink: #10233f;
+        --faint: #7a879b;
+        --danger: #d64550;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #f5f7fb;
+        color: var(--ink);
+      }
+      header {
+        background: var(--navy);
+        color: #fff;
+        padding: 18px 20px;
+      }
+      header .row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      header h1 {
+        margin: 0;
+        font-size: 1.2rem;
+      }
+      header p {
+        margin: 4px 0 0;
+        color: #c7d2e2;
+        font-size: 0.85rem;
+      }
+      a.back,
+      a.logout-link {
+        color: var(--gold);
+        font-weight: 600;
+        text-decoration: none;
+        font-size: 0.85rem;
+        cursor: pointer;
+      }
+      .wrap {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
+        margin-bottom: 24px;
+      }
+      .stat {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 16px;
+        box-shadow: 0 1px 3px rgba(11, 31, 58, 0.06);
+      }
+      .stat .n {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--navy);
+      }
+      .stat .l {
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--faint);
+        font-weight: 700;
+        margin-top: 2px;
+      }
+      .stat.primary {
+        background: linear-gradient(135deg, var(--teal), var(--teal2));
+        border: none;
+      }
+      .stat.primary .n,
+      .stat.primary .l {
+        color: #fff;
+      }
+      .stat.gold {
+        background: linear-gradient(135deg, var(--gold), #d4a017);
+        border: none;
+      }
+      .stat.gold .n,
+      .stat.gold .l {
+        color: var(--navy);
+      }
+      h2 {
+        font-size: 1.05rem;
+        margin: 28px 0 10px;
+      }
+      h2:first-of-type {
+        margin-top: 0;
+      }
+      .panel {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 18px;
+        margin-bottom: 20px;
+        box-shadow: 0 1px 3px rgba(11, 31, 58, 0.06);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--line);
+        font-size: 0.87rem;
+      }
+      th {
+        background: #eef1f6;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--faint);
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      td.num {
+        text-align: right;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      .bar {
+        display: inline-block;
+        height: 8px;
+        background: var(--teal);
+        border-radius: 4px;
+        vertical-align: middle;
+        margin-right: 8px;
+        min-width: 2px;
+      }
+      .foot {
+        color: var(--faint);
+        font-size: 0.82rem;
+        margin-top: 16px;
+      }
+      .windows {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: -8px 0 22px;
+      }
+      .win {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 8px 14px;
+        font-size: 0.85rem;
+        color: var(--ink);
+      }
+      .refresh {
+        background: var(--gold);
+        color: var(--navy);
+        border: none;
+        border-radius: 8px;
+        padding: 8px 14px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .tabs {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 12px;
+      }
+      .tabs button {
+        background: #eef1f6;
+        border: none;
+        border-radius: 999px;
+        padding: 6px 14px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--faint);
+        cursor: pointer;
+      }
+      .tabs button.active {
+        background: var(--navy);
+        color: #fff;
+      }
+      .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+      }
+      @media (max-width: 720px) {
+        .two-col {
+          grid-template-columns: 1fr;
+        }
+      }
+      .funnel-row {
+        display: grid;
+        grid-template-columns: 150px 1fr 130px;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 10px;
+        font-size: 0.87rem;
+      }
+      .funnel-track {
+        background: #eef1f6;
+        border-radius: 8px;
+        height: 26px;
+        position: relative;
+        overflow: hidden;
+      }
+      .funnel-fill {
+        background: linear-gradient(90deg, var(--teal), var(--teal2));
+        height: 100%;
+        border-radius: 8px;
+        min-width: 3px;
+      }
+      .funnel-nums {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+        color: var(--faint);
+        font-size: 0.8rem;
+      }
+      .device-row {
+        display: flex;
+        gap: 16px;
+        margin-top: 6px;
+      }
+      .device-item {
+        flex: 1;
+      }
+      .device-track {
+        background: #eef1f6;
+        border-radius: 8px;
+        height: 18px;
+        overflow: hidden;
+        margin-top: 4px;
+      }
+      .device-fill {
+        background: var(--teal);
+        height: 100%;
+      }
+      .retention-table td,
+      .retention-table th {
+        text-align: center;
+      }
+      .retention-table td:first-child,
+      .retention-table th:first-child {
+        text-align: left;
+      }
+      .ret-cell {
+        border-radius: 6px;
+        padding: 4px 6px;
+        display: inline-block;
+        min-width: 44px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .empty-note {
+        color: var(--faint);
+        font-size: 0.85rem;
+        padding: 14px;
+        text-align: center;
+      }
 
-    /* ---- login gate ---- */
-    #login-gate { max-width:380px; margin:60px auto; background:#fff; border:1px solid var(--line); border-radius:14px; padding:28px; box-shadow:0 4px 20px rgba(11,31,58,.08); }
-    #login-gate h2 { margin:0 0 4px; font-size:1.2rem; }
-    #login-gate p.sub { color:var(--faint); font-size:.85rem; margin:0 0 18px; }
-    #login-gate label { display:block; font-size:.82rem; font-weight:700; color:var(--faint); margin-bottom:5px; }
-    #login-gate input { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:.95rem; margin-bottom:14px; }
-    #login-gate button { width:100%; background:var(--teal); color:#fff; border:none; border-radius:8px; padding:11px; font-weight:700; font-size:.95rem; cursor:pointer; }
-    #login-gate button:hover { background:var(--teal2); }
-    #login-error { background:#fdecee; color:var(--danger); border:1px solid #f6c9ce; padding:9px 12px; border-radius:8px; font-size:.85rem; margin-bottom:14px; display:none; }
-    #login-gate .hint { color:var(--faint); font-size:.78rem; margin-top:14px; text-align:center; }
-  </style>
-</head>
-<body>
-  <header>
-    <div class="wrap" style="padding:0;">
-      <div class="row">
-        <div style="display:flex;align-items:center;gap:10px">
-          <svg viewBox="0 0 200 200" width="26" height="26" style="flex:0 0 auto" aria-hidden="true">
-            <path fill="#fff" d="M18 20 C -6 80 40 165 100 190 C 96 140 90 60 88 15 Z"/>
-            <path fill="#fff" d="M182 20 C 206 80 160 165 100 190 C 104 140 110 60 112 15 Z"/>
-          </svg>
-          <div>
-            <h1>Universo — Admin dashboard</h1>
-            <p>Traffic, behavior, funnel and retention. <a class="back" href="/">← Back to app</a></p>
+      /* ---- login gate ---- */
+      #login-gate {
+        max-width: 380px;
+        margin: 60px auto;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 28px;
+        box-shadow: 0 4px 20px rgba(11, 31, 58, 0.08);
+      }
+      #login-gate h2 {
+        margin: 0 0 4px;
+        font-size: 1.2rem;
+      }
+      #login-gate p.sub {
+        color: var(--faint);
+        font-size: 0.85rem;
+        margin: 0 0 18px;
+      }
+      #login-gate label {
+        display: block;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--faint);
+        margin-bottom: 5px;
+      }
+      #login-gate input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        font-size: 0.95rem;
+        margin-bottom: 14px;
+      }
+      #login-gate button {
+        width: 100%;
+        background: var(--teal);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 11px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        cursor: pointer;
+      }
+      #login-gate button:hover {
+        background: var(--teal2);
+      }
+      #login-error {
+        background: #fdecee;
+        color: var(--danger);
+        border: 1px solid #f6c9ce;
+        padding: 9px 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        margin-bottom: 14px;
+        display: none;
+      }
+      #login-gate .hint {
+        color: var(--faint);
+        font-size: 0.78rem;
+        margin-top: 14px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="wrap" style="padding: 0">
+        <div class="row">
+          <div style="display: flex; align-items: center; gap: 10px">
+            <svg
+              viewBox="0 0 200 200"
+              width="26"
+              height="26"
+              style="flex: 0 0 auto"
+              aria-hidden="true"
+            >
+              <path
+                fill="#fff"
+                d="M18 20 C -6 80 40 165 100 190 C 96 140 90 60 88 15 Z"
+              />
+              <path
+                fill="#fff"
+                d="M182 20 C 206 80 160 165 100 190 C 104 140 110 60 112 15 Z"
+              />
+            </svg>
+            <div>
+              <h1>Universo — Admin dashboard</h1>
+              <p>
+                Traffic, behavior, funnel and retention.
+                <a class="back" href="/">← Back to app</a>
+              </p>
+            </div>
           </div>
+          <a class="logout-link" id="logout-link" style="display: none"
+            >Log out ↦</a
+          >
         </div>
-        <a class="logout-link" id="logout-link" style="display:none">Log out ↦</a>
       </div>
-    </div>
-  </header>
+    </header>
 
-  <!-- Signed-out state is deliberately minimal: a title, the two fields, and
+    <!-- Signed-out state is deliberately minimal: a title, the two fields, and
        the button. No description, no provisioning hint — a public URL should
        never describe its own auth setup. Admin provisioning lives in README. -->
-  <div id="login-gate">
-    <h2>Admin sign in</h2>
-    <div id="login-error"></div>
-    <form id="login-form">
-      <label for="admin-email">Email</label>
-      <input id="admin-email" type="email" autocomplete="username" required />
-      <label for="admin-password">Password</label>
-      <input id="admin-password" type="password" autocomplete="current-password" required />
-      <button type="submit">Sign in</button>
-    </form>
-  </div>
-
-  <div class="wrap" id="dashboard" style="display:none">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <span id="ts" class="foot" style="margin:0"></span>
-      <button class="refresh" id="refresh-btn">↻ Refresh</button>
+    <div id="login-gate">
+      <h2>Admin sign in</h2>
+      <div id="login-error"></div>
+      <form id="login-form">
+        <label for="admin-email">Email</label>
+        <input id="admin-email" type="email" autocomplete="username" required />
+        <label for="admin-password">Password</label>
+        <input
+          id="admin-password"
+          type="password"
+          autocomplete="current-password"
+          required
+        />
+        <button type="submit">Sign in</button>
+      </form>
     </div>
 
-    <div id="stats" class="grid"></div>
-    <div id="windows" class="windows"></div>
+    <div class="wrap" id="dashboard" style="display: none">
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 14px;
+        "
+      >
+        <span id="ts" class="foot" style="margin: 0"></span>
+        <button class="refresh" id="refresh-btn">↻ Refresh</button>
+      </div>
 
-    <h2>Funnel (last <span id="funnel-days-label">7</span> days)</h2>
-    <div class="panel">
-      <div class="tabs" id="funnel-range"></div>
-      <div id="funnel"></div>
-      <p class="foot" style="margin-top:4px">A client counts at a stage if it produced that event at least once in the window — this measures <em>reach</em>, not a strictly ordered path.</p>
-    </div>
+      <div id="stats" class="grid"></div>
+      <div id="windows" class="windows"></div>
 
-    <div class="two-col">
-      <div>
-        <h2>Traffic (last <span id="traffic-days-label">7</span> days)</h2>
-        <div class="panel">
-          <div class="tabs" id="traffic-range"></div>
-          <div id="traffic-summary" class="grid" style="margin-bottom:14px"></div>
-          <h3 style="font-size:.85rem;margin:0 0 8px">Top pages</h3>
-          <div id="top-pages"></div>
-          <h3 style="font-size:.85rem;margin:16px 0 8px">Top referrers</h3>
-          <div id="top-referrers"></div>
-          <h3 style="font-size:.85rem;margin:16px 0 8px">Device split</h3>
-          <div id="device-split"></div>
+      <h2>Funnel (last <span id="funnel-days-label">7</span> days)</h2>
+      <div class="panel">
+        <div class="tabs" id="funnel-range"></div>
+        <div id="funnel"></div>
+        <p class="foot" style="margin-top: 4px">
+          A client counts at a stage if it produced that event at least once in
+          the window — this measures <em>reach</em>, not a strictly ordered
+          path.
+        </p>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <h2>Traffic (last <span id="traffic-days-label">7</span> days)</h2>
+          <div class="panel">
+            <div class="tabs" id="traffic-range"></div>
+            <div
+              id="traffic-summary"
+              class="grid"
+              style="margin-bottom: 14px"
+            ></div>
+            <h3 style="font-size: 0.85rem; margin: 0 0 8px">Top pages</h3>
+            <div id="top-pages"></div>
+            <h3 style="font-size: 0.85rem; margin: 16px 0 8px">
+              Top referrers
+            </h3>
+            <div id="top-referrers"></div>
+            <h3 style="font-size: 0.85rem; margin: 16px 0 8px">Device split</h3>
+            <div id="device-split"></div>
+          </div>
+        </div>
+        <div>
+          <h2>Top search terms</h2>
+          <div class="panel"><div id="top-searches"></div></div>
+          <h2>Weekly retention</h2>
+          <div class="panel"><div id="retention"></div></div>
         </div>
       </div>
-      <div>
-        <h2>Top search terms</h2>
-        <div class="panel"><div id="top-searches"></div></div>
-        <h2>Weekly retention</h2>
-        <div class="panel"><div id="retention"></div></div>
-      </div>
-    </div>
 
-    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">
-      <h2>University leads</h2>
-      <!-- Injected by showDash() only once the admin session is confirmed, so
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: baseline;
+          gap: 10px;
+        "
+      >
+        <h2>University leads</h2>
+        <!-- Injected by showDash() only once the admin session is confirmed, so
            the export URL never appears in the HTML served to a signed-out
            visitor. (The endpoint itself is also requireAdmin-guarded.) -->
-      <span id="csv-slot"></span>
-    </div>
-    <div class="panel">
-      <div id="table-leads"></div>
-      <p class="foot" style="margin-top:4px">Submitted through the landing page's "For universities" form. The CSV button downloads students who opted into product-update emails — paste into any mail tool to send an update.</p>
-    </div>
-
-    <h2 style="margin-top:24px">Data quality</h2>
-    <div id="dq-stats" class="grid"></div>
-    <div class="two-col" style="margin-top:14px">
-      <div>
-        <h3 style="font-size:.9rem;margin:0 0 8px">Most-missing fields</h3>
-        <div class="panel"><div id="dq-missing"></div></div>
+        <span id="csv-slot"></span>
       </div>
-      <div>
-        <h3 style="font-size:.9rem;margin:0 0 8px">Quality distribution</h3>
-        <div class="panel"><div id="dq-distribution"></div></div>
+      <div class="panel">
+        <div id="table-leads"></div>
+        <p class="foot" style="margin-top: 4px">
+          Submitted through the landing page's "For universities" form. The CSV
+          button downloads students who opted into product-update emails — paste
+          into any mail tool to send an update.
+        </p>
       </div>
-    </div>
-    <div class="panel" style="margin-top:14px">
-      <div class="dq-filters" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px">
-        <label>Band <select id="dq-band"><option value="">All</option><option>Incomplete</option><option>Needs Improvement</option><option>Good</option><option>Excellent</option></select></label>
-        <label>Status <select id="dq-status"><option value="">All</option><option>Verified</option><option>Needs Review</option><option>Unknown</option></select></label>
-        <label><input type="checkbox" id="dq-stale" /> Stale only</label>
-        <span id="dq-records-count" class="foot"></span>
+
+      <h2 style="margin-top: 24px">Data quality</h2>
+      <div id="dq-stats" class="grid"></div>
+      <div class="two-col" style="margin-top: 14px">
+        <div>
+          <h3 style="font-size: 0.9rem; margin: 0 0 8px">
+            Most-missing fields
+          </h3>
+          <div class="panel"><div id="dq-missing"></div></div>
+        </div>
+        <div>
+          <h3 style="font-size: 0.9rem; margin: 0 0 8px">
+            Quality distribution
+          </h3>
+          <div class="panel"><div id="dq-distribution"></div></div>
+        </div>
       </div>
-      <div id="dq-records"></div>
-      <p class="foot" style="margin-top:6px" id="dq-note"></p>
+      <div class="panel" style="margin-top: 14px">
+        <div
+          class="dq-filters"
+          style="
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 12px;
+          "
+        >
+          <label
+            >Band
+            <select id="dq-band">
+              <option value="">All</option>
+              <option>Incomplete</option>
+              <option>Needs Improvement</option>
+              <option>Good</option>
+              <option>Excellent</option>
+            </select></label
+          >
+          <label
+            >Status
+            <select id="dq-status">
+              <option value="">All</option>
+              <option>Verified</option>
+              <option>Needs Review</option>
+              <option>Unknown</option>
+            </select></label
+          >
+          <label><input type="checkbox" id="dq-stale" /> Stale only</label>
+          <span id="dq-records-count" class="foot"></span>
+        </div>
+        <div id="dq-records"></div>
+        <p class="foot" style="margin-top: 6px" id="dq-note"></p>
+      </div>
+
+      <h2 style="margin-top: 24px">Top universities by Apply-Now clicks</h2>
+      <div id="table-clicks"></div>
+
+      <h2 style="margin-top: 24px">Top universities by profile views</h2>
+      <div id="table-views"></div>
+
+      <p class="foot">
+        Anonymous, deduplicable events (tied to a random client id, never an
+        email) recorded in <code>data/events.jsonl</code>. Deleting a student
+        account purges their linked event history.
+      </p>
     </div>
 
-    <h2 style="margin-top:24px">Top universities by Apply-Now clicks</h2>
-    <div id="table-clicks"></div>
+    <script>
+      const gate = document.getElementById("login-gate");
+      const dash = document.getElementById("dashboard");
+      let funnelDays = 7,
+        trafficDays = 7;
 
-    <h2 style="margin-top:24px">Top universities by profile views</h2>
-    <div id="table-views"></div>
+      async function api(path, opts) {
+        const res = await fetch(path, { credentials: "same-origin", ...opts });
+        if (res.status === 401) {
+          showGate();
+          throw new Error("unauthorized");
+        }
+        if (!res.ok) throw new Error("Request failed: " + res.status);
+        return res.status === 204 ? null : res.json();
+      }
 
-    <p class="foot">Anonymous, deduplicable events (tied to a random client id, never an email) recorded in <code>data/events.jsonl</code>. Deleting a student account purges their linked event history.</p>
-  </div>
+      function showGate() {
+        gate.style.display = "block";
+        dash.style.display = "none";
+        document.getElementById("logout-link").style.display = "none";
+        document.getElementById("csv-slot").innerHTML = ""; // never expose the export URL signed out
+      }
+      function showDash() {
+        gate.style.display = "none";
+        dash.style.display = "block";
+        document.getElementById("logout-link").style.display = "inline";
+        // Built via DOM (not markup) so the export path appears nowhere in the
+        // HTML served to a signed-out visitor.
+        const slot = document.getElementById("csv-slot");
+        slot.innerHTML = "";
+        const a = document.createElement("a");
+        a.className = "refresh";
+        a.href = "/api/" + "admin/subscribers" + ".csv";
+        a.download = "";
+        a.style.textDecoration = "none";
+        a.textContent = "⬇ Subscribers CSV";
+        slot.appendChild(a);
+      }
 
-  <script>
-    const gate = document.getElementById('login-gate');
-    const dash = document.getElementById('dashboard');
-    let funnelDays = 7, trafficDays = 7;
-
-    async function api(path, opts) {
-      const res = await fetch(path, { credentials: 'same-origin', ...opts });
-      if (res.status === 401) { showGate(); throw new Error('unauthorized'); }
-      if (!res.ok) throw new Error('Request failed: ' + res.status);
-      return res.status === 204 ? null : res.json();
-    }
-
-    function showGate() {
-      gate.style.display = 'block'; dash.style.display = 'none';
-      document.getElementById('logout-link').style.display = 'none';
-      document.getElementById('csv-slot').innerHTML = ''; // never expose the export URL signed out
-    }
-    function showDash() {
-      gate.style.display = 'none'; dash.style.display = 'block';
-      document.getElementById('logout-link').style.display = 'inline';
-      // Built via DOM (not markup) so the export path appears nowhere in the
-      // HTML served to a signed-out visitor.
-      const slot = document.getElementById('csv-slot');
-      slot.innerHTML = '';
-      const a = document.createElement('a');
-      a.className = 'refresh';
-      a.href = '/api/' + 'admin/subscribers' + '.csv';
-      a.download = '';
-      a.style.textDecoration = 'none';
-      a.textContent = '⬇ Subscribers CSV';
-      slot.appendChild(a);
-    }
-
-    // ---- login ----
-    document.getElementById('login-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const err = document.getElementById('login-error');
-      err.style.display = 'none';
-      const email = document.getElementById('admin-email').value;
-      const password = document.getElementById('admin-password').value;
-      try {
-        const res = await fetch('/api/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'same-origin', body: JSON.stringify({ email, password }) });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Login failed');
-        showDash();
-        loadAll();
-      } catch (ex) { err.textContent = ex.message; err.style.display = 'block'; }
-    });
-    document.getElementById('logout-link').addEventListener('click', async () => {
-      try { await fetch('/api/admin/logout', { method: 'POST', credentials: 'same-origin' }); } catch {}
-      showGate();
-    });
-    document.getElementById('refresh-btn').addEventListener('click', loadAll);
-
-    // ---- rendering helpers ----
-    const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    const nfmt = (n) => Number(n || 0).toLocaleString('en-US');
-
-    function barTable(rows, cols) {
-      // rows: array of objects; cols: [{key,label,num?}]
-      if (!rows.length) return '<p class="empty-note">No data yet.</p>';
-      const max = Math.max(1, ...rows.map(r => Number(r[cols[cols.length - 1].key]) || 0));
-      return `<table><thead><tr>${cols.map(c => `<th${c.num ? ' style="text-align:right"' : ''}>${esc(c.label)}</th>`).join('')}</tr></thead>
-        <tbody>${rows.map(r => `<tr>${cols.map((c, i) => {
-          const v = r[c.key];
-          if (c.num) {
-            const w = i === cols.length - 1 ? Math.round((Number(v) || 0) / max * 70) : 0;
-            return `<td class="num">${i === cols.length - 1 ? `<span class="bar" style="width:${w}px"></span>` : ''}${nfmt(v)}</td>`;
+      // ---- login ----
+      document
+        .getElementById("login-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const err = document.getElementById("login-error");
+          err.style.display = "none";
+          const email = document.getElementById("admin-email").value;
+          const password = document.getElementById("admin-password").value;
+          try {
+            const res = await fetch("/api/admin/login", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "same-origin",
+              body: JSON.stringify({ email, password }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Login failed");
+            showDash();
+            loadAll();
+          } catch (ex) {
+            err.textContent = ex.message;
+            err.style.display = "block";
           }
-          return `<td>${esc(v)}</td>`;
-        }).join('')}</tr>`).join('')}</tbody></table>`;
-    }
+        });
+      document
+        .getElementById("logout-link")
+        .addEventListener("click", async () => {
+          try {
+            await fetch("/api/admin/logout", {
+              method: "POST",
+              credentials: "same-origin",
+            });
+          } catch {}
+          showGate();
+        });
+      document.getElementById("refresh-btn").addEventListener("click", loadAll);
 
-    function renderRangeTabs(container, days, onPick) {
-      const opts = [7, 14, 30];
-      container.innerHTML = opts.map(d => `<button data-d="${d}" class="${d === days ? 'active' : ''}">${d}d</button>`).join('');
-      container.querySelectorAll('button').forEach(b => b.addEventListener('click', () => onPick(Number(b.dataset.d))));
-    }
+      // ---- rendering helpers ----
+      const esc = (s) =>
+        String(s == null ? "" : s).replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+      const nfmt = (n) => Number(n || 0).toLocaleString("en-US");
 
-    // ---- sections ----
-    async function loadStats() {
-      const d = await api('/api/admin/stats');
-      const t = d.totals;
-      const cards = [
-        ['primary', t.signups, 'Sign-ups'],
-        ['', t.searches, 'Searches'],
-        ['gold', t.currently_saved, 'Saved (current)'],
-        ['primary', t.apply_clicks, 'Apply clicks'],
-        ['', t.apply_clicks_unique, 'Apply clicks (unique)'],
-        ['', t.pageviews, 'Pageviews'],
-        ['', t.students, 'Total students'],
-        ['', t.universities_verified, 'Verified profiles'],
-        ['', t.universities, 'Directory total'],
-        ['gold', t.pilot_leads, 'University leads'],
-        ['gold', t.update_subscribers, 'Update subscribers'],
-      ];
-      document.getElementById('stats').innerHTML = cards.map(([cls, n, l]) => `<div class="stat ${cls}"><div class="n">${nfmt(n)}</div><div class="l">${l}</div></div>`).join('');
+      function barTable(rows, cols) {
+        // rows: array of objects; cols: [{key,label,num?}]
+        if (!rows.length) return '<p class="empty-note">No data yet.</p>';
+        const max = Math.max(
+          1,
+          ...rows.map((r) => Number(r[cols[cols.length - 1].key]) || 0),
+        );
+        return `<table><thead><tr>${cols.map((c) => `<th${c.num ? ' style="text-align:right"' : ""}>${esc(c.label)}</th>`).join("")}</tr></thead>
+        <tbody>${rows
+          .map(
+            (r) =>
+              `<tr>${cols
+                .map((c, i) => {
+                  const v = r[c.key];
+                  if (c.num) {
+                    const w =
+                      i === cols.length - 1
+                        ? Math.round(((Number(v) || 0) / max) * 70)
+                        : 0;
+                    return `<td class="num">${i === cols.length - 1 ? `<span class="bar" style="width:${w}px"></span>` : ""}${nfmt(v)}</td>`;
+                  }
+                  return `<td>${esc(v)}</td>`;
+                })
+                .join("")}</tr>`,
+          )
+          .join("")}</tbody></table>`;
+      }
 
-      const win = (obj) => `signups ${obj.signup || 0} · searches ${obj.search || 0} · saves ${obj.save || 0} · apply ${obj.apply_click || 0}`;
-      document.getElementById('windows').innerHTML =
-        `<div class="win"><strong>Last 24h:</strong> ${win(d.last_24h || {})}</div>` +
-        `<div class="win"><strong>Last 7d:</strong> ${win(d.last_7d || {})}</div>`;
+      function renderRangeTabs(container, days, onPick) {
+        const opts = [7, 14, 30];
+        container.innerHTML = opts
+          .map(
+            (d) =>
+              `<button data-d="${d}" class="${d === days ? "active" : ""}">${d}d</button>`,
+          )
+          .join("");
+        container
+          .querySelectorAll("button")
+          .forEach((b) =>
+            b.addEventListener("click", () => onPick(Number(b.dataset.d))),
+          );
+      }
 
-      document.getElementById('table-clicks').innerHTML = barTable(
-        d.top_universities_by_apply_clicks.map(r => ({ name: r.name, country: r.country, click_count: r.click_count })),
-        [{ key: 'name', label: 'University' }, { key: 'country', label: 'Country' }, { key: 'click_count', label: 'Apply clicks', num: true }],
-      );
-      document.getElementById('table-views').innerHTML = barTable(
-        d.top_universities_by_views.map(r => ({ name: r.name, country: r.country, unique_viewers: r.unique_viewers, views: r.views })),
-        [{ key: 'name', label: 'University' }, { key: 'country', label: 'Country' }, { key: 'unique_viewers', label: 'Unique viewers' }, { key: 'views', label: 'Views', num: true }],
-      );
-      document.getElementById('ts').textContent = 'Updated ' + new Date(d.generated_at).toLocaleString();
-    }
+      // ---- sections ----
+      async function loadStats() {
+        const d = await api("/api/admin/stats");
+        const t = d.totals;
+        const cards = [
+          ["primary", t.signups, "Sign-ups"],
+          ["", t.searches, "Searches"],
+          ["gold", t.currently_saved, "Saved (current)"],
+          ["primary", t.apply_clicks, "Apply clicks"],
+          ["", t.apply_clicks_unique, "Apply clicks (unique)"],
+          ["", t.pageviews, "Pageviews"],
+          ["", t.students, "Total students"],
+          ["", t.universities_verified, "Verified profiles"],
+          ["", t.universities, "Directory total"],
+          ["gold", t.pilot_leads, "University leads"],
+          ["gold", t.update_subscribers, "Update subscribers"],
+        ];
+        document.getElementById("stats").innerHTML = cards
+          .map(
+            ([cls, n, l]) =>
+              `<div class="stat ${cls}"><div class="n">${nfmt(n)}</div><div class="l">${l}</div></div>`,
+          )
+          .join("");
 
-    async function loadFunnel() {
-      document.getElementById('funnel-days-label').textContent = funnelDays;
-      renderRangeTabs(document.getElementById('funnel-range'), funnelDays, (d) => { funnelDays = d; loadFunnel(); });
-      const d = await api(`/api/admin/funnel?days=${funnelDays}`);
-      const max = Math.max(1, ...d.stages.map(s => s.count));
-      document.getElementById('funnel').innerHTML = d.stages.map(s => `
+        const win = (obj) =>
+          `signups ${obj.signup || 0} · searches ${obj.search || 0} · saves ${obj.save || 0} · apply ${obj.apply_click || 0}`;
+        document.getElementById("windows").innerHTML =
+          `<div class="win"><strong>Last 24h:</strong> ${win(d.last_24h || {})}</div>` +
+          `<div class="win"><strong>Last 7d:</strong> ${win(d.last_7d || {})}</div>`;
+
+        document.getElementById("table-clicks").innerHTML = barTable(
+          d.top_universities_by_apply_clicks.map((r) => ({
+            name: r.name,
+            country: r.country,
+            click_count: r.click_count,
+          })),
+          [
+            { key: "name", label: "University" },
+            { key: "country", label: "Country" },
+            { key: "click_count", label: "Apply clicks", num: true },
+          ],
+        );
+        document.getElementById("table-views").innerHTML = barTable(
+          d.top_universities_by_views.map((r) => ({
+            name: r.name,
+            country: r.country,
+            unique_viewers: r.unique_viewers,
+            views: r.views,
+          })),
+          [
+            { key: "name", label: "University" },
+            { key: "country", label: "Country" },
+            { key: "unique_viewers", label: "Unique viewers" },
+            { key: "views", label: "Views", num: true },
+          ],
+        );
+        document.getElementById("ts").textContent =
+          "Updated " + new Date(d.generated_at).toLocaleString();
+      }
+
+      async function loadFunnel() {
+        document.getElementById("funnel-days-label").textContent = funnelDays;
+        renderRangeTabs(
+          document.getElementById("funnel-range"),
+          funnelDays,
+          (d) => {
+            funnelDays = d;
+            loadFunnel();
+          },
+        );
+        const d = await api(`/api/admin/funnel?days=${funnelDays}`);
+        const max = Math.max(1, ...d.stages.map((s) => s.count));
+        document.getElementById("funnel").innerHTML = d.stages
+          .map(
+            (s) => `
         <div class="funnel-row">
           <div>${esc(s.label)}</div>
-          <div class="funnel-track"><div class="funnel-fill" style="width:${Math.round(s.count / max * 100)}%"></div></div>
+          <div class="funnel-track"><div class="funnel-fill" style="width:${Math.round((s.count / max) * 100)}%"></div></div>
           <div class="funnel-nums">${nfmt(s.count)} · ${s.pct_of_first}% of visits</div>
-        </div>`).join('');
-    }
+        </div>`,
+          )
+          .join("");
+      }
 
-    async function loadTraffic() {
-      document.getElementById('traffic-days-label').textContent = trafficDays;
-      renderRangeTabs(document.getElementById('traffic-range'), trafficDays, (d) => { trafficDays = d; loadTraffic(); });
-      const d = await api(`/api/admin/traffic?days=${trafficDays}`);
+      async function loadTraffic() {
+        document.getElementById("traffic-days-label").textContent = trafficDays;
+        renderRangeTabs(
+          document.getElementById("traffic-range"),
+          trafficDays,
+          (d) => {
+            trafficDays = d;
+            loadTraffic();
+          },
+        );
+        const d = await api(`/api/admin/traffic?days=${trafficDays}`);
 
-      document.getElementById('traffic-summary').innerHTML = [
-        ['primary', d.unique_visitors, 'Unique visitors'],
-        ['', d.pageviews, 'Pageviews'],
-      ].map(([cls, n, l]) => `<div class="stat ${cls}"><div class="n">${nfmt(n)}</div><div class="l">${l}</div></div>`).join('');
+        document.getElementById("traffic-summary").innerHTML = [
+          ["primary", d.unique_visitors, "Unique visitors"],
+          ["", d.pageviews, "Pageviews"],
+        ]
+          .map(
+            ([cls, n, l]) =>
+              `<div class="stat ${cls}"><div class="n">${nfmt(n)}</div><div class="l">${l}</div></div>`,
+          )
+          .join("");
 
-      document.getElementById('top-pages').innerHTML = barTable(
-        d.top_paths.map(r => ({ key: r.key, count: r.count })),
-        [{ key: 'key', label: 'Path' }, { key: 'count', label: 'Views', num: true }],
-      );
-      document.getElementById('top-referrers').innerHTML = barTable(
-        d.top_referrers.map(r => ({ key: r.key === 'direct' ? 'Direct / unknown' : r.key, count: r.count })),
-        [{ key: 'key', label: 'Referrer' }, { key: 'count', label: 'Visits', num: true }],
-      );
+        document.getElementById("top-pages").innerHTML = barTable(
+          d.top_paths.map((r) => ({ key: r.key, count: r.count })),
+          [
+            { key: "key", label: "Path" },
+            { key: "count", label: "Views", num: true },
+          ],
+        );
+        document.getElementById("top-referrers").innerHTML = barTable(
+          d.top_referrers.map((r) => ({
+            key: r.key === "direct" ? "Direct / unknown" : r.key,
+            count: r.count,
+          })),
+          [
+            { key: "key", label: "Referrer" },
+            { key: "count", label: "Visits", num: true },
+          ],
+        );
 
-      const dv = d.device_split || { mobile: 0, desktop: 0, unknown: 0 };
-      const total = Math.max(1, dv.mobile + dv.desktop + dv.unknown);
-      document.getElementById('device-split').innerHTML = `
+        const dv = d.device_split || { mobile: 0, desktop: 0, unknown: 0 };
+        const total = Math.max(1, dv.mobile + dv.desktop + dv.unknown);
+        document.getElementById("device-split").innerHTML = `
         <div class="device-row">
-          <div class="device-item">Mobile — ${nfmt(dv.mobile)} (${Math.round(dv.mobile / total * 100)}%)
-            <div class="device-track"><div class="device-fill" style="width:${Math.round(dv.mobile / total * 100)}%"></div></div>
+          <div class="device-item">Mobile — ${nfmt(dv.mobile)} (${Math.round((dv.mobile / total) * 100)}%)
+            <div class="device-track"><div class="device-fill" style="width:${Math.round((dv.mobile / total) * 100)}%"></div></div>
           </div>
-          <div class="device-item">Desktop — ${nfmt(dv.desktop)} (${Math.round(dv.desktop / total * 100)}%)
-            <div class="device-track"><div class="device-fill" style="width:${Math.round(dv.desktop / total * 100)}%"></div></div>
+          <div class="device-item">Desktop — ${nfmt(dv.desktop)} (${Math.round((dv.desktop / total) * 100)}%)
+            <div class="device-track"><div class="device-fill" style="width:${Math.round((dv.desktop / total) * 100)}%"></div></div>
           </div>
         </div>`;
-    }
+      }
 
-    async function loadSearches() {
-      const d = await api('/api/admin/searches?days=30&limit=12');
-      document.getElementById('top-searches').innerHTML = barTable(
-        d.terms.map(r => ({ q: r.q, count: r.count })),
-        [{ key: 'q', label: 'Search term' }, { key: 'count', label: 'Count', num: true }],
-      );
-    }
+      async function loadSearches() {
+        const d = await api("/api/admin/searches?days=30&limit=12");
+        document.getElementById("top-searches").innerHTML = barTable(
+          d.terms.map((r) => ({ q: r.q, count: r.count })),
+          [
+            { key: "q", label: "Search term" },
+            { key: "count", label: "Count", num: true },
+          ],
+        );
+      }
 
-    async function loadLeads() {
-      const d = await api('/api/admin/leads');
-      document.getElementById('table-leads').innerHTML = d.leads.length
-        ? `<table><thead><tr><th>Date</th><th>Name</th><th>Email</th><th>University</th><th>Country</th><th>Message</th></tr></thead>
-           <tbody>${d.leads.map(l => `<tr>
-             <td>${esc(String(l.created_at || '').slice(0, 10))}</td>
+      async function loadLeads() {
+        const d = await api("/api/admin/leads");
+        document.getElementById("table-leads").innerHTML = d.leads.length
+          ? `<table><thead><tr><th>Date</th><th>Name</th><th>Email</th><th>University</th><th>Country</th><th>Message</th></tr></thead>
+           <tbody>${d.leads
+             .map(
+               (l) => `<tr>
+             <td>${esc(String(l.created_at || "").slice(0, 10))}</td>
              <td>${esc(l.contact_name)}</td>
              <td><a href="mailto:${esc(l.work_email)}">${esc(l.work_email)}</a></td>
              <td>${esc(l.university_name)}</td>
              <td>${esc(l.country)}</td>
-             <td>${esc((l.message || '').slice(0, 120))}</td>
-           </tr>`).join('')}</tbody></table>`
-        : '<p class="empty-note">No university leads yet — they land here when the "For universities" form on the landing page is submitted.</p>';
-    }
-
-    let dqWired = false;
-    async function loadDataQuality() {
-      const a = await api('/api/admin/data-quality');
-      const dist = a.distribution;
-      document.getElementById('dq-stats').innerHTML = [
-        ['', a.count, 'Universities'],
-        ['good', a.average_score + '%', 'Avg quality score'],
-        ['good', a.by_status.Verified || 0, 'Verified'],
-        ['', a.by_status.Unknown || 0, 'Unknown source'],
-        ['warn', a.stale_count, 'Stale (need review)'],
-        ['', a.researched_tuition, 'Researched tuition'],
-      ].map(([cls, n, l]) => `<div class="stat ${cls}"><div class="n">${typeof n === 'number' ? nfmt(n) : esc(n)}</div><div class="l">${esc(l)}</div></div>`).join('');
-
-      document.getElementById('dq-missing').innerHTML = barTable(
-        a.missing_fields.map(m => ({ label: m.label, missing: m.missing })),
-        [{ key: 'label', label: 'Field' }, { key: 'missing', label: 'Records missing', num: true }],
-      );
-      document.getElementById('dq-distribution').innerHTML = barTable(
-        [['Excellent', dist.Excellent], ['Good', dist.Good], ['Needs Improvement', dist['Needs Improvement']], ['Incomplete', dist.Incomplete]].map(([band, n]) => ({ band, n })),
-        [{ key: 'band', label: 'Band' }, { key: 'n', label: 'Universities', num: true }],
-      );
-      document.getElementById('dq-note').textContent =
-        'Not scored per record because no data source provides them per university (reported here, never faked): ' + a.structurally_unavailable.join(', ') + '.';
-
-      await loadDqRecords();
-      if (!dqWired) {
-        dqWired = true;
-        ['dq-band', 'dq-status', 'dq-stale'].forEach(id => document.getElementById(id).addEventListener('change', loadDqRecords));
+             <td>${esc((l.message || "").slice(0, 120))}</td>
+           </tr>`,
+             )
+             .join("")}</tbody></table>`
+          : '<p class="empty-note">No university leads yet — they land here when the "For universities" form on the landing page is submitted.</p>';
       }
-    }
 
-    async function loadDqRecords() {
-      const band = document.getElementById('dq-band').value;
-      const status = document.getElementById('dq-status').value;
-      const stale = document.getElementById('dq-stale').checked ? '1' : '';
-      const qs = new URLSearchParams({ limit: '50' });
-      if (band) qs.set('band', band);
-      if (status) qs.set('status', status);
-      if (stale) qs.set('stale', '1');
-      const d = await api('/api/admin/data-quality/records?' + qs);
-      document.getElementById('dq-records-count').textContent = nfmt(d.count) + ' match — showing up to 50 (lowest score first)';
-      document.getElementById('dq-records').innerHTML = d.records.length
-        ? `<table><thead><tr><th>Score</th><th>Band</th><th>University</th><th>Country</th><th>Status</th><th>Verified</th><th>Missing</th></tr></thead>
-           <tbody>${d.records.map(r => `<tr>
+      let dqWired = false;
+      async function loadDataQuality() {
+        const a = await api("/api/admin/data-quality");
+        const dist = a.distribution;
+        document.getElementById("dq-stats").innerHTML = [
+          ["", a.count, "Universities"],
+          ["good", a.average_score + "%", "Avg quality score"],
+          ["good", a.by_status.Verified || 0, "Verified"],
+          ["", a.by_status.Unknown || 0, "Unknown source"],
+          ["warn", a.stale_count, "Stale (need review)"],
+          ["", a.researched_tuition, "Researched tuition"],
+        ]
+          .map(
+            ([cls, n, l]) =>
+              `<div class="stat ${cls}"><div class="n">${typeof n === "number" ? nfmt(n) : esc(n)}</div><div class="l">${esc(l)}</div></div>`,
+          )
+          .join("");
+
+        document.getElementById("dq-missing").innerHTML = barTable(
+          a.missing_fields.map((m) => ({ label: m.label, missing: m.missing })),
+          [
+            { key: "label", label: "Field" },
+            { key: "missing", label: "Records missing", num: true },
+          ],
+        );
+        document.getElementById("dq-distribution").innerHTML = barTable(
+          [
+            ["Excellent", dist.Excellent],
+            ["Good", dist.Good],
+            ["Needs Improvement", dist["Needs Improvement"]],
+            ["Incomplete", dist.Incomplete],
+          ].map(([band, n]) => ({ band, n })),
+          [
+            { key: "band", label: "Band" },
+            { key: "n", label: "Universities", num: true },
+          ],
+        );
+        document.getElementById("dq-note").textContent =
+          "Not scored per record because no data source provides them per university (reported here, never faked): " +
+          a.structurally_unavailable.join(", ") +
+          ".";
+
+        await loadDqRecords();
+        if (!dqWired) {
+          dqWired = true;
+          ["dq-band", "dq-status", "dq-stale"].forEach((id) =>
+            document
+              .getElementById(id)
+              .addEventListener("change", loadDqRecords),
+          );
+        }
+      }
+
+      async function loadDqRecords() {
+        const band = document.getElementById("dq-band").value;
+        const status = document.getElementById("dq-status").value;
+        const stale = document.getElementById("dq-stale").checked ? "1" : "";
+        const qs = new URLSearchParams({ limit: "50" });
+        if (band) qs.set("band", band);
+        if (status) qs.set("status", status);
+        if (stale) qs.set("stale", "1");
+        const d = await api("/api/admin/data-quality/records?" + qs);
+        document.getElementById("dq-records-count").textContent =
+          nfmt(d.count) + " match — showing up to 50 (lowest score first)";
+        document.getElementById("dq-records").innerHTML = d.records.length
+          ? `<table><thead><tr><th>Score</th><th>Band</th><th>University</th><th>Country</th><th>Status</th><th>Verified</th><th>Missing</th></tr></thead>
+           <tbody>${d.records
+             .map(
+               (r) => `<tr>
              <td class="num">${r.score}%</td>
              <td>${esc(r.band)}</td>
              <td>${esc(r.name)}</td>
              <td>${esc(r.country)}</td>
-             <td>${esc(r.verification_status)}${r.stale ? ' <span title="source data is old">· stale</span>' : ''}</td>
-             <td>${esc(r.last_verified_at || '—')}</td>
-             <td>${esc((r.missing || []).join(', ') || '—')}</td>
-           </tr>`).join('')}</tbody></table>`
-        : '<p class="empty-note">No records match this filter.</p>';
-    }
-
-    async function loadRetention() {
-      const d = await api('/api/admin/retention?weeks=6');
-      if (!d.cohorts.length) { document.getElementById('retention').innerHTML = '<p class="empty-note">Not enough data yet — check back after a week of traffic.</p>'; return; }
-      const weeks = d.weeks;
-      const heat = (pct) => {
-        if (pct == null) return '<span class="ret-cell" style="color:var(--faint)">—</span>';
-        const alpha = Math.max(0.08, Math.min(1, pct / 100));
-        const color = pct >= 40 ? `rgba(20,184,166,${alpha})` : pct >= 15 ? `rgba(233,185,73,${alpha})` : `rgba(214,69,80,${Math.max(0.12, alpha * 0.6)})`;
-        return `<span class="ret-cell" style="background:${color}">${pct}%</span>`;
-      };
-      document.getElementById('retention').innerHTML = `
-        <table class="retention-table"><thead><tr><th>Cohort</th><th>Size</th>${Array.from({ length: weeks }, (_, i) => `<th>Wk ${i}</th>`).join('')}</tr></thead>
-        <tbody>${d.cohorts.map(c => `<tr><td>${esc(c.week_start)}</td><td>${nfmt(c.size)}</td>${c.retention.map(heat).join('')}</tr>`).join('')}</tbody></table>
-        <p class="foot">% of each weekly cohort (grouped by the week they were first seen) that returned in a later week.</p>`;
-    }
-
-    async function loadAll() {
-      try {
-        await Promise.all([loadStats(), loadFunnel(), loadTraffic(), loadSearches(), loadRetention(), loadLeads(), loadDataQuality()]);
-      } catch (e) {
-        if (e.message !== 'unauthorized') console.error(e);
+             <td>${esc(r.verification_status)}${r.stale ? ' <span title="source data is old">· stale</span>' : ""}</td>
+             <td>${esc(r.last_verified_at || "—")}</td>
+             <td>${esc((r.missing || []).join(", ") || "—")}</td>
+           </tr>`,
+             )
+             .join("")}</tbody></table>`
+          : '<p class="empty-note">No records match this filter.</p>';
       }
-    }
 
-    // ---- boot: are we already signed in? ----
-    (async () => {
-      try {
-        await api('/api/admin/me');
-        showDash();
-        loadAll();
-      } catch { showGate(); }
-    })();
-  </script>
-</body>
+      async function loadRetention() {
+        const d = await api("/api/admin/retention?weeks=6");
+        if (!d.cohorts.length) {
+          document.getElementById("retention").innerHTML =
+            '<p class="empty-note">Not enough data yet — check back after a week of traffic.</p>';
+          return;
+        }
+        const weeks = d.weeks;
+        const heat = (pct) => {
+          if (pct == null)
+            return '<span class="ret-cell" style="color:var(--faint)">—</span>';
+          const alpha = Math.max(0.08, Math.min(1, pct / 100));
+          const color =
+            pct >= 40
+              ? `rgba(20,184,166,${alpha})`
+              : pct >= 15
+                ? `rgba(233,185,73,${alpha})`
+                : `rgba(214,69,80,${Math.max(0.12, alpha * 0.6)})`;
+          return `<span class="ret-cell" style="background:${color}">${pct}%</span>`;
+        };
+        document.getElementById("retention").innerHTML = `
+        <table class="retention-table"><thead><tr><th>Cohort</th><th>Size</th>${Array.from({ length: weeks }, (_, i) => `<th>Wk ${i}</th>`).join("")}</tr></thead>
+        <tbody>${d.cohorts.map((c) => `<tr><td>${esc(c.week_start)}</td><td>${nfmt(c.size)}</td>${c.retention.map(heat).join("")}</tr>`).join("")}</tbody></table>
+        <p class="foot">% of each weekly cohort (grouped by the week they were first seen) that returned in a later week.</p>`;
+      }
+
+      async function loadAll() {
+        try {
+          await Promise.all([
+            loadStats(),
+            loadFunnel(),
+            loadTraffic(),
+            loadSearches(),
+            loadRetention(),
+            loadLeads(),
+            loadDataQuality(),
+          ]);
+        } catch (e) {
+          if (e.message !== "unauthorized") console.error(e);
+        }
+      }
+
+      // ---- boot: are we already signed in? ----
+      (async () => {
+        try {
+          await api("/api/admin/me");
+          showDash();
+          loadAll();
+        } catch {
+          showGate();
+        }
+      })();
+    </script>
+  </body>
 </html>

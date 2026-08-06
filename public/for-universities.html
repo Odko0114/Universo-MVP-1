@@ -1,324 +1,594 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#0B1F3A" />
-  <title>For universities — Universo</title>
-  <meta name="description" content="Reach international students who are actively deciding where to apply — and see the search, comparison and drop-off behavior your current recruitment channels can't show you. Claim your university's profile on Universo." />
-  <link rel="icon" href="/favicon.svg" />
-  <link rel="canonical" href="/for-universities" />
-  <link rel="stylesheet" href="/css/styles.css" />
-</head>
-<body class="lp-body">
-
-  <header class="topbar lp-header" style="position:static">
-    <div class="topbar__inner">
-      <a class="brand" href="/discover" aria-label="Universo — Same Start. Equal Chance.">
-        <span class="brand__mark" aria-hidden="true">
-          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-            <path fill="currentColor" d="M18 20 C -6 80 40 165 100 190 C 96 140 90 60 88 15 Z"/>
-            <path fill="currentColor" d="M182 20 C 206 80 160 165 100 190 C 104 140 110 60 112 15 Z"/>
-          </svg>
-        </span>
-        <span class="brand__wordmark">
-          <span class="brand__name">Universo</span>
-          <span class="brand__tag">Same Start. Equal Chance.</span>
-        </span>
-      </a>
-      <nav class="lp-nav" aria-label="Primary">
-        <a href="/partners" class="lp-nav__link">Partner sign in</a>
-        <a href="#claim" class="btn btn--gold btn--sm">Claim your profile</a>
-      </nav>
-    </div>
-  </header>
-
-  <main>
-    <!-- ============ Hero ============ -->
-    <section class="lp-hero">
-      <div class="lp-hero__blobs" aria-hidden="true">
-        <span class="lp-blob lp-blob--1"></span>
-        <span class="lp-blob lp-blob--2"></span>
-        <span class="lp-blob lp-blob--3"></span>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0B1F3A" />
+    <title>For universities — Universo</title>
+    <meta
+      name="description"
+      content="Reach international students who are actively deciding where to apply — and see the search, comparison and drop-off behavior your current recruitment channels can't show you. Claim your university's profile on Universo."
+    />
+    <link rel="icon" href="/favicon.svg" />
+    <link rel="canonical" href="/for-universities" />
+    <link rel="stylesheet" href="/css/styles.css" />
+  </head>
+  <body class="lp-body">
+    <header class="topbar lp-header" style="position: static">
+      <div class="topbar__inner">
+        <a
+          class="brand"
+          href="/discover"
+          aria-label="Universo — Same Start. Equal Chance."
+        >
+          <span class="brand__mark" aria-hidden="true">
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+              <path
+                fill="currentColor"
+                d="M18 20 C -6 80 40 165 100 190 C 96 140 90 60 88 15 Z"
+              />
+              <path
+                fill="currentColor"
+                d="M182 20 C 206 80 160 165 100 190 C 104 140 110 60 112 15 Z"
+              />
+            </svg>
+          </span>
+          <span class="brand__wordmark">
+            <span class="brand__name">Universo</span>
+            <span class="brand__tag">Same Start. Equal Chance.</span>
+          </span>
+        </a>
+        <nav class="lp-nav" aria-label="Primary">
+          <a href="/partners" class="lp-nav__link">Partner sign in</a>
+          <a href="#claim" class="btn btn--gold btn--sm">Claim your profile</a>
+        </nav>
       </div>
-      <div class="lp-wrap lp-hero__grid">
-        <div class="lp-hero__copy">
-          <p class="hero__tagline">For universities</p>
-          <h1 class="lp-hero__title">Your recruitment budget can't see the students who <span class="accent">didn't convert</span></h1>
-          <p class="lp-hero__sub">Fairs, agents and ranking-site placements tell you nothing about what prospective students searched, what they compared you against, or where they stopped reading. Universo is built to give you that view — plus a direct channel to students actively deciding where to apply.</p>
-          <div class="lp-hero__ctas">
-            <a href="#claim" class="btn btn--gold lp-cta">Claim your profile</a>
-            <a href="/discover" class="btn btn--ghost-light lp-cta">See the student side ↗</a>
-          </div>
-          <ul class="lp-checklist" aria-label="Key facts">
-            <li>✓ Your profile is already listed — claiming it puts you in control</li>
-            <li>✓ Engagement analytics: views, saves, apply clicks, viewer countries</li>
-            <li>✓ Free for founding pilot partners — €990/month per institution after the pilot</li>
-          </ul>
+    </header>
+
+    <main>
+      <!-- ============ Hero ============ -->
+      <section class="lp-hero">
+        <div class="lp-hero__blobs" aria-hidden="true">
+          <span class="lp-blob lp-blob--1"></span>
+          <span class="lp-blob lp-blob--2"></span>
+          <span class="lp-blob lp-blob--3"></span>
         </div>
-      </div>
-      <svg class="lp-hero__wave" viewBox="0 0 1440 60" preserveAspectRatio="none" aria-hidden="true"><path d="M0 30 C 360 60 1080 0 1440 30 L1440 60 L0 60 Z" fill="var(--bg)"/></svg>
-    </section>
+        <div class="lp-wrap lp-hero__grid">
+          <div class="lp-hero__copy">
+            <p class="hero__tagline">For universities</p>
+            <h1 class="lp-hero__title">
+              Your recruitment budget can't see the students who
+              <span class="accent">didn't convert</span>
+            </h1>
+            <p class="lp-hero__sub">
+              Fairs, agents and ranking-site placements tell you nothing about
+              what prospective students searched, what they compared you
+              against, or where they stopped reading. Universo is built to give
+              you that view — plus a direct channel to students actively
+              deciding where to apply.
+            </p>
+            <div class="lp-hero__ctas">
+              <a href="#claim" class="btn btn--gold lp-cta"
+                >Claim your profile</a
+              >
+              <a href="/discover" class="btn btn--ghost-light lp-cta"
+                >See the student side ↗</a
+              >
+            </div>
+            <ul class="lp-checklist" aria-label="Key facts">
+              <li>
+                ✓ Your profile is already listed — claiming it puts you in
+                control
+              </li>
+              <li>
+                ✓ Engagement analytics: views, saves, apply clicks, viewer
+                countries
+              </li>
+              <li>
+                ✓ Free for founding pilot partners — €990/month per institution
+                after the pilot
+              </li>
+            </ul>
+          </div>
+        </div>
+        <svg
+          class="lp-hero__wave"
+          viewBox="0 0 1440 60"
+          preserveAspectRatio="none"
+          aria-hidden="true"
+        >
+          <path
+            d="M0 30 C 360 60 1080 0 1440 30 L1440 60 L0 60 Z"
+            fill="var(--bg)"
+          />
+        </svg>
+      </section>
 
-    <!-- ============ Stats ============ -->
-    <section class="lp-wrap lp-stats" aria-label="Platform statistics">
-      <!-- data-count drives the JS count-up; the visible text is the real
+      <!-- ============ Stats ============ -->
+      <section class="lp-wrap lp-stats" aria-label="Platform statistics">
+        <!-- data-count drives the JS count-up; the visible text is the real
            number so the stat never shows 0 without/before JS. Both are
            injected at boot from the live dataset (see server.js). -->
-      <!-- The raw directory total (4,004) is deliberately NOT shown here.
+        <!-- The raw directory total (4,004) is deliberately NOT shown here.
            Advertising it beside the verified count tells a buyer that most of
            the catalogue is thin — the opposite of the intended message. -->
-      <div class="lp-stat" data-reveal><div class="lp-stat__n" data-count="{{VERIFIED_RAW}}">{{VERIFIED}}</div><div class="lp-stat__l">Verified profiles</div></div>
-      <div class="lp-stat" data-reveal><div class="lp-stat__n" data-count="{{COUNTRIES_RAW}}">{{COUNTRIES}}</div><div class="lp-stat__l">Countries covered</div></div>
-    </section>
+        <div class="lp-stat" data-reveal>
+          <div class="lp-stat__n" data-count="{{VERIFIED_RAW}}">
+            {{VERIFIED}}
+          </div>
+          <div class="lp-stat__l">Verified profiles</div>
+        </div>
+        <div class="lp-stat" data-reveal>
+          <div class="lp-stat__n" data-count="{{COUNTRIES_RAW}}">
+            {{COUNTRIES}}
+          </div>
+          <div class="lp-stat__l">Countries covered</div>
+        </div>
+      </section>
 
-    <!-- ============ What you get ============ -->
-    <section class="lp-wrap lp-section">
-      <h2 class="lp-h2" data-reveal>What claiming your profile unlocks</h2>
-      <div class="lp-trust">
-        <div class="lp-trust__item" data-reveal>
-          <div class="lp-trust__icon"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 15l4-6 3 3 5-8"/></svg></div>
-          <h3>Engagement analytics</h3>
-          <p>Daily profile views, saves and apply clicks on real time-series charts — plus which countries your viewers come from. Not a quarterly report.</p>
+      <!-- ============ What you get ============ -->
+      <section class="lp-wrap lp-section">
+        <h2 class="lp-h2" data-reveal>What claiming your profile unlocks</h2>
+        <div class="lp-trust">
+          <div class="lp-trust__item" data-reveal>
+            <div class="lp-trust__icon">
+              <svg
+                width="34"
+                height="34"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M3 3v18h18" />
+                <path d="M7 15l4-6 3 3 5-8" />
+              </svg>
+            </div>
+            <h3>Engagement analytics</h3>
+            <p>
+              Daily profile views, saves and apply clicks on real time-series
+              charts — plus which countries your viewers come from. Not a
+              quarterly report.
+            </p>
+          </div>
+          <div class="lp-trust__item" data-reveal>
+            <div class="lp-trust__icon">
+              <svg
+                width="34"
+                height="34"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path
+                  d="M21 11.5a8.4 8.4 0 0 1-8.5 8.3 8.6 8.6 0 0 1-3.9-.9L3 21l2.1-5.4a8.2 8.2 0 0 1-1-4A8.4 8.4 0 0 1 12.6 3.3a8.4 8.4 0 0 1 8.4 8.2z"
+                />
+              </svg>
+            </div>
+            <h3>A channel, not a listing</h3>
+            <p>
+              Students discover you inside the tool they're already using to
+              decide — filtered by field, budget and language, matched to their
+              profile.
+            </p>
+          </div>
+          <div class="lp-trust__item" data-reveal>
+            <div class="lp-trust__icon">
+              <svg
+                width="34"
+                height="34"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M12 2 3 7v6c0 5 3.8 8.4 9 9 5.2-.6 9-4 9-9V7l-9-5z" />
+                <path d="m9 12 2 2 4-4" />
+              </svg>
+            </div>
+            <h3>Control of your profile</h3>
+            <p>
+              Your university is already listed from official register data.
+              Claiming verifies you — so your programs, costs and story are told
+              your way.
+            </p>
+          </div>
         </div>
-        <div class="lp-trust__item" data-reveal>
-          <div class="lp-trust__icon"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.3 8.6 8.6 0 0 1-3.9-.9L3 21l2.1-5.4a8.2 8.2 0 0 1-1-4A8.4 8.4 0 0 1 12.6 3.3a8.4 8.4 0 0 1 8.4 8.2z"/></svg></div>
-          <h3>A channel, not a listing</h3>
-          <p>Students discover you inside the tool they're already using to decide — filtered by field, budget and language, matched to their profile.</p>
-        </div>
-        <div class="lp-trust__item" data-reveal>
-          <div class="lp-trust__icon"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2 3 7v6c0 5 3.8 8.4 9 9 5.2-.6 9-4 9-9V7l-9-5z"/><path d="m9 12 2 2 4-4"/></svg></div>
-          <h3>Control of your profile</h3>
-          <p>Your university is already listed from official register data. Claiming verifies you — so your programs, costs and story are told your way.</p>
-        </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- ============ Dashboard demo ============ -->
-    <section class="lp-wrap lp-section" style="text-align:center">
-      <h2 class="lp-h2" data-reveal>See your dashboard before you claim</h2>
-      <p class="lp-lede" data-reveal style="margin-bottom:16px">A live, interactive example — the exact analytics view you'd get, with illustrative numbers. No sign-up needed.</p>
-      <a href="/partners/demo" class="btn btn--gold lp-cta" data-reveal>See what your dashboard would look like ↗</a>
-    </section>
+      <!-- ============ Dashboard demo ============ -->
+      <section class="lp-wrap lp-section" style="text-align: center">
+        <h2 class="lp-h2" data-reveal>See your dashboard before you claim</h2>
+        <p class="lp-lede" data-reveal style="margin-bottom: 16px">
+          A live, interactive example — the exact analytics view you'd get, with
+          illustrative numbers. No sign-up needed.
+        </p>
+        <a href="/partners/demo" class="btn btn--gold lp-cta" data-reveal
+          >See what your dashboard would look like ↗</a
+        >
+      </section>
 
-    <!-- ============ Pricing ============ -->
-    <section class="lp-wrap lp-section" id="pricing">
-      <h2 class="lp-h2" data-reveal>Pricing</h2>
-      <div class="lp-pricing" data-reveal>
-        <div class="lp-pricing__card lp-pricing__card--pilot">
-          <p class="lp-pricing__tag">Founding pilot</p>
-          <p class="lp-pricing__price">Free</p>
-          <p class="muted" style="margin:0 0 12px">For founding pilot partners, while we build with you.</p>
-          <ul class="lp-checklist lp-checklist--dark">
-            <li>✓ Full analytics dashboard</li>
-            <li>✓ Direct input on what we build next</li>
-            <li>✓ Locked-in founding-partner terms when we introduce paid plans</li>
-          </ul>
+      <!-- ============ Pricing ============ -->
+      <section class="lp-wrap lp-section" id="pricing">
+        <h2 class="lp-h2" data-reveal>Pricing</h2>
+        <div class="lp-pricing" data-reveal>
+          <div class="lp-pricing__card lp-pricing__card--pilot">
+            <p class="lp-pricing__tag">Founding pilot</p>
+            <p class="lp-pricing__price">Free</p>
+            <p class="muted" style="margin: 0 0 12px">
+              For founding pilot partners, while we build with you.
+            </p>
+            <ul class="lp-checklist lp-checklist--dark">
+              <li>✓ Full analytics dashboard</li>
+              <li>✓ Direct input on what we build next</li>
+              <li>
+                ✓ Locked-in founding-partner terms when we introduce paid plans
+              </li>
+            </ul>
+          </div>
+          <div class="lp-pricing__card">
+            <p class="lp-pricing__tag">After the pilot</p>
+            <p class="lp-pricing__price">€990<span>/month</span></p>
+            <p class="muted" style="margin: 0 0 12px">
+              Everything you need to run international recruitment on Universo.
+            </p>
+            <ul class="lp-checklist lp-checklist--dark">
+              <li>
+                ✓ Full engagement analytics dashboard (views, saves, apply
+                clicks, viewer countries)
+              </li>
+              <li>
+                ✓ Unlimited profile edits — your programs, tuition and story,
+                kept current
+              </li>
+              <li>✓ Priority placement in matched student results</li>
+              <li>✓ Monthly engagement report</li>
+              <li>✓ Direct applicant leads and inbound messages</li>
+            </ul>
+          </div>
         </div>
-        <div class="lp-pricing__card">
-          <p class="lp-pricing__tag">After the pilot</p>
-          <p class="lp-pricing__price">€990<span>/month</span></p>
-          <p class="muted" style="margin:0 0 12px">Everything you need to run international recruitment on Universo.</p>
-          <ul class="lp-checklist lp-checklist--dark">
-            <li>✓ Full engagement analytics dashboard (views, saves, apply clicks, viewer countries)</li>
-            <li>✓ Unlimited profile edits — your programs, tuition and story, kept current</li>
-            <li>✓ Priority placement in matched student results</li>
-            <li>✓ Monthly engagement report</li>
-            <li>✓ Direct applicant leads and inbound messages</li>
-          </ul>
-        </div>
-      </div>
-      <p class="muted" data-reveal style="font-size:0.9rem;margin-top:12px">No commitment to claim your profile now — pricing only applies once you're on a paid plan after the pilot.</p>
-    </section>
+        <p
+          class="muted"
+          data-reveal
+          style="font-size: 0.9rem; margin-top: 12px"
+        >
+          No commitment to claim your profile now — pricing only applies once
+          you're on a paid plan after the pilot.
+        </p>
+      </section>
 
-    <!-- ============ Founding partner invitation (no testimonials yet — honest
+      <!-- ============ Founding partner invitation (no testimonials yet — honest
          about it, framed as the advantage it actually is: see the Pricing
          section above for the founding-partner terms this refers to) ============ -->
-    <section class="lp-wrap lp-section" id="testimonials">
-      <h2 class="lp-h2" data-reveal>Be one of our first partners</h2>
-      <div class="lp-testimonials" data-reveal>
-        <div class="lp-testimonial">
-          <p class="lp-testimonial__quote">We don't have partner testimonials yet — we're that early. What we do have: founding-partner pricing locked in now, before anyone else claims their profile, and direct input on what we build next.</p>
-          <p class="lp-testimonial__by">That's the trade-off of being first. It runs in your favor.</p>
+      <section class="lp-wrap lp-section" id="testimonials">
+        <h2 class="lp-h2" data-reveal>Be one of our first partners</h2>
+        <div class="lp-testimonials" data-reveal>
+          <div class="lp-testimonial">
+            <p class="lp-testimonial__quote">
+              We don't have partner testimonials yet — we're that early. What we
+              do have: founding-partner pricing locked in now, before anyone
+              else claims their profile, and direct input on what we build next.
+            </p>
+            <p class="lp-testimonial__by">
+              That's the trade-off of being first. It runs in your favor.
+            </p>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- ============ Mission ============ -->
-    <section class="lp-mission" id="mission">
-      <div class="lp-wrap" data-reveal>
-        <p class="lp-mission__kicker">Why we built this</p>
-        <blockquote class="lp-mission__quote">
-          I believe where you're born shouldn't determine how you begin. Universo exists to give every student an equal start and every university a smarter way to reach them.
-        </blockquote>
-        <p class="lp-mission__by">— Odgerel Batdelger, founder and CEO, Universo</p>
-      </div>
-    </section>
+      <!-- ============ Mission ============ -->
+      <section class="lp-mission" id="mission">
+        <div class="lp-wrap" data-reveal>
+          <p class="lp-mission__kicker">Why we built this</p>
+          <blockquote class="lp-mission__quote">
+            I believe where you're born shouldn't determine how you begin.
+            Universo exists to give every student an equal start and every
+            university a smarter way to reach them.
+          </blockquote>
+          <p class="lp-mission__by">
+            — Odgerel Batdelger, founder and CEO, Universo
+          </p>
+        </div>
+      </section>
 
-    <!-- ============ Data handling (GDPR) ============ -->
-    <section class="lp-wrap lp-section" id="data-handling">
-      <h2 class="lp-h2" data-reveal>How we handle data</h2>
-      <div class="lp-datacard" data-reveal>
-        <p>Universo is built so a university can use it without ever receiving personal data about a
-        student who hasn't chosen to contact them. Partner analytics are aggregate counts only —
-        there is no screen anywhere in the product that shows you an individual student.</p>
-        <ul>
-          <li><strong>What we collect:</strong> anonymous engagement events (profile views, saves, apply clicks, searches) tied to a random client id stored in a first-party cookie — never a name or email.</li>
-          <li><strong>What partners can see:</strong> aggregate counts and trends for your own institution only — views, saves, apply clicks, and viewer countries. Never an individual student, and never another institution's numbers.</li>
-          <!-- ⚠ DO NOT fill this in with "EU" until the service actually runs in
+      <!-- ============ Data handling (GDPR) ============ -->
+      <section class="lp-wrap lp-section" id="data-handling">
+        <h2 class="lp-h2" data-reveal>How we handle data</h2>
+        <div class="lp-datacard" data-reveal>
+          <p>
+            Universo is built so a university can use it without ever receiving
+            personal data about a student who hasn't chosen to contact them.
+            Partner analytics are aggregate counts only — there is no screen
+            anywhere in the product that shows you an individual student.
+          </p>
+          <ul>
+            <li>
+              <strong>What we collect:</strong> anonymous engagement events
+              (profile views, saves, apply clicks, searches) tied to a random
+              client id stored in a first-party cookie — never a name or email.
+            </li>
+            <li>
+              <strong>What partners can see:</strong> aggregate counts and
+              trends for your own institution only — views, saves, apply clicks,
+              and viewer countries. Never an individual student, and never
+              another institution's numbers.
+            </li>
+            <!-- ⚠ DO NOT fill this in with "EU" until the service actually runs in
                an EU region. As of now render.yaml declares no region, so the
                service and its disk run in Render's DEFAULT region: Oregon, US.
                Claiming EU residency here would be a false statement in the
                exact section a German or Finnish DPO will read first.
                Fix = add `region: frankfurt` in render.yaml and recreate the
                service, then replace this placeholder with the EU wording. -->
-          <li><strong>Where it is stored:</strong> [DATA_RESIDENCY_STATUS — see note in page source before publishing]</li>
-          <li><strong>Legal basis:</strong> legitimate interest (GDPR Art. 6(1)(f)) for anonymous product analytics; explicit consent (Art. 6(1)(a)) for any student who creates an account or opts into email updates. Students can export or permanently delete their data, including their event history, at any time.</li>
-        </ul>
-        <p class="muted" style="margin:12px 0 0">Full details in our <a href="/privacy">privacy policy</a>. Questions from your DPO are welcome before you claim — email <a href="mailto:join.universo@gmail.com">join.universo@gmail.com</a>.</p>
-      </div>
-    </section>
-
-    <!-- ============ Claim / contact form ============ -->
-    <section class="lp-wrap lp-section" id="claim">
-      <h2 class="lp-h2" data-reveal>Claim your profile</h2>
-      <p class="lp-lede" data-reveal>Tell us who you are and which institution you represent. We verify every claim by hand (that's the point), then set up your partner access — analytics dashboard included. We reply within 2 business days.</p>
-      <p class="lp-lede" data-reveal style="font-size:0.95rem">Free for founding pilot universities — see <a href="#pricing">pricing</a> for what comes after. No commitment to claim now.</p>
-      <form class="lp-uni-form" id="uni-form" data-reveal novalidate>
-        <div class="hp-field" aria-hidden="true">
-          <label for="company_website">Leave this field blank</label>
-          <input id="company_website" name="company_website" type="text" tabindex="-1" autocomplete="off" />
+            <li>
+              <strong>Where it is stored:</strong> [DATA_RESIDENCY_STATUS — see
+              note in page source before publishing]
+            </li>
+            <li>
+              <strong>Legal basis:</strong> legitimate interest (GDPR Art.
+              6(1)(f)) for anonymous product analytics; explicit consent (Art.
+              6(1)(a)) for any student who creates an account or opts into email
+              updates. Students can export or permanently delete their data,
+              including their event history, at any time.
+            </li>
+          </ul>
+          <p class="muted" style="margin: 12px 0 0">
+            Full details in our <a href="/privacy">privacy policy</a>. Questions
+            from your DPO are welcome before you claim — email
+            <a href="mailto:join.universo@gmail.com">join.universo@gmail.com</a
+            >.
+          </p>
         </div>
-        <div class="field"><label for="uf-name">Your name *</label><input id="uf-name" required maxlength="120" /></div>
-        <div class="field"><label for="uf-email">Work email *</label><input id="uf-email" type="email" required maxlength="254" /></div>
-        <div class="field"><label for="uf-uni">University *</label><input id="uf-uni" required maxlength="160" /></div>
-        <div class="field"><label for="uf-country">Country</label><input id="uf-country" maxlength="80" placeholder="e.g. Finland" /></div>
-        <div class="field lp-uni-form__wide"><label for="uf-msg">Anything we should know? (optional)</label><textarea id="uf-msg" rows="3" maxlength="1000"></textarea></div>
-        <div class="lp-uni-form__wide">
-          <button type="submit" class="btn btn--primary" id="uf-submit">Request access</button>
-          <p class="lp-uni-form__err" id="uf-error" hidden></p>
+      </section>
+
+      <!-- ============ Claim / contact form ============ -->
+      <section class="lp-wrap lp-section" id="claim">
+        <h2 class="lp-h2" data-reveal>Claim your profile</h2>
+        <p class="lp-lede" data-reveal>
+          Tell us who you are and which institution you represent. We verify
+          every claim by hand (that's the point), then set up your partner
+          access — analytics dashboard included. We reply within 2 business
+          days.
+        </p>
+        <p class="lp-lede" data-reveal style="font-size: 0.95rem">
+          Free for founding pilot universities — see
+          <a href="#pricing">pricing</a> for what comes after. No commitment to
+          claim now.
+        </p>
+        <form class="lp-uni-form" id="uni-form" data-reveal novalidate>
+          <div class="hp-field" aria-hidden="true">
+            <label for="company_website">Leave this field blank</label>
+            <input
+              id="company_website"
+              name="company_website"
+              type="text"
+              tabindex="-1"
+              autocomplete="off"
+            />
+          </div>
+          <div class="field">
+            <label for="uf-name">Your name *</label
+            ><input id="uf-name" required maxlength="120" />
+          </div>
+          <div class="field">
+            <label for="uf-email">Work email *</label
+            ><input id="uf-email" type="email" required maxlength="254" />
+          </div>
+          <div class="field">
+            <label for="uf-uni">University *</label
+            ><input id="uf-uni" required maxlength="160" />
+          </div>
+          <div class="field">
+            <label for="uf-country">Country</label
+            ><input id="uf-country" maxlength="80" placeholder="e.g. Finland" />
+          </div>
+          <div class="field lp-uni-form__wide">
+            <label for="uf-msg">Anything we should know? (optional)</label
+            ><textarea id="uf-msg" rows="3" maxlength="1000"></textarea>
+          </div>
+          <div class="lp-uni-form__wide">
+            <button type="submit" class="btn btn--primary" id="uf-submit">
+              Request access
+            </button>
+            <p class="lp-uni-form__err" id="uf-error" hidden></p>
+          </div>
+        </form>
+        <div class="lp-uni-form__done" id="uni-form-done" hidden>
+          <h3>Got it — thank you.</h3>
+          <p>
+            We verify and reply to every claim within 2 business days. Urgent,
+            or prefer email? Write to
+            <a href="mailto:join.universo@gmail.com">join.universo@gmail.com</a
+            >.
+          </p>
         </div>
-      </form>
-      <div class="lp-uni-form__done" id="uni-form-done" hidden>
-        <h3>Got it — thank you.</h3>
-        <p>We verify and reply to every claim within 2 business days. Urgent, or prefer email? Write to <a href="mailto:join.universo@gmail.com">join.universo@gmail.com</a>.</p>
+      </section>
+    </main>
+
+    <footer class="lp-footer">
+      <div class="lp-wrap lp-footer__inner">
+        <div class="brand">
+          <span
+            class="brand__mark"
+            aria-hidden="true"
+            style="color: var(--navy-900)"
+          >
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+              <path
+                fill="currentColor"
+                d="M18 20 C -6 80 40 165 100 190 C 96 140 90 60 88 15 Z"
+              />
+              <path
+                fill="currentColor"
+                d="M182 20 C 206 80 160 165 100 190 C 104 140 110 60 112 15 Z"
+              />
+            </svg>
+          </span>
+          <span class="brand__wordmark">
+            <span class="brand__name" style="color: var(--navy-900)"
+              >Universo</span
+            >
+          </span>
+        </div>
+        <nav class="lp-footer__links" aria-label="Footer">
+          <a href="/discover">For students</a>
+          <a href="/partners">Partner sign in</a>
+          <a href="/privacy">Privacy</a>
+        </nav>
+        <p class="lp-footer__copy">
+          © 2026 Universo. Same Start. Equal Chance.
+        </p>
       </div>
-    </section>
-  </main>
+    </footer>
 
-  <footer class="lp-footer">
-    <div class="lp-wrap lp-footer__inner">
-      <div class="brand">
-        <span class="brand__mark" aria-hidden="true" style="color:var(--navy-900)">
-          <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-            <path fill="currentColor" d="M18 20 C -6 80 40 165 100 190 C 96 140 90 60 88 15 Z"/>
-            <path fill="currentColor" d="M182 20 C 206 80 160 165 100 190 C 104 140 110 60 112 15 Z"/>
-          </svg>
-        </span>
-        <span class="brand__wordmark">
-          <span class="brand__name" style="color:var(--navy-900)">Universo</span>
-        </span>
-      </div>
-      <nav class="lp-footer__links" aria-label="Footer">
-        <a href="/discover">For students</a>
-        <a href="/partners">Partner sign in</a>
-        <a href="/privacy">Privacy</a>
-      </nav>
-      <p class="lp-footer__copy">© 2026 Universo. Same Start. Equal Chance.</p>
-    </div>
-  </footer>
+    <script>
+      (function () {
+        "use strict";
+        var reduceMotion =
+          window.matchMedia &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  <script>
-    (function () {
-      'use strict';
-      var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-      // ---- scroll-reveal ----------------------------------------------------
-      var revealEls = document.querySelectorAll('[data-reveal]');
-      if (reduceMotion || !('IntersectionObserver' in window)) {
-        revealEls.forEach(function (el) { el.classList.add('is-visible'); });
-      } else {
-        var io = new IntersectionObserver(function (entries) {
-          entries.forEach(function (entry) {
-            if (entry.isIntersecting) { entry.target.classList.add('is-visible'); io.unobserve(entry.target); }
+        // ---- scroll-reveal ----------------------------------------------------
+        var revealEls = document.querySelectorAll("[data-reveal]");
+        if (reduceMotion || !("IntersectionObserver" in window)) {
+          revealEls.forEach(function (el) {
+            el.classList.add("is-visible");
           });
-        }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
-        revealEls.forEach(function (el) { io.observe(el); });
-      }
-
-      // ---- count-up stats ---------------------------------------------------
-      function countUp(el) {
-        var target = parseInt(el.dataset.count, 10);
-        // The real number is already server-rendered into the element (so it
-        // never shows 0 without JS). Only animate up from 0 when the element
-        // is actually starting from empty/zero — never flash the real number
-        // back down to 0 first.
-        var current = parseInt((el.textContent || '').replace(/[^0-9]/g, ''), 10);
-        if (current === target) return;
-        if (reduceMotion || !target) { el.textContent = target ? target.toLocaleString('en-US') : el.textContent; return; }
-        var start = performance.now(), duration = 1200;
-        function tick(now) {
-          var p = Math.min(1, (now - start) / duration);
-          var eased = 1 - Math.pow(1 - p, 3);
-          el.textContent = Math.round(target * eased).toLocaleString('en-US');
-          if (p < 1) requestAnimationFrame(tick);
+        } else {
+          var io = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                  entry.target.classList.add("is-visible");
+                  io.unobserve(entry.target);
+                }
+              });
+            },
+            { threshold: 0.15, rootMargin: "0px 0px -40px 0px" },
+          );
+          revealEls.forEach(function (el) {
+            io.observe(el);
+          });
         }
-        requestAnimationFrame(tick);
-      }
-      var counters = document.querySelectorAll('[data-count]');
-      if ('IntersectionObserver' in window) {
-        var cio = new IntersectionObserver(function (entries) {
-          entries.forEach(function (entry) {
-            if (entry.isIntersecting) { countUp(entry.target); cio.unobserve(entry.target); }
-          });
-        }, { threshold: 0.6 });
-        counters.forEach(function (el) { cio.observe(el); });
-      } else {
-        counters.forEach(countUp);
-      }
 
-      // ---- header shadow on scroll ------------------------------------------
-      var header = document.querySelector('.lp-header');
-      window.addEventListener('scroll', function () {
-        header.classList.toggle('is-scrolled', window.scrollY > 8);
-      }, { passive: true });
-
-      // ---- claim/contact form (POST /api/pilot-leads) -----------------------
-      var uniForm = document.getElementById('uni-form');
-      uniForm.addEventListener('submit', function (e) {
-        e.preventDefault();
-        var btn = document.getElementById('uf-submit');
-        var errEl = document.getElementById('uf-error');
-        errEl.hidden = true;
-        btn.disabled = true;
-        btn.textContent = 'Sending…';
-        fetch('/api/pilot-leads', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'same-origin',
-          body: JSON.stringify({
-            contact_name: document.getElementById('uf-name').value,
-            work_email: document.getElementById('uf-email').value,
-            university_name: document.getElementById('uf-uni').value,
-            country: document.getElementById('uf-country').value,
-            message: document.getElementById('uf-msg').value,
-            company_website: document.getElementById('company_website').value, // honeypot
-          }),
-        }).then(function (r) {
-          return r.json().catch(function () { return {}; }).then(function (data) {
-            if (!r.ok) throw new Error(data.error || 'Something went wrong. Try again.');
-            uniForm.hidden = true;
-            document.getElementById('uni-form-done').hidden = false;
+        // ---- count-up stats ---------------------------------------------------
+        function countUp(el) {
+          var target = parseInt(el.dataset.count, 10);
+          // The real number is already server-rendered into the element (so it
+          // never shows 0 without JS). Only animate up from 0 when the element
+          // is actually starting from empty/zero — never flash the real number
+          // back down to 0 first.
+          var current = parseInt(
+            (el.textContent || "").replace(/[^0-9]/g, ""),
+            10,
+          );
+          if (current === target) return;
+          if (reduceMotion || !target) {
+            el.textContent = target
+              ? target.toLocaleString("en-US")
+              : el.textContent;
+            return;
+          }
+          var start = performance.now(),
+            duration = 1200;
+          function tick(now) {
+            var p = Math.min(1, (now - start) / duration);
+            var eased = 1 - Math.pow(1 - p, 3);
+            el.textContent = Math.round(target * eased).toLocaleString("en-US");
+            if (p < 1) requestAnimationFrame(tick);
+          }
+          requestAnimationFrame(tick);
+        }
+        var counters = document.querySelectorAll("[data-count]");
+        if ("IntersectionObserver" in window) {
+          var cio = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                  countUp(entry.target);
+                  cio.unobserve(entry.target);
+                }
+              });
+            },
+            { threshold: 0.6 },
+          );
+          counters.forEach(function (el) {
+            cio.observe(el);
           });
-        }).catch(function (err) {
-          errEl.textContent = err.message;
-          errEl.hidden = false;
-        }).finally(function () {
-          btn.disabled = false;
-          btn.textContent = 'Request access';
+        } else {
+          counters.forEach(countUp);
+        }
+
+        // ---- header shadow on scroll ------------------------------------------
+        var header = document.querySelector(".lp-header");
+        window.addEventListener(
+          "scroll",
+          function () {
+            header.classList.toggle("is-scrolled", window.scrollY > 8);
+          },
+          { passive: true },
+        );
+
+        // ---- claim/contact form (POST /api/pilot-leads) -----------------------
+        var uniForm = document.getElementById("uni-form");
+        uniForm.addEventListener("submit", function (e) {
+          e.preventDefault();
+          var btn = document.getElementById("uf-submit");
+          var errEl = document.getElementById("uf-error");
+          errEl.hidden = true;
+          btn.disabled = true;
+          btn.textContent = "Sending…";
+          fetch("/api/pilot-leads", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "same-origin",
+            body: JSON.stringify({
+              contact_name: document.getElementById("uf-name").value,
+              work_email: document.getElementById("uf-email").value,
+              university_name: document.getElementById("uf-uni").value,
+              country: document.getElementById("uf-country").value,
+              message: document.getElementById("uf-msg").value,
+              company_website: document.getElementById("company_website").value, // honeypot
+            }),
+          })
+            .then(function (r) {
+              return r
+                .json()
+                .catch(function () {
+                  return {};
+                })
+                .then(function (data) {
+                  if (!r.ok)
+                    throw new Error(
+                      data.error || "Something went wrong. Try again.",
+                    );
+                  uniForm.hidden = true;
+                  document.getElementById("uni-form-done").hidden = false;
+                });
+            })
+            .catch(function (err) {
+              errEl.textContent = err.message;
+              errEl.hidden = false;
+            })
+            .finally(function () {
+              btn.disabled = false;
+              btn.textContent = "Request access";
+            });
         });
-      });
-    })();
-  </script>
-</body>
+      })();
+    </script>
+  </body>
 </html>

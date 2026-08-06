@@ -1,5 +1,5 @@
 // Ambient type augmentations for the plain-JS backend (used by checkJs).
-import 'express';
+import "express";
 
 declare global {
   namespace Express {

@@ -14,7 +14,9 @@
     "import:all": "node scripts/import-eter.js && node scripts/import-global.js && node scripts/import-rankings.js",
     "create-admin": "node scripts/create-admin.js",
     "test": "node --test --test-concurrency=1",
-    "typecheck": "tsc -p jsconfig.json"
+    "test:e2e": "playwright test",
+    "typecheck": "tsc -p jsconfig.json",
+    "format": "prettier --write ."
   },
   "keywords": [
     "universities",
@@ -33,11 +35,13 @@
     "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@types/bcryptjs": "^2.4.6",
     "@types/compression": "^1.8.1",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^26.1.1",
+    "prettier": "^3.9.6",
     "typescript": "^5.5.4"
   }
 }

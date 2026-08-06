@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 /**
  * Imports a global list of universities (~10,000 across ~200 countries) from the
@@ -19,23 +19,34 @@
  *    but unverified. Every record carries data_verified:false.
  */
 
-const fs = require('fs');
-const path = require('path');
-const manifest = require('../lib/manifest');
+const fs = require("fs");
+const path = require("path");
+const manifest = require("../lib/manifest");
 
-const SOURCE_URL = process.env.GLOBAL_UNIS_URL
-  || 'https://raw.githubusercontent.com/Hipo/university-domains-list/master/world_universities_and_domains.json';
+const SOURCE_URL =
+  process.env.GLOBAL_UNIS_URL ||
+  "https://raw.githubusercontent.com/Hipo/university-domains-list/master/world_universities_and_domains.json";
 
 function hostOf(url) {
-  if (!url) return '';
+  if (!url) return "";
   try {
-    return new URL(url.includes('://') ? url : `http://${url}`).hostname.replace(/^www\./, '').toLowerCase();
+    return new URL(url.includes("://") ? url : `http://${url}`).hostname
+      .replace(/^www\./, "")
+      .toLowerCase();
   } catch {
-    return String(url).replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].toLowerCase();
+    return String(url)
+      .replace(/^https?:\/\//, "")
+      .replace(/^www\./, "")
+      .split("/")[0]
+      .toLowerCase();
   }
 }
 
-const slug = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+const slug = (s) =>
+  String(s || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 
 async function run() {
   console.log(`[import-global] Fetching global universities from Hipolabs…`);
@@ -48,10 +59,10 @@ async function run() {
   const usedIds = new Set();
 
   for (const r of rows) {
-    const name = (r.name || '').trim();
+    const name = (r.name || "").trim();
     if (!name) continue;
 
-    const website = (r.web_pages && r.web_pages[0]) || '';
+    const website = (r.web_pages && r.web_pages[0]) || "";
     const domain = (r.domains && r.domains[0]) || hostOf(website);
     if (!domain) continue; // no domain => no logo, no dedup key; skip
 
@@ -64,21 +75,21 @@ async function run() {
     }
     usedIds.add(id);
 
-    const region = (r['state-province'] || '').trim();
-    const country = (r.country || '').trim() || 'Unknown';
+    const region = (r["state-province"] || "").trim();
+    const country = (r.country || "").trim() || "Unknown";
 
     out.push({
       id,
-      source: 'global',
+      source: "global",
       name,
       country,
-      country_code: r.alpha_two_code || '',
+      country_code: r.alpha_two_code || "",
       region,
-      city: '', // Hipolabs has no city (only state/province, kept as `region`)
+      city: "", // Hipolabs has no city (only state/province, kept as `region`)
       website: website || `https://${domain}`,
       domain,
-      institution_type: '',
-      legal_status: '',
+      institution_type: "",
+      legal_status: "",
       founded: null,
       student_count: null,
       coords: null,
@@ -88,10 +99,10 @@ async function run() {
       fields_of_study: [],
       tuition_range: null,
       estimated_living_cost: null,
-      application_deadline: '',
-      acceptance_requirements: '',
+      application_deadline: "",
+      acceptance_requirements: "",
       application_link: website || `https://${domain}`,
-      short_description: `University in ${region ? region + ', ' : ''}${country}.`,
+      short_description: `University in ${region ? region + ", " : ""}${country}.`,
       click_count: 0,
       data_verified: false,
     });
@@ -100,17 +111,31 @@ async function run() {
   out.sort((a, b) => a.name.localeCompare(b.name));
 
   // Fail loudly if the source shrank drastically or lost its domains.
-  manifest.assertQuality(out, { source: 'global', minCount: 8000, requireField: 'domain' });
+  manifest.assertQuality(out, {
+    source: "global",
+    minCount: 8000,
+    requireField: "domain",
+  });
 
-  const target = path.join(__dirname, '..', 'data', 'seed', 'global-universities.json');
+  const target = path.join(
+    __dirname,
+    "..",
+    "data",
+    "seed",
+    "global-universities.json",
+  );
   fs.writeFileSync(target, JSON.stringify(out, null, 2));
-  manifest.write('global', out, { source_url: SOURCE_URL });
+  manifest.write("global", out, { source_url: SOURCE_URL });
 
-  console.log(`[import-global] Wrote ${out.length} records to ${path.relative(process.cwd(), target)}`);
-  console.log(`[import-global]   countries: ${new Set(out.map((r) => r.country)).size}`);
+  console.log(
+    `[import-global] Wrote ${out.length} records to ${path.relative(process.cwd(), target)}`,
+  );
+  console.log(
+    `[import-global]   countries: ${new Set(out.map((r) => r.country)).size}`,
+  );
 }
 
 run().catch((e) => {
-  console.error('[import-global] FAILED:', e.message);
+  console.error("[import-global] FAILED:", e.message);
   process.exit(1);
 });
