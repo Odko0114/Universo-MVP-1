@@ -33,6 +33,7 @@ const events = require("./lib/events");
 const validate = require("./lib/validate");
 const ssr = require("./lib/ssr");
 const email = require("./lib/email");
+const photos = require("./lib/photos");
 const { rateLimit } = require("./lib/rate-limit");
 const { fetchWithResilience } = require("./lib/http");
 
@@ -48,6 +49,17 @@ store.init("admins", []);
 store.init("clicks", {}); // { universityId: count } — kept separate so a click
 // never rewrites the ~12k-record universities file.
 store.init("photos", {}); // { id: { photo_url|null, attribution, cached_at } }
+// Repair caches written before cover photos were filtered: seals and wordmarks
+// were stored as photos and crop into unreadable fragments. Blanks the image and
+// keeps the extract, so no re-lookup is triggered. No-op once clean.
+{
+  const cache = store.read("photos");
+  const pruned = photos.pruneLogoPhotos(cache);
+  if (pruned) {
+    store.write("photos", cache);
+    log.info("photos.pruned_logos", { count: pruned });
+  }
+}
 store.init("pilot_leads", []); // university contact/pilot/claim leads (/for-universities form)
 store.init("uni_accounts", []); // partner logins, each bound to one university_id
 store.init("claims", {}); // { universityId: { account_id, claimed_at } } — kept
@@ -871,7 +883,10 @@ async function lookupWikipedia(name, extra) {
   const data = await res.json();
   const page = data?.query?.pages && Object.values(data.query.pages)[0];
   if (!page) return null;
-  const src = page.original?.source || page.thumbnail?.source || null;
+  let src = page.original?.source || page.thumbnail?.source || null;
+  // Seals/wordmarks crop into unreadable fragments — drop the image, keep the
+  // extract. Every photo lookup routes through here, so this is the only guard.
+  if (photos.isLogoLike(src)) src = null;
   const extract = page.extract ? String(page.extract).trim() : null;
   if (!src && !extract) return null;
   return { photo_url: src, page: page.title, extract };
