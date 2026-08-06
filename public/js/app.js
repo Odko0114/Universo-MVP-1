@@ -530,8 +530,8 @@
       </section>
 
       <div class="scope-row" role="group" aria-label="Result scope">
-        <button class="niche-btn ${d.scope === "verified" ? "is-active" : ""}" id="scope-verified" type="button">✓ Verified profiles (${verifiedN})</button>
-        <button class="niche-btn ${d.scope === "all" ? "is-active" : ""}" id="scope-all" type="button">Include unverified register entries (${registerN})</button>
+        <button class="niche-btn ${d.scope === "verified" ? "is-active" : ""}" id="scope-verified" type="button" aria-pressed="${d.scope === "verified"}">✓ Verified profiles (${verifiedN})</button>
+        <button class="niche-btn ${d.scope === "all" ? "is-active" : ""}" id="scope-all" type="button" aria-pressed="${d.scope === "all"}">Include unverified register entries (${registerN})</button>
       </div>
 
       <button class="niche-btn ${niche ? "is-active" : ""}" id="niche-toggle" type="button">
@@ -552,7 +552,7 @@
         <div class="field"><label for="f-language">Language</label><select id="f-language"><option value="">Any language</option>${opts(m.languages, d.language)}</select></div>
         <div class="field"><label for="f-degree">Degree level</label><select id="f-degree"><option value="">Any degree</option>${opts(m.degree_levels, d.degree)}</select></div>
         <div class="field"><label for="f-budget">Tuition budget</label><select id="f-budget">${budgets.map(([v, l]) => `<option value="${v}" ${v === d.maxTuition ? "selected" : ""}>${l}</option>`).join("")}</select></div>
-        <div class="field"><label for="f-sort">Sort by</label><select id="f-sort">
+        <div class="field field--wide"><label for="f-sort">Sort by</label><select id="f-sort">
           <option value="" ${d.sort === "" ? "selected" : ""}>${profiled ? "Best match (your profile)" : "Verified first, then A–Z"}</option>
           <option value="name" ${d.sort === "name" ? "selected" : ""}>Name (A–Z)</option>
           <option value="size" ${d.sort === "size" ? "selected" : ""}>Largest (students)</option>

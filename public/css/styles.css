@@ -291,20 +291,45 @@ img {
   color: #fff;
 }
 
-/* Verified-vs-directory scope toggle (sits above the niche button) */
+/* Verified-vs-directory scope toggle (sits above the niche button).
+   Styled as ONE segmented control, not two pills: it's a binary either/or, and
+   as two separate full-width pills it read as two competing CTAs — worse, it
+   looked identical to the niche button below, which does something unrelated. */
 .scope-row {
   display: flex;
-  gap: 10px;
   margin-bottom: 10px;
+  border: 1.5px solid var(--teal-500);
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--surface);
 }
 .scope-row .niche-btn {
   flex: 1;
   margin-bottom: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+/* Must be scoped too: unscoped `.niche-btn.is-active` ties with
+   `.scope-row .niche-btn` on specificity and loses on source order, which left
+   the selected segment as white text on a transparent background. */
+.scope-row .niche-btn.is-active {
+  background: var(--teal-500);
+  color: #fff;
+}
+.scope-row .niche-btn + .niche-btn {
+  border-left: 1.5px solid var(--teal-500);
 }
 @media (max-width: 560px) {
+  /* Both labels carry a count and wrap badly side by side on a phone; stack the
+     segments and square the container so it still reads as one control. */
   .scope-row {
     flex-direction: column;
-    gap: 8px;
+    border-radius: var(--radius);
+  }
+  .scope-row .niche-btn + .niche-btn {
+    border-left: 0;
+    border-top: 1.5px solid var(--teal-500);
   }
 }
 
@@ -350,6 +375,12 @@ img {
 }
 .filters .full {
   grid-column: 1 / -1;
+}
+/* Sort is ordering, not filtering, and it's the 7th item in an even grid — so
+   it left a hole at the end of the last row. Spanning two cells fills the row
+   and gives the odd-one-out control a shape of its own. */
+.filters .field--wide {
+  grid-column: span 2;
 }
 .field label {
   display: block;
@@ -634,6 +665,14 @@ img {
 }
 .profile__actions .btn {
   flex: 1;
+}
+/* Full-width is right on a phone (thumb reach) but not on a wide page, where
+   flex:1 stretched Save and Apply Now to ~530px each. Cap the pair instead of
+   unsetting flex, so the two stay equal and left-aligned under the header. */
+@media (min-width: 720px) {
+  .profile__actions {
+    max-width: 440px;
+  }
 }
 
 .info-card {
