@@ -57,22 +57,74 @@
     <!-- Route outlet -->
     <main id="view" class="view" tabindex="-1" aria-live="polite"></main>
 
-    <!-- Bottom tab navigation (mobile) -->
+    <!-- Bottom tab navigation (mobile).
+         Icons are inline SVG, not emoji: emoji render as full-colour OS glyphs
+         that look different on every device and ignore the active-tab colour.
+         These reuse the path data from the ICONS map in app.js and inherit
+         currentColor, so the active tab tints its own icon. Inline rather than
+         injected by app.js so the nav is complete before the deferred bundle runs. -->
     <nav class="tabbar" aria-label="Primary">
       <a href="/discover" data-link data-nav="discover" class="tabbar__item">
-        <span class="tabbar__icon" aria-hidden="true">🔎</span>
+        <span class="tabbar__icon" aria-hidden="true">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+        </span>
         <span class="tabbar__label">Discover</span>
       </a>
       <a href="/journey" data-link data-nav="journey" class="tabbar__item">
-        <span class="tabbar__icon" aria-hidden="true">🧭</span>
+        <span class="tabbar__icon" aria-hidden="true">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path d="m15.5 8.5-2.2 5.3-5.3 2.2 2.2-5.3z" />
+          </svg>
+        </span>
         <span class="tabbar__label">Dream Plan</span>
       </a>
       <a href="/saved" data-link data-nav="saved" class="tabbar__item">
-        <span class="tabbar__icon" aria-hidden="true">🔖</span>
+        <span class="tabbar__icon" aria-hidden="true">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1z" />
+          </svg>
+        </span>
         <span class="tabbar__label">Saved</span>
       </a>
       <a href="/account" data-link data-nav="account" class="tabbar__item">
-        <span class="tabbar__icon" aria-hidden="true">👤</span>
+        <span class="tabbar__icon" aria-hidden="true">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.8"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5" />
+          </svg>
+        </span>
         <span class="tabbar__label">Account</span>
       </a>
     </nav>
