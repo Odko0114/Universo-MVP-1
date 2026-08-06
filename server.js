@@ -49,15 +49,18 @@ store.init("admins", []);
 store.init("clicks", {}); // { universityId: count } — kept separate so a click
 // never rewrites the ~12k-record universities file.
 store.init("photos", {}); // { id: { photo_url|null, attribution, cached_at } }
-// Repair caches written before cover photos were filtered: seals and wordmarks
-// were stored as photos and crop into unreadable fragments. Blanks the image and
-// keeps the extract, so no re-lookup is triggered. No-op once clean.
+// Give entries from an older lookup strategy one retry: seals cached as photos,
+// and misses that were really timeouts recorded as permanent. Real photos are
+// left alone. No-op once every entry carries the current version.
 {
   const cache = store.read("photos");
-  const pruned = photos.pruneLogoPhotos(cache);
-  if (pruned) {
+  const dropped = photos.dropStale(cache);
+  if (dropped) {
     store.write("photos", cache);
-    log.info("photos.pruned_logos", { count: pruned });
+    log.info("photos.dropped_stale", {
+      count: dropped,
+      version: photos.LOOKUP_VERSION,
+    });
   }
 }
 store.init("pilot_leads", []); // university contact/pilot/claim leads (/for-universities form)
@@ -892,6 +895,78 @@ async function lookupWikipedia(name, extra) {
   return { photo_url: src, page: page.title, extract };
 }
 
+// Commons extmetadata values arrive as HTML fragments.
+const stripHtml = (h) =>
+  h
+    ? String(h)
+        .replace(/<[^>]*>/g, "")
+        .trim()
+    : "";
+
+// Credit block from a Commons imageinfo record (CC-BY-SA mostly → required).
+const creditFrom = (imageinfo) => {
+  const m = imageinfo?.extmetadata || {};
+  return {
+    artist: stripHtml(m.Artist?.value) || "Wikimedia Commons",
+    license: stripHtml(m.LicenseShortName?.value) || "",
+    source: imageinfo?.descriptionurl || "",
+  };
+};
+
+// Wikipedia's lead image for a university is usually its seal or wordmark, which
+// `isLogoLike` rejects. Commons file search finds actual campus photography.
+// Returns null rather than a bad image — the placeholder glyph looks deliberate.
+async function lookupCommonsPhoto(name) {
+  const params = new URLSearchParams({
+    action: "query",
+    format: "json",
+    generator: "search",
+    gsrsearch: name,
+    gsrnamespace: "6", // File:
+    gsrlimit: "20",
+    prop: "imageinfo",
+    iiprop: "url|size|mime|extmetadata",
+    iiurlwidth: "1200", // serve a thumbnail, not a 7500px original
+  });
+  const res = await fetchWithResilience(
+    `https://commons.wikimedia.org/w/api.php?${params}`,
+    {
+      headers: { "User-Agent": WIKI_UA },
+      timeoutMs: 8000,
+      retries: 1,
+      label: "commons-search",
+    },
+  );
+  const data = await res.json();
+  const pages = data?.query?.pages ? Object.values(data.query.pages) : [];
+  // The pages object is keyed by pageid, which loses ranking — `index` restores
+  // search order, and picking the most relevant usable image depends on it.
+  pages.sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
+
+  // Keep the full imageinfo aside rather than threading it through the picker —
+  // the credit is only needed for the one candidate that wins.
+  const infoByTitle = new Map();
+  const candidates = pages.map((p) => {
+    const ii = p.imageinfo?.[0] || {};
+    infoByTitle.set(p.title, ii);
+    return {
+      title: p.title,
+      url: ii.thumburl || ii.url,
+      width: ii.width,
+      height: ii.height,
+      mime: ii.mime,
+    };
+  });
+
+  const best = photos.pickBestPhoto(candidates);
+  if (!best) return null;
+  return {
+    photo_url: best.url,
+    page: best.title,
+    attribution: creditFrom(infoByTitle.get(best.title)),
+  };
+}
+
 // Best-effort image credit (Wikimedia Commons is mostly CC-BY-SA → attribution required).
 async function lookupAttribution(photoUrl) {
   try {
@@ -914,18 +989,7 @@ async function lookupAttribution(photoUrl) {
     );
     const data = await res.json();
     const page = data?.query?.pages && Object.values(data.query.pages)[0];
-    const m = page?.imageinfo?.[0]?.extmetadata || {};
-    const strip = (h) =>
-      h
-        ? String(h)
-            .replace(/<[^>]*>/g, "")
-            .trim()
-        : "";
-    return {
-      artist: strip(m.Artist?.value) || "Wikimedia Commons",
-      license: strip(m.LicenseShortName?.value) || "",
-      source: page?.imageinfo?.[0]?.descriptionurl || "",
-    };
+    return creditFrom(page?.imageinfo?.[0]);
   } catch {
     return { artist: "Wikimedia Commons", license: "", source: "" };
   }
@@ -939,25 +1003,65 @@ function resolvePhoto(uni) {
     photoInflight.set(
       uni.id,
       (async () => {
-        let found = await lookupWikipedia(uni.name).catch(() => null);
+        // "Found nothing" and "couldn't ask" are different answers. A timeout or
+        // an open circuit breaker must not be recorded as "this university has
+        // no photo" — that verdict is cached forever. Track failures separately.
+        let failed = false;
+        const attempt = (p) =>
+          p.catch(() => {
+            failed = true;
+            return null;
+          });
+
+        let found = await attempt(lookupWikipedia(uni.name));
         if (!found && uni.country)
-          found = await lookupWikipedia(uni.name, uni.country).catch(
-            () => null,
-          );
-        const attribution =
-          found && found.photo_url
+          found = await attempt(lookupWikipedia(uni.name, uni.country));
+
+        // Wikipedia gives the article extract (the Overview text) but usually a
+        // seal for the image. Fall back to Commons for the photograph only, and
+        // keep the extract regardless of which source the picture came from.
+        let commons = null;
+        if (!found?.photo_url) {
+          commons = await attempt(lookupCommonsPhoto(uni.name));
+          if (!commons && uni.country)
+            commons = await attempt(
+              lookupCommonsPhoto(`${uni.name} ${uni.country}`),
+            );
+        }
+
+        const photoUrl = found?.photo_url || commons?.photo_url || null;
+        const extract = found?.extract || null;
+        // Commons search already returns the credit inline; the Wikipedia path
+        // still needs a second call to resolve one.
+        const attribution = commons
+          ? commons.attribution
+          : found?.photo_url
             ? await lookupAttribution(found.photo_url)
             : null;
-        const entry = found
-          ? {
-              photo_url: found.photo_url,
-              page: found.page,
-              extract: found.extract,
-              attribution,
-              source: "wikipedia",
-              cached_at: new Date().toISOString(),
-            }
-          : { none: true, cached_at: new Date().toISOString() };
+
+        // Came back empty-handed *because the lookups errored* — return nothing
+        // for now but don't persist it, so the next view tries again instead of
+        // inheriting a permanent "no photo" from one bad minute upstream.
+        if (!photoUrl && !extract && failed) {
+          return { none: true, transient: true };
+        }
+
+        const entry =
+          photoUrl || extract
+            ? {
+                photo_url: photoUrl,
+                page: found?.page || commons?.page || null,
+                extract,
+                attribution,
+                source: commons?.photo_url ? "commons" : "wikipedia",
+                v: photos.LOOKUP_VERSION,
+                cached_at: new Date().toISOString(),
+              }
+            : {
+                none: true,
+                v: photos.LOOKUP_VERSION,
+                cached_at: new Date().toISOString(),
+              };
         const c = store.read("photos");
         c[uni.id] = entry;
         store.writeDebounced("photos", c);
