@@ -255,12 +255,10 @@ const loginLimiter = rateLimit({
 // requireAuth, never in place of it.
 function requireVerifiedEmail(req, res, next) {
   if (!email.ENABLED || req.student.email_verified) return next();
-  res
-    .status(403)
-    .json({
-      error: "Please verify your email to continue.",
-      code: "EMAIL_NOT_VERIFIED",
-    });
+  res.status(403).json({
+    error: "Please verify your email to continue.",
+    code: "EMAIL_NOT_VERIFIED",
+  });
 }
 
 api.post(
@@ -473,11 +471,9 @@ api.post(
       ? new Date(student.email_verify_last_sent).getTime()
       : 0;
     if (Date.now() - lastSent < RESEND_COOLDOWN_MS) {
-      return res
-        .status(429)
-        .json({
-          error: "Please wait a minute before requesting another email.",
-        });
+      return res.status(429).json({
+        error: "Please wait a minute before requesting another email.",
+      });
     }
 
     const verifyToken = auth.generateToken();
@@ -1098,11 +1094,9 @@ api.delete("/me/saved/:id", auth.requireAuth, (req, res) => {
 api.post("/me/saved/:id/status", auth.requireAuth, (req, res) => {
   const id = req.params.id;
   if (!req.student.saved_universities.includes(id)) {
-    return res
-      .status(400)
-      .json({
-        error: "Save this university before setting an application status.",
-      });
+    return res.status(400).json({
+      error: "Save this university before setting an application status.",
+    });
   }
   const status = typeof req.body.status === "string" ? req.body.status : "";
   if (!journey.APPLICATION_STATUS_KEYS.has(status))
@@ -1657,12 +1651,10 @@ adminApi.post("/uni-accounts", async (req, res) => {
     };
     await store.write("claims", claims);
     log.info("university claimed", { university: uni.id });
-    res
-      .status(201)
-      .json({
-        account,
-        university: { id: uni.id, name: uni.name, claimed_status: "claimed" },
-      });
+    res.status(201).json({
+      account,
+      university: { id: uni.id, name: uni.name, claimed_status: "claimed" },
+    });
   } catch (e) {
     res.status(400).json({ error: e.message });
   }
