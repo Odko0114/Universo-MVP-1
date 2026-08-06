@@ -13,6 +13,24 @@
       content="Universo helps international students discover and compare universities abroad."
     />
     <link rel="icon" href="/favicon.svg" />
+    <!-- Preload only the `latin` subsets: they cover almost every page render,
+         and arriving before first paint avoids a visible reflow when the body
+         font swaps in. `latin-ext` stays lazy — it loads only when a page
+         actually shows a diacritic. -->
+    <link
+      rel="preload"
+      href="/fonts/publicsans-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/newsreader-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
     <link rel="stylesheet" href="/css/styles.css" />
   </head>
   <body>

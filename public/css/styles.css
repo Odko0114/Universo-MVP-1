@@ -1,5 +1,63 @@
 /* Universo — mobile-first styles. Palette: navy / teal / gold. */
 
+/* ---------- Typefaces ----------
+   Self-hosted rather than loaded from the Google Fonts CDN: that CDN sees the
+   IP of every visitor, which a German court ruled a GDPR violation in 2022 —
+   not a good look for a product whose users are EU students. Self-hosting also
+   removes a third-party origin from the critical path.
+
+   Both are variable (400–700) so one file covers every weight. Newsreader is
+   requested WITHOUT its optical-size axis: keeping opsz cost 213KB against
+   92KB, and an axis nothing animates isn't worth 121KB on a phone.
+
+   The unicode-range split matters here. Latin Extended-A carries the diacritics
+   the dataset is full of — Universität, Autónoma, Aalto-yliopisto, Ș/Ț — but
+   a page showing none of them never downloads that file. */
+@font-face {
+  font-family: "Public Sans";
+  src: url("/fonts/publicsans-latin.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Public Sans";
+  src: url("/fonts/publicsans-latin-ext.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+    U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB,
+    U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Newsreader";
+  src: url("/fonts/newsreader-latin.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+    U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212,
+    U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Newsreader";
+  src: url("/fonts/newsreader-latin-ext.woff2") format("woff2");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+    U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB,
+    U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 :root {
   --navy-900: #0b1f3a;
   --navy-800: #12294d;
@@ -47,8 +105,12 @@
   --tabbar-h: 62px;
   --maxw: 1080px;
   --font:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
-    sans-serif;
+    "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+  /* Headings only. Georgia is the fallback rather than the body stack, so a
+     swap before the webfont lands still reads as a serif and the hierarchy
+     never collapses into one voice. */
+  --font-display: "Newsreader", Georgia, "Times New Roman", serif;
 }
 
 * {
@@ -89,9 +151,27 @@ h3 {
   line-height: 1.25;
   color: var(--ink);
 }
+/* Serif is the page-and-section voice; h3 stays sans because it labels dense
+   components (card names, checklist rows) where a serif reads as decoration
+   rather than hierarchy. */
+h1,
+h2 {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
 img {
   max-width: 100%;
   display: block;
+}
+/* Form controls take a UA font rather than inheriting from body. That was
+   invisible while body was also a system stack — now it would leave every
+   button, input and select in Arial beside Public Sans. */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
 }
 
 /* ---------- Top bar (brand strip on all sizes; nav links join in on desktop) ---------- */
@@ -703,6 +783,9 @@ img {
   font-size: var(--text-base);
   color: var(--ink);
   margin-top: 2px;
+  /* Key facts is a two-column grid of figures — tuition, living cost, ranking,
+     student counts — so the digits should line up between rows. */
+  font-variant-numeric: tabular-nums;
 }
 .taglist {
   display: flex;
@@ -1588,6 +1671,7 @@ img {
   font-size: var(--text-4xl);
   font-weight: 800;
   color: var(--navy-900);
+  font-variant-numeric: tabular-nums;
 }
 .lp-stat__l {
   font-size: var(--text-sm);
