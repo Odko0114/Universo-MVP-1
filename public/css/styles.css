@@ -2669,3 +2669,69 @@ img {
     font-size: var(--text-md);
   }
 }
+
+/* =====================================================================
+   Motion — app surfaces
+   Deliberately at the end of the file: the reduced-motion overrides below
+   must come after the rules they switch off, and the existing block sits
+   up in the landing-page section.
+
+   Each of these earns its place by explaining something. Decorative
+   movement is what makes an interface feel cheap, not premium.
+   ===================================================================== */
+
+/* Readiness and progress bars grow from zero on render. `.progress__bar`
+   already carried a width transition, but it never fired: paint() replaces the
+   node, and a freshly inserted element renders at its final width — CSS
+   transitions don't run on first paint. Animating on mount is what actually
+   shows the change after ticking a document. transform, not width, so it
+   composites instead of triggering layout on every frame. */
+@keyframes bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+}
+.progress__bar {
+  transform-origin: left center;
+  animation: bar-grow 0.45s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+/* Saving is the action the whole product is built around, and the only
+   confirmation was the label swapping. A brief pop on the icon says the tap
+   registered — on the icon alone, so the button itself doesn't jump. */
+@keyframes save-pop {
+  50% {
+    transform: scale(1.18);
+  }
+}
+.btn--saved .icon {
+  animation: save-pop 0.32s ease;
+}
+
+/* Skeletons already shimmer; content arriving with a hard swap after that is
+   the jarring part. */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+.grid .uni-card {
+  animation: fade-in-up 0.28s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The app's own animations were never covered — only the landing page's.
+     The skeleton shimmer in particular ran for every user who asked for less
+     motion, on every loading state in the product. */
+  .skeleton,
+  .progress__bar,
+  .btn--saved .icon,
+  .grid .uni-card {
+    animation: none !important;
+  }
+  .btn:active,
+  .uni-card:hover {
+    transform: none;
+  }
+}
