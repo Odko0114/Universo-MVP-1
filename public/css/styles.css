@@ -1900,6 +1900,15 @@ img {
   flex: 0 0 auto;
   margin-top: 2px;
 }
+/* Icons used inline with text (save buttons, rank chips, the location line)
+   sit on the baseline. The empty-state icon() default is 44px and block-level,
+   so it isn't affected by this. */
+.btn .icon,
+.chip .icon,
+.profile__title .loc .icon,
+.verify-flag .icon {
+  vertical-align: -0.15em;
+}
 .auth-fineprint {
   text-align: center;
   margin: 12px 0 0;

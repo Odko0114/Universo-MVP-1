@@ -148,6 +148,9 @@
     alert:
       '<path d="M12 3 2 21h20L12 3z"/><path d="M12 10v5"/><circle cx="12" cy="18" r=".5"/>',
     check: '<circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.5 2.5L16 9"/>',
+    pin: '<path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+    award:
+      '<circle cx="12" cy="9" r="5"/><path d="M8.5 13.5 7 22l5-2.5L17 22l-1.5-8.5"/>',
     spark:
       '<path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.5 2.5M16.5 16.5 19 19M19 5l-2.5 2.5M7.5 16.5 5 19"/>',
   };
@@ -294,7 +297,7 @@
     const chips = [];
     if (u.ranking && u.ranking.world_rank) {
       chips.push(
-        `<span class="chip chip--rank">🏆 #${esc(u.ranking.world_rank)} world</span>`,
+        `<span class="chip chip--rank">${icon("award", 13)} #${esc(u.ranking.world_rank)} world</span>`,
       );
     }
     // Tuition chip only for hand-researched figures — estimate ranges are not
@@ -354,7 +357,7 @@
           <div class="card-actions">
             <a class="btn btn--ghost btn--sm" href="/university/${esc(u.id)}" style="flex:1">View</a>
             <button class="btn btn--sm ${saved ? "btn--saved" : "btn--primary"}" data-save="${esc(u.id)}" style="flex:1">
-              ${saved ? "🔖 Saved" : "＋ Save"}
+              ${saved ? `${icon("bookmark", 15)} Saved` : "＋ Save"}
             </button>
           </div>
         </div>
@@ -378,7 +381,7 @@
           "btn--ghost",
           !saved && !b.classList.contains("btn--sm"),
         );
-        b.innerHTML = saved ? "🔖 Saved" : "＋ Save";
+        b.innerHTML = saved ? `${icon("bookmark", 15)} Saved` : "＋ Save";
         b.disabled = false;
       });
   }
@@ -1232,7 +1235,7 @@
         : "";
       facts.push([
         "Ranking",
-        `🏆 #${u.ranking.world_rank} world${nat} (${u.ranking.provider})`,
+        `#${u.ranking.world_rank} world${nat} (${u.ranking.provider})`,
       ]);
     }
     // A specific tuition figure is shown ONLY when it comes from hand-curated
@@ -1324,13 +1327,13 @@
       <div class="profile__cover" id="cover" style="background:${gradient(u.id)}">
         <div class="profile__headline">
           ${logoHtml(u, "logo--profile")}
-          <div class="profile__title"><h1>${esc(u.name)}</h1><div class="loc">📍 ${esc(u.city ? u.city + ", " : "")}${esc(u.country)}</div></div>
+          <div class="profile__title"><h1>${esc(u.name)}</h1><div class="loc">${icon("pin", 14)} ${esc(u.city ? u.city + ", " : "")}${esc(u.country)}</div></div>
         </div>
       </div>
       <p class="photo-credit" id="photo-credit" hidden></p>
 
       <div class="profile__actions">
-        <button class="btn ${saved ? "btn--saved" : "btn--ghost"}" data-save="${esc(u.id)}">${saved ? "🔖 Saved" : "＋ Save"}</button>
+        <button class="btn ${saved ? "btn--saved" : "btn--ghost"}" data-save="${esc(u.id)}">${saved ? `${icon("bookmark", 15)} Saved` : "＋ Save"}</button>
         <button class="btn btn--gold" id="apply-btn">Apply Now ↗</button>
       </div>
 
@@ -1359,7 +1362,7 @@
 
       ${
         isCurated
-          ? `<div class="verify-flag"><span>⚠️</span><span>${banner}</span></div>`
+          ? `<div class="verify-flag"><span>${icon("alert", 16)}</span><span>${banner}</span></div>`
           : `<div class="unverified-note">
              <strong>We have not verified tuition, programs or entry requirements for this university yet.</strong>
              Everything on this page comes from the official European register (ETER).
@@ -1703,7 +1706,10 @@
       navigate("/account?mode=register&next=%2Fonboarding", true);
       return;
     }
-    setActiveNav("account");
+    // Onboarding is a focused wizard, not one of the four tabs — highlighting
+    // Account claimed the user was somewhere they weren't. No tab is the honest
+    // answer here; setActiveNav(null) matches nothing and clears them all.
+    setActiveNav(null);
     document.title = "Set up matching — Universo";
     // The country step needs the facet list — load it once, then re-render.
     if (!state.filterMeta) {
