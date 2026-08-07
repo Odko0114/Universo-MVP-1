@@ -44,6 +44,13 @@
   --text-6xl: 2.4rem;
   --text-7xl: 2.9rem;
 
+  /* Spacing grid: 4px steps — 4, 8, 12, 16, 20, 24, 28, 32, 40, 48, 56, 64.
+     Values under 4px are the one exception, for hairline optical nudges.
+     Written as literals rather than tokens because most spacing here is
+     shorthand (`padding: 12px 16px`), where three var() calls per line costs
+     more readability than the indirection buys. The constraint is the grid, not
+     the variable — pick a step, don't invent a value. */
+
   --tabbar-h: 62px;
   --maxw: 1080px;
   --font:
@@ -127,7 +134,7 @@ img {
 .brand {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
 }
 .brand__mark {
   width: 26px;
@@ -166,13 +173,13 @@ img {
 }
 .topnav {
   display: none;
-  gap: 6px;
+  gap: 8px;
 }
 .topnav a {
   color: #cdd7e6;
   font-weight: 600;
   font-size: var(--text-base);
-  padding: 8px 14px;
+  padding: 8px 16px;
   border-radius: 999px;
 }
 .topnav a:hover {
@@ -236,12 +243,12 @@ img {
   background: linear-gradient(135deg, var(--navy-900), var(--navy-700));
   color: #fff;
   border-radius: var(--radius);
-  padding: 22px 20px;
+  padding: 24px 20px;
   margin-bottom: 16px;
 }
 .hero h1 {
   color: #fff;
-  margin: 0 0 6px;
+  margin: 0 0 8px;
   font-size: var(--text-3xl);
 }
 .hero p {
@@ -260,7 +267,7 @@ img {
   font-size: var(--text-xs);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  margin: 0 0 10px;
+  margin: 0 0 12px;
 }
 
 .section-head {
@@ -310,7 +317,7 @@ img {
    looked identical to the niche button below, which does something unrelated. */
 .scope-row {
   display: flex;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   border: 1.5px solid var(--teal-500);
   border-radius: 999px;
   overflow: hidden;
@@ -348,14 +355,14 @@ img {
 
 /* ---------- Recommendations ---------- */
 .grid--rec {
-  margin-bottom: 22px;
+  margin-bottom: 24px;
 }
 .match-why {
   font-size: var(--text-xs);
   color: var(--teal-600);
   background: var(--teal-050);
   border-radius: 8px;
-  padding: 6px 8px;
+  padding: 8px 8px;
   margin: 2px 0 0;
 }
 
@@ -366,7 +373,7 @@ img {
 }
 .searchbar input {
   width: 100%;
-  padding: 13px 14px 13px 42px;
+  padding: 12px 16px 12px 40px;
   border: 1px solid var(--line);
   border-radius: 999px;
   font-size: var(--text-lg);
@@ -407,7 +414,7 @@ img {
 .field select,
 .field input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 12px 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   background: var(--surface);
@@ -424,8 +431,8 @@ img {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  margin: 6px 2px 14px;
+  gap: 12px;
+  margin: 8px 2px 16px;
 }
 .link-btn {
   background: none;
@@ -469,7 +476,7 @@ img {
      cover's bottom-left, and an opaque tile over the label hid half the city
      name. Only .uni-card__loc is in flow here — the badges are absolute. */
   justify-content: flex-end;
-  padding: 10px 12px;
+  padding: 12px 12px;
   color: #fff;
 }
 .uni-card__badge {
@@ -480,7 +487,7 @@ img {
   color: #fff;
   font-size: var(--text-xs);
   font-weight: 600;
-  padding: 3px 9px;
+  padding: 3px 8px;
   border-radius: 999px;
   backdrop-filter: blur(3px);
 }
@@ -490,7 +497,7 @@ img {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 .uni-card__body {
-  padding: 12px 14px 14px;
+  padding: 12px 16px 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -498,7 +505,7 @@ img {
 }
 .uni-card__title {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   align-items: flex-start;
 }
 .uni-card__logo {
@@ -513,7 +520,7 @@ img {
   font-weight: 800;
   font-size: var(--text-base);
   border: 1px solid var(--line);
-  margin-top: -30px;
+  margin-top: -32px;
   box-shadow: var(--shadow-sm);
   background-color: #fff;
 }
@@ -530,14 +537,14 @@ img {
 .uni-card__meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
   margin-top: auto;
 }
 
 .chip {
   font-size: var(--text-xs);
   font-weight: 600;
-  padding: 3px 9px;
+  padding: 3px 8px;
   border-radius: 999px;
   background: var(--teal-050);
   color: var(--teal-600);
@@ -558,7 +565,7 @@ img {
 .card-actions {
   display: flex;
   gap: 8px;
-  margin-top: 10px;
+  margin-top: 12px;
 }
 
 /* ---------- Buttons ---------- */
@@ -630,13 +637,13 @@ img {
   align-items: flex-end;
   padding: 16px;
   color: #fff;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   position: relative;
 }
 .back-link {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   margin-bottom: 12px;
   color: var(--ink-soft);
   font-weight: 600;
@@ -673,7 +680,7 @@ img {
 
 .profile__actions {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 16px;
 }
 .profile__actions .btn {
@@ -697,7 +704,7 @@ img {
   box-shadow: var(--shadow-sm);
 }
 .info-card h3 {
-  margin: 0 0 10px;
+  margin: 0 0 12px;
   font-size: var(--text-lg);
 }
 .info-grid {
@@ -723,11 +730,11 @@ img {
 .taglist {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
 }
 
 .scholarship-row {
-  padding: 10px 0;
+  padding: 12px 0;
   border-top: 1px solid var(--line);
 }
 .scholarship-row:first-of-type {
@@ -754,7 +761,7 @@ img {
   border: 1px solid #f2e0a8;
   color: #7a5b00;
   border-radius: var(--radius-sm);
-  padding: 10px 12px;
+  padding: 12px 12px;
   font-size: var(--text-sm);
   margin-bottom: 12px;
 }
@@ -773,19 +780,19 @@ img {
   margin: 0 0 4px;
 }
 .form-group {
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 .form-group label {
   display: block;
   font-size: var(--text-md);
   font-weight: 600;
-  margin-bottom: 5px;
+  margin-bottom: 4px;
   color: var(--ink-soft);
 }
 .form-group input,
 .form-group select {
   width: 100%;
-  padding: 11px 12px;
+  padding: 12px 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   font-size: var(--text-lg);
@@ -800,7 +807,7 @@ img {
 }
 .consent {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   align-items: flex-start;
   font-size: var(--text-md);
   color: var(--ink-soft);
@@ -816,23 +823,23 @@ img {
   background: #fdecee;
   color: var(--danger);
   border: 1px solid #f6c9ce;
-  padding: 10px 12px;
+  padding: 12px 12px;
   border-radius: var(--radius-sm);
   font-size: var(--text-md);
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 .form-success {
   background: var(--teal-050);
   color: var(--success);
   border: 1px solid #bfe8d5;
-  padding: 10px 12px;
+  padding: 12px 12px;
   border-radius: var(--radius-sm);
   font-size: var(--text-md);
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 .switch-auth {
   text-align: center;
-  margin-top: 14px;
+  margin-top: 16px;
   font-size: var(--text-base);
   color: var(--ink-soft);
 }
@@ -847,15 +854,15 @@ img {
 
 .tabs {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   background: #eef1f6;
   padding: 4px;
   border-radius: 999px;
-  margin-bottom: 18px;
+  margin-bottom: 20px;
 }
 .tabs button {
   flex: 1;
-  padding: 9px;
+  padding: 8px;
   border: none;
   background: none;
   border-radius: 999px;
@@ -873,8 +880,8 @@ img {
 .account-head {
   display: flex;
   align-items: center;
-  gap: 14px;
-  margin-bottom: 18px;
+  gap: 16px;
+  margin-bottom: 20px;
 }
 /* Now that the avatar holds its width, the address is what has to give: a flex
    item won't shrink below its content without min-width:0, and an email has no
@@ -932,7 +939,7 @@ img {
 .journey-skel {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 @keyframes shimmer {
   0% {
@@ -982,16 +989,16 @@ img {
 .journey-actions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 .journey-action {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 14px 16px;
+  padding: 16px 16px;
 }
 .journey-action__body {
   flex: 1;
@@ -1013,10 +1020,10 @@ img {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 .journey-scholarships li {
-  padding-bottom: 14px;
+  padding-bottom: 16px;
   border-bottom: 1px solid var(--line);
 }
 .journey-scholarships li:last-child {
@@ -1024,7 +1031,7 @@ img {
   border-bottom: none;
 }
 .journey-scholarships p {
-  margin: 4px 0 6px;
+  margin: 4px 0 8px;
   font-size: var(--text-md);
 }
 
@@ -1053,7 +1060,7 @@ img {
 .app-status__select {
   flex: 1;
   min-width: 0;
-  padding: 6px 8px;
+  padding: 8px 8px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--bg);
@@ -1075,13 +1082,13 @@ img {
   color: var(--navy-900);
 }
 .dream-form {
-  margin-top: 14px;
+  margin-top: 16px;
 }
 
 .next-best {
   border: 1px solid var(--teal-500);
   background: linear-gradient(180deg, var(--teal-050), var(--surface));
-  margin-top: 14px;
+  margin-top: 16px;
 }
 .next-best__eyebrow {
   font-size: var(--text-xs);
@@ -1091,7 +1098,7 @@ img {
   color: var(--teal-600);
 }
 .next-best__title {
-  margin: 6px 0 0;
+  margin: 8px 0 0;
   font-size: var(--text-xl);
 }
 
@@ -1104,7 +1111,7 @@ img {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   font-weight: 600;
 }
 .readiness__pct {
@@ -1113,7 +1120,7 @@ img {
   font-weight: 800;
 }
 .readiness__detail {
-  margin: 6px 0 0;
+  margin: 8px 0 0;
   font-size: var(--text-md);
 }
 
@@ -1181,8 +1188,8 @@ img {
   position: relative;
   display: flex;
   align-items: flex-start;
-  gap: 14px;
-  padding: 0 0 18px 0;
+  gap: 16px;
+  padding: 0 0 20px 0;
 }
 .timeline__stage:not(:last-child)::before {
   content: "";
@@ -1274,7 +1281,7 @@ img {
   bottom: calc(var(--tabbar-h) + 16px + env(safe-area-inset-bottom, 0));
   background: var(--navy-900);
   color: #fff;
-  padding: 11px 18px;
+  padding: 12px 20px;
   border-radius: 999px;
   font-size: var(--text-base);
   font-weight: 600;
@@ -1432,7 +1439,7 @@ img {
   z-index: 200;
   background: var(--navy-900);
   color: #fff;
-  padding: 10px 16px;
+  padding: 12px 16px;
   border-radius: 8px;
   transition: top 0.15s ease;
 }
@@ -1524,13 +1531,13 @@ img {
 .lp-nav {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 .lp-nav__link {
   color: #cdd7e6;
   font-weight: 600;
   font-size: var(--text-base);
-  padding: 8px 10px;
+  padding: 8px 12px;
 }
 .lp-nav__link:hover {
   color: #fff;
@@ -1540,7 +1547,7 @@ img {
 .lp-hero {
   background: linear-gradient(135deg, var(--navy-900), var(--navy-700));
   color: #fff;
-  padding: 44px 20px 36px;
+  padding: 48px 20px 40px;
   text-align: center;
 }
 .lp-hero .hero__tagline {
@@ -1548,7 +1555,7 @@ img {
 }
 .lp-hero__title {
   color: #fff;
-  margin: 6px 0 14px;
+  margin: 8px 0 16px;
   font-size: var(--text-5xl);
   line-height: 1.15;
   font-weight: 800;
@@ -1563,18 +1570,18 @@ img {
   color: #c7d2e2;
   font-size: var(--text-lg);
   max-width: 520px;
-  margin: 0 auto 26px;
+  margin: 0 auto 28px;
   line-height: 1.55;
 }
 .lp-hero__ctas {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   max-width: 340px;
   margin: 0 auto;
 }
 .lp-cta {
-  padding: 14px 22px;
+  padding: 16px 24px;
   font-size: var(--text-lg);
 }
 .btn--ghost-light {
@@ -1590,7 +1597,7 @@ img {
 .lp-checklist {
   list-style: none;
   padding: 0;
-  margin: 26px 0 0;
+  margin: 28px 0 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1610,7 +1617,7 @@ img {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
-  padding: 30px 20px;
+  padding: 32px 20px;
   text-align: center;
 }
 .lp-stat__n {
@@ -1628,7 +1635,7 @@ img {
 
 /* Generic section rhythm */
 .lp-section {
-  padding: 34px 20px;
+  padding: 32px 20px;
 }
 .lp-h2 {
   font-size: var(--text-3xl);
@@ -1640,7 +1647,7 @@ img {
   color: var(--ink-soft);
   text-align: center;
   max-width: 480px;
-  margin: 0 auto 26px;
+  margin: 0 auto 28px;
   font-size: var(--text-lg);
 }
 
@@ -1654,7 +1661,7 @@ img {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 22px 20px;
+  padding: 24px 20px;
   box-shadow: var(--shadow-sm);
 }
 .lp-step__num {
@@ -1669,7 +1676,7 @@ img {
   margin-bottom: 12px;
 }
 .lp-step h3 {
-  margin: 0 0 6px;
+  margin: 0 0 8px;
   font-size: var(--text-lg);
 }
 .lp-step p {
@@ -1684,14 +1691,14 @@ img {
   background: linear-gradient(135deg, var(--teal-050), #fff);
   border: 1.5px solid var(--teal-500);
   border-radius: var(--radius);
-  padding: 28px 22px;
+  padding: 28px 24px;
 }
 
 /* Trust */
 .lp-trust {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 20px;
 }
 .lp-trust__item {
   text-align: center;
@@ -1701,7 +1708,7 @@ img {
   margin-bottom: 8px;
 }
 .lp-trust__item h3 {
-  margin: 0 0 6px;
+  margin: 0 0 8px;
   font-size: var(--text-lg);
 }
 .lp-trust__item p {
@@ -1714,7 +1721,7 @@ img {
 /* Final CTA band */
 .lp-final-cta {
   background: var(--navy-900);
-  padding: 46px 20px;
+  padding: 48px 20px;
 }
 
 /* Footer */
@@ -1736,7 +1743,7 @@ img {
 }
 .lp-footer__links {
   display: flex;
-  gap: 18px;
+  gap: 20px;
 }
 .lp-footer__links a {
   color: var(--ink-soft);
@@ -1780,7 +1787,7 @@ img {
 
 @media (min-width: 900px) {
   .lp-hero {
-    padding: 70px 20px 56px;
+    padding: 72px 20px 56px;
   }
   .lp-hero__title {
     font-size: var(--text-7xl);
@@ -1825,7 +1832,7 @@ img {
 .empty-card__icon {
   width: 74px;
   height: 74px;
-  margin: 0 auto 14px;
+  margin: 0 auto 16px;
   border-radius: 50%;
   background: var(--teal-050);
   color: var(--teal-600);
@@ -1833,7 +1840,7 @@ img {
   place-items: center;
 }
 .empty-card h3 {
-  margin: 0 0 6px;
+  margin: 0 0 8px;
   font-size: var(--text-xl);
 }
 .empty-card .muted {
@@ -1841,9 +1848,9 @@ img {
   max-width: 320px;
 }
 .empty-card__actions {
-  margin-top: 18px;
+  margin-top: 20px;
   display: flex;
-  gap: 10px;
+  gap: 12px;
   justify-content: center;
   flex-wrap: wrap;
 }
@@ -1856,9 +1863,9 @@ img {
 .auth-card__brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   justify-content: center;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   color: var(--navy-900);
 }
 .auth-card__brand .brand__mark {
@@ -1891,10 +1898,10 @@ img {
   border: 1px solid var(--teal-500);
   color: var(--teal-600);
   border-radius: var(--radius-sm);
-  padding: 10px 12px;
+  padding: 12px 12px;
   font-size: var(--text-md);
   font-weight: 600;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 .auth-gate-note .icon {
   flex: 0 0 auto;
@@ -1924,7 +1931,7 @@ img {
   background: linear-gradient(135deg, var(--navy-900), var(--navy-700));
   color: #dbe5f1;
   border-radius: var(--radius);
-  padding: 14px 16px;
+  padding: 16px 16px;
   margin-bottom: 12px;
   font-size: var(--text-md);
   flex-wrap: wrap;
@@ -1946,7 +1953,7 @@ img {
   font-size: var(--text-2xs);
   font-weight: 800;
   letter-spacing: 0.02em;
-  padding: 3px 9px;
+  padding: 3px 8px;
   border-radius: 999px;
 }
 .uni-card__tier--verified {
@@ -1964,7 +1971,7 @@ img {
 .lp-hero__grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 34px;
+  gap: 32px;
   align-items: center;
   text-align: center;
 }
@@ -1997,9 +2004,9 @@ img {
 .lp-mock__bar {
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   background: #eef1f6;
-  padding: 9px 12px;
+  padding: 8px 12px;
 }
 .lp-mock__dot {
   width: 9px;
@@ -2013,7 +2020,7 @@ img {
   color: var(--teal-600);
   font-size: var(--text-2xs);
   font-weight: 700;
-  padding: 3px 10px;
+  padding: 3px 12px;
   border-radius: 999px;
   white-space: nowrap;
   overflow: hidden;
@@ -2027,7 +2034,7 @@ img {
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;
-  padding: 8px 10px;
+  padding: 8px 12px;
 }
 .lp-mock__cover span {
   background: rgba(11, 31, 58, 0.72);
@@ -2038,7 +2045,7 @@ img {
   border-radius: 999px;
 }
 .lp-mock__body {
-  padding: 10px 12px 12px;
+  padding: 12px 12px 12px;
 }
 .lp-mock__name {
   font-weight: 700;
@@ -2047,27 +2054,27 @@ img {
 }
 .lp-mock__chips {
   display: flex;
-  gap: 5px;
+  gap: 4px;
   flex-wrap: wrap;
-  margin-top: 6px;
+  margin-top: 8px;
 }
 .lp-mock__chips .chip {
   font-size: var(--text-2xs);
-  padding: 2px 7px;
+  padding: 2px 8px;
 }
 .lp-mock__match {
-  margin-top: 7px;
+  margin-top: 8px;
   font-size: var(--text-2xs);
   color: var(--teal-600);
   background: var(--teal-050);
   border-radius: 7px;
-  padding: 5px 7px;
+  padding: 4px 8px;
 }
 .lp-trust__icon {
   color: var(--teal-600);
   display: flex;
   justify-content: center;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 @media (min-width: 900px) {
@@ -2263,7 +2270,7 @@ img {
   font-size: var(--text-xs);
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  margin: 0 0 18px;
+  margin: 0 0 20px;
 }
 .lp-mission__quote {
   color: #fff;
@@ -2277,21 +2284,21 @@ img {
   color: #c7d2e2;
   font-weight: 600;
   font-size: var(--text-md);
-  margin: 18px 0 0;
+  margin: 20px 0 0;
 }
 
 /* ---------- Landing: university contact form ---------- */
 .lp-uni-form {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  gap: 16px;
   max-width: 680px;
   margin-top: 20px;
   position: relative;
   background: #fff;
   border: 1px solid var(--line, #e4e8ef);
   border-radius: 16px;
-  padding: 22px;
+  padding: 24px;
   box-shadow: 0 2px 10px rgba(11, 31, 58, 0.05);
 }
 .lp-uni-form__wide {
@@ -2299,7 +2306,7 @@ img {
 }
 .lp-uni-form textarea {
   width: 100%;
-  padding: 10px 12px;
+  padding: 12px 12px;
   border: 1px solid #d6dce6;
   border-radius: 10px;
   font: inherit;
@@ -2322,10 +2329,10 @@ img {
   background: var(--teal-050);
   border: 1px solid rgba(20, 184, 166, 0.3);
   border-radius: 16px;
-  padding: 22px;
+  padding: 24px;
 }
 .lp-uni-form__done h3 {
-  margin: 0 0 6px;
+  margin: 0 0 8px;
 }
 .lp-uni-form__done p {
   margin: 0;
@@ -2358,7 +2365,7 @@ img {
   background: var(--navy-900);
   color: #fff;
   border-radius: var(--radius);
-  padding: 10px 14px;
+  padding: 12px 16px;
   margin-bottom: 12px;
   font-size: var(--text-md);
 }
@@ -2381,7 +2388,7 @@ img {
   background: var(--teal-050);
   border: 1px dashed var(--teal-500);
   border-radius: var(--radius-sm);
-  padding: 10px 14px;
+  padding: 12px 16px;
   font-size: var(--text-md);
   color: var(--navy-800);
 }
@@ -2391,7 +2398,7 @@ img {
   background: var(--teal-050);
   border: 1px solid rgba(20, 184, 166, 0.25);
   border-radius: var(--radius);
-  padding: 14px 16px;
+  padding: 16px 16px;
   margin-bottom: 12px;
 }
 .fit-card h3 {
@@ -2401,7 +2408,7 @@ img {
 }
 .fit-list {
   margin: 0;
-  padding-left: 18px;
+  padding-left: 20px;
 }
 .fit-list li {
   margin: 2px 0;
@@ -2416,8 +2423,8 @@ img {
 }
 .onb-progress {
   display: flex;
-  gap: 6px;
-  margin-bottom: 14px;
+  gap: 8px;
+  margin-bottom: 16px;
 }
 .onb-progress span {
   flex: 1;
@@ -2439,7 +2446,7 @@ img {
 }
 .onb-input {
   width: 100%;
-  padding: 11px 13px;
+  padding: 12px 12px;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   font-size: var(--text-lg);
@@ -2455,7 +2462,7 @@ img {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 22px;
+  margin-top: 24px;
 }
 .onb-nav .btn {
   flex: 1;
@@ -2471,7 +2478,7 @@ img {
   background: var(--surface);
   color: var(--ink);
   border-radius: 999px;
-  padding: 8px 14px;
+  padding: 8px 16px;
   font-size: var(--text-base);
   font-weight: 600;
   cursor: pointer;
@@ -2510,7 +2517,7 @@ img {
   background: var(--navy-800);
   color: #fff;
   border-radius: var(--radius);
-  padding: 22px;
+  padding: 24px;
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
 .lp-pricing__card--pilot {
@@ -2523,7 +2530,7 @@ img {
   font-size: var(--text-xs);
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  margin: 0 0 6px;
+  margin: 0 0 8px;
 }
 .lp-pricing__price {
   font-size: var(--text-5xl);
@@ -2551,7 +2558,7 @@ img {
 .lp-testimonials {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 14px;
+  gap: 16px;
 }
 .lp-testimonial {
   background: var(--surface);
@@ -2581,7 +2588,7 @@ img {
   background: #fdf7e6;
   border: 1px solid rgba(233, 185, 73, 0.45);
   border-radius: var(--radius);
-  padding: 12px 14px;
+  padding: 12px 16px;
   margin-bottom: 12px;
   font-size: var(--text-md);
   line-height: 1.55;
@@ -2598,7 +2605,7 @@ img {
   border: 1px solid var(--line);
   border-left: 4px solid var(--teal-500);
   border-radius: var(--radius);
-  padding: 20px 22px;
+  padding: 20px 24px;
 }
 .lp-datacard p {
   margin: 0 0 12px;
@@ -2626,12 +2633,15 @@ img {
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   margin: 20px 0 8px;
 }
 .pager__btn {
   min-width: 40px;
-  padding: 9px 12px;
+  /* 12px, not the 8px the grid pass rounded 9px down to: these are the smallest
+     tap targets in the app and snapping down took them from 36px to 34px tall.
+     The next step up puts them back above where they started. */
+  padding: 12px;
   border: 1px solid var(--line);
   background: var(--surface);
   color: var(--ink);
@@ -2665,7 +2675,10 @@ img {
 @media (max-width: 480px) {
   .pager__btn {
     min-width: 36px;
-    padding: 8px 9px;
+    /* Vertical padding held at 12px on phones too — this is the narrowest
+       breakpoint and the smallest control, so it's the last place to shave
+       height off a tap target. Only the horizontal padding tightens. */
+    padding: 12px 8px;
     font-size: var(--text-md);
   }
 }
