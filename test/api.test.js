@@ -1309,3 +1309,138 @@ test("GET /api/universities/filters exposes verified/total counts", async () => 
   assert.ok(r.json.counts.verified > 0);
   assert.ok(r.json.counts.total > r.json.counts.verified);
 });
+
+// --- Canonical host / cutover prep -----------------------------------------
+// These cover the custom-domain switch: every public URL must advertise ONE
+// origin, whichever hostname the request arrived on. Getting this wrong means
+// the old and new domains each serve a complete, self-canonicalising copy of
+// the site and split their ranking signals.
+
+// The configured origin shares the test server's host but uses https, while the
+// request itself is http. That keeps the canonical-host redirect quiet (hosts
+// match) while still telling appOrigin and baseUrl apart: only appOrigin yields
+// https here.
+const configuredOrigin = () => "https://" + base.replace(/^https?:\/\//, "");
+
+test("sitemap uses the configured origin, not the request scheme/host", async () => {
+  process.env.UNIVERSO_APP_URL = configuredOrigin();
+  try {
+    const xml = await (await fetch(base + "/sitemap.xml")).text();
+    assert.match(
+      xml,
+      new RegExp("<loc>" + configuredOrigin() + "/discover</loc>"),
+    );
+    assert.ok(
+      !xml.includes("http://" + base.replace(/^https?:\/\//, "") + "/discover"),
+      "must not fall back to the request-derived origin",
+    );
+  } finally {
+    delete process.env.UNIVERSO_APP_URL;
+  }
+});
+
+test("sitemap is not poisoned by whichever host asked first", async () => {
+  // The old cache baked the origin in, so the first request decided the URLs
+  // for every later one — one crawler on the wrong host and the sitemap lied
+  // until the next restart.
+  const hostPort = base.replace(/^https?:\/\//, "");
+  process.env.UNIVERSO_APP_URL = "https://" + hostPort;
+  let first;
+  try {
+    first = await (await fetch(base + "/sitemap.xml")).text();
+  } finally {
+    delete process.env.UNIVERSO_APP_URL;
+  }
+
+  process.env.UNIVERSO_APP_URL = "http://" + hostPort;
+  try {
+    const second = await (await fetch(base + "/sitemap.xml")).text();
+    assert.match(
+      first,
+      new RegExp("<loc>https://" + hostPort + "/discover</loc>"),
+    );
+    assert.match(
+      second,
+      new RegExp("<loc>http://" + hostPort + "/discover</loc>"),
+      "second request must rebuild, not reuse the first origin",
+    );
+  } finally {
+    delete process.env.UNIVERSO_APP_URL;
+  }
+});
+
+test("robots.txt points its Sitemap line at the configured origin", async () => {
+  process.env.UNIVERSO_APP_URL = configuredOrigin();
+  try {
+    const txt = await (await fetch(base + "/robots.txt")).text();
+    assert.ok(txt.includes("Sitemap: " + configuredOrigin() + "/sitemap.xml"));
+  } finally {
+    delete process.env.UNIVERSO_APP_URL;
+  }
+});
+
+test("profile canonical points at the configured origin", async () => {
+  process.env.UNIVERSO_APP_URL = configuredOrigin();
+  try {
+    const html = await (await fetch(base + "/university/aarhus")).text();
+    assert.ok(
+      html.includes(
+        '<link rel="canonical" href="' +
+          configuredOrigin() +
+          '/university/aarhus"',
+      ),
+      "canonical must use the configured origin, not the request scheme",
+    );
+  } finally {
+    delete process.env.UNIVERSO_APP_URL;
+  }
+});
+
+test("canonical-host redirect stays dormant until UNIVERSO_APP_URL is set", async () => {
+  delete process.env.UNIVERSO_APP_URL;
+  const res = await fetch(base + "/discover", { redirect: "manual" });
+  assert.equal(res.status, 200, "no configured origin → serve normally");
+});
+
+test("canonical-host redirect sends a GET on the wrong host to the real domain", async () => {
+  process.env.UNIVERSO_APP_URL = "https://universo.example";
+  try {
+    const res = await fetch(base + "/university/aarhus?x=1", {
+      redirect: "manual",
+    });
+    assert.equal(res.status, 301);
+    assert.equal(
+      res.headers.get("location"),
+      "https://universo.example/university/aarhus?x=1",
+      "path and query must survive the redirect",
+    );
+  } finally {
+    delete process.env.UNIVERSO_APP_URL;
+  }
+});
+
+test("canonical-host redirect leaves POSTs and /healthz alone", async () => {
+  process.env.UNIVERSO_APP_URL = "https://universo.example";
+  try {
+    // A 301 on a POST drops the body — serve it rather than silently break it.
+    const post = await fetch(base + "/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: "nobody@example.com",
+        password: "wrong-password",
+      }),
+      redirect: "manual",
+    });
+    assert.ok(
+      post.status !== 301,
+      `POST must not redirect (got ${post.status})`,
+    );
+
+    // Render's health check can use an internal hostname; a 3xx reads as unhealthy.
+    const health = await fetch(base + "/healthz", { redirect: "manual" });
+    assert.equal(health.status, 200);
+  } finally {
+    delete process.env.UNIVERSO_APP_URL;
+  }
+});

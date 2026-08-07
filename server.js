@@ -158,6 +158,34 @@ app.set("trust proxy", true);
 app.use(compression()); // gzip/brotli — the filter/search JSON responses are big
 app.use(express.json({ limit: "16kb" }));
 
+// Canonical-host redirect. Dormant until UNIVERSO_APP_URL is set, which makes
+// it the switch for the custom-domain cutover: until then every host serves
+// normally, and the moment it's configured the old *.onrender.com address
+// starts sending visitors and crawlers to the real domain instead of quietly
+// serving a second, competing copy of the whole site.
+//
+// Deliberately narrow:
+//   - GET/HEAD only. Redirecting a POST would drop its body, so writes are
+//     served on whatever host they arrive at rather than silently broken.
+//   - /healthz is exempt: Render's health check may call an internal hostname,
+//     and a 3xx there can read as an unhealthy service.
+//   - No-ops when the host already matches, so there is no redirect loop.
+app.use((req, res, next) => {
+  if (!process.env.UNIVERSO_APP_URL) return next();
+  if (req.method !== "GET" && req.method !== "HEAD") return next();
+  if (req.path === "/healthz") return next();
+
+  let want;
+  try {
+    want = new URL(appOrigin(req));
+  } catch {
+    return next(); // malformed env value — never take the site down over it
+  }
+  if (req.get("host") === want.host) return next();
+
+  return res.redirect(301, `${want.origin}${req.originalUrl}`);
+});
+
 // Baseline security headers (a CSP is deliberately omitted for now — the SPA
 // uses inline styles throughout, so a useful CSP needs a dedicated pass).
 app.use((_req, res, next) => {
@@ -1884,7 +1912,8 @@ app.get("/for-universities", (req, res) => {
 app.get("/join", (_req, res) => res.redirect(301, "/for-universities"));
 
 app.get("/robots.txt", (req, res) => {
-  const base = `${req.protocol}://${req.get("host")}`;
+  // Must agree with the sitemap it points at — see appOrigin().
+  const base = appOrigin(req);
   // Operational/account surfaces carry no unique public content — keep
   // crawlers out of them (they're also noindex'd at the page level). Public
   // pages (/, /discover, /university/*) are open to everyone.
@@ -1922,28 +1951,37 @@ app.get("/robots.txt", (req, res) => {
     );
 });
 
-let sitemapCache = null; // dataset is static — build once
+// Paths only — deliberately NOT the finished XML. Baking the origin into the
+// cache meant whichever Host header arrived first decided what the sitemap
+// advertised for the rest of the process: one crawler hitting the old hostname
+// after a deploy would have the new domain serving a sitemap full of old-domain
+// URLs. Joining per request is 302 string concats on a rarely-hit route.
+let sitemapPaths = null; // dataset is static — collect once
 app.get("/sitemap.xml", (req, res) => {
-  const base = `${req.protocol}://${req.get("host")}`;
-  if (!sitemapCache) {
+  const base = appOrigin(req);
+  if (!sitemapPaths) {
     // Only VERIFIED profiles are submitted for indexing. The ~3,700
     // register-only records are near-duplicate boilerplate (name, city, type,
     // enrolment) with no tuition, programs or entry requirements — asking
     // Google to index them invites a thin-content judgement on the whole
     // domain. They stay reachable and crawlable (noindex,follow on the page
     // itself), so their outbound links still pass, but they're not advertised.
-    const urls = [
+    sitemapPaths = [
       "discover",
       "for-universities",
       ...UNIVERSITIES.filter((u) => u.verified).map(
         (u) => `university/${u.id}`,
       ),
-    ]
-      .map((p) => `  <url><loc>${base}/${p}</loc></url>`)
-      .join("\n");
-    sitemapCache = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
+    ];
   }
-  res.type("application/xml").send(sitemapCache);
+  const urls = sitemapPaths
+    .map((p) => `  <url><loc>${base}/${p}</loc></url>`)
+    .join("\n");
+  res
+    .type("application/xml")
+    .send(
+      `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`,
+    );
 });
 
 // Server-rendered profile pages (real HTML + per-page meta for crawlers).
@@ -1975,7 +2013,7 @@ app.get("/university/:id", (req, res) => {
         description:
           uni.short_description ||
           `${uni.name} — discover programs, facts and how to apply.`,
-        canonical: `${baseUrl(req)}/university/${uni.id}`,
+        canonical: `${appOrigin(req)}/university/${uni.id}`,
         // Unverified = register-only boilerplate. noindex,FOLLOW: keep it out of
         // the index without orphaning the links on it. A profile becomes
         // indexable the moment it earns real content (or a university claims it).
@@ -2019,7 +2057,7 @@ app.get("/discover", (req, res) => {
       metaHtml: ssr.metaTags({
         title: "Discover universities in Europe — Universo",
         description: `${VERIFIED_COUNT} verified EU university profiles — tuition, scholarships and apply links — in a directory of ${UNIVERSITIES.length.toLocaleString("en-US")} European institutions. Free to browse.`,
-        canonical: `${baseUrl(req)}/discover`,
+        canonical: `${appOrigin(req)}/discover`,
       }),
       viewHtml: ssr.directoryView(list, UNIVERSITIES.length),
     }),
