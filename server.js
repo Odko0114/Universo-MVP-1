@@ -237,8 +237,25 @@ const baseUrl = (req) => `${req.protocol}://${req.get("host")}`;
 // link pointing at the attacker's domain, tokens and all). UNIVERSO_APP_URL
 // is a trusted, server-configured origin; baseUrl(req) is only a fallback
 // for local dev where that env var typically isn't set.
-const appOrigin = (req) =>
-  (process.env.UNIVERSO_APP_URL || baseUrl(req)).replace(/\/+$/, "");
+//
+// Returns a bare origin (scheme://host) even when UNIVERSO_APP_URL is set to a
+// full URL. Stripping only the trailing slash wasn't enough: a value carrying a
+// path — `https://host/discover`, easily pasted from a browser address bar —
+// got prepended to every route, producing /discover/discover in the sitemap and
+// /discover/verify-email in email links. A function named appOrigin should
+// return an origin whatever is in the variable.
+const appOrigin = (req) => {
+  const raw = process.env.UNIVERSO_APP_URL;
+  if (raw) {
+    try {
+      return new URL(raw).origin;
+    } catch {
+      // Not parseable as a URL — fall through to the request-derived origin
+      // rather than emitting a broken absolute link everywhere.
+    }
+  }
+  return baseUrl(req).replace(/\/+$/, "");
+};
 
 // A matching profile is "complete enough" to switch the matching layer on once
 // the student has stated at least a field of interest OR a degree OR a budget —

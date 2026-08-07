@@ -1444,3 +1444,41 @@ test("canonical-host redirect leaves POSTs and /healthz alone", async () => {
     delete process.env.UNIVERSO_APP_URL;
   }
 });
+
+test("appOrigin normalizes UNIVERSO_APP_URL to a bare origin", async () => {
+  // Regression: the value in production was set to an address-bar copy that
+  // carried a path (".../discover"), which got prepended to every route —
+  // /discover/discover in the sitemap, /discover/verify-email in email links.
+  const hostPort = base.replace(/^https?:\/\//, "");
+  for (const value of [
+    "http://" + hostPort + "/discover",
+    "http://" + hostPort + "/discover/",
+    "http://" + hostPort + "//",
+  ]) {
+    process.env.UNIVERSO_APP_URL = value;
+    try {
+      const xml = await (await fetch(base + "/sitemap.xml")).text();
+      assert.ok(
+        xml.includes("<loc>http://" + hostPort + "/discover</loc>"),
+        `expected a bare origin for ${value}`,
+      );
+      assert.ok(
+        !xml.includes("/discover/discover"),
+        `path leaked through for ${value}`,
+      );
+    } finally {
+      delete process.env.UNIVERSO_APP_URL;
+    }
+  }
+});
+
+test("appOrigin ignores an unparseable UNIVERSO_APP_URL instead of emitting broken links", async () => {
+  process.env.UNIVERSO_APP_URL = "not a url";
+  try {
+    const xml = await (await fetch(base + "/sitemap.xml")).text();
+    assert.match(xml, /<loc>http:\/\/127\.0\.0\.1:\d+\/discover<\/loc>/);
+    assert.ok(!xml.includes("not a url"));
+  } finally {
+    delete process.env.UNIVERSO_APP_URL;
+  }
+});
