@@ -1,51 +1,57 @@
-# CLAUDE.md
+# Universo — Build Plan & Context
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+## Session start protocol
 
-## What this is
+At the start of every session, before I ask you anything:
 
-Universo — a mobile-first MVP that helps international students discover and compare universities abroad. Node.js + Express backend, file-based JSON storage, vanilla HTML/CSS/JS frontend (no build step, hash-routed SPA). See [README.md](README.md) for the full feature list, data model, and API reference — don't duplicate that here; this file is about working in the code.
+1. Read this file, including the status log at the bottom.
+2. State which roadmap item is next (first unchecked box).
+3. Open the linked task file for that item (`docs/tasks/0N-*.md`) — that file is the master prompt with full detail. Read it fully before proposing anything.
+4. Verify the *previous* item is actually true — don't trust the checkbox blindly. Spot-check the codebase for evidence it was really done (e.g. if item 1 is checked, confirm the fix is actually in the code, not just marked complete).
+5. If the previous item looks incomplete, flag it and stop — don't start new work on top of an unverified fix.
+6. If it checks out, propose the next task in one sentence (pulled from the task file's Objective) and wait for my go-ahead before touching code.
 
-## Commands
+Do this unprompted, every session, without me asking "what's next."
 
-```bash
-npm install
-npm run dev              # node --watch server.js, http://localhost:3000
-npm start                # plain run, no watch
-npm test                 # node --test --test-concurrency=1 (all tests in test/)
-npm run typecheck        # tsc -p jsconfig.json (checkJs over the plain-JS backend)
-npm run seed             # rebuild data/universities.json from curated + seed caches
-npm run import:eter [year]   # refresh data/seed/eter-universities.json (default year 2022)
-npm run import:global    # refresh data/seed/global-universities.json
-npm run import:rankings  # refresh data/seed/rankings.json
-npm run import:all       # all three imports above
-npm run create-admin -- you@example.com   # create/update an /admin account (interactive password prompt)
-```
+## Priority filter for every decision
 
-Run a single test file: `node --test test/dataset.test.js`. Node's test runner also supports filtering by name: `node --test --test-name-pattern="apply-click" test/api.test.js`.
+Before building anything, ask: can a student from Mongolia who wants to study in Finland —
 
-CI (`.github/workflows/ci.yml`) runs on Node 20.x and 22.x: `npm ci` → `npm run seed` → `npm test` → `npm run typecheck` → `npm audit --omit=dev --audit-level=high`. The full seed dataset isn't committed (only the cached ETER import is), so tests always run against a freshly built `data/universities.json` — don't assume a stale local `data/universities.json` matches what CI sees; re-run `npm run seed` after touching anything in `data/seed/` or `lib/dataset.js`.
+- Discover universities?
+- Compare them?
+- Save favorites?
+- Create a dream?
+- See what to do next?
+- Come back tomorrow and continue?
+- Feel they're making progress?
 
-No database and no frontend build step — `data/*.json` (git-ignored except `data/seed/`) is rebuilt from seed files on every boot via `store.initFresh`.
+If a task doesn't move one of these forward, it's not next.
 
-## Architecture
+## Rules for this repo
 
-**`server.js`** is a single Express app (~1500 lines) that wires every `lib/` module together. Two route surfaces live in it: page routes (`app.get('/discover')`, `/university/:id`, `/admin`, etc. — mostly server-rendered via `lib/ssr.js`) and a `/api` router (`api.get/post/...`) mounted at the bottom. When looking for a route, `grep -n "^api\.\(get\|post\|delete\|patch\)" server.js` for API endpoints or `grep -n "app\.get("` for pages — the README's API table covers the stable endpoints but server.js has grown ahead of it (email verification flow, student journey/milestones/dream-plan endpoints, university-partner portal login/stats, pilot-lead capture).
+- One task per session. Implement it, I test it manually, then commit. Do not bundle multiple roadmap items into one prompt.
+- Do not start the next item until the current one is confirmed working in production, not just locally.
+- Do not add features not on this list without explicit approval — especially anything gamification-shaped (streaks, badges, notifications).
+- When touching a screen for a roadmap item, apply consistent spacing/typography/card style while you're in that code. Don't schedule a separate "polish pass."
+- Task files under `docs/tasks/` are the source of truth for scope on that item. If something feels missing from a task file, flag it before starting rather than improvising.
 
-**The `lib/store.js` seam is the key architectural boundary.** Every module reads/writes data only through `store.init/read/write/writeDebounced` — never touches `data/*.json` directly. This is deliberate: it's what would let file-based JSON storage be swapped for Postgres/SQLite later without touching route handlers or business logic. Respect this seam when adding persistence — don't reach for `fs` directly in a new module.
+## Roadmap (in order — do not reorder without discussion)
 
-**Three data tiers merge into one dataset** (`lib/dataset.js`): curated (`data/seed/universities.js`, 40 hand-built rich profiles) → ETER (European register import, ~3,400) → global (Hipolabs list, ~9,000), deduped by web domain with curated always winning a clash. On top of the merge, `lib/estimates.js` fills country-level tuition/cost/language bands only where no real value exists, and results are tagged by confidence (`real` vs `estimated`) — never invent a per-university fact where only a country-level estimate exists. `lib/data-quality.js` scores/flags records and `data/seed/manifest.json` tracks import provenance (fetch dates, counts, checksums); the `import-*.js` scripts fail loudly on malformed source data rather than silently ingesting it.
+- [ ] 1. **Security fix** — remove/secure the exposed admin provisioning command → [`docs/tasks/01-security-fix.md`](docs/tasks/01-security-fix.md)
+- [ ] 2. **Analytics infra** — move event writes from ephemeral disk to Supabase; basic event tracking (no dashboard yet) → [`docs/tasks/02-analytics-infra.md`](docs/tasks/02-analytics-infra.md)
+- [ ] 3. **Core student flow** — fix + apply visual consistency pass: register → discover → search → save → compare → [`docs/tasks/03-core-student-flow.md`](docs/tasks/03-core-student-flow.md)
+- [ ] 4. **Navigation** — URL-based filter/compare persistence, last-viewed university → [`docs/tasks/04-navigation-persistence.md`](docs/tasks/04-navigation-persistence.md)
+- [ ] 5. **Continue Where You Left Off** — last visited page/state on Home, basic progress indicator (profile %, saved count) → [`docs/tasks/05-continue-where-left-off.md`](docs/tasks/05-continue-where-left-off.md)
+- [ ] 6. **Admin dashboard** — Overview (DAU/WAU/MAU, new vs returning) + Funnel (Visitor → Register → Dream → Save → Compare → Apply) only → [`docs/tasks/06-admin-dashboard.md`](docs/tasks/06-admin-dashboard.md)
+- [ ] 7. **Next Best Action** — design using real funnel data from step 6, not guesses → [`docs/tasks/07-next-best-action.md`](docs/tasks/07-next-best-action.md)
+- [ ] 8. **Launch prep** — SEO metadata/sitemap, custom domain, Search Console, performance (Lighthouse), accessibility basics → [`docs/tasks/08-launch-prep.md`](docs/tasks/08-launch-prep.md)
 
-**Two completely separate auth systems, by design**: student auth (`lib/auth.js`, cookie `uv_token`) and admin auth (`lib/admin-auth.js`, cookie `uv_admin`) use different stores, different JWT claims, and different middleware (`auth.requireAuth` vs `adminAuth.requireAdmin`), so a compromised student session can never reach `/api/admin/*`. A third, `lib/uni-auth.js` (`requireUni`), gates the university-partner portal (`/api/uni/*`). When adding a protected route, be deliberate about which of the three you're gating with — they are not interchangeable.
+## Explicitly deferred (do not build until revisited)
 
-**Student "journey" / dream-plan features** (`lib/journey.js`, `lib/explain.js`, `lib/match.js`) compute recommendations and milestone/readiness tracking against a student's saved universities and profile — these are pure functions over the dataset plus stored student state, unit-tested independently of the HTTP layer in `test/*.test.js`.
+Animations/microinteractions beyond consistency pass, retention gamification (streaks/badges/reminders), scroll restoration, product/search analytics dashboards, founder morning-brief dashboard, screen reader support, architecture refactors, viral loops/partnerships, competitive benchmarking UI.
 
-**Analytics is first-party and PII-free**: every user action becomes a timestamped, anonymized event appended to `data/events.jsonl`; all funnel/retention/traffic aggregation is pure, unit-tested math in `lib/events.js`, surfaced through the `/admin` dashboard. Never attach an email or student id to an event — only the anonymous browser id.
+## Status log
 
-**Frontend has no build step.** `public/js/api.js` is the API client, `public/js/app.js` (~1500 lines) is the SPA's views/router (hash-based routing for client-rendered pages), `public/css/styles.css` is shared by both the landing page and the app. Server-rendered pages (`/discover`, `/university/:id`) get their HTML/meta tags from `lib/ssr.js` for SEO; everything else renders client-side after the shell loads.
+(Update after each session — one line: date, item number, what shipped, any issue found.)
 
-**Resilience/ops modules worth knowing about before touching outbound calls or request handling**: `lib/http.js` (timeout + retry + circuit breaker for ETER/Wikipedia/logo fetches — route new outbound calls through this, don't add raw `fetch`), `lib/rate-limit.js` (in-memory sliding-window limiter, applied per-route in server.js), `lib/validate.js` (request-body validation/length-capping), `lib/log.js` (structured JSON logs + the error-capture sink).
-
-## Testing conventions
-
-Tests are plain `node:test` files in `test/`, one per `lib/` module plus `test/api.test.js` for full HTTP round-trips (auth, save/unsave, export, delete, admin isolation). New `lib/` logic should get a matching `test/<name>.test.js`. Tests that touch storage use a temp/isolated data dir rather than the real `data/` — follow the existing pattern in `test/store.test.js` / `test/api.test.js` rather than pointing tests at the real seeded dataset.
+<!-- 2026-08-07 | Item 0 | Repo restructured: CLAUDE.md split into index + per-task master prompts under docs/tasks/. No code changed. -->
