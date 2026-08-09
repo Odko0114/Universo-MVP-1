@@ -1,7 +1,7 @@
 /* Universo SPA — History-API router + views. Vanilla JS, no build step.
    Uses real paths (not hash) so the server can render each page for crawlers. */
 (function () {
-  "use strict";
+  ("use strict");
 
   const view = document.getElementById("view");
   const PAGE_SIZE = 48;
@@ -286,6 +286,11 @@
   // ---- History-API router -------------------------------------------------
   function navigate(pathname, replace) {
     if (pathname !== location.pathname) {
+      // Before the new entry exists — a replace overwrites this one, so there
+      // is nothing about it worth keeping.
+      if (!replace) {
+        rememberScroll();
+      }
       history[replace ? "replaceState" : "pushState"]({}, "", pathname);
     }
     render();
@@ -317,15 +322,7 @@
     e.preventDefault();
     navigate(href);
   });
-  window.addEventListener("popstate", () => {
-    poppingHistory = true;
-    try {
-      render();
-    } finally {
-      // Only the synchronous scroll decision at the top of render() needs this.
-      poppingHistory = false;
-    }
-  });
+  window.addEventListener("popstate", render);
 
   const go = navigate;
 
@@ -680,8 +677,14 @@
       renderDiscover();
     });
 
-    loadResults(true);
+    // Awaited so renderDiscover's promise means "results are on screen", not
+    // "skeletons are on screen". Scroll restoration hangs off that promise, and
+    // restoring against a 6-skeleton page (~4000px) instead of the real list
+    // (~26000px) is exactly how the offset was getting clamped to the top.
+    // Recommendations stay unawaited — they render above the list and resolve
+    // separately, so waiting on them would delay restoration for nothing.
     loadRecommendations();
+    await loadResults(true);
   }
 
   async function loadRecommendations() {
@@ -2344,19 +2347,84 @@
   // =========================================================================
   // Router + error boundary
   // =========================================================================
-  // Back/forward restores the previous scroll offset. The browser already does
-  // this well via history.scrollRestoration (left at its default "auto"); the
-  // bug was that render() reset the offset to 0 on EVERY render, including the
-  // ones triggered by popstate, so a student returning from a profile lost their
-  // place in a long result list. Taking it over manually was tried and is worse:
-  // a view resolves while its skeletons are up and the real results land after,
-  // so any offset applied then gets clamped when the page briefly shrinks.
-  // Suppressing our own reset is the whole fix.
-  let poppingHistory = false;
+  // Back/forward returns the student to the exact offset they left, so a long
+  // filtered list doesn't have to be re-found after every profile view.
+  //
+  // The browser's own scrollRestoration can't do this here. It fires as the
+  // history entry activates, when this page is still six skeletons (~4000px)
+  // and the fetched list (~26000px) hasn't arrived — so the offset is clamped
+  // to whatever fits, which is usually the top. Manual control plus restoring
+  // once the results are actually painted is the only ordering that works;
+  // renderDiscover awaits loadResults precisely so that promise means "painted".
+  if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+
+  const scrollNow = () =>
+    window.scrollY || document.documentElement.scrollTop || 0;
+
+  // The offset is stored on the history entry itself, so it travels with that
+  // entry through Back, Forward and reload without a side map to keep in sync.
+  function rememberScroll() {
+    try {
+      history.replaceState(
+        { ...(history.state || {}), scrollY: scrollNow() },
+        "",
+      );
+    } catch {
+      /* state quota or a sandboxed frame — starting at the top is the floor */
+    }
+  }
+
+  function applyScroll(y) {
+    if (!y) return;
+    let frames = 0;
+    let cancelled = false;
+    const stop = () => {
+      cancelled = true;
+    };
+    const passive = { passive: true };
+    // If the student is already scrolling, their input wins — being yanked back
+    // to a remembered offset mid-gesture is worse than not restoring.
+    window.addEventListener("wheel", stop, passive);
+    window.addEventListener("touchstart", stop, passive);
+    window.addEventListener("keydown", stop);
+    const release = () => {
+      window.removeEventListener("wheel", stop, passive);
+      window.removeEventListener("touchstart", stop, passive);
+      window.removeEventListener("keydown", stop);
+    };
+
+    // Card images and late layout can still grow the page after the list is in
+    // the DOM, so keep re-applying until the offset sticks — bounded at ~1s.
+    const tick = () => {
+      if (cancelled) {
+        return release();
+      }
+      const max = Math.max(
+        0,
+        document.documentElement.scrollHeight - window.innerHeight,
+      );
+      window.scrollTo(0, Math.min(y, max));
+      if (Math.abs(scrollNow() - y) > 2 && frames++ < 40) {
+        // setTimeout, not requestAnimationFrame: rAF is throttled to nothing in
+        // a background or occluded tab, so a student who opens a profile in a
+        // new tab and comes back would never get their position restored.
+        setTimeout(tick, 25);
+      } else {
+        release();
+      }
+    };
+    tick(); // first attempt immediately; retries only if the page is still short
+  }
+
+  // A reload keeps history.state, so saving on the way out covers refresh too.
+  window.addEventListener("pagehide", rememberScroll);
 
   function render() {
     const parts = location.pathname.split("/").filter(Boolean);
-    if (!poppingHistory) window.scrollTo(0, 0);
+    // Only an entry we've navigated away from carries an offset; a freshly
+    // pushed one has none and correctly starts at the top.
+    const savedY = Number((history.state || {}).scrollY) || 0;
+    if (!savedY) window.scrollTo(0, 0);
     view.focus({ preventScroll: true });
 
     // "/" is the marketing landing page, served as its own static page — the
@@ -2394,6 +2462,12 @@
       else p = renderDiscover();
     } catch (e) {
       return showCrash(e);
+    }
+    if (savedY) {
+      // renderDiscover awaits its results, so this fires once the list is on
+      // screen — the only point at which the offset can actually be honoured.
+      const painted = p && typeof p.then === "function" ? p : Promise.resolve();
+      painted.then(() => applyScroll(savedY)).catch(() => {});
     }
     if (p && p.catch) p.catch(showCrash);
   }
