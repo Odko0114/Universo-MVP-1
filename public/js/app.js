@@ -1104,10 +1104,16 @@
     }
     setActiveNav("saved");
     document.title = "Saved — Universo";
-    view.innerHTML = `<div class="section-head"><h2>Saved universities</h2></div><div id="results" class="grid">${'<div class="skeleton"></div>'.repeat(3)}</div>`;
+    view.innerHTML = `<div class="section-head"><h2>Saved universities</h2><span id="cmp-link"></span></div><div id="results" class="grid">${'<div class="skeleton"></div>'.repeat(3)}</div>`;
     try {
       const { universities } = await API.saved();
       state.savedIds = new Set(universities.map((u) => u.id));
+      // Comparing needs at least two, so the entry point only appears once it
+      // would actually do something.
+      if (universities.length >= 2) {
+        document.getElementById("cmp-link").innerHTML =
+          '<a class="link-btn" href="/compare" data-link>Compare side by side</a>';
+      }
       const results = document.getElementById("results");
       results.innerHTML = universities.length
         ? universities.map(savedCell).join("")
@@ -1126,6 +1132,142 @@
         sub: e.message,
         ctaHref: "/discover",
         ctaLabel: "Back to discover",
+      });
+    }
+  }
+
+  // ---- Compare -------------------------------------------------------------
+  // Rows are attributes, columns are universities. The honesty problem a table
+  // has and a profile doesn't: a row renders for EVERY university, so a missing
+  // value needs a marker that reads as "we don't know" rather than an empty
+  // cell, which reads as zero or free. Every gap says "Not verified".
+  const UNKNOWN = '<span class="cmp__unknown">Not verified</span>';
+
+  // Same rules as the profile: a tuition figure only when it was actually
+  // researched, estimates flagged as estimates. Never a bare number we can't
+  // stand behind — see the notes in renderProfile.
+  const COMPARE_ROWS = [
+    {
+      label: "Country",
+      get: (u) => esc([u.city, u.country].filter(Boolean).join(", ")),
+    },
+    {
+      label: "Tuition (intl)",
+      get: (u) =>
+        u.tuition_source === "curated_research" && money(u.tuition_range)
+          ? esc(money(u.tuition_range))
+          : "",
+    },
+    {
+      label: "Living cost",
+      get: (u) => {
+        const m = money(u.estimated_living_cost);
+        if (!m) return "";
+        return u.estimated_living_cost.estimated
+          ? `~${esc(m)} <span class="cmp__est">est.</span>`
+          : esc(m);
+      },
+    },
+    {
+      label: "Language",
+      get: (u) =>
+        (u.language_of_instruction || []).length
+          ? esc(u.language_of_instruction.join(", ")) +
+            (u.language_estimated
+              ? ' <span class="cmp__est">typical</span>'
+              : "")
+          : "",
+    },
+    {
+      label: "Degree levels",
+      get: (u) => esc((u.degree_levels || []).join(", ")),
+    },
+    {
+      label: "Ranking",
+      get: (u) =>
+        u.ranking && u.ranking.world_rank
+          ? `#${esc(u.ranking.world_rank)} world <span class="cmp__est">${esc(u.ranking.provider)}</span>`
+          : "",
+    },
+    {
+      label: "Application deadline",
+      get: (u) => esc(u.application_deadline || ""),
+    },
+    {
+      label: "Students",
+      get: (u) =>
+        u.student_count ? esc(nfmt(u.student_count)) + " enrolled" : "",
+    },
+  ];
+
+  async function renderCompare() {
+    if (!state.user) {
+      navigate("/account?src=gate&next=%2Fcompare", true);
+      return;
+    }
+    setActiveNav("saved"); // Compare belongs to the shortlist, which lives under Saved.
+    document.title = "Compare — Universo";
+    view.innerHTML = `<div class="section-head"><h2>Compare</h2></div><div class="skeleton skeleton--block"></div>`;
+
+    try {
+      const { universities } = await API.saved();
+      state.savedIds = new Set(universities.map((u) => u.id));
+
+      if (universities.length < 2) {
+        view.innerHTML =
+          `<div class="section-head"><h2>Compare</h2></div>` +
+          emptyState({
+            iconName: "bookmark",
+            title: universities.length
+              ? "Save one more to compare"
+              : "Nothing to compare yet",
+            sub: universities.length
+              ? "Comparing works from two universities up — three to five makes the trade-offs clearest."
+              : "Save the universities you're considering and see them side by side.",
+            ctaHref: "/discover",
+            ctaLabel: "Browse universities",
+            secondary: universities.length
+              ? '<a class="btn btn--ghost" href="/saved" data-link>View shortlist</a>'
+              : "",
+          });
+        return;
+      }
+
+      API.track({
+        type: "compare",
+        count: universities.length,
+        device: deviceGuess(),
+      });
+
+      const head = universities
+        .map(
+          (u) =>
+            `<th scope="col"><a href="/university/${esc(u.id)}" data-link>${esc(u.name)}</a></th>`,
+        )
+        .join("");
+      const body = COMPARE_ROWS.map((row) => {
+        const cells = universities
+          .map((u) => `<td>${row.get(u) || UNKNOWN}</td>`)
+          .join("");
+        return `<tr><th scope="row">${esc(row.label)}</th>${cells}</tr>`;
+      }).join("");
+
+      view.innerHTML = `
+        <div class="section-head"><h2>Compare</h2><a class="link-btn" href="/saved" data-link>Back to shortlist</a></div>
+        <p class="muted cmp__note">Comparing ${universities.length} saved universities. Blank facts are ones we haven't verified for that university — not zero.</p>
+        <div class="cmp-scroll">
+          <table class="cmp">
+            <thead><tr><th scope="col"><span class="sr-only">Attribute</span></th>${head}</tr></thead>
+            <tbody>${body}</tbody>
+          </table>
+        </div>`;
+    } catch (e) {
+      view.innerHTML = emptyState({
+        iconName: "alert",
+        title: "Couldn’t load your comparison",
+        sub: e.message,
+        ctaHref: "/saved",
+        ctaLabel: "Back to shortlist",
       });
     }
   }
@@ -2138,6 +2280,7 @@
       if (parts[0] === "discover") p = renderDiscover();
       else if (parts[0] === "journey") p = renderJourney();
       else if (parts[0] === "saved") p = renderSaved();
+      else if (parts[0] === "compare") p = renderCompare();
       else if (parts[0] === "onboarding") p = renderOnboarding();
       else if (parts[0] === "account")
         p = renderAccount(new URLSearchParams(location.search).get("mode"));

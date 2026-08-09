@@ -2748,3 +2748,71 @@ img {
     transform: none;
   }
 }
+
+/* ---------- Compare ----------
+   A comparison table is the one place in this app where content legitimately
+   exceeds the viewport, so it scrolls inside its own container rather than
+   letting the page scroll sideways. The attribute column is sticky: without it
+   you scroll to the fourth university and no longer know which row you're on. */
+.cmp-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+.cmp {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: var(--text-md);
+}
+.cmp th,
+.cmp td {
+  padding: 12px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.cmp thead th {
+  font-size: var(--text-base);
+  color: var(--ink);
+  border-bottom: 2px solid var(--line);
+}
+.cmp tbody th {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+  font-weight: 700;
+}
+/* Sticky attribute column — the row label has to survive horizontal scrolling. */
+.cmp th:first-child {
+  position: sticky;
+  left: 0;
+  background: var(--surface);
+  z-index: 1;
+  min-width: 148px;
+}
+.cmp tbody tr:last-child th,
+.cmp tbody tr:last-child td {
+  border-bottom: 0;
+}
+.cmp td {
+  font-variant-numeric: tabular-nums;
+}
+/* A gap must never read as zero or free. */
+.cmp__unknown {
+  color: var(--ink-faint);
+  font-style: italic;
+}
+.cmp__est {
+  color: var(--ink-faint);
+  font-size: var(--text-2xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.cmp__note {
+  margin: 0 2px 12px;
+}

@@ -235,3 +235,21 @@ test("nextActions: complete profile hides the profile action; saved count drives
   assert.equal(manySaved[0].key, "compare");
   assert.match(manySaved[0].title, /5 saved/);
 });
+
+test("nextActions: the compare action points at the compare view, not the list", () => {
+  const full = journey.profileCompleteness({
+    fields_of_interest: ["CS"],
+    degree_level: "Master",
+    budget_max_eur_year: 5000,
+    preferred_languages: ["English"],
+    country_preference: ["Spain"],
+    city_preference: "mid",
+  });
+  const a = journey.nextActions(5, full).find((x) => x.key === "compare");
+  assert.ok(a, "a shortlist of 5 should offer comparing");
+  assert.equal(
+    a.href,
+    "/compare",
+    "sending them back to /saved was the old dead end",
+  );
+});

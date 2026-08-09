@@ -857,7 +857,12 @@ api.post("/universities/:id/apply-click", clickLimiter, (req, res) => {
 // the client and avoids forwarding a full URL with query strings). No PII is
 // accepted or stored — just a path, an anonymous id, and a device/locale guess.
 
-const TRACK_TYPES = new Set(["pageview", "profile_view", "filter_used"]);
+const TRACK_TYPES = new Set([
+  "pageview",
+  "profile_view",
+  "filter_used",
+  "compare",
+]);
 const trackLimiter = rateLimit({ windowMs: 60 * 1000, max: 120 });
 
 function refDomain(req) {
@@ -891,6 +896,14 @@ api.post("/track", trackLimiter, (req, res) => {
   if (type === "filter_used") {
     meta.filter = typeof filter === "string" ? filter.slice(0, 40) : "";
     meta.value = typeof value === "string" ? value.slice(0, 80) : "";
+  }
+  // How many universities were on screen when the student compared. Still just
+  // a number against an anonymous id — no university ids, no student id.
+  if (type === "compare") {
+    const n = Number(req.body && req.body.count);
+    meta.count = Number.isFinite(n)
+      ? Math.max(0, Math.min(50, Math.trunc(n)))
+      : 0;
   }
 
   events.record(type, meta);
@@ -2085,6 +2098,27 @@ app.get("/discover", (req, res) => {
 // <main>, stale default meta, and indexable. They now ship real fallback
 // content (visible before/without JS — the SPA replaces it on hydrate),
 // page-appropriate meta, and noindex (no unique public content on either).
+// Compare is a private view of the student's own shortlist — noindex, and the
+// SSR fallback is a sign-in prompt, exactly like /saved.
+app.get("/compare", (_req, res) => {
+  res.send(
+    ssr.injectSSR(SHELL, {
+      metaHtml: ssr.metaTags({
+        title: "Compare your universities — Universo",
+        description:
+          "Compare your saved European universities side by side on Universo.",
+        noindex: true,
+      }),
+      viewHtml: `
+      <section class="ssr">
+        <h1>Compare your universities</h1>
+        <p>Sign in to compare your shortlist side by side — saving universities is free, always.</p>
+        <p><a href="/account">Sign in</a> · <a href="/account?mode=register&src=compare-ssr">Create a free account</a></p>
+      </section>`,
+    }),
+  );
+});
+
 app.get("/saved", (_req, res) => {
   res.send(
     ssr.injectSSR(SHELL, {

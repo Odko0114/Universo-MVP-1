@@ -1482,3 +1482,39 @@ test("appOrigin ignores an unparseable UNIVERSO_APP_URL instead of emitting brok
     delete process.env.UNIVERSO_APP_URL;
   }
 });
+
+// --- Compare (Task 3a) ------------------------------------------------------
+
+test("GET /compare serves a noindex shell with a sign-in prompt for anonymous visitors", async () => {
+  const r = await req("GET", "/compare");
+  assert.equal(r.status, 200);
+  assert.match(
+    r.text,
+    /noindex/,
+    "a private shortlist view must not be indexed",
+  );
+  assert.match(r.text, /Compare your universities/);
+  assert.match(r.text, /Sign in/);
+});
+
+test("track accepts a compare event and records only a bounded count", async () => {
+  const r = await req("POST", "/api/track", { type: "compare", count: 4 });
+  assert.equal(r.status, 204);
+
+  // Out-of-range values are clamped rather than trusted — the client supplies this.
+  const big = await req("POST", "/api/track", {
+    type: "compare",
+    count: 99999,
+  });
+  assert.equal(big.status, 204);
+  const junk = await req("POST", "/api/track", {
+    type: "compare",
+    count: "not-a-number",
+  });
+  assert.equal(junk.status, 204);
+});
+
+test("track still rejects unknown event types", async () => {
+  const r = await req("POST", "/api/track", { type: "compare_everything" });
+  assert.equal(r.status, 400);
+});
