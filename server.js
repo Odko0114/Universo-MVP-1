@@ -283,6 +283,10 @@ const publicStudent = (s) => {
   return {
     ...safe,
     profile_completed: profileCompleted(s),
+    // The percentage behind that boolean, from the same pure function the
+    // Dream Plan readiness card uses — so "Profile 67%" can't drift between
+    // the two places it appears. Computed here to keep it off a second request.
+    profile_completeness: journey.profileCompleteness(s).percent,
     // Computed per response, not stored: whether verification is actually
     // enforced right now (dormant until RESEND_API_KEY is set — see
     // lib/email.js). Lets the client show/hide the verify-gate correctly
@@ -862,6 +866,7 @@ const TRACK_TYPES = new Set([
   "profile_view",
   "filter_used",
   "compare",
+  "continue", // returning visitor resumed from the "pick up where you left off" card
 ]);
 const trackLimiter = rateLimit({ windowMs: 60 * 1000, max: 120 });
 

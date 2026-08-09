@@ -1580,3 +1580,36 @@ test("unknown university id returns 404 so one dead id can't break a shared comp
   assert.equal(r.status, 404);
   assert.match(r.json.error, /not found/i);
 });
+
+// --- Continue where you left off (Task 5) -----------------------------------
+
+test("student payload carries profile_completeness from the same source as Dream Plan", async () => {
+  // The continue card shows "Profile N%" and the Dream Plan readiness card shows
+  // the same number. Both must come from journey.profileCompleteness or they
+  // will disagree in front of the student.
+  const journey = require("../lib/journey");
+  const email = `pc${Date.now()}@example.com`;
+  const reg = await req("POST", "/api/auth/register", {
+    full_name: "Pct User",
+    email,
+    password: "completeness-pass-1234",
+    consent: true,
+    fields_of_interest: ["Computer Science"],
+    degree_level: "Master",
+  });
+  assert.equal(reg.status, 201);
+
+  const s = reg.json.student;
+  assert.equal(typeof s.profile_completeness, "number");
+  assert.equal(
+    s.profile_completeness,
+    journey.profileCompleteness(s).percent,
+    "the percentage must match the shared calculation, not a second one",
+  );
+  assert.ok(s.profile_completeness > 0 && s.profile_completeness < 100);
+});
+
+test("track accepts the continue event so Task 7 can measure resumes", async () => {
+  const r = await req("POST", "/api/track", { type: "continue" });
+  assert.equal(r.status, 204);
+});

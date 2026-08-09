@@ -2816,3 +2816,62 @@ img {
 .cmp__note {
   margin: 0 2px 12px;
 }
+
+/* ---------- Continue where you left off ----------
+   A quiet resume affordance, not a promotion: it restates something the person
+   already did. Sits between the hero and the filters, so it's the first thing
+   a returning visitor can act on without competing with the headline. */
+.continue {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: space-between;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--teal-500);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+}
+.continue__body {
+  min-width: 0; /* let a long university name ellipsize instead of pushing the button off */
+}
+.continue__eyebrow {
+  margin: 0;
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+}
+.continue__title {
+  display: block;
+  margin-top: 2px;
+  font-weight: 700;
+  font-size: var(--text-lg);
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.continue__progress {
+  margin: 2px 0 0;
+  font-size: var(--text-md);
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.continue .btn {
+  flex: 0 0 auto;
+}
+@media (max-width: 480px) {
+  /* Stacking keeps the full university name readable on a phone. */
+  .continue {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .continue__title {
+    white-space: normal;
+  }
+}
