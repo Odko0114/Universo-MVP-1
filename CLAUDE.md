@@ -55,3 +55,11 @@ Animations/microinteractions beyond consistency pass, retention gamification (st
 (Update after each session — one line: date, item number, what shipped, any issue found.)
 
 <!-- 2026-08-07 | Item 0 | Repo restructured: CLAUDE.md split into index + per-task master prompts under docs/tasks/. No code changed. -->
+
+2026-08-09 | Item 1 | Already fixed in an earlier session — verified in production with raw curl: all admin provisioning endpoints 401, no admin logic in shipped JS, login still works. No code changed. Residual: an HTML comment in the /admin shell still mentions where provisioning is documented (cosmetic, not a hole).
+
+2026-08-09 | Item 2 | Marked NOT APPLICABLE. Task premise was false — this deploys on Render's paid Starter tier with a 1GB persistent disk at /var/data, not ephemeral free-tier storage (proven: the photo cache survived a redeploy with 130 pre-existing entries). No Supabase exists to migrate to; it would be a new dependency. Its other three acceptance criteria (survives restart, non-blocking writes, anonymous capture) are already met by the current design. Revisit when scaling past one instance or when SQL access is needed — lib/store.js is the seam.
+
+2026-08-09 | Item 3a | Shipped /compare: side-by-side comparison of saved universities, the missing last step of the core flow (journey.js previously linked "compare" to /saved, a list). Gaps render "Not verified" rather than blank, since an empty cell next to Tuition reads as free. Sticky attribute column, table scrolls in its own container. Two empty states (0 saved, 1 saved). Fires a compare event (count only, anonymous).
+
+2026-08-09 | Item 3b | SSR profile brought to parity with the client view: added living cost, application deadline and fields of study. Found and fixed an honesty inconsistency — the crawlable page rendered estimated living cost and teaching language as plain facts while the client marked them "est."/"typical", so the page Google indexes was the less honest of the two. Affects all 300 indexed profiles.

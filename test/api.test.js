@@ -1518,3 +1518,47 @@ test("track still rejects unknown event types", async () => {
   const r = await req("POST", "/api/track", { type: "compare_everything" });
   assert.equal(r.status, 400);
 });
+
+// --- SSR profile parity (Task 3b) -------------------------------------------
+// The crawlable page is what Google and JS-disabled visitors get for all 300
+// indexed profiles. It must carry the same facts as the client view, with the
+// same honesty markers.
+
+test("SSR profile carries living cost, deadline and fields of study", async () => {
+  const r = await req("GET", "/university/aarhus");
+  assert.equal(r.status, 200);
+  assert.match(
+    r.text,
+    /Living cost/,
+    "living cost was missing from the crawlable page",
+  );
+  assert.match(r.text, /Application deadline/, "deadline was missing");
+  assert.match(
+    r.text,
+    /Fields of study/,
+    "fields of study section was missing",
+  );
+});
+
+test("SSR profile marks estimates, so a crawler can't read them as verified", async () => {
+  // Åbo Akademi has a country-level living-cost estimate and an estimated
+  // teaching language — exactly the case the markers exist for.
+  const r = await req("GET", "/university/eter-fi0003");
+  assert.equal(r.status, 200);
+  const hasEstMarker =
+    /Living cost · est\./.test(r.text) || /Language · typical/.test(r.text);
+  assert.ok(hasEstMarker, "an estimated figure rendered as a plain fact");
+  if (/Living cost · est\./.test(r.text)) {
+    assert.match(r.text, /~€/, "estimated money should keep its ~ prefix");
+  }
+});
+
+test("SSR profile still omits tuition it hasn't researched", async () => {
+  // The rule that must survive this change: no tuition row unless the figure
+  // was hand-researched. A row that looks answered but isn't is the bug.
+  const r = await req("GET", "/university/eter-fi0003");
+  assert.ok(
+    !/Tuition \(intl\)/.test(r.text),
+    "unresearched tuition must stay omitted",
+  );
+});
