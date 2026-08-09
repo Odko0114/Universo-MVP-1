@@ -1562,3 +1562,21 @@ test("SSR profile still omits tuition it hasn't researched", async () => {
     "unresearched tuition must stay omitted",
   );
 });
+
+// --- Navigation persistence (Task 4) ----------------------------------------
+
+test("a shareable compare link is anonymous-readable: single-university lookup needs no auth", async () => {
+  // /compare?ids=… fetches each university individually so a copied link opens
+  // for whoever receives it. That only works while this endpoint stays public.
+  const r = await req("GET", "/api/universities/aarhus");
+  assert.equal(r.status, 200);
+  assert.equal(r.json.university.id, "aarhus");
+});
+
+test("unknown university id returns 404 so one dead id can't break a shared comparison", async () => {
+  // The compare view drops ids that fail rather than erroring the whole page —
+  // that behaviour depends on this being a clean 404, not a 500.
+  const r = await req("GET", "/api/universities/does-not-exist");
+  assert.equal(r.status, 404);
+  assert.match(r.json.error, /not found/i);
+});

@@ -236,6 +236,35 @@
     });
   }
 
+  // ---- Last-viewed university ---------------------------------------------
+  // Task 5 ("Continue where you left off") needs to know the last profile this
+  // person opened, which the URL can't answer once they've navigated away.
+  // localStorage rather than the student record: it works for the anonymous
+  // visitors who make up most traffic, costs no request, and holds nothing
+  // personal — a public university id and a timestamp.
+  const LAST_VIEWED_KEY = "uv_last_viewed";
+
+  function rememberLastViewed(u) {
+    try {
+      localStorage.setItem(
+        LAST_VIEWED_KEY,
+        JSON.stringify({ id: u.id, name: u.name, at: Date.now() }),
+      );
+    } catch {
+      // Private mode or a full quota — losing this is not worth an error.
+    }
+  }
+
+  /** @returns {{id:string,name:string,at:number}|null} */
+  function readLastViewed() {
+    try {
+      const v = JSON.parse(localStorage.getItem(LAST_VIEWED_KEY) || "null");
+      return v && typeof v.id === "string" && v.id ? v : null;
+    } catch {
+      return null;
+    }
+  }
+
   const deviceGuess = () => (window.innerWidth < 700 ? "mobile" : "desktop");
   const trackPageview = (path) =>
     API.track({ type: "pageview", path, device: deviceGuess() });
@@ -1200,8 +1229,28 @@
     },
   ];
 
+  // A comparison is identified by its ids in the URL, which is what makes it
+  // survive a refresh and be shareable. Capped so a hand-edited URL can't ask
+  // for hundreds of lookups.
+  const MAX_COMPARE = 10;
+  function compareIdsFromUrl() {
+    const raw = new URLSearchParams(location.search).get("ids");
+    if (!raw) return null;
+    const ids = raw
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(0, MAX_COMPARE);
+    return ids.length ? ids : null;
+  }
+
   async function renderCompare() {
-    if (!state.user) {
+    const urlIds = compareIdsFromUrl();
+
+    // A shared link has to open for whoever receives it, so an explicit id list
+    // doesn't require an account. Without ids there's nothing to show a logged-
+    // out visitor, so that path still gates.
+    if (!urlIds && !state.user) {
       navigate("/account?src=gate&next=%2Fcompare", true);
       return;
     }
@@ -1210,25 +1259,59 @@
     view.innerHTML = `<div class="section-head"><h2>Compare</h2></div><div class="skeleton skeleton--block"></div>`;
 
     try {
-      const { universities } = await API.saved();
-      state.savedIds = new Set(universities.map((u) => u.id));
+      let universities;
+      if (urlIds) {
+        // Fetched individually: a handful of small cached responses beats adding
+        // a bulk endpoint for this. Unknown ids drop out rather than erroring —
+        // one dead id in a shared link shouldn't break the whole comparison.
+        const fetched = await Promise.all(
+          urlIds.map((id) =>
+            API.university(id)
+              .then((r) => r.university)
+              .catch(() => null),
+          ),
+        );
+        universities = fetched.filter(Boolean);
+      } else {
+        universities = (await API.saved()).universities;
+        state.savedIds = new Set(universities.map((u) => u.id));
+        // Put the current set in the URL so this exact view can be reloaded or
+        // shared. replaceState, not push — arriving at /compare shouldn't need
+        // two Backs to leave.
+        if (universities.length >= 2) {
+          history.replaceState(
+            {},
+            "",
+            "/compare?ids=" + universities.map((u) => u.id).join(","),
+          );
+        }
+      }
 
       if (universities.length < 2) {
+        // Three different reasons to land here, and they need different advice:
+        // a shared link whose ids no longer resolve, an empty shortlist, or a
+        // shortlist of one.
+        const fromLink = !!urlIds;
         view.innerHTML =
           `<div class="section-head"><h2>Compare</h2></div>` +
           emptyState({
-            iconName: "bookmark",
-            title: universities.length
-              ? "Save one more to compare"
-              : "Nothing to compare yet",
-            sub: universities.length
-              ? "Comparing works from two universities up — three to five makes the trade-offs clearest."
-              : "Save the universities you're considering and see them side by side.",
+            iconName: fromLink ? "alert" : "bookmark",
+            title: fromLink
+              ? "This comparison link no longer works"
+              : universities.length
+                ? "Save one more to compare"
+                : "Nothing to compare yet",
+            sub: fromLink
+              ? "The universities it pointed to aren't available. Browse and build your own shortlist instead."
+              : universities.length
+                ? "Comparing works from two universities up — three to five makes the trade-offs clearest."
+                : "Save the universities you're considering and see them side by side.",
             ctaHref: "/discover",
             ctaLabel: "Browse universities",
-            secondary: universities.length
-              ? '<a class="btn btn--ghost" href="/saved" data-link>View shortlist</a>'
-              : "",
+            secondary:
+              !fromLink && universities.length
+                ? '<a class="btn btn--ghost" href="/saved" data-link>View shortlist</a>'
+                : "",
           });
         return;
       }
@@ -1253,8 +1336,8 @@
       }).join("");
 
       view.innerHTML = `
-        <div class="section-head"><h2>Compare</h2><a class="link-btn" href="/saved" data-link>Back to shortlist</a></div>
-        <p class="muted cmp__note">Comparing ${universities.length} saved universities. Blank facts are ones we haven't verified for that university — not zero.</p>
+        <div class="section-head"><h2>Compare</h2>${state.user ? '<a class="link-btn" href="/saved" data-link>Back to shortlist</a>' : '<a class="link-btn" href="/discover" data-link>Browse universities</a>'}</div>
+        <p class="muted cmp__note">Comparing ${universities.length} universities. Blank facts are ones we haven't verified for that university — not zero.</p>
         <div class="cmp-scroll">
           <table class="cmp">
             <thead><tr><th scope="col"><span class="sr-only">Attribute</span></th>${head}</tr></thead>
@@ -1365,6 +1448,7 @@
     }
 
     trackProfileView(u.id);
+    rememberLastViewed(u);
     document.title = `${u.name} — Universo`;
     const saved = state.savedIds.has(u.id);
     const src = u.source || (u.tuition_range ? "curated" : "global");
