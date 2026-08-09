@@ -429,6 +429,16 @@
       <div id="stats" class="grid"></div>
       <div id="windows" class="windows"></div>
 
+      <h2>Overview</h2>
+      <div class="panel">
+        <div id="overview" class="grid"></div>
+        <p class="foot" style="margin-top: 4px">
+          Distinct browsers, not events — one person refreshing twenty times is
+          one visitor. <em>New</em> means their first ever recorded activity
+          falls inside the window; everyone else is returning.
+        </p>
+      </div>
+
       <h2>Funnel (last <span id="funnel-days-label">7</span> days)</h2>
       <div class="panel">
         <div class="tabs" id="funnel-range"></div>
@@ -752,6 +762,37 @@
           "Updated " + new Date(d.generated_at).toLocaleString();
       }
 
+      async function loadOverview() {
+        const d = await api("/api/admin/overview");
+        const rows = [
+          ["primary", "DAU", d.dau, "last 24 hours"],
+          ["", "WAU", d.wau, "last 7 days"],
+          ["", "MAU", d.mau, "last 30 days"],
+        ];
+        document.getElementById("overview").innerHTML = rows
+          .map(
+            ([tone, label, w, sub]) =>
+              '<div class="card ' +
+              tone +
+              '">' +
+              '<div class="n">' +
+              w.active +
+              "</div>" +
+              '<div class="l">' +
+              label +
+              " · " +
+              sub +
+              "</div>" +
+              '<div class="l" style="margin-top:4px">' +
+              w.new +
+              " new · " +
+              w.returning +
+              " returning" +
+              "</div></div>",
+          )
+          .join("");
+      }
+
       async function loadFunnel() {
         document.getElementById("funnel-days-label").textContent = funnelDays;
         renderRangeTabs(
@@ -971,6 +1012,7 @@
         try {
           await Promise.all([
             loadStats(),
+            loadOverview(),
             loadFunnel(),
             loadTraffic(),
             loadSearches(),

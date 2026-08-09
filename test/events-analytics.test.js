@@ -14,24 +14,26 @@ const {
 const now = () => new Date().toISOString();
 
 test("computeFunnel counts distinct anon reach per stage with conversion %", () => {
+  // Stages are Visitor -> Register -> Dream -> Save -> Compare -> Apply.
   const evs = [
     { type: "pageview", anon: "a", ts: now() },
     { type: "pageview", anon: "b", ts: now() },
     { type: "pageview", anon: "c", ts: now() },
-    { type: "search", anon: "a", ts: now() },
-    { type: "search", anon: "b", ts: now() },
-    { type: "profile_view", anon: "a", ts: now() },
+    { type: "signup", anon: "a", ts: now() },
+    { type: "signup", anon: "b", ts: now() },
+    { type: "dream_update", anon: "a", ts: now() },
     { type: "save", anon: "a", ts: now() },
   ];
   const byKey = Object.fromEntries(
     computeFunnel(evs, {}).map((s) => [s.key, s]),
   );
   assert.equal(byKey.visit.count, 3);
-  assert.equal(byKey.search.count, 2);
-  assert.equal(byKey.profile_view.count, 1);
+  assert.equal(byKey.register.count, 2);
+  assert.equal(byKey.dream.count, 1);
   assert.equal(byKey.save.count, 1);
-  assert.equal(byKey.apply_click.count, 0);
-  assert.equal(byKey.search.pct_of_first, Math.round((2 / 3) * 1000) / 10);
+  assert.equal(byKey.compare.count, 0);
+  assert.equal(byKey.apply.count, 0);
+  assert.equal(byKey.register.pct_of_first, Math.round((2 / 3) * 1000) / 10);
 });
 
 test("computeFunnel ignores events with no anon id", () => {
@@ -154,4 +156,101 @@ test("purgeAnon removes only events tied to the targeted anonymous ids", async (
   );
 
   await events.purgeAnon([other]); // self-clean so this test leaves no residue
+});
+
+// --- Overview: DAU/WAU/MAU + new vs returning (Task 6) -----------------------
+
+const H = 3600_000;
+const D = 86_400_000;
+const at = (now, agoMs) => new Date(now - agoMs).toISOString();
+
+test("computeOverview counts distinct visitors, not events", () => {
+  const now = Date.now();
+  const ev = [
+    { ts: at(now, H), type: "pageview", anon: "a" },
+    { ts: at(now, H), type: "pageview", anon: "a" },
+    { ts: at(now, H), type: "pageview", anon: "a" },
+    { ts: at(now, H), type: "pageview", anon: "b" },
+  ];
+  const o = events.computeOverview(ev, now);
+  assert.equal(
+    o.dau.active,
+    2,
+    "one browser refreshing three times is one visitor",
+  );
+});
+
+test("computeOverview splits new from returning by first-ever activity", () => {
+  const now = Date.now();
+  const ev = [
+    // Seen for the first time two months ago, active again today → returning.
+    { ts: at(now, 60 * D), type: "pageview", anon: "old" },
+    { ts: at(now, 2 * H), type: "pageview", anon: "old" },
+    // First appearance is today → new.
+    { ts: at(now, 3 * H), type: "pageview", anon: "fresh" },
+  ];
+  const o = events.computeOverview(ev, now);
+  assert.equal(o.dau.active, 2);
+  assert.equal(
+    o.dau.new,
+    1,
+    "only the visitor whose first event is today is new",
+  );
+  assert.equal(o.dau.returning, 1);
+});
+
+test("computeOverview windows nest correctly", () => {
+  const now = Date.now();
+  const ev = [
+    { ts: at(now, 2 * H), type: "pageview", anon: "today" },
+    { ts: at(now, 3 * D), type: "pageview", anon: "thisweek" },
+    { ts: at(now, 20 * D), type: "pageview", anon: "thismonth" },
+    { ts: at(now, 90 * D), type: "pageview", anon: "ancient" },
+  ];
+  const o = events.computeOverview(ev, now);
+  assert.equal(o.dau.active, 1);
+  assert.equal(o.wau.active, 2);
+  assert.equal(
+    o.mau.active,
+    3,
+    "the 90-day-old visitor falls outside every window",
+  );
+});
+
+test("computeOverview ignores events with no anonymous id", () => {
+  const now = Date.now();
+  const o = events.computeOverview(
+    [
+      { ts: at(now, H), type: "pageview" },
+      { ts: at(now, H), type: "pageview", anon: "a" },
+    ],
+    now,
+  );
+  assert.equal(
+    o.dau.active,
+    1,
+    "an id-less event must not become a phantom visitor",
+  );
+});
+
+test("funnel measures the six roadmap stages, in order", () => {
+  const now = Date.now();
+  const ev = [
+    { ts: at(now, H), type: "pageview", anon: "a" },
+    { ts: at(now, H), type: "signup", anon: "a" },
+    { ts: at(now, H), type: "dream_update", anon: "a" },
+    { ts: at(now, H), type: "save", anon: "a" },
+    { ts: at(now, H), type: "compare", anon: "a" },
+    { ts: at(now, H), type: "apply_click", anon: "a" },
+    // A visitor who only browsed drops out after the first stage.
+    { ts: at(now, H), type: "pageview", anon: "b" },
+  ];
+  const stages = events.computeFunnel(ev, { sinceMs: D });
+  assert.deepEqual(
+    stages.map((s) => s.key),
+    ["visit", "register", "dream", "save", "compare", "apply"],
+  );
+  assert.equal(stages[0].count, 2);
+  assert.equal(stages[1].count, 1, "only one of the two registered");
+  assert.equal(stages[5].count, 1);
 });

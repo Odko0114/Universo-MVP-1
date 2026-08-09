@@ -133,11 +133,26 @@ test("GET /api/admin/subscribers.csv is admin-gated and returns a CSV header row
 test("GET /api/admin/funnel and /api/admin/retention are reachable with a session", async () => {
   const f = await req("GET", "/api/admin/funnel?days=7");
   assert.equal(f.status, 200);
-  assert.equal(f.json.stages.length, 5);
+  assert.equal(
+    f.json.stages.length,
+    6,
+    "Visitor -> Register -> Dream -> Save -> Compare -> Apply",
+  );
 
   const r = await req("GET", "/api/admin/retention?weeks=4");
   assert.equal(r.status, 200);
   assert.ok(Array.isArray(r.json.cohorts));
+});
+
+test("GET /api/admin/overview needs a session and returns the three windows", async () => {
+  const r = await req("GET", "/api/admin/overview");
+  assert.equal(r.status, 200);
+  for (const w of ["dau", "wau", "mau"]) {
+    assert.ok(r.json[w], `missing ${w}`);
+    assert.equal(typeof r.json[w].active, "number");
+    // The split has to add up, or the panel is quietly lying.
+    assert.equal(r.json[w].new + r.json[w].returning, r.json[w].active);
+  }
 });
 
 test("a student session cannot access admin routes", async () => {

@@ -1735,6 +1735,12 @@ adminApi.get("/traffic", (req, res) => {
 });
 
 // Reach funnel: distinct clients at each stage, with conversion rates.
+// Overview: DAU/WAU/MAU with a new-vs-returning split, over distinct anonymous
+// clients. No query params — these three windows are the metric definition.
+adminApi.get("/overview", (_req, res) => {
+  res.json(events.overview());
+});
+
 adminApi.get("/funnel", (req, res) => {
   const days = Math.min(
     90,
