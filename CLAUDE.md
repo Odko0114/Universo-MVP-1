@@ -7,7 +7,7 @@ At the start of every session, before I ask you anything:
 1. Read this file, including the status log at the bottom.
 2. State which roadmap item is next (first unchecked box).
 3. Open the linked task file for that item (`docs/tasks/0N-*.md`) — that file is the master prompt with full detail. Read it fully before proposing anything.
-4. Verify the *previous* item is actually true — don't trust the checkbox blindly. Spot-check the codebase for evidence it was really done (e.g. if item 1 is checked, confirm the fix is actually in the code, not just marked complete).
+4. Verify the _previous_ item is actually true — don't trust the checkbox blindly. Spot-check the codebase for evidence it was really done (e.g. if item 1 is checked, confirm the fix is actually in the code, not just marked complete).
 5. If the previous item looks incomplete, flag it and stop — don't start new work on top of an unverified fix.
 6. If it checks out, propose the next task in one sentence (pulled from the task file's Objective) and wait for my go-ahead before touching code.
 
