@@ -265,40 +265,6 @@
     }
   }
 
-  // ---- Continue where you left off ----------------------------------------
-  // Discover is the app's landing surface ("/" redirects here), so this is where
-  // a returning visitor arrives. It reads the same localStorage value the
-  // profile page writes, which means it works for the anonymous majority too,
-  // not just signed-in students.
-  //
-  // Deliberately NOT gamification: no streak, no badge, no nudge to come back.
-  // It only restates something the person already did, and only while that's
-  // still plausibly what they were working on.
-  const CONTINUE_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
-
-  function continueCard() {
-    const last = readLastViewed();
-    if (!last) return ""; // brand-new visitor — the hero is the right first thing
-    if (Date.now() - (last.at || 0) > CONTINUE_MAX_AGE_MS) return "";
-
-    // Progress is only meaningful for someone with an account; anonymous
-    // visitors get the resume link alone rather than a row of zeroes.
-    const u = state.user;
-    const progress = u
-      ? `<p class="continue__progress">Profile ${Number(u.profile_completeness || 0)}% · ${state.savedIds.size} saved</p>`
-      : "";
-
-    return `
-      <section class="continue" aria-label="Continue where you left off">
-        <div class="continue__body">
-          <p class="continue__eyebrow">Pick up where you left off</p>
-          <a class="continue__title" href="/university/${esc(last.id)}" data-link data-continue="${esc(last.id)}">${esc(last.name || "the university you were viewing")}</a>
-          ${progress}
-        </div>
-        <a class="btn btn--primary btn--sm" href="/university/${esc(last.id)}" data-link data-continue="${esc(last.id)}">Continue</a>
-      </section>`;
-  }
-
   const deviceGuess = () => (window.innerWidth < 700 ? "mobile" : "desktop");
   const trackPageview = (path) =>
     API.track({ type: "pageview", path, device: deviceGuess() });
@@ -348,15 +314,18 @@
     )
       return;
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
-    // Resuming is the signal Task 7 will want: did the continue card actually
-    // bring anyone back into the flow? Recorded before navigating away.
-    if (a.hasAttribute("data-continue")) {
-      API.track({ type: "continue", device: deviceGuess() });
-    }
     e.preventDefault();
     navigate(href);
   });
-  window.addEventListener("popstate", render);
+  window.addEventListener("popstate", () => {
+    poppingHistory = true;
+    try {
+      render();
+    } finally {
+      // Only the synchronous scroll decision at the top of render() needs this.
+      poppingHistory = false;
+    }
+  });
 
   const go = navigate;
 
@@ -599,8 +568,6 @@
         <h1>Find your university <span class="accent">in Europe</span></h1>
         <p><strong>${totalN}</strong> European universities listed — <strong>${verifiedN}</strong> with a complete, checked profile (photo, official enrolment data, scholarships). The rest are entries from the official European register; open any profile to see exactly what we do and don't know about it.</p>
       </section>
-
-      ${continueCard()}
 
       <div class="scope-row" role="group" aria-label="Result scope">
         <button class="niche-btn ${d.scope === "verified" ? "is-active" : ""}" id="scope-verified" type="button" aria-pressed="${d.scope === "verified"}">✓ Verified profiles (${verifiedN})</button>
@@ -2377,9 +2344,19 @@
   // =========================================================================
   // Router + error boundary
   // =========================================================================
+  // Back/forward restores the previous scroll offset. The browser already does
+  // this well via history.scrollRestoration (left at its default "auto"); the
+  // bug was that render() reset the offset to 0 on EVERY render, including the
+  // ones triggered by popstate, so a student returning from a profile lost their
+  // place in a long result list. Taking it over manually was tried and is worse:
+  // a view resolves while its skeletons are up and the real results land after,
+  // so any offset applied then gets clamped when the page briefly shrinks.
+  // Suppressing our own reset is the whole fix.
+  let poppingHistory = false;
+
   function render() {
     const parts = location.pathname.split("/").filter(Boolean);
-    window.scrollTo(0, 0);
+    if (!poppingHistory) window.scrollTo(0, 0);
     view.focus({ preventScroll: true });
 
     // "/" is the marketing landing page, served as its own static page — the
