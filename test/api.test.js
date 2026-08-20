@@ -100,10 +100,14 @@ test("GET /api/universities/filters returns facets", async () => {
   assert.ok(r.json.institution_types.length >= 1);
 });
 
-test("GET / permanently redirects to the public directory (the homepage IS the product)", async () => {
+test("GET / serves the front-door landing page (orients + matches, no auth wall)", async () => {
   const res = await fetch(base + "/", { redirect: "manual" });
-  assert.equal(res.status, 301);
-  assert.equal(res.headers.get("location"), "/discover");
+  assert.equal(res.status, 200);
+  const html = await res.text();
+  assert.match(html, /What fits you\?/, "the live matcher is on the landing");
+  assert.match(html, /Same Start\. Equal Chance\./, "the mission leads");
+  assert.match(html, /\/css\/fonts\.css/, "shares the app's self-hosted fonts");
+  assert.match(html, /See all your matches in Universo/, "flows into Discover");
 });
 
 test("GET /discover is public and server-rendered — no auth wall, no redirect", async () => {

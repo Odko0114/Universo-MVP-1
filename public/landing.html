@@ -1,0 +1,1065 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0B1F3A" />
+    <title>Universo — Find the university that fits you</title>
+    <meta
+      name="description"
+      content="Universo helps international students discover and compare European universities — honestly, and free. Answer three questions and see what fits you, no account needed."
+    />
+    <link rel="canonical" href="/" />
+    <link rel="icon" href="/favicon.svg" />
+    <!-- The app's own self-hosted faces, so this door and Discover share the
+         exact same typography. -->
+    <link rel="stylesheet" href="/css/fonts.css" />
+    <style>
+      /* Discover's exact palette — this page and the app are one place. Own
+         (prefixed) classes so nothing collides with the app's CSS. */
+      :root {
+        --navy-900: #0b1f3a;
+        --navy-800: #12294d;
+        --navy-700: #1b3a66;
+        --teal-500: #14b8a6;
+        --teal-600: #0d9488;
+        --teal-050: #e6f7f4;
+        --gold-500: #e9b949;
+        --gold-600: #d4a017;
+        --ink: #10233f;
+        --ink-soft: #45566e;
+        --ink-faint: #616e82;
+        --line: #e4e8ef;
+        --bg: #f5f7fb;
+        --surface: #ffffff;
+
+        --serif: "Newsreader", Georgia, "Times New Roman", serif;
+        --sans:
+          "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+
+        --maxw: 1140px;
+        --radius: 16px;
+        --radius-sm: 12px;
+        --shadow-sm:
+          0 1px 2px rgba(11, 31, 58, 0.06), 0 1px 3px rgba(11, 31, 58, 0.08);
+        --shadow-md: 0 10px 34px rgba(11, 31, 58, 0.12);
+        --shadow-lg: 0 24px 60px rgba(11, 31, 58, 0.22);
+
+        --s-1: clamp(0.82rem, 0.8rem + 0.12vw, 0.9rem);
+        --s0: clamp(1rem, 0.97rem + 0.16vw, 1.1rem);
+        --s1: clamp(1.15rem, 1.05rem + 0.4vw, 1.4rem);
+        --s2: clamp(1.5rem, 1.3rem + 0.9vw, 2.1rem);
+        --s3: clamp(2rem, 1.6rem + 1.9vw, 3.2rem);
+        --s4: clamp(2.5rem, 1.9rem + 3vw, 4.4rem);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        font-family: var(--sans);
+        color: var(--ink);
+        background: var(--bg);
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+      a {
+        color: inherit;
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: var(--serif);
+        font-weight: 500;
+        line-height: 1.08;
+        letter-spacing: -0.015em;
+        text-wrap: balance;
+        margin: 0;
+      }
+      .em {
+        font-style: italic;
+        color: var(--gold-600);
+        font-weight: 400;
+      }
+      .fd-wrap {
+        max-width: var(--maxw);
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+      .fd-eyebrow {
+        font-family: var(--sans);
+        font-size: var(--s-1);
+        font-weight: 700;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        margin: 0;
+      }
+      .fd-sr {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      .fd-btn {
+        font-family: var(--sans);
+        font-size: var(--s0);
+        font-weight: 600;
+        text-decoration: none;
+        padding: 14px 26px;
+        border-radius: 999px;
+        cursor: pointer;
+        border: 1px solid transparent;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition:
+          transform 0.18s ease,
+          box-shadow 0.28s ease,
+          background 0.2s,
+          border-color 0.2s;
+      }
+      .fd-btn--gold {
+        color: var(--navy-900);
+        background: var(--gold-500);
+        box-shadow: 0 6px 22px rgba(233, 185, 73, 0.35);
+      }
+      .fd-btn--gold:hover {
+        transform: translateY(-2px);
+        background: var(--gold-600);
+      }
+      .fd-btn--teal {
+        color: #fff;
+        background: var(--teal-500);
+        box-shadow: 0 6px 22px rgba(20, 184, 166, 0.28);
+      }
+      .fd-btn--teal:hover {
+        transform: translateY(-2px);
+        background: var(--teal-600);
+      }
+      .fd-btn--ghost {
+        color: #eaf1ff;
+        border-color: rgba(255, 255, 255, 0.28);
+      }
+      .fd-btn--ghost:hover {
+        border-color: var(--gold-500);
+        color: var(--gold-500);
+      }
+      :focus-visible {
+        outline: 2px solid var(--teal-500);
+        outline-offset: 2px;
+      }
+
+      /* Top bar */
+      .fd-top {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 5;
+      }
+      .fd-top__in {
+        max-width: var(--maxw);
+        margin: 0 auto;
+        padding: 20px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .fd-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        text-decoration: none;
+        color: #fff;
+      }
+      .fd-brand__mark {
+        width: 28px;
+        height: 28px;
+        color: #fff;
+        flex: 0 0 auto;
+      }
+      .fd-brand__name {
+        font-family: var(--serif);
+        font-style: italic;
+        font-weight: 600;
+        font-size: 1.4rem;
+      }
+
+      /* Hero: orient (left) + live match (right) */
+      .fd-hero {
+        position: relative;
+        background:
+          radial-gradient(
+            120% 80% at 50% 128%,
+            rgba(233, 185, 73, 0.28),
+            transparent 58%
+          ),
+          linear-gradient(160deg, var(--navy-900), var(--navy-700));
+        color: #fff;
+        padding: 128px 0 84px;
+        overflow: hidden;
+      }
+      .fd-hero::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(233, 185, 73, 0.2),
+          rgba(233, 185, 73, 0.85) 50%,
+          rgba(233, 185, 73, 0.2),
+          transparent
+        );
+        box-shadow: 0 0 30px 2px rgba(233, 185, 73, 0.4);
+      }
+      .fd-hero__grid {
+        display: grid;
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 52px;
+        align-items: center;
+      }
+      .fd-hero__tag {
+        color: var(--gold-500);
+        letter-spacing: 0.16em;
+      }
+      .fd-hero h1 {
+        color: #fff;
+        font-size: var(--s4);
+        margin: 16px 0 0;
+        max-width: 13ch;
+      }
+      .fd-hero__lede {
+        color: #c7d3e6;
+        font-size: var(--s1);
+        line-height: 1.5;
+        margin: 22px 0 0;
+        max-width: 42ch;
+      }
+      .fd-trust {
+        margin: 28px 0 0;
+        display: flex;
+        gap: 26px;
+        flex-wrap: wrap;
+      }
+      .fd-trust__n {
+        font-family: var(--serif);
+        font-size: 1.7rem;
+        color: var(--gold-500);
+        font-variant-numeric: tabular-nums;
+        line-height: 1;
+      }
+      .fd-trust__l {
+        font-size: var(--s-1);
+        color: #a9b8d0;
+        margin-top: 5px;
+        max-width: 16ch;
+      }
+
+      /* Matcher card */
+      .fd-matcher {
+        background: var(--surface);
+        color: var(--ink);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-lg);
+        padding: 26px;
+      }
+      .fd-matcher__head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .fd-matcher__eyebrow {
+        color: var(--teal-600);
+      }
+      .fd-matcher__note {
+        font-size: 0.72rem;
+        color: var(--ink-faint);
+      }
+      .fd-matcher h2 {
+        font-size: var(--s1);
+        margin: 4px 0 16px;
+      }
+      .fd-field {
+        margin-bottom: 12px;
+      }
+      .fd-field > span {
+        display: block;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        margin-bottom: 6px;
+      }
+      .fd-field select {
+        width: 100%;
+        font-family: var(--sans);
+        font-size: var(--s0);
+        color: var(--ink);
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        padding: 12px 13px;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23616e82' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 13px center;
+        cursor: pointer;
+      }
+      .fd-result {
+        margin-top: 6px;
+        min-height: 42px;
+      }
+      .fd-hint {
+        color: var(--ink-faint);
+        font-size: var(--s0);
+        padding: 14px 0 4px;
+      }
+      .fd-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px 0;
+        border-top: 1px solid var(--line);
+        opacity: 0;
+        transform: translateY(6px);
+        animation: fd-rise 0.45s ease forwards;
+      }
+      @keyframes fd-rise {
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      .fd-row__dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        margin-top: 7px;
+        flex: 0 0 auto;
+        background: var(--gold-500);
+        box-shadow: 0 0 8px 1px rgba(233, 185, 73, 0.6);
+      }
+      .fd-row__name {
+        font-family: var(--serif);
+        font-size: 1.14rem;
+        line-height: 1.2;
+        color: var(--ink);
+      }
+      .fd-row__why {
+        font-size: var(--s-1);
+        color: var(--teal-600);
+        margin-top: 2px;
+      }
+      .fd-row__meta {
+        font-size: var(--s-1);
+        color: var(--ink-faint);
+        margin-top: 1px;
+      }
+      .fd-matcher__cta {
+        margin-top: 16px;
+        display: none;
+      }
+      .fd-matcher__cta.show {
+        display: block;
+      }
+      .fd-matcher__cta .fd-btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      /* Light sections */
+      .fd-sec {
+        padding: clamp(56px, 9vh, 104px) 0;
+      }
+      .fd-sec-head {
+        max-width: 40ch;
+        margin: 0 auto;
+        text-align: center;
+      }
+      .fd-sec-head h2 {
+        font-size: var(--s3);
+        margin-top: 12px;
+      }
+      .fd-sec-head p {
+        color: var(--ink-soft);
+        font-size: var(--s1);
+        margin: 16px auto 0;
+        max-width: 48ch;
+        line-height: 1.5;
+      }
+
+      .fd-honesty {
+        background: var(--surface);
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+      }
+      .fd-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        margin-top: 40px;
+      }
+      .fd-stat {
+        text-align: center;
+        padding: 8px;
+      }
+      .fd-stat__n {
+        font-family: var(--serif);
+        font-size: clamp(2.4rem, 1.9rem + 2.4vw, 3.6rem);
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+        color: var(--navy-900);
+      }
+      .fd-stat--t .fd-stat__n {
+        color: var(--teal-600);
+      }
+      .fd-stat__l {
+        color: var(--ink-soft);
+        font-size: var(--s0);
+        margin: 12px auto 0;
+        max-width: 24ch;
+      }
+
+      .fd-path {
+        margin-top: 42px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        counter-reset: step;
+      }
+      .fd-step {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 22px;
+        box-shadow: var(--shadow-sm);
+      }
+      .fd-step::before {
+        counter-increment: step;
+        content: "0" counter(step);
+        font-family: var(--serif);
+        font-size: var(--s-1);
+        letter-spacing: 0.08em;
+        color: var(--teal-600);
+        font-weight: 600;
+      }
+      .fd-step h3 {
+        font-size: var(--s1);
+        margin: 8px 0 0;
+      }
+      .fd-step p {
+        color: var(--ink-soft);
+        font-size: var(--s0);
+        margin: 10px 0 0;
+        line-height: 1.5;
+      }
+
+      .fd-unis {
+        margin-top: 42px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+      }
+      .fd-uni {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        transition:
+          transform 0.26s ease,
+          box-shadow 0.3s ease;
+      }
+      .fd-uni:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
+      }
+      .fd-uni__cover {
+        height: 92px;
+        background: linear-gradient(135deg, var(--navy-800), var(--teal-600));
+        position: relative;
+      }
+      .fd-uni__flag {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        font-size: var(--s-1);
+        color: #fff;
+        background: rgba(11, 31, 58, 0.5);
+        padding: 3px 10px;
+        border-radius: 999px;
+        backdrop-filter: blur(3px);
+      }
+      .fd-uni__body {
+        padding: 18px 20px 22px;
+      }
+      .fd-uni h3 {
+        font-size: 1.28rem;
+      }
+      .fd-uni__fact {
+        color: var(--ink-soft);
+        font-size: var(--s-1);
+        margin-top: 9px;
+        line-height: 1.5;
+      }
+      .fd-tags {
+        margin-top: 14px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+      }
+      .fd-tag {
+        font-size: 0.72rem;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: var(--bg);
+        border: 1px solid var(--line);
+        color: var(--ink-soft);
+      }
+      .fd-tag--v {
+        color: var(--teal-600);
+        background: var(--teal-050);
+        border-color: transparent;
+      }
+
+      .fd-mission {
+        text-align: center;
+        background:
+          radial-gradient(
+            120% 80% at 50% -10%,
+            rgba(233, 185, 73, 0.16),
+            transparent 55%
+          ),
+          linear-gradient(180deg, var(--navy-900), var(--navy-800));
+        color: #fff;
+      }
+      .fd-mission h2 {
+        color: #fff;
+        font-size: var(--s4);
+        max-width: 15ch;
+        margin: 0 auto;
+      }
+      .fd-mission p {
+        color: #c7d3e6;
+        font-size: var(--s1);
+        max-width: 44ch;
+        margin: 22px auto 0;
+        line-height: 1.55;
+      }
+
+      .fd-foot {
+        background: var(--navy-900);
+        color: #90a2c0;
+        padding: 40px 0;
+        font-size: var(--s-1);
+      }
+      .fd-foot__in {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+      .fd-foot a {
+        color: #c7d3e6;
+      }
+
+      html.js .fd-reveal {
+        opacity: 0;
+        transform: translateY(20px);
+        transition:
+          opacity 0.7s ease,
+          transform 0.7s ease;
+      }
+      html.js .fd-reveal.in {
+        opacity: 1;
+        transform: none;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        html.js .fd-reveal {
+          opacity: 1;
+          transform: none;
+          transition: none;
+        }
+        .fd-row {
+          animation: none;
+          opacity: 1;
+          transform: none;
+        }
+      }
+
+      @media (max-width: 900px) {
+        .fd-hero {
+          padding-top: 104px;
+        }
+        .fd-hero__grid {
+          grid-template-columns: 1fr;
+          gap: 34px;
+        }
+        .fd-stats,
+        .fd-path,
+        .fd-unis {
+          grid-template-columns: 1fr;
+        }
+        .fd-path,
+        .fd-unis {
+          gap: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="fd-top">
+      <div class="fd-top__in">
+        <a class="fd-brand" href="/" aria-label="Universo home">
+          <svg class="fd-brand__mark" viewBox="0 0 200 200" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M18 20 C -6 80 40 165 100 190 C 96 140 90 60 88 15 Z"
+            />
+            <path
+              fill="currentColor"
+              d="M182 20 C 206 80 160 165 100 190 C 104 140 110 60 112 15 Z"
+            />
+          </svg>
+          <span class="fd-brand__name">Universo</span>
+        </a>
+        <a class="fd-btn fd-btn--ghost" href="/account?mode=login">Sign in</a>
+      </div>
+    </header>
+
+    <main id="top">
+      <!-- Hero: orient (left) + the live Discover value (right), one screen -->
+      <section class="fd-hero">
+        <div class="fd-wrap fd-hero__grid">
+          <div>
+            <p class="fd-eyebrow fd-hero__tag fd-reveal">
+              Same Start. Equal Chance.
+            </p>
+            <h1 class="fd-reveal">
+              Find the university that fits <span class="em">you</span>
+            </h1>
+            <p class="fd-hero__lede fd-reveal">
+              Universo helps international students discover and compare
+              European universities — honestly, and free. Wherever you start
+              from, the same map.
+            </p>
+            <div class="fd-trust fd-reveal">
+              <div>
+                <div class="fd-trust__n">3,835</div>
+                <div class="fd-trust__l">universities, one honest map</div>
+              </div>
+              <div>
+                <div class="fd-trust__n">300</div>
+                <div class="fd-trust__l">fully checked profiles</div>
+              </div>
+              <div>
+                <div class="fd-trust__n">€0</div>
+                <div class="fd-trust__l">free for students, always</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="fd-matcher fd-reveal">
+            <div class="fd-matcher__head">
+              <p class="fd-eyebrow fd-matcher__eyebrow">Try it now</p>
+              <span class="fd-matcher__note">No account needed</span>
+            </div>
+            <h2>What fits you?</h2>
+            <label class="fd-field">
+              <span>What do you want to study?</span>
+              <select id="f-field">
+                <option value="">Choose a field</option>
+                <option>Computer Science</option>
+                <option>Engineering</option>
+                <option>Business</option>
+                <option>Law</option>
+                <option>Medicine</option>
+                <option>Natural Sciences</option>
+                <option>Social Sciences</option>
+                <option>Arts &amp; Design</option>
+              </select>
+            </label>
+            <label class="fd-field">
+              <span>Where would you like to be?</span>
+              <select id="f-country">
+                <option value="">Anywhere in Europe</option>
+              </select>
+            </label>
+            <label class="fd-field">
+              <span>Budget per year?</span>
+              <select id="f-budget">
+                <option value="">Any budget</option>
+                <option value="0">Free — no tuition</option>
+                <option value="6000">Under €6,000</option>
+                <option value="12000">Under €12,000</option>
+                <option value="20000">Under €20,000</option>
+              </select>
+            </label>
+            <div class="fd-result" id="f-result" aria-live="polite">
+              <p class="fd-hint">
+                Pick a field and your matches appear — with the reason why.
+              </p>
+            </div>
+            <div class="fd-matcher__cta" id="f-cta">
+              <a class="fd-btn fd-btn--teal" id="f-see" href="/discover"
+                >See all your matches in Universo →</a
+              >
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Honesty -->
+      <section class="fd-sec fd-honesty">
+        <div class="fd-wrap">
+          <div class="fd-sec-head fd-reveal">
+            <p class="fd-eyebrow" style="color: var(--teal-600)">
+              Why us, honestly
+            </p>
+            <h2>Only what we <span class="em">actually know</span></h2>
+            <p>
+              Ranking sites make you feel small. We orient you instead — with
+              data we can defend, and the gaps admitted out loud. If we haven't
+              verified a fact, we say so, rather than show a number we can't
+              stand behind.
+            </p>
+          </div>
+          <div class="fd-stats fd-reveal">
+            <div class="fd-stat">
+              <div class="fd-stat__n">3,835</div>
+              <div class="fd-stat__l">
+                European universities, straight from the official register.
+              </div>
+            </div>
+            <div class="fd-stat fd-stat--t">
+              <div class="fd-stat__n">300</div>
+              <div class="fd-stat__l">
+                Fully checked — photo, real enrolment, scholarships.
+              </div>
+            </div>
+            <div class="fd-stat">
+              <div class="fd-stat__n">€0</div>
+              <div class="fd-stat__l">
+                What Universo costs a student. No catch.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- How it works -->
+      <section class="fd-sec">
+        <div class="fd-wrap">
+          <div class="fd-sec-head fd-reveal">
+            <p class="fd-eyebrow" style="color: var(--teal-600)">
+              From lost to landed
+            </p>
+            <h2>Four steps, one clear line</h2>
+          </div>
+          <div class="fd-path fd-reveal">
+            <div class="fd-step">
+              <h3>Discover</h3>
+              <p>
+                Browse 3,835 universities with no login. Filter by what matters
+                to you.
+              </p>
+            </div>
+            <div class="fd-step">
+              <h3>Match</h3>
+              <p>
+                See the few that truly fit — and read why, before you commit to
+                anything.
+              </p>
+            </div>
+            <div class="fd-step">
+              <h3>Dream</h3>
+              <p>
+                Save a shortlist, set your intake, build a plan you can actually
+                follow.
+              </p>
+            </div>
+            <div class="fd-step">
+              <h3>Apply</h3>
+              <p>
+                Reach each university's own page with a clear next step, not a
+                maze.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Universities -->
+      <section class="fd-sec" style="padding-top: 0">
+        <div class="fd-wrap">
+          <div class="fd-sec-head fd-reveal">
+            <p class="fd-eyebrow" style="color: var(--teal-600)">Real places</p>
+            <h2>Honestly described</h2>
+          </div>
+          <div class="fd-unis fd-reveal">
+            <article class="fd-uni">
+              <div class="fd-uni__cover">
+                <span class="fd-uni__flag">Denmark</span>
+              </div>
+              <div class="fd-uni__body">
+                <h3>Aarhus University</h3>
+                <p class="fd-uni__fact">
+                  Top-100 worldwide, strong from business to biosciences.
+                  English &amp; Danish.
+                </p>
+                <div class="fd-tags">
+                  <span class="fd-tag fd-tag--v">✓ Verified</span>
+                  <span class="fd-tag">€0–€16,000/yr</span>
+                </div>
+              </div>
+            </article>
+            <article class="fd-uni">
+              <div class="fd-uni__cover">
+                <span class="fd-uni__flag">Finland</span>
+              </div>
+              <div class="fd-uni__body">
+                <h3>Aalto University</h3>
+                <p class="fd-uni__fact">
+                  Design, tech and business under one roof near Helsinki.
+                  English master's.
+                </p>
+                <div class="fd-tags">
+                  <span class="fd-tag fd-tag--v">✓ Verified</span>
+                  <span class="fd-tag">Scholarships</span>
+                </div>
+              </div>
+            </article>
+            <article class="fd-uni">
+              <div class="fd-uni__cover">
+                <span class="fd-uni__flag">Germany</span>
+              </div>
+              <div class="fd-uni__body">
+                <h3>Technical University of Munich</h3>
+                <p class="fd-uni__fact">
+                  A leading European research university — engineering and the
+                  sciences.
+                </p>
+                <div class="fd-tags">
+                  <span class="fd-tag fd-tag--v">✓ Verified</span>
+                  <span class="fd-tag">€0–€6,000/yr</span>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- Mission close -->
+      <section class="fd-sec fd-mission">
+        <div class="fd-wrap">
+          <h2 class="fd-reveal">
+            Same start. <span class="em">Equal chance.</span>
+          </h2>
+          <p class="fd-reveal">
+            Talent is spread evenly across the world. Opportunity isn't.
+            Universo is a small push against that — a clear, honest map for
+            anyone bold enough to leave home for it.
+          </p>
+          <div class="fd-reveal" style="margin-top: 30px">
+            <a class="fd-btn fd-btn--gold" href="/discover"
+              >Start exploring →</a
+            >
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="fd-foot">
+      <div class="fd-wrap fd-foot__in">
+        <span
+          >Universo — a discovery platform for international students in
+          Europe.</span
+        >
+        <span
+          ><a href="/for-universities">For universities</a> · Free for students,
+          always.</span
+        >
+      </div>
+    </footer>
+
+    <script>
+      document.documentElement.classList.add("js");
+
+      // Populate the country dropdown from the live filter list, so the options
+      // are exactly the countries the dataset (and the matcher) actually know.
+      (async () => {
+        try {
+          const r = await fetch("/api/universities/filters");
+          const d = await r.json();
+          const sel = document.getElementById("f-country");
+          const preferred = [
+            "Finland",
+            "Germany",
+            "Netherlands",
+            "Denmark",
+            "Spain",
+            "Sweden",
+            "France",
+            "Italy",
+          ];
+          const set = new Set(d.countries || []);
+          const list = [
+            ...preferred.filter((c) => set.has(c)),
+            ...(d.countries || []).filter((c) => !preferred.includes(c)),
+          ];
+          for (const c of list) {
+            const o = document.createElement("option");
+            o.textContent = c;
+            sel.appendChild(o);
+          }
+        } catch {
+          // Filters unavailable — leave "Anywhere in Europe"; field+budget still match.
+        }
+      })();
+
+      // The matcher is powered by the REAL API — the same engine and honest
+      // reasons Discover uses. Answers are stored so "See all matches" carries
+      // them straight into Discover's full ranking.
+      const result = document.getElementById("f-result");
+      const cta = document.getElementById("f-cta");
+      const seeBtn = document.getElementById("f-see");
+
+      function esc(s) {
+        return String(s == null ? "" : s).replace(
+          /[&<>"']/g,
+          (m) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[m],
+        );
+      }
+
+      async function run() {
+        const field = document.getElementById("f-field").value;
+        const country = document.getElementById("f-country").value;
+        const budget = document.getElementById("f-budget").value;
+
+        if (!field && !country && budget === "") {
+          result.innerHTML =
+            '<p class="fd-hint">Pick a field and your matches appear — with the reason why.</p>';
+          cta.classList.remove("show");
+          return;
+        }
+
+        // Store for the flow into Discover (same key the app's quick-match reads).
+        try {
+          localStorage.setItem(
+            "uv_quickmatch",
+            JSON.stringify({ field, country, budget }),
+          );
+        } catch (e) {
+          /* private mode — the flow still works, just without carry-over */
+        }
+        seeBtn.href = "/discover";
+
+        const p = new URLSearchParams({ verified: "1", limit: "3" });
+        if (field) p.set("fitFields", field);
+        if (country) p.set("fitCountry", country);
+        if (budget !== "") p.set("fitBudget", budget);
+
+        result.innerHTML = '<p class="fd-hint">Finding your matches…</p>';
+        try {
+          const res = await fetch("/api/universities?" + p.toString());
+          const data = await res.json();
+          const unis = (data.universities || []).slice(0, 3);
+          if (!unis.length) {
+            result.innerHTML =
+              '<p class="fd-hint">Nothing verified for that exact mix yet — try widening one answer. We’d rather show less than pretend.</p>';
+            cta.classList.remove("show");
+            return;
+          }
+          result.innerHTML = unis
+            .map((u, i) => {
+              const why =
+                (u.match_reasons && u.match_reasons[0]) ||
+                "A strong all-round fit";
+              const loc = [u.city, u.country].filter(Boolean).join(", ");
+              return `
+              <div class="fd-row" style="animation-delay:${i * 80}ms">
+                <span class="fd-row__dot" aria-hidden="true"></span>
+                <div>
+                  <div class="fd-row__name">${esc(u.name)}</div>
+                  <div class="fd-row__why">${esc(why)}</div>
+                  <div class="fd-row__meta">${esc(loc)}</div>
+                </div>
+              </div>`;
+            })
+            .join("");
+          cta.classList.add("show");
+        } catch (e) {
+          result.innerHTML =
+            '<p class="fd-hint">Couldn’t reach the matcher just now — but you can still <a href="/discover" style="color:var(--teal-600)">browse every university</a>.</p>';
+          cta.classList.remove("show");
+        }
+      }
+      ["f-field", "f-country", "f-budget"].forEach((id) =>
+        document.getElementById(id).addEventListener("change", run),
+      );
+
+      // Reveal — gated on .js so content is never stranded invisible.
+      const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const els = document.querySelectorAll(".fd-reveal");
+      if ("IntersectionObserver" in window && !reduce) {
+        const io = new IntersectionObserver(
+          (entries) =>
+            entries.forEach((e) => {
+              if (e.isIntersecting) {
+                e.target.classList.add("in");
+                io.unobserve(e.target);
+              }
+            }),
+          { threshold: 0.12, rootMargin: "0px 0px -6% 0px" },
+        );
+        els.forEach((el) => io.observe(el));
+        addEventListener("load", () =>
+          setTimeout(
+            () =>
+              els.forEach(
+                (el) =>
+                  !el.classList.contains("in") &&
+                  el.getBoundingClientRect().top < innerHeight &&
+                  el.classList.add("in"),
+              ),
+            350,
+          ),
+        );
+      } else {
+        els.forEach((el) => el.classList.add("in"));
+      }
+    </script>
+  </body>
+</html>

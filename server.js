@@ -2056,6 +2056,7 @@ app.get("/sitemap.xml", (req, res) => {
     // domain. They stay reachable and crawlable (noindex,follow on the page
     // itself), so their outbound links still pass, but they're not advertised.
     sitemapPaths = [
+      "", // the homepage / front door
       "discover",
       "for-universities",
       ...UNIVERSITIES.filter((u) => u.verified).map(
@@ -2116,7 +2117,11 @@ app.get("/university/:id", (req, res) => {
 // The homepage IS the product: visitors see real, browsable university data
 // immediately instead of a marketing page. Permanent redirect keeps one
 // canonical URL for the directory.
-app.get("/", (_req, res) => res.redirect(301, "/discover"));
+// The front door: orients a cold visitor AND hands them the live matcher (the
+// same engine Discover uses), then flows into the app. Was a 301 to /discover.
+app.get("/", (_req, res) =>
+  res.sendFile(path.join(PUBLIC_DIR, "landing.html")),
+);
 
 // Public, account-free directory — browsing and searching require nothing.
 // Only actions gate on login (saving, recommendations), enforced at their own
