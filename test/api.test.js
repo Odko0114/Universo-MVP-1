@@ -105,9 +105,18 @@ test("GET / serves the front-door landing page (orients + matches, no auth wall)
   assert.equal(res.status, 200);
   const html = await res.text();
   assert.match(html, /What fits you\?/, "the live matcher is on the landing");
-  assert.match(html, /Same Start\. Equal Chance\./, "the mission leads");
+  assert.match(
+    html,
+    /Same Start\. Equal Chance\./,
+    "the mission statement is present",
+  );
   assert.match(html, /\/css\/fonts\.css/, "shares the app's self-hosted fonts");
-  assert.match(html, /See all your matches in Universo/, "flows into Discover");
+  assert.match(html, /See all your matches/, "flows into Discover");
+  assert.match(
+    html,
+    /f-field/,
+    "the matcher's inputs exist to be pre-filled on load",
+  );
 });
 
 test("GET /discover is public and server-rendered — no auth wall, no redirect", async () => {
