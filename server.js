@@ -636,26 +636,37 @@ api.post(
     const result = validate.forgotPassword(req.body);
     if (!result.ok) return res.status(400).json({ error: result.error });
 
-    const students = store.read("students");
-    const student = students.find((s) => s.email === result.value.email);
-    // Always the same response whether or not the account exists — the account
-    // lookup and email send only happen on the real path, but the response
-    // never tells a caller which case they hit (avoid enumeration).
-    if (student) {
-      const resetToken = auth.generateToken();
-      student.password_reset_token_hash = auth.hashToken(resetToken);
-      student.password_reset_expires = new Date(
-        Date.now() + 60 * 60 * 1000,
-      ).toISOString();
-      store.write("students", students);
-      email
-        .sendPasswordResetEmail(
-          student,
-          `${appOrigin(req)}/reset-password?token=${resetToken}`,
-        )
-        .catch(() => {});
+    // `delivery` reports whether email can actually be sent right now (it's
+    // dormant until RESEND_API_KEY + a verified domain exist). It reflects
+    // global server config, NOT whether the account exists, so it leaks nothing
+    // about any user — every caller gets the same value. The client uses it to
+    // avoid telling someone to "check your email" when nothing will arrive.
+    const delivery = email.ENABLED ? "email" : "unavailable";
+
+    // No point minting a token that can never reach the user. When email is
+    // dormant, skip straight to the honest "unavailable" response.
+    if (delivery === "email") {
+      const students = store.read("students");
+      const student = students.find((s) => s.email === result.value.email);
+      // Same response whether or not the account exists — the lookup and send
+      // happen only on the real path, but the reply never reveals which case
+      // was hit (avoid enumeration).
+      if (student) {
+        const resetToken = auth.generateToken();
+        student.password_reset_token_hash = auth.hashToken(resetToken);
+        student.password_reset_expires = new Date(
+          Date.now() + 60 * 60 * 1000,
+        ).toISOString();
+        store.write("students", students);
+        email
+          .sendPasswordResetEmail(
+            student,
+            `${appOrigin(req)}/reset-password?token=${resetToken}`,
+          )
+          .catch(() => {});
+      }
     }
-    res.json({ ok: true });
+    res.json({ ok: true, delivery });
   }),
 );
 

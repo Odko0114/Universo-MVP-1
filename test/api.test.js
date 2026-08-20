@@ -1013,6 +1013,8 @@ test("forgot-password always responds 200, whether or not the account exists (no
   const testAddr = `forgot_${Date.now()}@example.com`;
   let capturedLink;
   const original = emailService.sendPasswordResetEmail;
+  const origEnabled = emailService.ENABLED;
+  emailService.ENABLED = true; // exercise the deliverable path; send is stubbed
   emailService.sendPasswordResetEmail = (student, link) => {
     capturedLink = link;
     return Promise.resolve({ sent: false });
@@ -1047,6 +1049,7 @@ test("forgot-password always responds 200, whether or not the account exists (no
     );
   } finally {
     emailService.sendPasswordResetEmail = original;
+    emailService.ENABLED = origEnabled;
     await req("DELETE", "/api/me").catch(() => {});
   }
 });
@@ -1055,6 +1058,8 @@ test("password reset: valid token changes the password and invalidates every exi
   const testAddr = `reset_${Date.now()}@example.com`;
   let capturedLink;
   const original = emailService.sendPasswordResetEmail;
+  const origEnabled = emailService.ENABLED;
+  emailService.ENABLED = true; // exercise the deliverable path; send is stubbed
   emailService.sendPasswordResetEmail = (student, link) => {
     capturedLink = link;
     return Promise.resolve({ sent: false });
@@ -1108,6 +1113,7 @@ test("password reset: valid token changes the password and invalidates every exi
     assert.equal(login.status, 200);
   } finally {
     emailService.sendPasswordResetEmail = original;
+    emailService.ENABLED = origEnabled;
     await req("DELETE", "/api/me").catch(() => {});
   }
 });
@@ -1579,4 +1585,74 @@ test("unknown university id returns 404 so one dead id can't break a shared comp
   const r = await req("GET", "/api/universities/does-not-exist");
   assert.equal(r.status, 404);
   assert.match(r.json.error, /not found/i);
+});
+
+test("forgot-password reports delivery unavailable (and mints no token) when email is dormant", async () => {
+  // The real production state today: no RESEND_API_KEY, so email can't be sent.
+  // The endpoint must NOT pretend it did — the client relies on `delivery` to
+  // avoid telling a user to check an inbox that will stay empty. And there's no
+  // point storing a reset token nobody can receive.
+  const testAddr = `dormant_${Date.now()}@example.com`;
+  const origEnabled = emailService.ENABLED;
+  const origSend = emailService.sendPasswordResetEmail;
+  let sendCalled = false;
+  emailService.ENABLED = false;
+  emailService.sendPasswordResetEmail = () => {
+    sendCalled = true;
+    return Promise.resolve({ sent: false });
+  };
+  try {
+    await req("POST", "/api/auth/register", {
+      full_name: "Dormant Flow",
+      email: testAddr,
+      password: "password123",
+      consent: true,
+    });
+
+    const r = await req("POST", "/api/auth/forgot-password", {
+      email: testAddr,
+    });
+    assert.equal(r.status, 200);
+    assert.equal(
+      r.json.delivery,
+      "unavailable",
+      "must not claim an email was sent",
+    );
+    assert.equal(sendCalled, false, "no send attempted when email is dormant");
+
+    // No token was persisted, so a later reset attempt has nothing to match.
+    const stored = store.read("students").find((s) => s.email === testAddr);
+    assert.ok(
+      !stored.password_reset_token_hash,
+      "no reset token minted while dormant",
+    );
+  } finally {
+    emailService.ENABLED = origEnabled;
+    emailService.sendPasswordResetEmail = origSend;
+    await req("DELETE", "/api/me").catch(() => {});
+  }
+});
+
+test("forgot-password reports delivery email when sending is available", async () => {
+  const testAddr = `deliver_${Date.now()}@example.com`;
+  const origEnabled = emailService.ENABLED;
+  const origSend = emailService.sendPasswordResetEmail;
+  emailService.ENABLED = true;
+  emailService.sendPasswordResetEmail = () => Promise.resolve({ sent: true });
+  try {
+    await req("POST", "/api/auth/register", {
+      full_name: "Deliver Flow",
+      email: testAddr,
+      password: "password123",
+      consent: true,
+    });
+    const r = await req("POST", "/api/auth/forgot-password", {
+      email: testAddr,
+    });
+    assert.equal(r.json.delivery, "email");
+  } finally {
+    emailService.ENABLED = origEnabled;
+    emailService.sendPasswordResetEmail = origSend;
+    await req("DELETE", "/api/me").catch(() => {});
+  }
 });

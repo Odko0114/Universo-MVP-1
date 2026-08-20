@@ -2266,6 +2266,7 @@
           <p class="muted" style="margin-top:0">Enter your account email — we'll send a reset link if it matches an account.</p>
           <div id="auth-error" class="form-error" hidden></div>
           <div id="forgot-success" class="form-success" hidden>Check your email for a reset link. It expires in 1 hour.</div>
+          <div id="forgot-unavailable" class="form-success" hidden>Email-based password reset isn't available yet. Email <a href="mailto:join.universo@gmail.com">join.universo@gmail.com</a> from your account address and we'll reset it for you.</div>
           <form id="forgot-form">
             <div class="form-group"><label>Email</label><input type="email" name="email" required autocomplete="email" /></div>
             <button class="btn btn--primary btn--block" type="submit" id="forgot-submit">Send reset link</button>
@@ -2282,9 +2283,16 @@
       btn.innerHTML = '<span class="spinner"></span>';
       const fd = new FormData(form);
       try {
-        await API.forgotPassword(fd.get("email"));
+        const r = await API.forgotPassword(fd.get("email"));
         form.hidden = true;
-        document.getElementById("forgot-success").hidden = false;
+        // Don't promise an email that can't be delivered — when email delivery
+        // is dormant the server says so, and we point at a real recovery route
+        // instead of a mailbox that will stay empty.
+        const which =
+          r && r.delivery === "unavailable"
+            ? "forgot-unavailable"
+            : "forgot-success";
+        document.getElementById(which).hidden = false;
       } catch (err) {
         showAuthError(err.message);
         btn.disabled = false;
