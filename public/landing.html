@@ -10,16 +10,12 @@
     <title>Universo — Find the university that fits you</title>
     <meta
       name="description"
-      content="Compare 3,835 European universities on real, transparent data and instantly see which ones fit you — free, no account needed."
+      content="Compare 3,835 European universities on real data and instantly see the ones that fit you. Sourced from the official European register. Free for students, no account needed."
     />
     <link rel="canonical" href="/" />
     <link rel="icon" href="/favicon.svg" />
-    <!-- The app's own self-hosted faces, so this door and Discover share the
-         exact same typography. -->
     <link rel="stylesheet" href="/css/fonts.css" />
     <style>
-      /* Discover's exact palette — this page and the app are one place. Own
-         (fd-) prefixed classes so nothing collides with the app's CSS. */
       :root {
         --navy-900: #0b1f3a;
         --navy-800: #12294d;
@@ -50,11 +46,11 @@
         --shadow-lg: 0 24px 60px rgba(11, 31, 58, 0.22);
 
         --s-1: clamp(0.82rem, 0.8rem + 0.12vw, 0.9rem);
-        --s0: clamp(1rem, 0.97rem + 0.16vw, 1.1rem);
-        --s1: clamp(1.15rem, 1.05rem + 0.4vw, 1.4rem);
+        --s0: clamp(1rem, 0.97rem + 0.16vw, 1.08rem);
+        --s1: clamp(1.12rem, 1.04rem + 0.36vw, 1.35rem);
         --s2: clamp(1.5rem, 1.3rem + 0.9vw, 2.1rem);
-        --s3: clamp(2rem, 1.6rem + 1.9vw, 3.2rem);
-        --s4: clamp(2.5rem, 1.9rem + 3vw, 4.4rem);
+        --s3: clamp(1.9rem, 1.55rem + 1.7vw, 3rem);
+        --s4: clamp(2.4rem, 1.85rem + 2.7vw, 4.1rem);
       }
 
       * {
@@ -75,14 +71,18 @@
       a {
         color: inherit;
       }
+      /* Headings: no text-wrap:balance — it was widening word gaps unevenly.
+         Controlled line length via max-width instead. */
       h1,
       h2,
       h3 {
         font-family: var(--serif);
         font-weight: 500;
-        line-height: 1.08;
-        letter-spacing: -0.015em;
-        text-wrap: balance;
+        line-height: 1.1;
+        letter-spacing: -0.012em;
+        margin: 0;
+      }
+      p {
         margin: 0;
       }
       .em {
@@ -90,61 +90,67 @@
         color: var(--gold-600);
         font-weight: 400;
       }
-      .fd-wrap {
+      .wrap {
         max-width: var(--maxw);
         margin: 0 auto;
         padding: 0 24px;
       }
-      .fd-eyebrow {
+      .eyebrow {
         font-family: var(--sans);
         font-size: var(--s-1);
         font-weight: 700;
-        letter-spacing: 0.16em;
+        letter-spacing: 0.14em;
         text-transform: uppercase;
         margin: 0;
       }
 
-      .fd-btn {
+      .btn {
         font-family: var(--sans);
         font-size: var(--s0);
         font-weight: 600;
         text-decoration: none;
-        padding: 14px 26px;
+        padding: 13px 24px;
         border-radius: 999px;
         cursor: pointer;
         border: 1px solid transparent;
         display: inline-flex;
         align-items: center;
         gap: 8px;
+        white-space: nowrap;
         transition:
           transform 0.18s ease,
           box-shadow 0.28s ease,
           background 0.2s,
-          border-color 0.2s;
+          border-color 0.2s,
+          color 0.2s;
       }
-      .fd-btn--gold {
+      .btn--gold {
         color: var(--navy-900);
         background: var(--gold-500);
-        box-shadow: 0 6px 22px rgba(233, 185, 73, 0.35);
+        box-shadow: 0 6px 20px rgba(233, 185, 73, 0.32);
       }
-      .fd-btn--gold:hover {
+      .btn--gold:hover {
         transform: translateY(-2px);
         background: var(--gold-600);
       }
-      .fd-btn--teal {
+      .btn--teal {
         color: #fff;
         background: var(--teal-500);
-        box-shadow: 0 6px 22px rgba(20, 184, 166, 0.28);
+        box-shadow: 0 6px 20px rgba(20, 184, 166, 0.26);
       }
-      .fd-btn--teal:hover {
+      .btn--teal:hover {
         transform: translateY(-2px);
         background: var(--teal-600);
       }
-      .fd-btn--ghost {
-        color: #eaf1ff;
-        border-color: rgba(255, 255, 255, 0.28);
+      .btn--lg {
+        padding: 16px 30px;
+        font-size: var(--s1);
       }
-      .fd-btn--ghost:hover {
+      .btn--ghost-d {
+        color: #eaf1ff;
+        border-color: rgba(255, 255, 255, 0.3);
+      }
+      .btn--ghost-d:hover {
         border-color: var(--gold-500);
         color: var(--gold-500);
       }
@@ -153,57 +159,109 @@
         outline-offset: 2px;
       }
 
-      /* Top bar */
-      .fd-top {
-        position: absolute;
+      /* ---- Sticky nav: transparent over the hero, solid on scroll ---- */
+      .nav {
+        position: fixed;
         top: 0;
         left: 0;
         right: 0;
-        z-index: 5;
+        z-index: 40;
+        transition:
+          background 0.3s ease,
+          box-shadow 0.3s ease,
+          border-color 0.3s ease;
+        border-bottom: 1px solid transparent;
       }
-      .fd-top__in {
+      .nav.solid {
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: saturate(1.6) blur(10px);
+        -webkit-backdrop-filter: saturate(1.6) blur(10px);
+        border-bottom-color: var(--line);
+        box-shadow: 0 1px 12px rgba(11, 31, 58, 0.05);
+      }
+      .nav__in {
         max-width: var(--maxw);
         margin: 0 auto;
-        padding: 20px 24px;
+        padding: 15px 24px;
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: 16px;
       }
-      .fd-brand {
+      .brand {
         display: flex;
         align-items: center;
         gap: 10px;
         text-decoration: none;
         color: #fff;
+        transition: color 0.3s ease;
       }
-      .fd-brand__mark {
-        width: 28px;
-        height: 28px;
-        color: #fff;
+      .nav.solid .brand {
+        color: var(--navy-900);
+      }
+      .brand__mark {
+        width: 27px;
+        height: 27px;
+        color: currentColor;
         flex: 0 0 auto;
       }
-      .fd-brand__name {
+      .brand__name {
         font-family: var(--serif);
         font-style: italic;
         font-weight: 600;
-        font-size: 1.4rem;
+        font-size: 1.38rem;
+      }
+      .nav__links {
+        display: flex;
+        align-items: center;
+        gap: 26px;
+      }
+      .nav__links a.link {
+        color: #d7e1f2;
+        font-size: var(--s-1);
+        font-weight: 600;
+        text-decoration: none;
+        transition: color 0.2s;
+      }
+      .nav.solid .nav__links a.link {
+        color: var(--ink-soft);
+      }
+      .nav__links a.link:hover {
+        color: var(--gold-500);
+      }
+      .nav.solid .nav__links a.link:hover {
+        color: var(--teal-600);
+      }
+      .nav__signin {
+        color: #eaf1ff;
+        font-size: var(--s-1);
+        font-weight: 600;
+        text-decoration: none;
+      }
+      .nav.solid .nav__signin {
+        color: var(--ink);
+      }
+      @media (max-width: 820px) {
+        .nav__links a.link {
+          display: none;
+        }
       }
 
-      /* Hero: orient (left) + the live, pre-filled matcher (right) */
-      .fd-hero {
+      /* ---- Hero ---- */
+      .hero {
         position: relative;
         background:
           radial-gradient(
             120% 80% at 50% 128%,
-            rgba(233, 185, 73, 0.28),
+            rgba(233, 185, 73, 0.26),
             transparent 58%
           ),
-          linear-gradient(160deg, var(--navy-900), var(--navy-700));
+          linear-gradient(158deg, var(--navy-900), var(--navy-700));
         color: #fff;
-        padding: 120px 0 78px;
+        padding: 118px 0 82px;
         overflow: hidden;
       }
-      .fd-hero::after {
+      .hero::after {
         content: "";
         position: absolute;
         left: 0;
@@ -213,101 +271,106 @@
         background: linear-gradient(
           90deg,
           transparent,
-          rgba(233, 185, 73, 0.2),
           rgba(233, 185, 73, 0.85) 50%,
-          rgba(233, 185, 73, 0.2),
           transparent
         );
-        box-shadow: 0 0 30px 2px rgba(233, 185, 73, 0.4);
+        box-shadow: 0 0 28px 2px rgba(233, 185, 73, 0.38);
       }
-      .fd-hero__grid {
+      .hero__grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 48px;
+        gap: 46px;
         align-items: center;
       }
-      .fd-hero__tag {
+      .hero__tag {
         color: var(--gold-500);
-        letter-spacing: 0.16em;
       }
-      .fd-hero h1 {
+      .hero h1 {
         color: #fff;
         font-size: var(--s4);
         margin: 14px 0 0;
-        max-width: 13ch;
+        max-width: 12ch;
       }
-      .fd-hero__lede {
+      .hero__lede {
         color: #c7d3e6;
         font-size: var(--s1);
         line-height: 1.5;
         margin: 20px 0 0;
-        max-width: 40ch;
+        max-width: 42ch;
       }
-      .fd-hero__cue {
-        margin: 26px 0 0;
+      .hero__ctas {
+        margin: 30px 0 0;
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .hero__micro {
+        margin: 22px 0 0;
+        color: #93a6c6;
+        font-size: var(--s-1);
         display: flex;
         align-items: center;
-        gap: 10px;
-        color: #a9b8d0;
-        font-size: var(--s-1);
+        gap: 8px;
       }
-      .fd-hero__cue svg {
-        width: 18px;
-        height: 18px;
-        color: var(--gold-500);
+      .hero__micro svg {
+        width: 15px;
+        height: 15px;
+        color: var(--teal-500);
+        flex: 0 0 auto;
       }
 
-      /* Matcher card */
-      .fd-matcher {
+      /* ---- Matcher card ---- */
+      .matcher {
         background: var(--surface);
         color: var(--ink);
         border-radius: var(--radius);
         box-shadow: var(--shadow-lg);
         padding: 24px;
       }
-      .fd-matcher__head {
+      .matcher__head {
         display: flex;
         align-items: baseline;
         justify-content: space-between;
         gap: 12px;
       }
-      .fd-matcher__eyebrow {
+      .matcher__eyebrow {
         color: var(--teal-600);
       }
-      .fd-matcher__note {
+      .matcher__note {
         font-size: 0.72rem;
         color: var(--ink-faint);
       }
-      .fd-matcher h2 {
+      .matcher h2 {
         font-size: var(--s1);
         margin: 4px 0 3px;
       }
-      .fd-matcher__lead {
+      .matcher__lead {
         font-size: var(--s-1);
         color: var(--ink-faint);
         margin: 0 0 16px;
       }
-      .fd-fields {
+      .fields {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 10px;
       }
-      .fd-field {
+      .field {
         min-width: 0;
       }
-      .fd-field--wide {
+      .field--wide {
         grid-column: 1 / -1;
       }
-      .fd-field > span {
+      .field > span {
         display: block;
         font-size: 0.68rem;
         font-weight: 700;
-        letter-spacing: 0.07em;
+        letter-spacing: 0.06em;
         text-transform: uppercase;
         color: var(--ink-faint);
         margin-bottom: 5px;
       }
-      .fd-field select {
+      .field select {
         width: 100%;
         font-family: var(--sans);
         font-size: var(--s0);
@@ -322,15 +385,15 @@
         background-position: right 12px center;
         cursor: pointer;
       }
-      .fd-result {
+      .result {
         margin-top: 14px;
       }
-      .fd-hint {
+      .hint {
         color: var(--ink-faint);
         font-size: var(--s0);
         padding: 8px 0;
       }
-      .fd-row {
+      .row {
         display: flex;
         align-items: center;
         gap: 13px;
@@ -338,15 +401,15 @@
         border-top: 1px solid var(--line);
         opacity: 0;
         transform: translateY(6px);
-        animation: fd-rise 0.4s ease forwards;
+        animation: rise 0.4s ease forwards;
       }
-      @keyframes fd-rise {
+      @keyframes rise {
         to {
           opacity: 1;
           transform: none;
         }
       }
-      .fd-row__thumb {
+      .row__thumb {
         width: 46px;
         height: 46px;
         border-radius: 10px;
@@ -355,179 +418,425 @@
         background-size: cover;
         background-position: center;
         border: 1px solid var(--line);
-        position: relative;
       }
-      .fd-row__thumb::after {
-        content: "";
-        position: absolute;
-        inset: auto 5px 5px auto;
-        width: 7px;
-        height: 7px;
-        border-radius: 50%;
-        background: var(--gold-500);
-        box-shadow: 0 0 6px 1px rgba(233, 185, 73, 0.7);
-      }
-      .fd-row__thumb.has-photo::after {
-        display: none;
-      }
-      .fd-row__name {
+      .row__name {
         font-family: var(--serif);
-        font-size: 1.12rem;
+        font-size: 1.1rem;
         line-height: 1.15;
         color: var(--ink);
       }
-      .fd-row__why {
+      .row__why {
         font-size: var(--s-1);
         color: var(--teal-600);
         margin-top: 2px;
       }
-      .fd-row__meta {
+      .row__meta {
         font-size: var(--s-1);
         color: var(--ink-faint);
         margin-top: 1px;
       }
-      .fd-matcher__cta {
+      .matcher__cta {
         margin-top: 16px;
       }
-      .fd-matcher__cta .fd-btn {
+      .matcher__cta .btn {
         width: 100%;
         justify-content: center;
       }
 
-      /* Sections */
-      .fd-sec {
-        padding: clamp(52px, 8vh, 96px) 0;
+      /* ---- Coverage strip (honest logo-wall equivalent) ---- */
+      .cover {
+        background: var(--surface);
+        border-bottom: 1px solid var(--line);
+        padding: 28px 0;
       }
-      .fd-sec-head {
-        max-width: 40ch;
-        margin: 0 auto;
+      .cover__label {
+        text-align: center;
+        color: var(--ink-faint);
+        font-size: var(--s-1);
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        margin-bottom: 16px;
+      }
+      .cover__row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px 30px;
+      }
+      .cover__name {
+        font-family: var(--serif);
+        font-size: clamp(1rem, 0.9rem + 0.5vw, 1.35rem);
+        color: var(--navy-800);
+        opacity: 0.75;
+        white-space: nowrap;
+      }
+
+      /* ---- Generic section ---- */
+      .sec {
+        padding: clamp(60px, 9vh, 108px) 0;
+      }
+      .sec-head {
+        max-width: 42ch;
+        margin: 0 auto 8px;
         text-align: center;
       }
-      .fd-sec-head h2 {
-        font-size: var(--s3);
-        margin-top: 10px;
+      .sec-head .eyebrow {
+        color: var(--teal-600);
       }
-      .fd-sec-head p {
+      .sec-head h2 {
+        font-size: var(--s3);
+        margin-top: 12px;
+        max-width: 20ch;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .sec-head p {
         color: var(--ink-soft);
         font-size: var(--s1);
-        margin: 14px auto 0;
-        max-width: 48ch;
+        margin: 16px auto 0;
+        max-width: 50ch;
         line-height: 1.5;
       }
 
-      /* Trust / transparency — three honest, real proof points */
-      .fd-trust {
+      /* ---- How it works: 3 steps with real-UI previews ---- */
+      .steps {
+        margin-top: 52px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+      }
+      .step {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 22px;
+        box-shadow: var(--shadow-sm);
+        display: flex;
+        flex-direction: column;
+      }
+      .step__n {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 30px;
+        border-radius: 999px;
+        background: var(--teal-050);
+        color: var(--teal-600);
+        font-family: var(--serif);
+        font-size: 0.95rem;
+        margin-bottom: 12px;
+      }
+      .step h3 {
+        font-size: var(--s1);
+      }
+      .step p {
+        color: var(--ink-soft);
+        font-size: var(--s0);
+        margin: 8px 0 18px;
+        line-height: 1.5;
+        flex: 1;
+      }
+      .preview {
+        border: 1px solid var(--line);
+        border-radius: var(--radius-sm);
+        background: var(--bg);
+        padding: 12px;
+        font-size: 0.78rem;
+      }
+      /* preview: match */
+      .pv-row {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        padding: 7px 0;
+      }
+      .pv-row + .pv-row {
+        border-top: 1px solid var(--line);
+      }
+      .pv-dot {
+        width: 26px;
+        height: 26px;
+        border-radius: 7px;
+        flex: 0 0 auto;
+        background: linear-gradient(135deg, var(--navy-800), var(--teal-600));
+      }
+      .pv-name {
+        font-family: var(--serif);
+        color: var(--ink);
+        font-size: 0.86rem;
+      }
+      .pv-why {
+        color: var(--teal-600);
+        font-size: 0.7rem;
+      }
+      /* preview: compare table */
+      .pv-tbl {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.72rem;
+      }
+      .pv-tbl th,
+      .pv-tbl td {
+        padding: 6px 7px;
+        text-align: left;
+        border-bottom: 1px solid var(--line);
+      }
+      .pv-tbl thead th {
+        font-family: var(--serif);
+        color: var(--ink);
+        font-weight: 500;
+      }
+      .pv-tbl tbody th {
+        color: var(--ink-faint);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        font-size: 0.62rem;
+      }
+      .pv-tbl td {
+        color: var(--ink-soft);
+        font-variant-numeric: tabular-nums;
+      }
+      /* preview: plan */
+      .pv-plan__row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 9px;
+      }
+      .pv-plan__lbl {
+        color: var(--ink-soft);
+      }
+      .pv-plan__pct {
+        color: var(--teal-600);
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .pv-bar {
+        height: 6px;
+        border-radius: 999px;
+        background: #eef1f6;
+        overflow: hidden;
+        margin-bottom: 12px;
+      }
+      .pv-bar > i {
+        display: block;
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--teal-500), var(--teal-600));
+      }
+
+      /* ---- Trust: four confident, real proof points ---- */
+      .trust {
         background: var(--surface);
         border-top: 1px solid var(--line);
         border-bottom: 1px solid var(--line);
       }
-      .fd-trust__grid {
+      .trust__grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 28px;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 26px;
+        margin-top: 44px;
       }
-      .fd-trust__item {
-        border-top: 2px solid var(--teal-050);
-        padding-top: 18px;
+      .trust__item {
+        text-align: left;
       }
-      .fd-trust__item h3 {
+      .trust__ico {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: var(--teal-050);
+        color: var(--teal-600);
+        display: grid;
+        place-items: center;
+        margin-bottom: 14px;
+      }
+      .trust__ico svg {
+        width: 21px;
+        height: 21px;
+      }
+      .trust__item h3 {
         font-size: var(--s1);
       }
-      .fd-trust__item p {
+      .trust__item p {
         color: var(--ink-soft);
         font-size: var(--s0);
-        margin: 10px 0 0;
+        margin-top: 9px;
         line-height: 1.55;
-      }
-      .fd-trust__item b {
-        color: var(--ink);
-        font-variant-numeric: tabular-nums;
       }
 
-      /* Continue / account purpose */
-      .fd-cont__in {
-        background: linear-gradient(135deg, var(--teal-050), #eef4fb);
-        border: 1px solid var(--line);
-        border-radius: var(--radius);
-        padding: clamp(28px, 5vw, 48px);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 32px;
-        flex-wrap: wrap;
+      /* ---- Founder note ---- */
+      .founder {
+        background: linear-gradient(160deg, var(--navy-900), var(--navy-800));
+        color: #fff;
       }
-      .fd-cont__copy {
-        max-width: 52ch;
+      .founder__in {
+        max-width: 720px;
+        margin: 0 auto;
+        text-align: center;
       }
-      .fd-cont__copy h2 {
-        font-size: var(--s2);
+      .founder__quote {
+        font-family: var(--serif);
+        font-size: clamp(1.5rem, 1.2rem + 1.5vw, 2.4rem);
+        line-height: 1.25;
+        color: #fff;
       }
-      .fd-cont__copy p {
-        color: var(--ink-soft);
+      .founder__quote .em {
+        color: var(--gold-500);
+      }
+      .founder__who {
+        margin-top: 22px;
+        color: #c7d3e6;
         font-size: var(--s0);
-        margin: 12px 0 0;
-        line-height: 1.55;
       }
-      .fd-cont__copy strong {
-        color: var(--ink);
+      .founder__who b {
+        color: #fff;
         font-weight: 600;
       }
 
-      /* Mission */
-      .fd-mission {
+      /* ---- FAQ ---- */
+      .faq {
+        max-width: 760px;
+        margin: 44px auto 0;
+      }
+      .qa {
+        border-bottom: 1px solid var(--line);
+      }
+      .qa summary {
+        list-style: none;
+        cursor: pointer;
+        padding: 20px 40px 20px 0;
+        position: relative;
+        font-family: var(--serif);
+        font-size: var(--s1);
+        color: var(--ink);
+      }
+      .qa summary::-webkit-details-marker {
+        display: none;
+      }
+      .qa summary::after {
+        content: "+";
+        position: absolute;
+        right: 4px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-family: var(--sans);
+        font-size: 1.5rem;
+        color: var(--teal-600);
+        transition: transform 0.2s ease;
+      }
+      .qa[open] summary::after {
+        content: "−";
+      }
+      .qa p {
+        color: var(--ink-soft);
+        font-size: var(--s0);
+        padding: 0 40px 22px 0;
+        line-height: 1.6;
+      }
+
+      /* ---- Final CTA ---- */
+      .final {
         text-align: center;
         background:
           radial-gradient(
-            120% 80% at 50% -10%,
-            rgba(233, 185, 73, 0.16),
+            120% 90% at 50% -20%,
+            rgba(233, 185, 73, 0.18),
             transparent 55%
           ),
-          linear-gradient(180deg, var(--navy-900), var(--navy-800));
+          linear-gradient(180deg, var(--navy-800), var(--navy-900));
         color: #fff;
       }
-      .fd-mission .fd-eyebrow {
+      .final .eyebrow {
         color: var(--gold-500);
       }
-      .fd-mission h2 {
+      .final h2 {
         color: #fff;
         font-size: var(--s3);
-        max-width: 16ch;
+        max-width: 18ch;
         margin: 12px auto 0;
       }
-      .fd-mission p {
+      .final p {
         color: #c7d3e6;
         font-size: var(--s1);
         max-width: 46ch;
-        margin: 18px auto 0;
-        line-height: 1.55;
+        margin: 16px auto 0;
+        line-height: 1.5;
       }
-
-      .fd-foot {
-        background: var(--navy-900);
-        color: #90a2c0;
-        padding: 36px 0;
-        font-size: var(--s-1);
-      }
-      .fd-foot__in {
+      .final__ctas {
+        margin-top: 30px;
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 20px;
+        gap: 14px;
+        justify-content: center;
         flex-wrap: wrap;
       }
-      .fd-foot a {
-        color: #c7d3e6;
+      .final__micro {
+        margin-top: 16px;
+        color: #93a6c6;
+        font-size: var(--s-1);
       }
 
-      /* Reveal — gated on .js so content is never stranded invisible */
-      html.js .fd-reveal {
+      /* ---- Footer ---- */
+      .foot {
+        background: var(--navy-900);
+        color: #90a2c0;
+        padding: 52px 0 40px;
+        font-size: var(--s-1);
+      }
+      .foot__top {
+        display: flex;
+        justify-content: space-between;
+        gap: 40px;
+        flex-wrap: wrap;
+        padding-bottom: 32px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .foot__brand {
+        max-width: 30ch;
+      }
+      .foot__brand p {
+        margin-top: 12px;
+        line-height: 1.55;
+      }
+      .foot__cols {
+        display: flex;
+        gap: 56px;
+        flex-wrap: wrap;
+      }
+      .foot__col h4 {
+        color: #c7d3e6;
+        font-size: var(--s-1);
+        font-weight: 700;
+        margin: 0 0 12px;
+      }
+      .foot__col a {
+        display: block;
+        color: #90a2c0;
+        text-decoration: none;
+        margin-bottom: 9px;
+      }
+      .foot__col a:hover {
+        color: #fff;
+      }
+      .foot__bottom {
+        padding-top: 22px;
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      /* ---- Reveal ---- */
+      html.js .reveal {
         opacity: 0;
         transform: translateY(18px);
         transition:
           opacity 0.6s ease,
           transform 0.6s ease;
       }
-      html.js .fd-reveal.in {
+      html.js .reveal.in {
         opacity: 1;
         transform: none;
       }
@@ -535,12 +844,12 @@
         html {
           scroll-behavior: auto;
         }
-        html.js .fd-reveal {
+        html.js .reveal {
           opacity: 1;
           transform: none;
           transition: none;
         }
-        .fd-row {
+        .row {
           animation: none;
           opacity: 1;
           transform: none;
@@ -548,33 +857,43 @@
       }
 
       @media (max-width: 900px) {
-        .fd-hero {
-          padding-top: 96px;
+        .hero {
+          padding-top: 92px;
         }
-        /* Mobile: headline + short line, then the live matcher — value fast.
-           The matcher is pulled above the intro's lower half via source order:
-           on mobile the grid stacks, so we keep intro compact and the matcher
-           immediately follows. */
-        .fd-hero__grid {
+        .hero__grid {
           grid-template-columns: 1fr;
-          gap: 26px;
+          gap: 24px;
         }
-        .fd-trust__grid {
+        /* Bring the live matcher (the value) up on mobile — the nav's
+           "Get started free" already covers the primary action, so the hero's
+           duplicate CTAs can step aside on small screens. */
+        .hero__ctas {
+          display: none;
+        }
+        .hero__lede {
+          margin-top: 16px;
+        }
+        .steps {
           grid-template-columns: 1fr;
-          gap: 22px;
+          gap: 18px;
         }
-        .fd-cont__in {
-          flex-direction: column;
-          align-items: flex-start;
+        .trust__grid {
+          grid-template-columns: 1fr 1fr;
+          gap: 26px 20px;
+        }
+      }
+      @media (max-width: 560px) {
+        .trust__grid {
+          grid-template-columns: 1fr;
         }
       }
     </style>
   </head>
   <body>
-    <header class="fd-top">
-      <div class="fd-top__in">
-        <a class="fd-brand" href="/" aria-label="Universo home">
-          <svg class="fd-brand__mark" viewBox="0 0 200 200" aria-hidden="true">
+    <header class="nav" id="nav">
+      <div class="nav__in">
+        <a class="brand" href="/" aria-label="Universo home">
+          <svg class="brand__mark" viewBox="0 0 200 200" aria-hidden="true">
             <path
               fill="currentColor"
               d="M18 20 C -6 80 40 165 100 190 C 96 140 90 60 88 15 Z"
@@ -584,53 +903,69 @@
               d="M182 20 C 206 80 160 165 100 190 C 104 140 110 60 112 15 Z"
             />
           </svg>
-          <span class="fd-brand__name">Universo</span>
+          <span class="brand__name">Universo</span>
         </a>
-        <a class="fd-btn fd-btn--ghost" href="/account?mode=login">Sign in</a>
+        <nav class="nav__links" aria-label="Primary">
+          <a class="link" href="#how">How it works</a>
+          <a class="link" href="#universities">Universities</a>
+          <a class="link" href="/for-universities">For universities</a>
+          <a class="nav__signin" href="/account?mode=login">Sign in</a>
+          <a class="btn btn--gold" href="/account?mode=register"
+            >Get started free</a
+          >
+        </nav>
       </div>
     </header>
 
     <main id="top">
-      <!-- Hero: WHAT is this (left) + real matches already on screen (right) -->
-      <section class="fd-hero">
-        <div class="fd-wrap fd-hero__grid">
+      <!-- HERO -->
+      <section class="hero">
+        <div class="wrap hero__grid">
           <div>
-            <p class="fd-eyebrow fd-hero__tag fd-reveal">
-              For international students in Europe
+            <p class="eyebrow hero__tag reveal">
+              University discovery for international students
             </p>
-            <h1 class="fd-reveal">
+            <h1 class="reveal">
               Find the university that fits <span class="em">you</span>
             </h1>
-            <p class="fd-hero__lede fd-reveal">
-              Compare 3,835 European universities on real data — and instantly
-              see which ones actually fit you. Free, no account needed.
+            <p class="hero__lede reveal">
+              Compare 3,835 European universities on real data and instantly see
+              the ones that fit you. Free, no account needed.
             </p>
-            <p class="fd-hero__cue fd-reveal">
+            <div class="hero__ctas reveal">
+              <a class="btn btn--gold btn--lg" href="/account?mode=register"
+                >Get started — it's free</a
+              >
+              <a class="btn btn--ghost-d btn--lg" href="#how"
+                >See how it works</a
+              >
+            </div>
+            <p class="hero__micro reveal">
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                stroke-width="2"
+                stroke-width="2.2"
                 aria-hidden="true"
               >
-                <path d="M5 12h14M13 6l6 6-6 6" />
+                <path d="M20 6 9 17l-5-5" />
               </svg>
-              Live matches, right here — change any answer to make them yours.
+              Sourced from the official European register · 32 countries
             </p>
           </div>
 
-          <!-- The matcher is pre-filled and shows real results on load -->
-          <div class="fd-matcher fd-reveal">
-            <div class="fd-matcher__head">
-              <p class="fd-eyebrow fd-matcher__eyebrow">Your matches</p>
-              <span class="fd-matcher__note">No account needed</span>
+          <!-- Live matcher, pre-filled, real results on load -->
+          <div class="matcher reveal">
+            <div class="matcher__head">
+              <p class="eyebrow matcher__eyebrow">Your matches</p>
+              <span class="matcher__note">No account needed</span>
             </div>
             <h2>What fits you?</h2>
-            <p class="fd-matcher__lead">
+            <p class="matcher__lead">
               Real universities, matched live. Change an answer and they update.
             </p>
-            <div class="fd-fields">
-              <label class="fd-field fd-field--wide">
+            <div class="fields">
+              <label class="field field--wide">
                 <span>Field of study</span>
                 <select id="f-field">
                   <option value="">Any field</option>
@@ -644,13 +979,13 @@
                   <option>Arts &amp; Design</option>
                 </select>
               </label>
-              <label class="fd-field">
+              <label class="field">
                 <span>Country</span>
                 <select id="f-country">
                   <option value="">Anywhere</option>
                 </select>
               </label>
-              <label class="fd-field">
+              <label class="field">
                 <span>Budget / year</span>
                 <select id="f-budget">
                   <option value="">Any</option>
@@ -661,11 +996,11 @@
                 </select>
               </label>
             </div>
-            <div class="fd-result" id="f-result" aria-live="polite">
-              <p class="fd-hint">Finding your matches…</p>
+            <div class="result" id="f-result" aria-live="polite">
+              <p class="hint">Finding your matches…</p>
             </div>
-            <div class="fd-matcher__cta">
-              <a class="fd-btn fd-btn--teal" id="f-see" href="/discover"
+            <div class="matcher__cta">
+              <a class="btn btn--teal" id="f-see" href="/discover"
                 >See all your matches →</a
               >
             </div>
@@ -673,99 +1008,366 @@
         </div>
       </section>
 
-      <!-- Trust: three real, checkable proof points -->
-      <section class="fd-sec fd-trust">
-        <div class="fd-wrap fd-trust__grid fd-reveal">
-          <div class="fd-trust__item">
-            <h3>You see what's checked</h3>
-            <p>
-              <b>300</b> universities have a deeply verified profile — photo,
-              real enrolment, scholarships. Another <b>3,535</b> come straight
-              from the official European register (ETER). Every profile shows
-              what we've confirmed and what we haven't. We never invent a
-              number.
-            </p>
-          </div>
-          <div class="fd-trust__item">
-            <h3>Free for students</h3>
-            <p>
-              Universities support the platform, so it stays free for you — no
-              paywall, no catch. You'll never pay to find your fit.
-            </p>
-          </div>
-          <div class="fd-trust__item">
-            <h3>More than a search box</h3>
-            <p>
-              AI can hand you an answer. Universo shows the real, structured
-              data behind it — tuition, deadlines, teaching language — and lets
-              you line universities up side by side and decide for yourself.
-            </p>
+      <!-- COVERAGE STRIP -->
+      <section class="cover" id="universities">
+        <div class="wrap">
+          <p class="cover__label">
+            Covering 3,835 universities across 32 countries — including
+          </p>
+          <div class="cover__row">
+            <span class="cover__name">University of Copenhagen</span>
+            <span class="cover__name">TU Munich</span>
+            <span class="cover__name">Leiden University</span>
+            <span class="cover__name">Lund University</span>
+            <span class="cover__name">University of Amsterdam</span>
+            <span class="cover__name">Sapienza Rome</span>
+            <span class="cover__name">Ghent University</span>
+            <span class="cover__name">University of Barcelona</span>
+            <span class="cover__name">Aalto University</span>
+            <span class="cover__name">Aarhus University</span>
           </div>
         </div>
       </section>
 
-      <!-- Continue: give the account a reason to exist -->
-      <section class="fd-sec">
-        <div class="fd-wrap fd-cont">
-          <div class="fd-cont__in fd-reveal">
-            <div class="fd-cont__copy">
-              <p class="fd-eyebrow" style="color: var(--teal-600)">
-                Keep going
-              </p>
-              <h2>Found a few you like? Keep them.</h2>
+      <!-- HOW IT WORKS -->
+      <section class="sec" id="how">
+        <div class="wrap">
+          <div class="sec-head reveal">
+            <p class="eyebrow">How it works</p>
+            <h2>From overwhelmed to a shortlist you trust</h2>
+            <p>
+              Three steps, no account needed to start. Everything you see is
+              real data you can check — matched to what actually matters to you.
+            </p>
+          </div>
+          <div class="steps reveal">
+            <div class="step">
+              <span class="step__n">1</span>
+              <h3>Match</h3>
               <p>
-                Create a free account to <strong>save your shortlist</strong>,
-                <strong>compare universities side by side</strong>, and
-                <strong>build a plan you can follow</strong> — then pick up
-                right where you left off next time.
+                Tell us your field, country and budget. See the universities
+                that fit — and the plain reason each one made the list.
+              </p>
+              <div class="preview" aria-hidden="true">
+                <div class="pv-row">
+                  <span class="pv-dot"></span>
+                  <div>
+                    <div class="pv-name">TU Munich</div>
+                    <div class="pv-why">Computer Science · In Germany</div>
+                  </div>
+                </div>
+                <div class="pv-row">
+                  <span class="pv-dot"></span>
+                  <div>
+                    <div class="pv-name">Aalto University</div>
+                    <div class="pv-why">Computer Science · No tuition</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="step">
+              <span class="step__n">2</span>
+              <h3>Compare</h3>
+              <p>
+                Line up your shortlist side by side — tuition, deadlines,
+                teaching language — and decide with the facts in front of you.
+              </p>
+              <div class="preview" aria-hidden="true">
+                <table class="pv-tbl">
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th>Aalto</th>
+                      <th>TUM</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th>Tuition</th>
+                      <td>€0</td>
+                      <td>€0–6k</td>
+                    </tr>
+                    <tr>
+                      <th>Language</th>
+                      <td>English</td>
+                      <td>Eng · De</td>
+                    </tr>
+                    <tr>
+                      <th>Deadline</th>
+                      <td>Jan 4</td>
+                      <td>May 31</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="step">
+              <span class="step__n">3</span>
+              <h3>Plan</h3>
+              <p>
+                Save your choices, set your intake, and build a plan that shows
+                exactly what to do next — and how ready you are.
+              </p>
+              <div class="preview" aria-hidden="true">
+                <div class="pv-plan__row">
+                  <span class="pv-plan__lbl">Profile</span
+                  ><span class="pv-plan__pct">100%</span>
+                </div>
+                <div class="pv-bar"><i style="width: 100%"></i></div>
+                <div class="pv-plan__row">
+                  <span class="pv-plan__lbl">Documents</span
+                  ><span class="pv-plan__pct">60%</span>
+                </div>
+                <div class="pv-bar"><i style="width: 60%"></i></div>
+                <div class="pv-plan__row">
+                  <span class="pv-plan__lbl">Application</span
+                  ><span class="pv-plan__pct">40%</span>
+                </div>
+                <div class="pv-bar"><i style="width: 40%"></i></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TRUST -->
+      <section class="sec trust">
+        <div class="wrap">
+          <div class="sec-head reveal">
+            <p class="eyebrow">Built to be trusted</p>
+            <h2>Real data, plainly sourced</h2>
+            <p>
+              Every university, every number — traceable to a real source.
+              That's the whole point.
+            </p>
+          </div>
+          <div class="trust__grid reveal">
+            <div class="trust__item">
+              <div class="trust__ico">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M12 2 4 5v6c0 5 3.4 8.5 8 10 4.6-1.5 8-5 8-10V5z" />
+                  <path d="m9 12 2 2 4-4" />
+                </svg>
+              </div>
+              <h3>Official source</h3>
+              <p>
+                Every university comes from ETER, the European Union's official
+                register of higher-education institutions.
               </p>
             </div>
-            <a class="fd-btn fd-btn--teal" href="/account?mode=register"
-              >Create a free account →</a
-            >
+            <div class="trust__item">
+              <div class="trust__ico">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="m8 12 2.5 2.5L16 9" />
+                </svg>
+              </div>
+              <h3>Verified profiles</h3>
+              <p>
+                300 universities are hand-checked in depth — photos, real
+                enrolment figures and current scholarships.
+              </p>
+            </div>
+            <div class="trust__item">
+              <div class="trust__ico">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M3 6h18M3 12h18M3 18h12" />
+                </svg>
+              </div>
+              <h3>Independent</h3>
+              <p>
+                No paid placements, no sponsored rankings. Universities never
+                buy their way up your results.
+              </p>
+            </div>
+            <div class="trust__item">
+              <div class="trust__ico">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <path d="M12 3v18M7 8h7a3 3 0 0 1 0 6H8a3 3 0 0 0 0 6h9" />
+                </svg>
+              </div>
+              <h3>Free forever</h3>
+              <p>
+                Universities support the platform, so students never pay — no
+                trial, no card, no catch.
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- Mission: the brand statement, in its rightful place -->
-      <section class="fd-sec fd-mission">
-        <div class="fd-wrap">
-          <p class="fd-eyebrow fd-reveal">Same Start. Equal Chance.</p>
-          <h2 class="fd-reveal">
-            Talent is everywhere. <span class="em">Opportunity isn't.</span>
-          </h2>
-          <p class="fd-reveal">
-            Universo is a small push against that — a clear, honest map for
-            anyone bold enough to leave home for their education.
+      <!-- FOUNDER -->
+      <section class="sec founder">
+        <div class="wrap founder__in">
+          <p class="eyebrow reveal" style="color: var(--gold-500)">
+            Why we built Universo
           </p>
-          <div class="fd-reveal" style="margin-top: 26px">
-            <a class="fd-btn fd-btn--gold" href="/discover"
-              >Explore every university →</a
+          <p class="founder__quote reveal" style="margin-top: 18px">
+            “Where you're born shouldn't determine
+            <span class="em">how you begin.</span>”
+          </p>
+          <p class="founder__who reveal">
+            <b>Odgerel Batdelger</b> — founder, Universo
+          </p>
+        </div>
+      </section>
+
+      <!-- FAQ -->
+      <section class="sec">
+        <div class="wrap">
+          <div class="sec-head reveal">
+            <p class="eyebrow">Good questions</p>
+            <h2>Everything you're probably wondering</h2>
+          </div>
+          <div class="faq reveal">
+            <details class="qa" open>
+              <summary>Is Universo really free?</summary>
+              <p>
+                Yes — free forever, with no card and no trial. Universities
+                support the platform so that students never have to pay to find
+                where they belong.
+              </p>
+            </details>
+            <details class="qa">
+              <summary>Is the data accurate?</summary>
+              <p>
+                Every university is drawn from ETER, the EU's official register.
+                On top of that, 300 have deeply verified profiles we've checked
+                by hand. When we show a number, it comes from a real source.
+              </p>
+            </details>
+            <details class="qa">
+              <summary>Do I need an account to use it?</summary>
+              <p>
+                No. You can match and browse every university without signing
+                up. An account simply lets you save your shortlist, compare side
+                by side, and pick up where you left off.
+              </p>
+            </details>
+            <details class="qa">
+              <summary>How is this different from searching myself?</summary>
+              <p>
+                A search gives you links. Universo matches universities to what
+                actually fits you, tells you why in plain words, and puts the
+                real data — tuition, deadlines, language — side by side so you
+                can decide with confidence.
+              </p>
+            </details>
+            <details class="qa">
+              <summary>Which countries does it cover?</summary>
+              <p>
+                3,835 universities across 32 European countries — from Finland
+                to Spain, Ireland to Italy.
+              </p>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <!-- FINAL CTA (endowment) -->
+      <section class="sec final">
+        <div class="wrap">
+          <p class="eyebrow reveal">Same Start. Equal Chance.</p>
+          <h2 class="reveal">
+            Your matches are ready. <span class="em">Keep them.</span>
+          </h2>
+          <p class="reveal">
+            Create a free account to save your shortlist, compare side by side,
+            and build a plan you can follow — then come back to it any time.
+          </p>
+          <div class="final__ctas reveal">
+            <a class="btn btn--gold btn--lg" href="/account?mode=register"
+              >Create your free account →</a
+            >
+            <a class="btn btn--ghost-d btn--lg" href="/discover"
+              >Browse first</a
             >
           </div>
+          <p class="final__micro reveal">
+            Free forever · no card · takes 20 seconds
+          </p>
         </div>
       </section>
     </main>
 
-    <footer class="fd-foot">
-      <div class="fd-wrap fd-foot__in">
-        <span
-          >Universo — university discovery for international students in
-          Europe.</span
-        >
-        <span
-          ><a href="/for-universities">For universities</a> · Free for students,
-          always.</span
-        >
+    <footer class="foot">
+      <div class="wrap">
+        <div class="foot__top">
+          <div class="foot__brand">
+            <a
+              class="brand"
+              href="/"
+              style="color: #fff"
+              aria-label="Universo home"
+            >
+              <svg class="brand__mark" viewBox="0 0 200 200" aria-hidden="true">
+                <path
+                  fill="currentColor"
+                  d="M18 20 C -6 80 40 165 100 190 C 96 140 90 60 88 15 Z"
+                />
+                <path
+                  fill="currentColor"
+                  d="M182 20 C 206 80 160 165 100 190 C 104 140 110 60 112 15 Z"
+                />
+              </svg>
+              <span class="brand__name">Universo</span>
+            </a>
+            <p>
+              University discovery for international students in Europe. Free
+              for students, always.
+            </p>
+          </div>
+          <div class="foot__cols">
+            <div class="foot__col">
+              <h4>Product</h4>
+              <a href="/discover">Discover</a>
+              <a href="#how">How it works</a>
+              <a href="/account?mode=register">Get started</a>
+            </div>
+            <div class="foot__col">
+              <h4>Universo</h4>
+              <a href="/for-universities">For universities</a>
+              <a href="/account?mode=login">Sign in</a>
+            </div>
+          </div>
+        </div>
+        <div class="foot__bottom">
+          <span>© <span id="yr"></span> Universo</span>
+          <span>Same Start. Equal Chance.</span>
+        </div>
       </div>
     </footer>
 
     <script>
       document.documentElement.classList.add("js");
+      document.getElementById("yr").textContent = new Date().getFullYear();
 
       const $ = (id) => document.getElementById(id);
       const result = $("f-result");
-      const seeBtn = $("f-see");
 
       function esc(s) {
         return String(s == null ? "" : s).replace(
@@ -781,23 +1383,18 @@
         );
       }
 
-      // Real matcher, real API — the same engine and honest reasons Discover
-      // uses. Answers are saved so "See all your matches" carries them into
-      // Discover's full ranking.
       async function run() {
         const field = $("f-field").value;
         const country = $("f-country").value;
         const budget = $("f-budget").value;
-
         try {
           localStorage.setItem(
             "uv_quickmatch",
             JSON.stringify({ field, country, budget }),
           );
         } catch (e) {
-          /* private mode — the flow still works, just without carry-over */
+          /* private mode — flow still works */
         }
-
         const p = new URLSearchParams({
           verified: "1",
           limit: "3",
@@ -806,14 +1403,13 @@
         if (field) p.set("fitFields", field);
         if (country) p.set("fitCountry", country);
         if (budget !== "") p.set("fitBudget", budget);
-
         try {
           const res = await fetch("/api/universities?" + p.toString());
           const data = await res.json();
           const unis = (data.universities || []).slice(0, 3);
           if (!unis.length) {
             result.innerHTML =
-              '<p class="fd-hint">Nothing verified for that exact mix yet — try widening one answer. We’d rather show less than pretend.</p>';
+              '<p class="hint">No exact fit for that mix — try widening one answer.</p>';
             return;
           }
           result.innerHTML = unis
@@ -822,33 +1418,31 @@
                 (u.match_reasons && u.match_reasons[0]) ||
                 "A strong all-round fit";
               const loc = [u.city, u.country].filter(Boolean).join(", ");
-              const photo = u.cover_photo_url
-                ? ` has-photo" style="background-image:url('${esc(u.cover_photo_url)}')`
-                : '"';
+              const bg = u.cover_photo_url
+                ? ` style="background-image:url('${esc(u.cover_photo_url)}')"`
+                : "";
               return `
-              <div class="fd-row" style="animation-delay:${i * 70}ms">
-                <span class="fd-row__thumb${photo}" aria-hidden="true"></span>
+              <div class="row" style="animation-delay:${i * 70}ms">
+                <span class="row__thumb"${bg} aria-hidden="true"></span>
                 <div>
-                  <div class="fd-row__name">${esc(u.name)}</div>
-                  <div class="fd-row__why">${esc(why)}</div>
-                  <div class="fd-row__meta">${esc(loc)}</div>
+                  <div class="row__name">${esc(u.name)}</div>
+                  <div class="row__why">${esc(why)}</div>
+                  <div class="row__meta">${esc(loc)}</div>
                 </div>
               </div>`;
             })
             .join("");
         } catch (e) {
           result.innerHTML =
-            '<p class="fd-hint">Couldn’t reach the matcher just now — you can still <a href="/discover" style="color:var(--teal-600)">browse every university</a>.</p>';
+            '<p class="hint">Couldn’t reach the matcher — <a href="/discover" style="color:var(--teal-600)">browse every university</a> instead.</p>';
         }
       }
-
       ["f-field", "f-country", "f-budget"].forEach((id) =>
         $(id).addEventListener("change", run),
       );
 
-      // Populate countries from the live filter list, then PRE-FILL a sensible
-      // default and show real matches immediately — the product proves itself
-      // before the visitor has to do anything.
+      // Populate countries from the live list, then pre-fill a sensible default
+      // and show real matches immediately.
       (async () => {
         try {
           const r = await fetch("/api/universities/filters");
@@ -875,17 +1469,21 @@
             sel.appendChild(o);
           }
         } catch (e) {
-          /* filters unavailable — field + budget still match */
+          /* field + budget still match */
         }
-        // Sensible, broad, meaningful default — a common field, everywhere,
-        // any budget — so the first results are real and widely relevant.
         $("f-field").value = "Computer Science";
         run();
       })();
 
-      // Reveal — gated on .js so content is never stranded invisible.
+      // Sticky-nav solid state
+      const nav = $("nav");
+      const onScroll = () => nav.classList.toggle("solid", scrollY > 40);
+      onScroll();
+      addEventListener("scroll", onScroll, { passive: true });
+
+      // Reveal
       const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-      const els = document.querySelectorAll(".fd-reveal");
+      const els = document.querySelectorAll(".reveal");
       if ("IntersectionObserver" in window && !reduce) {
         const io = new IntersectionObserver(
           (entries) =>
@@ -895,7 +1493,7 @@
                 io.unobserve(e.target);
               }
             }),
-          { threshold: 0.12, rootMargin: "0px 0px -6% 0px" },
+          { threshold: 0.1, rootMargin: "0px 0px -6% 0px" },
         );
         els.forEach((el) => io.observe(el));
         addEventListener("load", () =>
