@@ -91,3 +91,53 @@ test("buildFilters derives distinct facets", () => {
   assert.ok(f.countries.includes("Japan"));
   assert.deepEqual(f.degree_levels, ["Master"]);
 });
+
+test("sort=match breaks score ties by strength (world rank), not alphabetically", () => {
+  // Three universities that all match equally; only their strength differs.
+  const uni = (id, name, world_rank, verified) => ({
+    id,
+    name,
+    country: "Germany",
+    verified,
+    ranking: world_rank ? { world_rank, provider: "CWUR" } : undefined,
+    fields_of_study: ["Computer Science"],
+    degree_levels: [],
+    language_of_instruction: [],
+  });
+  const tie = [
+    uni("z-strong", "Zeta University", 90, true), // best rank, but last alphabetically
+    uni("a-weak", "Alpha University", 800, true), // worst rank, first alphabetically
+    uni("m-unranked", "Mu University", null, true), // no rank → after ranked ones
+  ];
+  const idx = search.buildIndex(tie);
+  // Equal match score for all → the tie-break decides the order.
+  const r = search.query(idx, { sort: "match" }, () => 0, { scoreFn: () => 5 });
+  assert.deepEqual(
+    r.universities.map((u) => u.id),
+    ["z-strong", "a-weak", "m-unranked"],
+    "stronger world rank first; unranked last — never alphabetical",
+  );
+});
+
+test("sort=match tie-break prefers a verified profile when ranks are equal", () => {
+  const base = (id, verified) => ({
+    id,
+    name: id,
+    country: "Germany",
+    verified,
+    ranking: { world_rank: 200, provider: "CWUR" },
+    fields_of_study: ["Computer Science"],
+    degree_levels: [],
+    language_of_instruction: [],
+  });
+  const idx = search.buildIndex([
+    base("register", false),
+    base("verified", true),
+  ]);
+  const r = search.query(idx, { sort: "match" }, () => 0, { scoreFn: () => 5 });
+  assert.equal(
+    r.universities[0].id,
+    "verified",
+    "verified profile wins an equal-rank tie",
+  );
+});
