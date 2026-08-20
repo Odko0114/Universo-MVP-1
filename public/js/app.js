@@ -603,6 +603,9 @@
         <button class="link-btn" id="clear-filters">Clear all</button>
       </div>
       <p class="hint muted" id="filter-hint"></p>
+      <!-- Names the results region so the heading outline doesn't jump h1 -> h3
+           (the card titles) when logged out with no "Recommended" h2 above. -->
+      <h2 class="sr-only">Search results</h2>
       <div id="results" class="grid">${'<div class="skeleton"></div>'.repeat(6)}</div>
       <div id="loadmore-wrap" class="loadmore-wrap"></div>`;
 

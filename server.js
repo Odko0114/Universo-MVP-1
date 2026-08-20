@@ -1919,7 +1919,28 @@ const FOR_UNIVERSITIES = (() => {
 // redirect:false — public/join is a real directory (the built React app), and
 // the default directory-redirect (/join → /join/) would 301 every request to
 // that route before it ever reaches the app.get('/join') handler below.
-app.use(express.static(PUBLIC_DIR, { index: false, redirect: false }));
+app.use(
+  express.static(PUBLIC_DIR, {
+    index: false,
+    redirect: false,
+    // Default was max-age=0, so every repeat visit re-validated CSS, JS and each
+    // font over the network — a round-trip per asset even when nothing changed.
+    // Fonts are content that never changes, so cache them for a year and mark
+    // them immutable (no revalidation at all). CSS/JS change on deploy and have
+    // no content hash in their filenames, so they get a short window: long
+    // enough to skip the round-trip on a burst of page views, short enough that
+    // a deploy is picked up within minutes. HTML shells stay uncached.
+    setHeaders(res, filePath) {
+      if (/\.(woff2?|ttf|otf)$/i.test(filePath)) {
+        res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+      } else if (/\.(css|js)$/i.test(filePath)) {
+        res.setHeader("Cache-Control", "public, max-age=300");
+      } else if (/\.html$/i.test(filePath)) {
+        res.setHeader("Cache-Control", "no-cache");
+      }
+    },
+  }),
+);
 
 app.get("/admin", (_req, res) =>
   res.sendFile(path.join(PUBLIC_DIR, "admin.html")),

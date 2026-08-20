@@ -12,7 +12,10 @@
 
   --ink: #10233f;
   --ink-soft: #45566e;
-  --ink-faint: #7a879b;
+  /* Darkened from #7a879b (contrast 3.4 on the page bg — below WCAG AA's 4.5).
+     #616e82 clears 4.5 on both the page and white backgrounds while staying
+     visibly muted. Used for secondary/muted text and uppercase field labels. */
+  --ink-faint: #616e82;
   --line: #e4e8ef;
   --bg: #f5f7fb;
   --surface: #ffffff;
