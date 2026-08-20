@@ -770,16 +770,37 @@ const universityDetailLimiter = rateLimit({ windowMs: 60 * 1000, max: 120 });
 api.get("/universities/filters", (_req, res) => res.json(FILTERS));
 
 api.get("/universities", universitiesLimiter, (req, res) => {
-  // A logged-in student with a matching profile gets fit-ranked results by
-  // default (the ranking is self-explanatory via a per-card reason). Anonymous
-  // or profile-less visitors keep the plain browse ordering. Explicit sorts
-  // the user picks always win.
+  // Fit-ranking runs off a match profile, not an account. A logged-in student
+  // brings theirs; an anonymous visitor can supply one inline via the "What
+  // fits you?" quick-match (fit* params). Either way the SAME engine ranks and
+  // explains — the only difference is where the profile comes from. Explicit
+  // sorts the user picks always win.
   const student = auth.loadStudent(req);
-  const profiled = student && match.hasProfile(student);
+  let profile = student && match.hasProfile(student) ? student : null;
+  if (!profile) {
+    // Sanitized with the exact rules a registered profile uses — junk fields,
+    // out-of-range budgets and unknown countries are dropped, not trusted.
+    const q = req.query;
+    const anon = validate.matchProfileFields({
+      fields_of_interest: String(q.fitFields || "")
+        .split(",")
+        .filter(Boolean),
+      degree_level: q.fitDegree,
+      budget_max_eur_year: q.fitBudget,
+      country_preference: String(q.fitCountry || "")
+        .split(",")
+        .filter(Boolean),
+      preferred_languages: String(q.fitLang || "")
+        .split(",")
+        .filter(Boolean),
+    });
+    if (match.hasProfile(anon)) profile = anon;
+  }
+  const profiled = !!profile;
   const params = { ...req.query };
   if (profiled && !params.sort && !params.q) params.sort = "match";
   const scoreFn = profiled
-    ? (u) => match.matchUniversity(student, u).score
+    ? (u) => match.matchUniversity(profile, u).score
     : undefined;
 
   const result = search.query(INDEX, params, clickOf, { scoreFn });
@@ -787,7 +808,7 @@ api.get("/universities", universitiesLimiter, (req, res) => {
     const withP = withPhoto(u);
     // Attach a compressed per-card reason only when we actually ranked by fit.
     if (profiled && params.sort === "match") {
-      const m = match.matchUniversity(student, u);
+      const m = match.matchUniversity(profile, u);
       const reason = explain.compressedReason(m.components);
       if (reason) withP.match_reasons = [reason];
     }

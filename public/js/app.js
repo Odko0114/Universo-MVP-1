@@ -153,6 +153,8 @@
       '<circle cx="12" cy="9" r="5"/><path d="M8.5 13.5 7 22l5-2.5L17 22l-1.5-8.5"/>',
     spark:
       '<path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.5 2.5M16.5 16.5 19 19M19 5l-2.5 2.5M7.5 16.5 5 19"/>',
+    target:
+      '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
   };
   const icon = (name, size = 44) =>
     `<svg class="icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ""}</svg>`;
@@ -262,6 +264,42 @@
       return v && typeof v.id === "string" && v.id ? v : null;
     } catch {
       return null;
+    }
+  }
+
+  // ---- Anonymous "What fits you?" quick-match ------------------------------
+  // Lets a visitor feel the personalized matching — the one thing Universo does
+  // that a plain directory doesn't — WITHOUT an account. Answers live in
+  // localStorage and ride along as fit* params on the results request; the
+  // server ranks with the same engine a logged-in profile uses. The account ask
+  // then comes after the value has been felt, not before.
+  const QUICK_MATCH_KEY = "uv_quickmatch";
+
+  function readQuickMatch() {
+    try {
+      const v = JSON.parse(localStorage.getItem(QUICK_MATCH_KEY) || "null");
+      if (!v || typeof v !== "object") return null;
+      // Only meaningful once field or budget is set — mirrors the server's
+      // hasProfile check, so the UI never claims matches the ranking won't honour.
+      return v.field || v.budget ? v : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function writeQuickMatch(v) {
+    try {
+      localStorage.setItem(QUICK_MATCH_KEY, JSON.stringify(v));
+    } catch {
+      /* private mode / quota — losing this only means no anonymous ranking */
+    }
+  }
+
+  function clearQuickMatch() {
+    try {
+      localStorage.removeItem(QUICK_MATCH_KEY);
+    } catch {
+      /* best-effort */
     }
   }
 
@@ -387,7 +425,7 @@
           </div>
           <p class="uni-card__desc">${esc(u.short_description || "")}</p>
           <div class="uni-card__meta">${metaChips(u)}</div>
-          ${(u.match_reasons || []).length ? `<p class="match-why">🎯 ${esc(u.match_reasons.join(" · "))}</p>` : ""}
+          ${(u.match_reasons || []).length ? `<p class="match-why">${icon("target", 14)} ${esc(u.match_reasons.join(" · "))}</p>` : ""}
           <div class="card-actions">
             <a class="btn btn--ghost btn--sm" href="/university/${esc(u.id)}" style="flex:1">View</a>
             <button class="btn btn--sm ${saved ? "btn--saved" : "btn--primary"}" data-save="${esc(u.id)}" style="flex:1">
@@ -550,6 +588,50 @@
         : "3,700+";
     const profiled = !!(state.user && state.user.profile_completed);
 
+    // Anonymous "What fits you?" card — two states: a prompt to answer, or a
+    // summary of the active match with the account-save CTA. Built here so it
+    // can reuse the opts()/budgets/m helpers already in scope.
+    const qm = state.user ? null : readQuickMatch();
+    const budgetLabel = (v) =>
+      (budgets.find(([val]) => val === String(v)) || [, ""])[1];
+    const quickMatchHtml = qm
+      ? `
+      <section class="quickmatch quickmatch--active" aria-label="Your matches">
+        <div class="quickmatch__body">
+          <p class="quickmatch__eyebrow">${icon("target", 15)} Best matches for you</p>
+          <p class="quickmatch__summary">${[
+            qm.field,
+            qm.country,
+            qm.budget ? budgetLabel(qm.budget) : "",
+          ]
+            .filter(Boolean)
+            .map(esc)
+            .join(" · ")}</p>
+        </div>
+        <div class="quickmatch__actions">
+          <a class="btn btn--primary btn--sm" href="/account?mode=register&src=quickmatch&next=%2Fonboarding">Save these — free account</a>
+          <button class="link-btn" id="qm-edit" type="button">Edit</button>
+        </div>
+      </section>`
+      : `
+      <section class="quickmatch" aria-label="What fits you">
+        <p class="quickmatch__eyebrow">Find what fits you</p>
+        <p class="quickmatch__lead">Answer three quick questions — no account needed — and we'll rank these by how well they fit you, and tell you why.</p>
+        <form id="qm-form" class="quickmatch__form">
+          <label class="sr-only" for="qm-field">Field of study</label>
+          <!-- MATCH.FIELDS, not m.fields_of_study: the matcher scores against
+               the onboarding field taxonomy ("Computer Science"), while the
+               filter list uses a different one ("Computer Science & IT"). A
+               value from the wrong list is silently dropped and never matches. -->
+          <select id="qm-field"><option value="">What do you want to study?</option>${opts(MATCH.FIELDS, "")}</select>
+          <label class="sr-only" for="qm-country">Country</label>
+          <select id="qm-country"><option value="">Any country</option>${opts(m.countries, "")}</select>
+          <label class="sr-only" for="qm-budget">Tuition budget</label>
+          <select id="qm-budget">${budgets.map(([v, l]) => `<option value="${v}">${v ? esc(l) : "Any budget"}</option>`).join("")}</select>
+          <button class="btn btn--primary" type="submit">Show my matches</button>
+        </form>
+      </section>`;
+
     view.innerHTML = `
       ${
         !state.user
@@ -565,6 +647,8 @@
         <h1>Find your university <span class="accent">in Europe</span></h1>
         <p><strong>${totalN}</strong> European universities listed — <strong>${verifiedN}</strong> with a complete, checked profile (photo, official enrolment data, scholarships). The rest are entries from the official European register; open any profile to see exactly what we do and don't know about it.</p>
       </section>
+
+      ${state.user ? "" : quickMatchHtml}
 
       <div class="scope-row" role="group" aria-label="Result scope">
         <button class="niche-btn ${d.scope === "verified" ? "is-active" : ""}" id="scope-verified" type="button" aria-pressed="${d.scope === "verified"}">✓ Verified profiles (${verifiedN})</button>
@@ -680,6 +764,38 @@
       renderDiscover();
     });
 
+    // Quick-match: submitting saves the answers and re-renders (which re-runs
+    // loadResults, now with fit* params) into the active "best matches" state.
+    const qmForm = document.getElementById("qm-form");
+    if (qmForm) {
+      qmForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const field = document.getElementById("qm-field").value;
+        const country = document.getElementById("qm-country").value;
+        const budget = document.getElementById("qm-budget").value;
+        if (!field && !budget) {
+          // Nothing that would actually rank — nudge instead of a dead submit.
+          toast("Pick a field or a budget so we can match you.");
+          return;
+        }
+        writeQuickMatch({ field, country, budget });
+        API.track({
+          type: "filter_used",
+          filter: "quickmatch",
+          value: field || budget,
+        });
+        d.page = 1;
+        renderDiscover();
+      });
+    }
+    const qmEdit = document.getElementById("qm-edit");
+    if (qmEdit) {
+      qmEdit.addEventListener("click", () => {
+        clearQuickMatch();
+        renderDiscover();
+      });
+    }
+
     // Awaited so renderDiscover's promise means "results are on screen", not
     // "skeletons are on screen". Scroll restoration hangs off that promise, and
     // restoring against a 6-skeleton page (~4000px) instead of the real list
@@ -770,6 +886,10 @@
         : "";
     }
 
+    // Anonymous quick-match answers ride along as fit* params — the server
+    // ranks with the same engine a logged-in profile uses. Ignored for logged-in
+    // visitors (the server already has their real profile).
+    const qm = state.user ? null : readQuickMatch();
     try {
       const res = await API.universities({
         q: d.q,
@@ -784,6 +904,9 @@
         sort: d.sort,
         offset,
         limit: PAGE_SIZE,
+        fitFields: qm && qm.field ? qm.field : "",
+        fitCountry: qm && qm.country ? qm.country : "",
+        fitBudget: qm && qm.budget ? qm.budget : "",
       });
       state.results.total = res.count;
       state.results.items = res.universities; // one page at a time, not accumulated
@@ -1581,7 +1704,7 @@
         u.match_explanation
           ? `
         <div class="fit-card">
-          <h3>🎯 Why this might fit you</h3>
+          <h3>${icon("target", 18)} Why this might fit you</h3>
           <p class="fit-sentence">${esc(u.match_explanation)}</p>
           ${(u.match_reasons || []).length ? `<div class="taglist" style="margin-top:8px">${u.match_reasons.map((r) => `<span class="chip chip--gold">${esc(r)}</span>`).join("")}</div>` : ""}
           <p class="muted" style="margin:8px 0 0;font-size:.8rem">Based on your profile. <a href="/onboarding">Update it</a> to refine your matches.</p>
@@ -1963,14 +2086,32 @@
     }
     if (!draft) {
       const u = state.user;
+      // A brand-new account arriving from the anonymous quick-match already told
+      // us field/country/budget — carry those in so onboarding continues the
+      // conversation instead of asking the same three questions again. Only used
+      // to seed empty fields; a returning user's saved profile always wins.
+      const qm = readQuickMatch();
+      const seedFields =
+        (u.fields_of_interest || []).length === 0 && qm && qm.field
+          ? [qm.field]
+          : [...(u.fields_of_interest || [])];
+      const seedCountry =
+        (u.country_preference || []).length === 0 && qm && qm.country
+          ? [qm.country]
+          : [...(u.country_preference || [])];
+      const seedBudget =
+        u.budget_max_eur_year != null
+          ? String(u.budget_max_eur_year)
+          : qm && qm.budget
+            ? String(qm.budget)
+            : "";
       draft = {
-        fields_of_interest: [...(u.fields_of_interest || [])],
-        budget_max_eur_year:
-          u.budget_max_eur_year != null ? String(u.budget_max_eur_year) : "",
+        fields_of_interest: seedFields,
+        budget_max_eur_year: seedBudget,
         preferred_languages: [...(u.preferred_languages || [])],
         degree_level: u.degree_level || "",
         city_preference: u.city_preference || "",
-        country_preference: [...(u.country_preference || [])],
+        country_preference: seedCountry,
         home_country: u.home_country || u.country_of_origin || "",
       };
       draft._step = 0;

@@ -1656,3 +1656,57 @@ test("forgot-password reports delivery email when sending is available", async (
     await req("DELETE", "/api/me").catch(() => {});
   }
 });
+
+// --- Anonymous "What fits you?" quick-match (creative lead) ------------------
+
+test("anonymous fit* params rank by match and attach honest per-card reasons", async () => {
+  const r = await req(
+    "GET",
+    "/api/universities?verified=1&limit=5&fitFields=Computer%20Science&fitBudget=6000&fitCountry=Germany",
+  );
+  assert.equal(r.status, 200);
+  assert.equal(
+    r.json.sort,
+    "match",
+    "fit params should switch ranking to match",
+  );
+  const withReason = r.json.universities.filter(
+    (u) => (u.match_reasons || []).length,
+  );
+  assert.ok(withReason.length > 0, "matched cards should carry a reason");
+  assert.ok(
+    withReason.some((u) => /Computer Science/.test(u.match_reasons[0])),
+    "the field the visitor picked should appear in a reason",
+  );
+});
+
+test("anonymous quick-match sanitizes junk and does not rank on it", async () => {
+  const r = await req(
+    "GET",
+    "/api/universities?verified=1&limit=3&fitFields=NONSENSE&fitCountry=Atlantis",
+  );
+  assert.equal(r.status, 200);
+  assert.notEqual(
+    r.json.sort,
+    "match",
+    "unrecognized input must not trigger ranking",
+  );
+  assert.ok(
+    !r.json.universities.some((u) => (u.match_reasons || []).length),
+    "no reasons when nothing valid was supplied",
+  );
+});
+
+test("the quick-match internal score never leaks into the public response", async () => {
+  const r = await req(
+    "GET",
+    "/api/universities?verified=1&limit=3&fitFields=Computer%20Science&fitBudget=6000",
+  );
+  for (const u of r.json.universities) {
+    assert.ok(!("match_score" in u), "raw score must stay server-side");
+    assert.ok(
+      !("match_components" in u),
+      "component breakdown must stay server-side",
+    );
+  }
+});

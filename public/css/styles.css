@@ -2819,3 +2819,90 @@ img {
 .cmp__note {
   margin: 0 2px 12px;
 }
+
+/* ---------- "What fits you?" quick-match (anonymous) ----------
+   The on-ramp to personalized matching without an account. Sits between the
+   hero and the filters — the first thing a first-time visitor can act on. */
+.quickmatch {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--teal-500);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+}
+.quickmatch__eyebrow {
+  margin: 0;
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-faint);
+}
+.quickmatch__lead {
+  margin: 4px 0 12px;
+  font-size: var(--text-md);
+  color: var(--ink-soft);
+}
+.quickmatch__form {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+.quickmatch__form select {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: var(--text-md);
+  color: var(--ink);
+}
+.quickmatch__form .btn {
+  white-space: nowrap;
+}
+/* Active state: a compact summary + the account-save CTA. */
+.quickmatch--active {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.quickmatch__body {
+  min-width: 0;
+}
+.quickmatch__summary {
+  margin: 2px 0 0;
+  font-weight: 700;
+  font-size: var(--text-lg);
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.quickmatch__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 0 auto;
+}
+.quickmatch__eyebrow .icon,
+.match-why .icon {
+  vertical-align: -0.15em;
+  color: var(--teal-600);
+}
+@media (max-width: 560px) {
+  /* Stack the three inputs so each is full-width and tappable on a phone. */
+  .quickmatch__form {
+    grid-template-columns: 1fr;
+  }
+  .quickmatch--active {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .quickmatch__actions {
+    justify-content: space-between;
+  }
+}
