@@ -14,6 +14,11 @@
     />
     <link rel="canonical" href="/" />
     <link rel="icon" href="/favicon.svg" />
+    <!-- Same typefaces as the app (Newsreader, a warm humanist serif, + Public
+         Sans): professional and human, and the landing now reads as one product
+         with Discover. Self-hosted — no Google Fonts CDN call, which the app
+         avoids on purpose (a 2022 German ruling treats that CDN's IP logging as
+         a GDPR breach for EU visitors). -->
     <link rel="stylesheet" href="/css/fonts.css" />
     <style>
       :root {
@@ -71,16 +76,23 @@
       a {
         color: inherit;
       }
-      /* Headings: no text-wrap:balance — it was widening word gaps unevenly.
-         Controlled line length via max-width instead. */
+      /* Headings in Fraunces. No text-wrap:balance (it widened word gaps
+         unevenly — the spacing issue); line length is controlled via max-width,
+         and word-spacing is pinned to normal so nothing drifts. */
       h1,
       h2,
       h3 {
         font-family: var(--serif);
+        /* Newsreader is variable 400–700; 500 reads as a confident, human
+           headline weight without shouting. */
         font-weight: 500;
-        line-height: 1.1;
-        letter-spacing: -0.012em;
+        line-height: 1.12;
+        letter-spacing: -0.01em;
+        word-spacing: normal;
         margin: 0;
+      }
+      body {
+        word-spacing: normal;
       }
       p {
         margin: 0;
@@ -99,7 +111,7 @@
         font-family: var(--sans);
         font-size: var(--s-1);
         font-weight: 700;
-        letter-spacing: 0.14em;
+        letter-spacing: 0.1em;
         text-transform: uppercase;
         margin: 0;
       }
@@ -207,7 +219,6 @@
       }
       .brand__name {
         font-family: var(--serif);
-        font-style: italic;
         font-weight: 600;
         font-size: 1.38rem;
       }
@@ -471,6 +482,28 @@
         white-space: nowrap;
       }
 
+      /* ---- Honest social proof (no invented counts) ---- */
+      .proof {
+        background: var(--navy-900);
+        color: #fff;
+        padding: clamp(34px, 6vh, 56px) 0;
+        text-align: center;
+      }
+      .proof__lead {
+        font-family: var(--serif);
+        font-size: clamp(1.5rem, 1.2rem + 1.6vw, 2.3rem);
+        line-height: 1.15;
+        margin: 0 auto;
+        max-width: 20ch;
+      }
+      .proof__sub {
+        color: rgba(255, 255, 255, 0.74);
+        font-size: var(--s1);
+        line-height: 1.55;
+        margin: 16px auto 0;
+        max-width: 52ch;
+      }
+
       /* ---- Generic section ---- */
       .sec {
         padding: clamp(60px, 9vh, 108px) 0;
@@ -585,7 +618,7 @@
       .pv-tbl thead th {
         font-family: var(--serif);
         color: var(--ink);
-        font-weight: 500;
+        font-weight: 600;
       }
       .pv-tbl tbody th {
         color: var(--ink-faint);
@@ -626,6 +659,248 @@
         height: 100%;
         border-radius: 999px;
         background: linear-gradient(90deg, var(--teal-500), var(--teal-600));
+      }
+
+      /* ---- Feature deep-dives (alternating copy + product preview) ---- */
+      .feat {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 52px;
+        align-items: center;
+      }
+      .feat + .feat {
+        margin-top: clamp(56px, 8vh, 100px);
+      }
+      .feat--rev .feat__visual {
+        order: -1;
+      }
+      /* Grid items default to min-width:auto, so the compare table's nowrap
+         cells would force the whole column wider than the viewport when the
+         two panes stack on mobile. Let both panes shrink to the column. */
+      .feat__copy,
+      .feat__visual {
+        min-width: 0;
+      }
+      .feat__copy .eyebrow {
+        color: var(--teal-600);
+      }
+      .feat__copy h2 {
+        font-size: var(--s3);
+        margin: 12px 0 0;
+        max-width: 16ch;
+      }
+      .feat__copy p {
+        color: var(--ink-soft);
+        font-size: var(--s1);
+        line-height: 1.5;
+        margin: 16px 0 0;
+        max-width: 46ch;
+      }
+      .feat__list {
+        margin: 20px 0 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .feat__li {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        color: var(--ink-soft);
+        font-size: var(--s0);
+      }
+      .feat__li svg {
+        width: 20px;
+        height: 20px;
+        color: var(--teal-600);
+        flex: 0 0 auto;
+        margin-top: 1px;
+      }
+      .feat__cta {
+        margin-top: 26px;
+      }
+      .glass {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-md);
+        padding: 22px;
+      }
+
+      /* rich compare preview */
+      .cmp {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: var(--s-1);
+      }
+      .cmp th,
+      .cmp td {
+        padding: 11px 10px;
+        text-align: left;
+        border-bottom: 1px solid var(--line);
+        white-space: nowrap;
+      }
+      .cmp thead th {
+        font-family: var(--serif);
+        font-weight: 600;
+        color: var(--ink);
+        font-size: var(--s0);
+      }
+      .cmp thead th:first-child {
+        width: 34%;
+      }
+      .cmp tbody th {
+        color: var(--ink-faint);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 0.66rem;
+      }
+      .cmp td {
+        color: var(--ink);
+        font-variant-numeric: tabular-nums;
+      }
+      .cmp tbody tr:last-child th,
+      .cmp tbody tr:last-child td {
+        border-bottom: 0;
+      }
+      .cmp__best {
+        color: var(--teal-600);
+        font-weight: 700;
+      }
+
+      /* rich dream-plan preview */
+      .plan__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 4px;
+      }
+      .plan__title {
+        font-family: var(--serif);
+        font-size: 1.2rem;
+        color: var(--ink);
+      }
+      .plan__intake {
+        font-size: 0.7rem;
+        color: var(--teal-600);
+        background: var(--teal-050);
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-weight: 600;
+      }
+      .plan__next {
+        border: 1px solid rgba(20, 184, 166, 0.3);
+        background: var(--teal-050);
+        border-radius: var(--radius-sm);
+        padding: 12px 14px;
+        margin: 14px 0 18px;
+      }
+      .plan__next b {
+        display: block;
+        color: var(--teal-600);
+        font-size: 0.66rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 3px;
+      }
+      .plan__next span {
+        color: var(--ink);
+        font-size: var(--s0);
+        font-weight: 600;
+      }
+      .plan__row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .plan__lbl {
+        color: var(--ink-soft);
+        font-size: var(--s-1);
+      }
+      .plan__pct {
+        color: var(--teal-600);
+        font-weight: 700;
+        font-size: var(--s-1);
+        font-variant-numeric: tabular-nums;
+      }
+      .plan__bar {
+        height: 7px;
+        border-radius: 999px;
+        background: #eef1f6;
+        overflow: hidden;
+        margin-bottom: 14px;
+      }
+      .plan__bar > i {
+        display: block;
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--teal-500), var(--teal-600));
+      }
+      .plan__foot {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--ink-faint);
+        font-size: var(--s-1);
+        border-top: 1px solid var(--line);
+        padding-top: 12px;
+      }
+      .plan__foot svg {
+        width: 15px;
+        height: 15px;
+        color: var(--gold-600);
+      }
+      /* Task checklist — the Dream Plan's own view, distinct from the simple
+         progress bars in the "how it works" step. */
+      .plan__tasks {
+        list-style: none;
+        margin: 0 0 16px;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 11px;
+      }
+      .plan__task {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        font-size: var(--s0);
+        color: var(--ink);
+      }
+      .plan__tick {
+        flex: 0 0 auto;
+        width: 20px;
+        height: 20px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        font-size: 0.72rem;
+        font-weight: 700;
+        line-height: 1;
+      }
+      .plan__task--done {
+        color: var(--ink-soft);
+      }
+      .plan__task--done .plan__tick {
+        background: var(--teal-050);
+        color: var(--teal-600);
+      }
+      .plan__task--next {
+        font-weight: 600;
+      }
+      .plan__task--next .plan__tick {
+        background: var(--teal-500);
+        color: #fff;
+      }
+      .plan__task--todo {
+        color: var(--ink-faint);
+      }
+      .plan__task--todo .plan__tick {
+        border: 1.5px solid var(--line);
       }
 
       /* ---- Trust: four confident, real proof points ---- */
@@ -820,12 +1095,97 @@
       .foot__col a:hover {
         color: #fff;
       }
+      .foot__social {
+        display: flex;
+        gap: 12px;
+        margin-top: 2px;
+      }
+      .foot__social a {
+        width: 40px;
+        height: 40px;
+        margin: 0;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        transition:
+          background 0.2s ease,
+          transform 0.2s ease;
+      }
+      .foot__social a:hover {
+        background: var(--gold-500);
+        color: var(--navy-900);
+        transform: translateY(-2px);
+      }
+      .foot__social svg {
+        width: 19px;
+        height: 19px;
+      }
       .foot__bottom {
         padding-top: 22px;
         display: flex;
         justify-content: space-between;
         gap: 16px;
         flex-wrap: wrap;
+      }
+      .foot__legal {
+        display: inline-flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      /* ---- Cookie / privacy notice ---- */
+      .cookie {
+        position: fixed;
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        z-index: 60;
+        margin: 0 auto;
+        max-width: 720px;
+        background: var(--navy-800);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 14px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+        padding: 16px 18px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+      .cookie[hidden] {
+        display: none;
+      }
+      .cookie__text {
+        flex: 1 1 320px;
+        font-size: var(--s-1);
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.82);
+        margin: 0;
+      }
+      .cookie__text a {
+        color: #fff;
+        text-decoration: underline;
+      }
+      .cookie__btn {
+        flex: 0 0 auto;
+        border: 0;
+        cursor: pointer;
+        background: var(--gold-500);
+        color: var(--navy-900);
+        font-family: var(--sans);
+        font-weight: 700;
+        font-size: var(--s-1);
+        padding: 10px 20px;
+        border-radius: 999px;
+      }
+      @media (max-width: 480px) {
+        .cookie__btn {
+          flex: 1 1 100%;
+        }
       }
 
       /* ---- Reveal ---- */
@@ -877,6 +1237,17 @@
           grid-template-columns: 1fr;
           gap: 18px;
         }
+        .feat {
+          grid-template-columns: 1fr;
+          gap: 26px;
+        }
+        .feat--rev .feat__visual {
+          order: 0; /* keep copy-then-visual on mobile for a consistent read */
+        }
+        /* Table is wider than a phone; let its card scroll instead of the page. */
+        .feat__visual .glass {
+          overflow-x: auto;
+        }
         .trust__grid {
           grid-template-columns: 1fr 1fr;
           gap: 26px 20px;
@@ -885,6 +1256,23 @@
       @media (max-width: 560px) {
         .trust__grid {
           grid-template-columns: 1fr;
+        }
+        /* Nav must fit 375px — it's position:fixed, so an overflow here escapes
+           the body clip and scrolls the whole page. Drop the "Sign in" text
+           (kept in the footer) and tighten the button so brand + primary CTA
+           fit comfortably. */
+        .nav__in {
+          padding: 12px 16px;
+        }
+        .nav__signin {
+          display: none;
+        }
+        .nav .btn--gold {
+          padding: 10px 15px;
+          font-size: var(--s-1);
+        }
+        .nav__links {
+          gap: 14px;
         }
       }
     </style>
@@ -896,11 +1284,11 @@
           <svg class="brand__mark" viewBox="0 0 200 200" aria-hidden="true">
             <path
               fill="currentColor"
-              d="M18 20 C -6 80 40 165 100 190 C 96 140 90 60 88 15 Z"
+              d="M30 118 L18 44 Q16 37 25 40 L90 56 L95 153 Z"
             />
             <path
               fill="currentColor"
-              d="M182 20 C 206 80 160 165 100 190 C 104 140 110 60 112 15 Z"
+              d="M170 118 L182 44 Q184 37 175 40 L110 56 L105 153 Z"
             />
           </svg>
           <span class="brand__name">Universo</span>
@@ -923,14 +1311,15 @@
         <div class="wrap hero__grid">
           <div>
             <p class="eyebrow hero__tag reveal">
-              University discovery for international students
+              The next Facebook — for education
             </p>
             <h1 class="reveal">
               Find the university that fits <span class="em">you</span>
             </h1>
             <p class="hero__lede reveal">
-              Compare 3,835 European universities on real data and instantly see
-              the ones that fit you. Free, no account needed.
+              See the European universities that fit you, compare them honestly,
+              and build a plan to actually get in. Free — no account needed to
+              start.
             </p>
             <div class="hero__ctas reveal">
               <a class="btn btn--gold btn--lg" href="/account?mode=register"
@@ -1029,6 +1418,19 @@
         </div>
       </section>
 
+      <!-- SOCIAL PROOF (honest: real student activity + real university demand) -->
+      <section class="proof">
+        <div class="wrap">
+          <p class="proof__lead reveal">
+            Students from around the world are already finding where they belong.
+          </p>
+          <p class="proof__sub reveal">
+            They're matching, saving and comparing on Universo every day — and
+            universities across Europe are asking to join.
+          </p>
+        </div>
+      </section>
+
       <!-- HOW IT WORKS -->
       <section class="sec" id="how">
         <div class="wrap">
@@ -1060,7 +1462,7 @@
                   <span class="pv-dot"></span>
                   <div>
                     <div class="pv-name">Aalto University</div>
-                    <div class="pv-why">Computer Science · No tuition</div>
+                    <div class="pv-why">Computer Science · English-taught</div>
                   </div>
                 </div>
               </div>
@@ -1083,9 +1485,9 @@
                   </thead>
                   <tbody>
                     <tr>
-                      <th>Tuition</th>
-                      <td>€0</td>
-                      <td>€0–6k</td>
+                      <th>Tuition · non-EU</th>
+                      <td>€15,000</td>
+                      <td>€12,000</td>
                     </tr>
                     <tr>
                       <th>Language</th>
@@ -1094,8 +1496,8 @@
                     </tr>
                     <tr>
                       <th>Deadline</th>
-                      <td>Jan 4</td>
-                      <td>May 31</td>
+                      <td>January</td>
+                      <td>May</td>
                     </tr>
                   </tbody>
                 </table>
@@ -1124,6 +1526,177 @@
                   ><span class="pv-plan__pct">40%</span>
                 </div>
                 <div class="pv-bar"><i style="width: 40%"></i></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FEATURE: COMPARE -->
+      <section class="sec">
+        <div class="wrap feat">
+          <div class="feat__copy reveal">
+            <p class="eyebrow">Decide with confidence</p>
+            <h2>Compare them side by side</h2>
+            <p>
+              No more juggling twenty browser tabs. Line your shortlist up and
+              see what actually matters — tuition, deadlines, teaching language
+              — in one clean view.
+            </p>
+            <div class="feat__list">
+              <div class="feat__li">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  aria-hidden="true"
+                >
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+                Real figures, side by side — never a guess
+              </div>
+              <div class="feat__li">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  aria-hidden="true"
+                >
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+                Spot the trade-offs in seconds, not weeks
+              </div>
+            </div>
+          </div>
+          <div class="feat__visual reveal">
+            <div class="glass">
+              <table class="cmp" aria-hidden="true">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>RWTH Aachen</th>
+                    <th>Leiden</th>
+                    <th>Bocconi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th>Tuition · non-EU</th>
+                    <td class="cmp__best">€0</td>
+                    <td>€16,000</td>
+                    <td>€14,000</td>
+                  </tr>
+                  <tr>
+                    <th>Language</th>
+                    <td>Eng · De</td>
+                    <td>English</td>
+                    <td>English</td>
+                  </tr>
+                  <tr>
+                    <th>Deadline</th>
+                    <td>March</td>
+                    <td>April</td>
+                    <td>Rolling</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FEATURE: DREAM PLAN (the reason to come back) -->
+      <section class="sec">
+        <div class="wrap feat feat--rev">
+          <div class="feat__copy reveal">
+            <p class="eyebrow">Your journey, in one place</p>
+            <h2>Turn a dream into a plan</h2>
+            <p>
+              Universo doesn't stop at a shortlist. Save your dream and get a
+              plan that shows how ready you are, what to do next, and every
+              deadline that matters — so you always know your next move.
+            </p>
+            <div class="feat__list">
+              <div class="feat__li">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  aria-hidden="true"
+                >
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+                See exactly how ready you are, honestly
+              </div>
+              <div class="feat__li">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  aria-hidden="true"
+                >
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+                One clear next step, every time you return
+              </div>
+            </div>
+            <div class="feat__cta">
+              <a class="btn btn--teal" href="/account?mode=register"
+                >Start your plan — free →</a
+              >
+            </div>
+          </div>
+          <div class="feat__visual reveal">
+            <div class="glass">
+              <div class="plan__head">
+                <span class="plan__title">Your dream plan</span>
+                <span class="plan__intake">Fall 2027</span>
+              </div>
+              <div class="plan__row">
+                <span class="plan__lbl">Overall readiness</span
+                ><span class="plan__pct">68%</span>
+              </div>
+              <div class="plan__bar" style="margin-bottom: 18px">
+                <i style="width: 68%"></i>
+              </div>
+              <ul class="plan__tasks">
+                <li class="plan__task plan__task--done">
+                  <span class="plan__tick">✓</span
+                  ><span>Shortlist saved · 3 universities</span>
+                </li>
+                <li class="plan__task plan__task--done">
+                  <span class="plan__tick">✓</span
+                  ><span>Profile complete</span>
+                </li>
+                <li class="plan__task plan__task--next">
+                  <span class="plan__tick">→</span
+                  ><span>Add your IELTS score</span>
+                </li>
+                <li class="plan__task plan__task--todo">
+                  <span class="plan__tick"></span
+                  ><span>Upload your transcript</span>
+                </li>
+                <li class="plan__task plan__task--todo">
+                  <span class="plan__tick"></span
+                  ><span>Draft your motivation letter</span>
+                </li>
+              </ul>
+              <div class="plan__foot">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <path d="M16 2v4M8 2v4M3 10h18" />
+                </svg>
+                Next deadline: Leiden · April
               </div>
             </div>
           </div>
@@ -1230,9 +1803,7 @@
             “Where you're born shouldn't determine
             <span class="em">how you begin.</span>”
           </p>
-          <p class="founder__who reveal">
-            <b>Odgerel Batdelger</b> — founder, Universo
-          </p>
+          <p class="founder__who reveal"><b>Founder &amp; CEO</b>, Universo</p>
         </div>
       </section>
 
@@ -1327,11 +1898,11 @@
               <svg class="brand__mark" viewBox="0 0 200 200" aria-hidden="true">
                 <path
                   fill="currentColor"
-                  d="M18 20 C -6 80 40 165 100 190 C 96 140 90 60 88 15 Z"
+                  d="M30 118 L18 44 Q16 37 25 40 L90 56 L95 153 Z"
                 />
                 <path
                   fill="currentColor"
-                  d="M182 20 C 206 80 160 165 100 190 C 104 140 110 60 112 15 Z"
+                  d="M170 118 L182 44 Q184 37 175 40 L110 56 L105 153 Z"
                 />
               </svg>
               <span class="brand__name">Universo</span>
@@ -1352,18 +1923,115 @@
               <h4>Universo</h4>
               <a href="/for-universities">For universities</a>
               <a href="/account?mode=login">Sign in</a>
+              <a href="/privacy">Privacy</a>
+            </div>
+            <div class="foot__col">
+              <h4>Connect</h4>
+              <div class="foot__social">
+                <a
+                  href="https://www.instagram.com/join.universo/"
+                  target="_blank"
+                  rel="noopener"
+                  aria-label="Universo on Instagram"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    aria-hidden="true"
+                  >
+                    <rect x="2.5" y="2.5" width="19" height="19" rx="5.5" />
+                    <circle cx="12" cy="12" r="4.2" />
+                    <circle
+                      cx="17.3"
+                      cy="6.7"
+                      r="1.2"
+                      fill="currentColor"
+                      stroke="none"
+                    />
+                  </svg>
+                </a>
+                <a
+                  href="https://www.facebook.com/profile.php?id=61592661747448"
+                  target="_blank"
+                  rel="noopener"
+                  aria-label="Universo on Facebook"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path
+                      fill="currentColor"
+                      d="M13.5 21v-8h2.7l.4-3.1h-3.1V7.9c0-.9.25-1.51 1.55-1.51H17V3.63c-.3-.04-1.3-.13-2.46-.13-2.43 0-4.09 1.48-4.09 4.21v2.35H7.7V13h2.75v8z"
+                    />
+                  </svg>
+                </a>
+                <a
+                  href="mailto:join.universo@gmail.com"
+                  aria-label="Email join.universo@gmail.com"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <rect x="3" y="5" width="18" height="14" rx="2.5" />
+                    <path d="m3.5 7 8.5 6 8.5-6" />
+                  </svg>
+                </a>
+              </div>
             </div>
           </div>
         </div>
         <div class="foot__bottom">
           <span>© <span id="yr"></span> Universo</span>
-          <span>Same Start. Equal Chance.</span>
+          <span class="foot__legal">
+            <a href="/privacy">Privacy &amp; cookies</a>
+            <span aria-hidden="true">·</span>
+            Same Start. Equal Chance.
+          </span>
         </div>
       </div>
     </footer>
 
+    <!-- GDPR transparency notice. Universo sets one first-party, anonymous
+         analytics cookie (a random id, no personal data). This gives notice and
+         a link to the full policy; dismissal is remembered so it shows once. -->
+    <div class="cookie" id="cookie" hidden>
+      <p class="cookie__text">
+        We use one anonymous cookie to understand how Universo is used — no
+        personal data, no ads, never shared. See our
+        <a href="/privacy">privacy &amp; cookies policy</a>.
+      </p>
+      <button class="cookie__btn" id="cookie-ok" type="button">Got it</button>
+    </div>
+
     <script>
       document.documentElement.classList.add("js");
+
+      // Show the cookie notice once (remembered in localStorage).
+      (function () {
+        var bar = document.getElementById("cookie");
+        if (!bar) return;
+        var KEY = "uv_cookie_ack";
+        try {
+          if (localStorage.getItem(KEY)) return;
+        } catch (e) {
+          /* private mode — just show it */
+        }
+        bar.hidden = false;
+        document.getElementById("cookie-ok").addEventListener("click", function () {
+          bar.hidden = true;
+          try {
+            localStorage.setItem(KEY, "1");
+          } catch (e) {
+            /* ignore */
+          }
+        });
+      })();
       document.getElementById("yr").textContent = new Date().getFullYear();
 
       const $ = (id) => document.getElementById(id);
