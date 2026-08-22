@@ -329,39 +329,13 @@ test("university profile pages stay public for anonymous visitors (SEO surface)"
   assert.match(await res.text(), /rel="canonical"/);
 });
 
-test("deduplicated slugs 301 to their surviving record (HTML and API)", async () => {
-  // 'g-au-dk' (global source) collapsed into the hand-curated 'aarhus'.
-  const html = await fetch(base + "/university/g-au-dk", {
-    redirect: "manual",
-  });
-  assert.equal(html.status, 301);
-  assert.equal(html.headers.get("location"), "/university/aarhus");
-
-  const api = await fetch(base + "/api/universities/g-au-dk", {
-    redirect: "manual",
-  });
-  assert.equal(api.status, 301);
-  assert.equal(api.headers.get("location"), "/api/universities/aarhus");
-});
-
-test("Goethe Frankfurt cross-domain duplicate is merged, not just flagged", async () => {
-  // eter-de0048 (goethe-university-frankfurt.de) and g-uni-frankfurt-de
-  // (uni-frankfurt.de) are the same institution under two official domains —
-  // previously only surfaced in lib/name-fixes.js#AMBIGUOUS_REVIEW for manual
-  // follow-up. Confirm the richer ETER record survived under its real name...
+test("Goethe University Frankfurt resolves to its real ETER record", async () => {
+  // The thin global-source duplicate (g-uni-frankfurt-de) is gone now that the
+  // global list is no longer loaded; the canonical ETER record stands alone
+  // under its real name.
   const survivor = (await req("GET", "/api/universities/eter-de0048")).json
     .university;
   assert.equal(survivor.name, "Goethe University Frankfurt");
-  // ...and the thinner global record now redirects to it instead of existing
-  // as a second, near-empty profile for the same university.
-  const dropped = await fetch(base + "/api/universities/g-uni-frankfurt-de", {
-    redirect: "manual",
-  });
-  assert.equal(dropped.status, 301);
-  assert.equal(
-    dropped.headers.get("location"),
-    "/api/universities/eter-de0048",
-  );
 });
 
 test("no name+country duplicates survive the build", async () => {

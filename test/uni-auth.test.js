@@ -177,7 +177,7 @@ test("a duplicate partner email is rejected", async () => {
 test("admin data-quality audit returns the aggregate over the full dataset", async () => {
   const r = await req("admin", "GET", "/api/admin/data-quality");
   assert.equal(r.status, 200);
-  assert.ok(r.json.count > 3000, "audits the whole dataset");
+  assert.ok(r.json.count > 2000, "audits the whole dataset");
   assert.ok(r.json.average_score >= 0 && r.json.average_score <= 100);
   assert.ok(
     r.json.distribution.Excellent >= 0 && r.json.distribution.Incomplete >= 0,

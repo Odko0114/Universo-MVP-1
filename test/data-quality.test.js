@@ -131,10 +131,10 @@ test("auditDataset aggregates distribution, status, staleness and missing counts
   );
 });
 
-test("performance: audits the full ~4,000-record dataset well under a second", () => {
+test("performance: audits the full ~2,900-record dataset well under a second", () => {
   const { buildDataset } = require("../lib/dataset");
   const list = buildDataset();
-  assert.ok(list.length > 3000, "sanity: real dataset loaded");
+  assert.ok(list.length > 2000, "sanity: real dataset loaded");
   const t0 = Date.now();
   const a = dq.auditDataset(list);
   const ms = Date.now() - t0;
