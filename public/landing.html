@@ -218,9 +218,15 @@
         flex: 0 0 auto;
       }
       .brand__name {
-        font-family: var(--serif);
-        font-weight: 600;
+        /* Match the app's wordmark exactly (a bold, slightly skewed sans) so
+           "Universo" reads identically on the landing and after sign-in. */
+        font-family: var(--sans);
+        font-weight: 800;
         font-size: 1.38rem;
+        letter-spacing: -0.01em;
+        font-style: italic;
+        transform: skewX(-3deg);
+        display: inline-block;
       }
       .nav__links {
         display: flex;
