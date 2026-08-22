@@ -381,7 +381,7 @@
             <div>
               <h1>Universo — Admin dashboard</h1>
               <p>
-                Traffic, behavior, funnel and retention.
+                Growth, engagement and university leads.
                 <a class="back" href="/">← Back to app</a>
               </p>
             </div>
@@ -426,27 +426,50 @@
         <button class="refresh" id="refresh-btn">↻ Refresh</button>
       </div>
 
-      <div id="stats" class="grid"></div>
-      <div id="windows" class="windows"></div>
+      <!-- ============ LEVEL 1 · how Universo is doing (real data) ========= -->
+      <h2>How Universo is doing</h2>
+      <div id="headline" class="grid"></div>
+      <p class="foot" style="margin: -14px 0 26px">
+        Real numbers, tied to actual accounts and actions — these you can trust.
+      </p>
 
-      <h2>Overview</h2>
-      <div class="panel">
-        <div id="overview" class="grid"></div>
-        <p class="foot" style="margin-top: 4px">
-          Distinct browsers, not events — one person refreshing twenty times is
-          one visitor. <em>New</em> means their first ever recorded activity
-          falls inside the window; everyone else is returning.
+      <!-- ============ LEVEL 2 · engagement (anonymous, approximate) ======== -->
+      <div
+        class="panel"
+        style="background: #fff8e6; border-color: #f0dfae; margin-bottom: 16px"
+      >
+        <strong style="font-size: 0.9rem"
+          >Why it's doing that — engagement &amp; behaviour</strong
+        >
+        <p class="foot" style="margin: 4px 0 0; color: #8a6d1a">
+          ⚠︎ Everything below counts <em>anonymous browser activity</em>, not
+          verified people. One person on two devices, in incognito, or a bot
+          each look like separate “users.” Read these as approximate trends —
+          not exact headcounts.
         </p>
       </div>
 
-      <h2>Funnel (last <span id="funnel-days-label">7</span> days)</h2>
+      <h2>Active users</h2>
+      <div class="panel">
+        <div id="overview" class="grid"></div>
+        <p class="foot" style="margin-top: 4px">
+          Distinct browsers active in each window (not events).
+          <em>New</em> = first-ever activity falls inside the window; everyone
+          else is returning.
+        </p>
+      </div>
+
+      <h2>
+        Where interest thins — reach funnel (last
+        <span id="funnel-days-label">7</span> days)
+      </h2>
       <div class="panel">
         <div class="tabs" id="funnel-range"></div>
         <div id="funnel"></div>
         <p class="foot" style="margin-top: 4px">
-          A client counts at a stage if it produced that event at least once in
-          the window — this measures <em>reach</em>, not a strictly ordered
-          path.
+          Anonymous reach at each step — a browser counts if it fired that event
+          once in the window. Stages are counted independently, so this is not a
+          strict start-to-finish path.
         </p>
       </div>
 
@@ -478,15 +501,28 @@
         </div>
       </div>
 
+      <h2>Most-viewed &amp; most-applied universities</h2>
+      <div class="two-col">
+        <div>
+          <h3 style="font-size: 0.85rem; margin: 0 0 8px">By profile views</h3>
+          <div id="table-views"></div>
+        </div>
+        <div>
+          <h3 style="font-size: 0.85rem; margin: 0 0 8px">By Apply-Now clicks</h3>
+          <div id="table-clicks"></div>
+        </div>
+      </div>
+
       <div
         style="
           display: flex;
           justify-content: space-between;
           align-items: baseline;
           gap: 10px;
+          margin-top: 28px;
         "
       >
-        <h2>University leads</h2>
+        <h2 style="margin: 0">University leads (B2B)</h2>
         <!-- Injected by showDash() only once the admin session is confirmed, so
            the export URL never appears in the HTML served to a signed-out
            visitor. (The endpoint itself is also requireAdmin-guarded.) -->
@@ -501,7 +537,22 @@
         </p>
       </div>
 
-      <h2 style="margin-top: 24px">Data quality</h2>
+      <!-- ============ LEVEL 3 · content & system ============ -->
+      <h2 style="margin-top: 28px">
+        Content quality — the university dataset
+      </h2>
+      <div
+        class="panel"
+        style="background: #eef6f5; border-color: #cfe7e3; margin-bottom: 14px"
+      >
+        <p class="foot" style="margin: 0; color: #0d6b60">
+          This is about the university <strong>database</strong>, not user
+          activity — so big numbers here are normal and expected. Most of the
+          3,835 universities come from the official EU register (ETER) with only
+          basic fields; 300 are deeply verified by hand. A low “completeness”
+          score on a register entry is not a bug.
+        </p>
+      </div>
       <div id="dq-stats" class="grid"></div>
       <div class="two-col" style="margin-top: 14px">
         <div>
@@ -512,7 +563,7 @@
         </div>
         <div>
           <h3 style="font-size: 0.9rem; margin: 0 0 8px">
-            Quality distribution
+            Completeness spread
           </h3>
           <div class="panel"><div id="dq-distribution"></div></div>
         </div>
@@ -554,16 +605,10 @@
         <p class="foot" style="margin-top: 6px" id="dq-note"></p>
       </div>
 
-      <h2 style="margin-top: 24px">Top universities by Apply-Now clicks</h2>
-      <div id="table-clicks"></div>
-
-      <h2 style="margin-top: 24px">Top universities by profile views</h2>
-      <div id="table-views"></div>
-
       <p class="foot">
-        Anonymous, deduplicable events (tied to a random client id, never an
-        email) recorded in <code>data/events.jsonl</code>. Deleting a student
-        account purges their linked event history.
+        User events are anonymous and deduplicable (a random client id, never an
+        email) in <code>data/events.jsonl</code>. Deleting a student account
+        purges their linked event history.
       </p>
     </div>
 
@@ -706,31 +751,60 @@
       async function loadStats() {
         const d = await api("/api/admin/stats");
         const t = d.totals;
-        const cards = [
-          ["primary", t.signups, "Sign-ups"],
-          ["", t.searches, "Searches"],
-          ["gold", t.currently_saved, "Saved (current)"],
-          ["primary", t.apply_clicks, "Apply clicks"],
-          ["", t.apply_clicks_unique, "Apply clicks (unique)"],
-          ["", t.pageviews, "Pageviews"],
-          ["", t.students, "Total students"],
-          ["", t.universities_verified, "Verified profiles"],
-          ["", t.universities, "Directory total"],
-          ["gold", t.pilot_leads, "University leads"],
-          ["gold", t.update_subscribers, "Update subscribers"],
-        ];
-        document.getElementById("stats").innerHTML = cards
-          .map(
-            ([cls, n, l]) =>
-              `<div class="stat ${cls}"><div class="n">${nfmt(n)}</div><div class="l">${l}</div></div>`,
-          )
-          .join("");
+        const a = d.activation || { activated: 0, rate: 0, signups: 0 };
 
-        const win = (obj) =>
-          `signups ${obj.signup || 0} · searches ${obj.search || 0} · saves ${obj.save || 0} · apply ${obj.apply_click || 0}`;
-        document.getElementById("windows").innerHTML =
-          `<div class="win"><strong>Last 24h:</strong> ${win(d.last_24h || {})}</div>` +
-          `<div class="win"><strong>Last 7d:</strong> ${win(d.last_7d || {})}</div>`;
+        // Week-over-week sign-up change.
+        let chg;
+        if (d.signups_prev_7d) {
+          const pct = Math.round(
+            ((d.signups_7d - d.signups_prev_7d) / d.signups_prev_7d) * 100,
+          );
+          chg = `+${d.signups_7d} this week · ${pct >= 0 ? "↑" : "↓"}${Math.abs(pct)}% vs last`;
+        } else {
+          chg = d.signups_7d
+            ? `+${d.signups_7d} this week`
+            : "no new sign-ups this week";
+        }
+
+        const tiles = [
+          ["primary", t.students, "Sign-ups", chg],
+          [
+            "",
+            `${a.rate}%`,
+            "Activation rate",
+            `${a.activated} of ${a.signups} traceable sign-ups saved / compared / applied`,
+          ],
+          [
+            "",
+            t.apply_clicks,
+            "Apply clicks",
+            `strongest intent · ${nfmt(t.apply_clicks_unique)} unique`,
+          ],
+          ["", t.compares || 0, "Comparisons run", "shortlist intent"],
+          [
+            "gold",
+            t.pilot_leads,
+            "University leads (B2B)",
+            d.leads_7d ? `+${d.leads_7d} this week` : "your revenue path",
+          ],
+          [
+            "gold",
+            t.update_subscribers,
+            "Update subscribers",
+            "opted into emails",
+          ],
+        ];
+        document.getElementById("headline").innerHTML = tiles
+          .map(([cls, n, l, sub]) => {
+            const subColor =
+              cls === "primary"
+                ? "rgba(255,255,255,.85)"
+                : cls === "gold"
+                  ? "rgba(11,31,58,.7)"
+                  : "var(--faint)";
+            return `<div class="stat ${cls}"><div class="n">${typeof n === "number" ? nfmt(n) : esc(n)}</div><div class="l">${esc(l)}</div>${sub ? `<div style="text-transform:none;letter-spacing:0;font-weight:600;font-size:.74rem;margin-top:5px;color:${subColor}">${esc(sub)}</div>` : ""}</div>`;
+          })
+          .join("");
 
         document.getElementById("table-clicks").innerHTML = barTable(
           d.top_universities_by_apply_clicks.map((r) => ({
@@ -765,30 +839,29 @@
       async function loadOverview() {
         const d = await api("/api/admin/overview");
         const rows = [
-          ["primary", "DAU", d.dau, "last 24 hours"],
-          ["", "WAU", d.wau, "last 7 days"],
-          ["", "MAU", d.mau, "last 30 days"],
+          ["primary", "Active today", d.dau],
+          ["", "Active this week", d.wau],
+          ["", "Active this month", d.mau],
         ];
         document.getElementById("overview").innerHTML = rows
           .map(
-            ([tone, label, w, sub]) =>
-              '<div class="card ' +
+            ([tone, label, w]) =>
+              '<div class="stat ' +
               tone +
               '">' +
               '<div class="n">' +
-              w.active +
+              nfmt(w.active) +
               "</div>" +
               '<div class="l">' +
               label +
-              " · " +
-              sub +
               "</div>" +
-              '<div class="l" style="margin-top:4px">' +
-              w.new +
+              '<div style="text-transform:none;letter-spacing:0;font-weight:600;font-size:.74rem;margin-top:5px;color:' +
+              (tone === "primary" ? "rgba(255,255,255,.85)" : "var(--faint)") +
+              '">' +
+              nfmt(w.new) +
               " new · " +
-              w.returning +
-              " returning" +
-              "</div></div>",
+              nfmt(w.returning) +
+              " returning</div></div>",
           )
           .join("");
       }
@@ -872,13 +945,15 @@
 
       async function loadSearches() {
         const d = await api("/api/admin/searches?days=30&limit=12");
-        document.getElementById("top-searches").innerHTML = barTable(
-          d.terms.map((r) => ({ q: r.q, count: r.count })),
-          [
-            { key: "q", label: "Search term" },
-            { key: "count", label: "Count", num: true },
-          ],
-        );
+        document.getElementById("top-searches").innerHTML = d.terms.length
+          ? barTable(
+              d.terms.map((r) => ({ q: r.q, count: r.count })),
+              [
+                { key: "q", label: "Search term" },
+                { key: "count", label: "Count", num: true },
+              ],
+            )
+          : '<p class="empty-note">No searches in the last 30 days yet.</p>';
       }
 
       async function loadLeads() {
@@ -904,13 +979,16 @@
       async function loadDataQuality() {
         const a = await api("/api/admin/data-quality");
         const dist = a.distribution;
+        const wellDetailed = (dist.Excellent || 0) + (dist.Good || 0);
+        const basic =
+          (dist["Needs Improvement"] || 0) + (dist.Incomplete || 0);
         document.getElementById("dq-stats").innerHTML = [
-          ["", a.count, "Universities"],
-          ["good", a.average_score + "%", "Avg quality score"],
-          ["good", a.by_status.Verified || 0, "Verified"],
-          ["", a.by_status.Unknown || 0, "Unknown source"],
-          ["warn", a.stale_count, "Stale (need review)"],
-          ["", a.researched_tuition, "Researched tuition"],
+          ["", a.count, "Universities total"],
+          ["gold", a.deeply_verified || 0, "Deeply verified (by hand)"],
+          ["", wellDetailed, "Well-detailed"],
+          ["", basic, "Basic register entry"],
+          ["", a.average_score + "%", "Avg completeness"],
+          ["", a.researched_tuition, "Hand-researched tuition"],
         ]
           .map(
             ([cls, n, l]) =>

@@ -1730,6 +1730,23 @@ adminApi.get("/stats", (_req, res) => {
       unique_viewers: r.unique,
     }));
 
+  // Level-1 "how are we doing" extras, computed from the same single read:
+  // week-over-week signup change, activation, and new B2B leads this week.
+  const now = Date.now();
+  const WEEK = 7 * 86_400_000;
+  const signupEvents = allEvents.filter((e) => e.type === "signup");
+  const signups_7d = signupEvents.filter(
+    (e) => now - Date.parse(e.ts) <= WEEK,
+  ).length;
+  const signups_prev_7d = signupEvents.filter((e) => {
+    const age = now - Date.parse(e.ts);
+    return age > WEEK && age <= 2 * WEEK;
+  }).length;
+  const leads = store.read("pilot_leads");
+  const leads_7d = leads.filter(
+    (l) => l.created_at && now - Date.parse(l.created_at) <= WEEK,
+  ).length;
+
   res.json({
     generated_at: new Date().toISOString(),
     totals: {
@@ -1740,6 +1757,7 @@ adminApi.get("/stats", (_req, res) => {
       searches: s.totals.search || 0,
       saves_events: s.totals.save || 0,
       currently_saved: currentlySaved,
+      compares: s.totals.compare || 0,
       apply_clicks: s.totals.apply_click || 0,
       apply_clicks_unique: Object.values(s.applyUnique).reduce(
         (a, b) => a + b,
@@ -1747,9 +1765,13 @@ adminApi.get("/stats", (_req, res) => {
       ),
       pageviews: (s.totals.pageview || 0) + (s.totals.profile_view || 0),
       universities_verified: VERIFIED_COUNT,
-      pilot_leads: store.read("pilot_leads").length,
+      pilot_leads: leads.length,
       update_subscribers: students.filter((x) => x.updates_optin).length,
     },
+    activation: events.computeActivation(allEvents),
+    signups_7d,
+    signups_prev_7d,
+    leads_7d,
     last_24h: s.last24h,
     last_7d: s.last7d,
     top_universities_by_apply_clicks: topByClicks,

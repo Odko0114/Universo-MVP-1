@@ -9,6 +9,7 @@ const {
   computeTraffic,
   computeTopSearches,
   computeTopByUni,
+  computeActivation,
 } = events;
 
 const now = () => new Date().toISOString();
@@ -34,6 +35,27 @@ test("computeFunnel counts distinct anon reach per stage with conversion %", () 
   assert.equal(byKey.compare.count, 0);
   assert.equal(byKey.apply.count, 0);
   assert.equal(byKey.register.pct_of_first, Math.round((2 / 3) * 1000) / 10);
+});
+
+test("computeActivation counts signed-up anons who also took a real action", () => {
+  const evs = [
+    { type: "signup", anon: "a", ts: now() },
+    { type: "signup", anon: "b", ts: now() },
+    { type: "signup", anon: "c", ts: now() },
+    { type: "save", anon: "a", ts: now() }, // a activated
+    { type: "compare", anon: "b", ts: now() }, // b activated
+    { type: "pageview", anon: "c", ts: now() }, // c signed up but only browsed
+    { type: "save", anon: "z", ts: now() }, // z never signed up — not counted
+  ];
+  const r = computeActivation(evs);
+  assert.equal(r.signups, 3);
+  assert.equal(r.activated, 2);
+  assert.equal(r.rate, Math.round((2 / 3) * 1000) / 10);
+});
+
+test("computeActivation is 0 with no signups (no divide-by-zero)", () => {
+  const r = computeActivation([{ type: "save", anon: "a", ts: now() }]);
+  assert.deepEqual(r, { signups: 0, activated: 0, rate: 0 });
 });
 
 test("computeFunnel ignores events with no anon id", () => {
