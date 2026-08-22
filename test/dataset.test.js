@@ -10,6 +10,39 @@ const {
   dedupeByNameCountry,
 } = require("../lib/dataset");
 
+test("buildDataset fills gaps with real data only (website, approx coords, language)", () => {
+  const { buildDataset } = require("../lib/dataset");
+  const list = buildDataset();
+
+  const tum = list.find((u) => u.id === "tum");
+  assert.ok(tum, "curated TUM record present");
+  assert.equal(
+    tum.website,
+    "https://www.tum.de",
+    "website derived from the application_link origin",
+  );
+  assert.ok(
+    tum.coords && tum.coords.lat != null && tum.coords.approx === true,
+    "city-level coords filled from the geocoded override and marked approx",
+  );
+
+  // Language now covered for previously-blank EU countries (flagged estimate).
+  const bg = list.find((u) => u.country === "Bulgaria");
+  assert.ok(
+    bg &&
+      bg.language_of_instruction &&
+      bg.language_of_instruction.length &&
+      bg.language_estimated === true,
+    "Bulgaria language filled and flagged as an estimate",
+  );
+
+  // Never attach coordinates to a junk city value (some records carry "m").
+  const junk = list.filter(
+    (u) => u.city === "m" && u.coords && u.coords.lat != null,
+  );
+  assert.equal(junk.length, 0, "junk city 'm' never receives coordinates");
+});
+
 test("dedupeByNameCountry keeps the highest-priority source and maps dropped slugs", () => {
   const rows = [
     {
