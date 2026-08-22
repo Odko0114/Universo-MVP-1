@@ -13,7 +13,7 @@
     "import:rankings": "node scripts/import-rankings.js",
     "import:all": "node scripts/import-eter.js && node scripts/import-global.js && node scripts/import-rankings.js",
     "create-admin": "node scripts/create-admin.js",
-    "test": "node --test --test-concurrency=1",
+    "test": "node --test --require ./scripts/test-setup.js --test-concurrency=1",
     "test:e2e": "playwright test",
     "typecheck": "tsc -p jsconfig.json",
     "format": "prettier --write ."
