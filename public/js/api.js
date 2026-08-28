@@ -116,6 +116,10 @@
       request("POST", "/me/document", { key, done }),
     setScholarshipStatus: (key, status) =>
       request("POST", "/me/scholarship", { key, status }),
+    setScholarship: (key, patch) =>
+      request("POST", "/me/scholarship", { key, ...patch }),
+    setDocExpiry: (key, expiry) =>
+      request("POST", "/me/document/expiry", { key, expiry }),
     // Applications (per-university document tracking)
     patchApplication: (id, patch) =>
       request("POST", `/me/application/${encodeURIComponent(id)}`, patch),

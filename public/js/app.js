@@ -1056,29 +1056,12 @@
           <p class="muted" style="margin:6px 0 0">Profile, applications, documents and scholarships are all in good shape.</p>
         </div>`;
 
-      // Application + Documents progress now live in the overview + command
-      // center above, so the readiness card shows only what isn't shown there:
-      // Profile strength (and Scholarship when the student says they need one).
+      // Application + Documents progress live in the overview + command center,
+      // so only Profile (and Scholarship when needed) remain — folded compactly
+      // into the overview strip below rather than a standalone card.
       const readinessDims = data.readiness.filter(
         (r) => r.key === "profile" || r.key === "scholarship",
       );
-      const readinessCard = `
-        <div class="section-head" style="margin-top:22px"><h3 style="margin:0">How ready are you?</h3></div>
-        <div class="card">
-          <div class="readiness">
-            ${readinessDims
-              .map(
-                (r) => `
-              <div class="readiness__row">
-                <div class="readiness__head"><span>${esc(r.label)}</span><span class="readiness__pct">${r.score}%</span></div>
-                <div class="progress" role="progressbar" aria-valuenow="${r.score}" aria-valuemin="0" aria-valuemax="100" aria-label="${esc(r.label)} readiness"><div class="progress__bar" style="width:${r.score}%"></div></div>
-                <p class="muted readiness__detail">${esc(r.detail)}</p>
-              </div>`,
-              )
-              .join("")}
-          </div>
-          <p class="muted" style="font-size:.8rem;margin:14px 0 0">These show how prepared you are — not your chance of admission, which no one can honestly predict.</p>
-        </div>`;
 
       // ---- Application command center: overview + applications + vault ----
       const usedIn = (key) =>
@@ -1088,6 +1071,19 @@
         }).length;
 
       const ov = data.overview;
+      const f = data.funding;
+      const costStat = f
+        ? `<div class="ov-stat"><span class="ov-stat__num">${eur(f.annual_min)}${f.annual_min === f.annual_max ? "" : "+"}</span><span class="ov-stat__label">Cost / year</span></div>`
+        : "";
+      // Compact readiness bars folded in (Profile, and Scholarship when needed).
+      const miniReadiness = readinessDims.length
+        ? `<div class="ov-readiness">${readinessDims
+            .map(
+              (r) =>
+                `<div class="ov-ready"><div class="ov-ready__head"><span>${esc(r.label)}</span><span class="readiness__pct">${r.score}%</span></div><div class="progress"><div class="progress__bar" style="width:${r.score}%"></div></div></div>`,
+            )
+            .join("")}</div>`
+        : "";
       const overviewCard =
         ov && ov.total
           ? `
@@ -1096,28 +1092,43 @@
           <div class="ov-stats">
             <div class="ov-stat"><span class="ov-stat__num">${ov.total}</span><span class="ov-stat__label">Applications</span></div>
             <div class="ov-stat"><span class="ov-stat__num">${ov.ready}</span><span class="ov-stat__label">Ready</span></div>
-            <div class="ov-stat"><span class="ov-stat__num">${ov.in_progress}</span><span class="ov-stat__label">In progress</span></div>
             <div class="ov-stat"><span class="ov-stat__num">${ov.missing}</span><span class="ov-stat__label">Missing docs</span></div>
+            ${costStat}
           </div>
           ${
             ov.upcoming_deadlines.length
               ? `<div class="ov-deadlines">${ov.upcoming_deadlines
                   .map(
                     (d) =>
-                      `<div class="ov-deadline ov-deadline--${d.tone}"><span class="ov-deadline__dot" aria-hidden="true"></span><strong>${esc(d.name)}</strong><span class="muted">${esc(deadlineText(d.days_left))}</span></div>`,
+                      `<a class="ov-deadline ov-deadline--${d.tone} journey-jump" href="#app-${esc(d.uni_id)}"><span class="ov-deadline__dot" aria-hidden="true"></span><strong>${esc(d.name)}</strong><span class="muted">${esc(deadlineText(d.days_left))}</span></a>`,
                   )
                   .join("")}</div>`
               : ""
           }
           <p class="muted" style="font-size:.85rem;margin:12px 0 0">${ov.requirements_done} / ${ov.requirements_total} required documents completed across your applications.</p>
+          ${miniReadiness}
         </div>`
           : "";
+
+      // Map each application → the scholarship schemes that could fund it (from
+      // the server-computed `covers` on each scheme).
+      const allSchemes = [
+        ...((data.scholarships && data.scholarships.groups) || []).flatMap(
+          (g) => g.scholarships,
+        ),
+        ...((data.scholarships && data.scholarships.eu_wide) || []),
+        ...((data.scholarships && data.scholarships.outbound) || []),
+      ];
+      const schByApp = {};
+      for (const s of allSchemes)
+        for (const nm of s.covers || [])
+          (schByApp[nm] = schByApp[nm] || []).push(s.name);
 
       const applicationsCard =
         data.applications && data.applications.length
           ? `
         <div class="section-head" style="margin-top:26px" id="applications"><h3 style="margin:0">My applications</h3></div>
-        <div class="app-list">${data.applications.map(appCard).join("")}</div>`
+        <div class="app-list">${data.applications.map((a) => appCard(a, schByApp[a.name] || [])).join("")}</div>`
           : "";
 
       const sharedDocs = (data.documents || []).filter((d) => d.shared);
@@ -1129,10 +1140,20 @@
             ${sharedDocs
               .map((doc) => {
                 const used = usedIn(doc.key);
+                const es = doc.expiry_status;
+                const warn =
+                  es && es.level !== "ok"
+                    ? `<span class="doc-expiry-badge doc-expiry-badge--${es.level}">${esc(es.text)}</span>`
+                    : "";
                 return `
               <li class="doc-item${doc.done ? " is-done" : ""}">
                 <button type="button" class="doc-check" data-document="${esc(doc.key)}" aria-pressed="${doc.done}" title="${doc.done ? "Mark not ready" : "Mark ready"}">${doc.done ? "✓" : ""}</button>
-                <div class="doc-body"><strong>${esc(doc.label)}</strong><p class="muted">${esc(doc.hint)}</p>${used ? `<p class="muted" style="font-size:.8rem;margin:2px 0 0">Used in ${used} application${used === 1 ? "" : "s"}</p>` : ""}</div>
+                <div class="doc-body">
+                  <strong>${esc(doc.label)}</strong> ${warn}
+                  <p class="muted">${esc(doc.hint)}</p>
+                  ${used ? `<p class="muted" style="font-size:.8rem;margin:2px 0 0">Used in ${used} application${used === 1 ? "" : "s"}</p>` : ""}
+                  <label class="doc-expiry muted">Valid until <input type="date" data-doc-expiry="${esc(doc.key)}" value="${esc(doc.expiry || "")}" /></label>
+                </div>
               </li>`;
               })
               .join("")}
@@ -1172,7 +1193,12 @@
           : "";
 
       // ---- Scholarships & funding (destination-driven, trackable) ----
-      const sch = data.scholarships || { groups: [], eu_wide: [], source: "none" };
+      const sch = data.scholarships || {
+        groups: [],
+        eu_wide: [],
+        outbound: [],
+        source: "none",
+      };
       const hasSchemes =
         (sch.groups && sch.groups.length) || (sch.eu_wide && sch.eu_wide.length);
       const needsScholarship = !!(data.dream && data.dream.scholarship_required);
@@ -1181,17 +1207,99 @@
       const scholarshipsCard =
         hasSchemes || data.funding || needsScholarship
           ? `
-        <div class="section-head" style="margin-top:26px" id="scholarships"><h3 style="margin:0">Scholarships &amp; funding</h3></div>
+        <div class="section-head" style="margin-top:26px" id="scholarships"><h3 style="margin:0">Scholarships</h3></div>
         <div class="card">
-          ${fundingLine(data.funding)}
           ${
             hasSchemes
               ? `<p class="muted" style="margin:0 0 14px">Real, named schemes for where you’re applying${sch.source === "preferences" ? " (your preferred countries)" : ""}. Confirm current eligibility, amounts and deadlines on each official page.</p>
                  ${sch.groups.map((g) => schGroup(g.country, g.scholarships)).join("")}
                  ${sch.eu_wide.length ? schGroup("EU-wide", sch.eu_wide) : ""}`
-              : `<p class="muted" style="margin:0">Save universities — or set your preferred countries — to see funding schemes for your destinations.</p>`
+              : `<p class="muted" style="margin:0 0 14px">Save universities — or set your preferred countries — to see funding schemes for your destinations.</p>`
           }
+          ${sch.outbound && sch.outbound.length ? schGroup("From your home country", sch.outbound) : ""}
         </div>`
+          : "";
+
+      // ---- Your action plan (full prioritized to-do across applications) ----
+      const ap = data.action_plan || [];
+      const actionPlanCard = ap.length
+        ? `
+        <div class="section-head" style="margin-top:26px"><h3 style="margin:0">Your action plan</h3></div>
+        <div class="card">
+          <ul class="action-list">
+            ${ap
+              .map(
+                (t) =>
+                  `<li class="action-item action-item--${esc(t.priority)}"><a class="journey-jump action-item__link" href="${esc(t.href)}"><span class="action-item__label">${esc(t.label)}</span>${t.detail ? `<span class="muted action-item__detail">${esc(t.detail)}</span>` : ""}</a></li>`,
+              )
+              .join("")}
+          </ul>
+        </div>`
+        : "";
+
+      // ---- What's coming up (one date-sorted agenda, grouped by month) ----
+      const ag = data.agenda || [];
+      const agendaCard = ag.length
+        ? `
+        <div class="section-head" style="margin-top:26px"><h3 style="margin:0">What’s coming up</h3></div>
+        <div class="card">
+          ${agendaGroups(ag)
+            .map(
+              (g) =>
+                `<div class="agenda-month"><h4 class="agenda-month__title">${esc(g.label)}</h4><ul class="agenda-list">${g.items
+                  .map(
+                    (it) =>
+                      `<li class="agenda-item agenda-item--${esc(it.kind)}"><a class="journey-jump" href="${esc(it.href)}"><span class="agenda-item__date">${esc(fmtDate(it.date))}</span><span class="agenda-item__label">${esc(it.label)}</span><span class="agenda-item__left ${it.days_left < 0 ? "is-overdue" : it.days_left <= 7 ? "is-soon" : ""}">${esc(deadlineText(it.days_left))}</span></a></li>`,
+                  )
+                  .join("")}</ul></div>`,
+            )
+            .join("")}
+        </div>`
+        : "";
+
+      // ---- Costs & budget (honest yearly estimate, per application) ----
+      const costApps = (data.applications || []).filter((a) => a.cost.known);
+      const costsCard =
+        data.funding && costApps.length
+          ? `
+        <div class="section-head" style="margin-top:26px" id="costs"><h3 style="margin:0">Costs &amp; budget</h3></div>
+        <div class="card">
+          ${fundingLine(data.funding)}
+          ${data.budget == null ? `<p class="muted" style="margin:0 0 12px">Set your yearly budget in your <a href="/onboarding">profile</a> to see the funding gap.</p>` : ""}
+          <ul class="cost-list">
+            ${costApps
+              .map(
+                (a) =>
+                  `<li class="cost-item"><a class="journey-jump cost-item__name" href="#app-${esc(a.uni_id)}">${esc(a.name)}</a><span class="cost-item__range">~${eur(a.cost.min)}–${eur(a.cost.max)}/yr</span>${a.over_budget != null ? (a.over_budget > 0 ? `<span class="cost-item__gap is-over">${eur(a.over_budget)} over</span>` : `<span class="cost-item__gap is-ok">within budget</span>`) : ""}</li>`,
+              )
+              .join("")}
+          </ul>
+          <p class="muted" style="font-size:.8rem;margin:12px 0 0">Tuition is shown only where we’ve researched it; living cost is an estimate. Confirm on the university’s page.</p>
+        </div>`
+          : "";
+
+      // ---- Compare your applications (decide where to focus) ----
+      const compareCard =
+        (data.applications || []).length >= 2
+          ? `
+        <div class="section-head" style="margin-top:26px"><h3 style="margin:0">Compare your applications</h3></div>
+        <div class="cmp-scroll"><table class="cmp cmp--apps">
+          <thead><tr><th scope="col">Application</th><th scope="col">Deadline</th><th scope="col">Status</th><th scope="col">Docs</th><th scope="col">Est. cost/yr</th></tr></thead>
+          <tbody>
+            ${data.applications
+              .map(
+                (a) =>
+                  `<tr>
+                <th scope="row"><a class="journey-jump" href="#app-${esc(a.uni_id)}">${esc(a.name)}</a></th>
+                <td>${a.deadline ? esc(deadlineText(a.days_left)) : "—"}</td>
+                <td>${esc((APP_STATUSES.find(([k]) => k === a.status) || ["", "Planning"])[1])}</td>
+                <td>${a.required_done}/${a.required_total}</td>
+                <td>${a.cost.known ? "~" + esc(eur(a.cost.min)) + "–" + esc(eur(a.cost.max)) : "—"}</td>
+              </tr>`,
+              )
+              .join("")}
+          </tbody>
+        </table></div>`
           : "";
 
       return `
@@ -1199,11 +1307,14 @@
           <div class="section-head"><h2>Your Dream Plan, ${first}</h2></div>
           ${dreamCard}
           ${nextBestCard}
+          ${actionPlanCard}
           ${overviewCard}
+          ${agendaCard}
           ${applicationsCard}
+          ${compareCard}
           ${documentsCard}
+          ${costsCard}
           ${scholarshipsCard}
-          ${readinessCard}
           ${picksCard}
           ${timelineCard}
         </div>`;
@@ -1388,6 +1499,24 @@
         toast(e.message, true);
       }
     }
+    async function onScholarshipDeadline(key, deadline) {
+      try {
+        await API.setScholarship(key, { deadline });
+        data = await API.journey(); // deadline feeds the agenda
+        paint();
+      } catch (e) {
+        toast(e.message, true);
+      }
+    }
+    async function onDocExpiry(key, expiry) {
+      try {
+        await API.setDocExpiry(key, expiry);
+        data = await API.journey();
+        paint();
+      } catch (e) {
+        toast(e.message, true);
+      }
+    }
 
     function paint() {
       // Remember which applications are expanded so a repaint doesn't collapse
@@ -1461,6 +1590,38 @@
         sel.addEventListener("change", () =>
           onScholarship(sel.dataset.sch, sel.value),
         );
+      });
+      view.querySelectorAll("[data-sch-deadline]").forEach((inp) => {
+        inp.addEventListener("change", () =>
+          onScholarshipDeadline(inp.dataset.schDeadline, inp.value),
+        );
+      });
+      view.querySelectorAll("[data-app-notes]").forEach((ta) => {
+        ta.addEventListener("change", () =>
+          onAppField(ta.dataset.appNotes, { notes: ta.value }),
+        );
+      });
+      view.querySelectorAll("[data-app-decision]").forEach((inp) => {
+        inp.addEventListener("change", () =>
+          onAppField(inp.dataset.appDecision, { decision_date: inp.value }),
+        );
+      });
+      view.querySelectorAll("[data-doc-expiry]").forEach((inp) => {
+        inp.addEventListener("change", () =>
+          onDocExpiry(inp.dataset.docExpiry, inp.value),
+        );
+      });
+      // In-page jump links: open the target application and scroll to it.
+      view.querySelectorAll("a.journey-jump").forEach((a) => {
+        a.addEventListener("click", (e) => {
+          const href = a.getAttribute("href") || "";
+          if (!href.startsWith("#")) return;
+          const target = document.getElementById(href.slice(1));
+          if (!target) return;
+          e.preventDefault();
+          if (target.tagName === "DETAILS") target.open = true;
+          target.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
       });
       const editDream = document.getElementById("edit-dream");
       const dreamForm = document.getElementById("dream-form");
@@ -1780,7 +1941,9 @@
     missing: "🔴 Missing docs",
   };
 
-  function appCard(a) {
+  const eur = (n) => "€" + nfmt(n);
+
+  function appCard(a, schemes) {
     const tone =
       a.required_total === 0 || a.required_done === a.required_total
         ? "complete"
@@ -1791,8 +1954,15 @@
       "",
       "Planning",
     ])[1];
+    // Decision date only makes sense once an application is out the door.
+    const showDecision = ["submitted", "under_review", "accepted", "rejected"].includes(
+      a.status,
+    );
+    const costChip = a.cost.known
+      ? `<span class="app-card__cost${a.over_budget > 0 ? " is-over" : ""}">~${eur(a.cost.min)}–${eur(a.cost.max)}/yr${a.over_budget > 0 ? ` · ${eur(a.over_budget)} over` : ""}</span>`
+      : "";
     return `
-    <details class="app-card" data-app="${esc(a.uni_id)}">
+    <details class="app-card" id="app-${esc(a.uni_id)}" data-app="${esc(a.uni_id)}">
       <summary class="app-card__head">
         <div class="app-card__title">
           <strong>${esc(a.name)}</strong>
@@ -1801,6 +1971,7 @@
         <div class="app-card__meta">
           <span class="chip chip--plain">${esc(statusLabel)}</span>
           ${a.deadline ? `<span class="app-card__deadline app-card__deadline--${deadlineTone(a.days_left)}">${esc(deadlineText(a.days_left))}</span>` : ""}
+          ${costChip}
           <span class="app-card__docs">${a.required_done}/${a.required_total} required · ${DOC_TONE_LABEL[tone]}</span>
         </div>
       </summary>
@@ -1809,8 +1980,14 @@
           <label class="app-field"><span>Program <span class="muted">(optional)</span></span><input type="text" class="onb-input" data-app-program="${esc(a.uni_id)}" maxlength="120" placeholder="e.g. Computer Science" value="${esc(a.program)}" /></label>
           <label class="app-field"><span>Deadline</span><input type="date" class="onb-input" data-app-deadline="${esc(a.uni_id)}" value="${esc(a.deadline)}" /></label>
           <label class="app-field"><span>Status</span><select class="onb-input" data-app-status="${esc(a.uni_id)}">${APP_STATUSES.map(([v, l]) => `<option value="${v}"${v === a.status ? " selected" : ""}>${esc(l)}</option>`).join("")}</select></label>
+          ${showDecision ? `<label class="app-field"><span>Decision expected</span><input type="date" class="onb-input" data-app-decision="${esc(a.uni_id)}" value="${esc(a.decision_date)}" /></label>` : ""}
         </div>
         ${a.portal ? `<a class="app-portal" href="${esc(a.portal)}" target="_blank" rel="noopener noreferrer">Open application portal ↗</a>` : ""}
+        ${
+          schemes && schemes.length
+            ? `<p class="app-funding muted"><strong>Funding you can use:</strong> <a href="#scholarships" class="journey-jump">${schemes.map(esc).join(", ")}</a></p>`
+            : ""
+        }
         ${
           a.curated_deadline || a.curated_requirements
             ? `<div class="app-hint"><span class="app-hint__icon" aria-hidden="true">${icon("alert", 15)}</span><div class="app-hint__body"><div class="app-hint__label">From ${esc(a.name)}’s public listing — always confirm on their official page</div>${a.curated_deadline ? `<div><strong>Deadline:</strong> ${esc(a.curated_deadline)}</div>` : ""}${a.curated_requirements ? `<div><strong>Requirements:</strong> ${esc(a.curated_requirements)}</div>` : ""}</div></div>`
@@ -1821,7 +1998,7 @@
           <input type="text" class="onb-input" data-add-doc-for="${esc(a.uni_id)}" maxlength="60" placeholder="Add a document (e.g. Portfolio, GRE score)" />
           <button type="button" class="btn btn--ghost btn--sm" data-add-doc-btn="${esc(a.uni_id)}">Add</button>
         </div>
-        <p class="muted" style="font-size:.8rem;margin:12px 0 0">Requirements and deadline are yours to set — check them on the university’s official application page.</p>
+        <label class="app-notes"><span>Notes <span class="muted">(only you see these)</span></span><textarea class="onb-input" data-app-notes="${esc(a.uni_id)}" rows="2" maxlength="500" placeholder="Contacts, questions, reminders…">${esc(a.notes)}</textarea></label>
       </div>
     </details>`;
   }
@@ -1865,7 +2042,11 @@
           </select>
         </div>
         <p class="muted">${esc(s.note)}</p>
-        ${s.website ? `<a href="${esc(s.website)}" target="_blank" rel="noopener noreferrer">Official page ↗</a>` : ""}
+        ${s.covers && s.covers.length ? `<p class="muted sch-covers">Could fund: ${s.covers.map(esc).join(", ")}</p>` : ""}
+        <div class="sch-item__foot">
+          ${s.website ? `<a href="${esc(s.website)}" target="_blank" rel="noopener noreferrer">Official page ↗</a>` : "<span></span>"}
+          <label class="sch-deadline muted">Deadline <input type="date" data-sch-deadline="${esc(s.key)}" value="${esc(s.deadline || "")}" /></label>
+        </div>
       </li>`;
   }
 
@@ -1885,6 +2066,28 @@
           : ` That’s within your ${eur(f.budget)}/yr budget.`;
     }
     return `<p class="muted funding-line"><strong>${range}/year</strong> — roughly what your ${f.count} researched option${f.count === 1 ? "" : "s"} cost (tuition + estimated living).${gap}</p>`;
+  }
+
+  // "12 Aug" — short date for the agenda.
+  function fmtDate(iso) {
+    const d = new Date(iso + "T00:00:00");
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  }
+
+  // Group already-sorted agenda items into consecutive month buckets.
+  function agendaGroups(items) {
+    const groups = [];
+    for (const it of items) {
+      const d = new Date(it.date + "T00:00:00");
+      const label = isNaN(d.getTime())
+        ? "Later"
+        : d.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+      const last = groups[groups.length - 1];
+      if (!last || last.label !== label) groups.push({ label, items: [it] });
+      else last.items.push(it);
+    }
+    return groups;
   }
 
   function wireStatusSelects(root) {

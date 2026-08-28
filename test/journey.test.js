@@ -375,6 +375,111 @@ test("readiness: scholarship dimension scores from tracked scheme statuses", () 
   assert.equal(mk([]), 30, "needs one but tracking none → low");
 });
 
+test("annualCost: curated tuition + living, else unknown", () => {
+  const known = journey.annualCost({
+    tuition_source: "curated_research",
+    tuition_range: { min: 0, max: 3000 },
+    estimated_living_cost: { min: 1000, max: 1500 },
+  });
+  assert.deepEqual(known, { min: 12000, max: 21000, known: true });
+  const est = journey.annualCost({
+    tuition_source: "country_estimate",
+    tuition_range: { min: 5000, max: 9000 },
+    estimated_living_cost: { min: 900, max: 1200 },
+  });
+  assert.equal(est.known, false, "estimated tuition is never treated as fact");
+});
+
+test("applicationView: cost + over_budget from the student's budget", () => {
+  const uni = {
+    id: "u1",
+    name: "X",
+    country: "Germany",
+    tuition_source: "curated_research",
+    tuition_range: { min: 0, max: 3000 },
+    estimated_living_cost: { min: 1000, max: 1500 },
+  };
+  const v = journey.applicationView({}, uni, {}, 15000);
+  assert.equal(v.cost.max, 21000);
+  assert.equal(v.over_budget, 6000, "21000 − 15000");
+  assert.equal(v.country, "Germany");
+  const noBudget = journey.applicationView({}, uni, {}, null);
+  assert.equal(noBudget.over_budget, null);
+});
+
+test("normalizeScholarship: legacy string and object", () => {
+  assert.deepEqual(journey.normalizeScholarship("applied"), {
+    status: "applied",
+    deadline: "",
+  });
+  assert.deepEqual(
+    journey.normalizeScholarship({ status: "applying", deadline: "2027-01-10" }),
+    { status: "applying", deadline: "2027-01-10" },
+  );
+  assert.equal(journey.normalizeScholarship({ status: "bogus" }).status, "");
+});
+
+test("docExpiryStatus: expired, expiring soon, and fine", () => {
+  const soon = new Date();
+  soon.setDate(soon.getDate() + 30);
+  const past = new Date();
+  past.setDate(past.getDate() - 5);
+  const far = new Date();
+  far.setDate(far.getDate() + 400);
+  assert.equal(journey.docExpiryStatus(past.toISOString().slice(0, 10)).level, "expired");
+  assert.equal(journey.docExpiryStatus(soon.toISOString().slice(0, 10)).level, "soon");
+  assert.equal(journey.docExpiryStatus(far.toISOString().slice(0, 10)).level, "ok");
+  assert.equal(journey.docExpiryStatus(""), null);
+});
+
+test("buildAgenda: merges + sorts application, decision and scholarship dates", () => {
+  const views = journey.buildApplications(
+    [
+      { id: "u1", name: "Helsinki" },
+      { id: "u2", name: "Aalto" },
+    ],
+    {
+      u1: { deadline: "2027-01-15" },
+      u2: { status: "submitted", decision_date: "2027-03-01" },
+    },
+    {},
+  );
+  const agenda = journey.buildAgenda(views, [
+    { name: "DAAD", deadline: "2027-02-01" },
+  ]);
+  assert.deepEqual(
+    agenda.map((i) => i.kind),
+    ["application", "scholarship", "decision"],
+    "sorted by date across all three kinds",
+  );
+  assert.equal(agenda[0].href, "#app-u1");
+});
+
+test("buildActionPlan: urgent deadlines lead, shared docs grouped, unique docs per app", () => {
+  const soon = new Date();
+  soon.setDate(soon.getDate() + 2);
+  const iso = soon.toISOString().slice(0, 10);
+  const views = journey.buildApplications(
+    [
+      { id: "u1", name: "Helsinki" },
+      { id: "u2", name: "Aalto" },
+    ],
+    { u1: { deadline: iso } }, // u1 near deadline, nothing ready
+    {},
+  );
+  const plan = journey.buildActionPlan(views, {});
+  assert.equal(plan[0].priority, "high", "the near deadline is first");
+  assert.match(plan[0].label, /Helsinki/);
+  // A shared required doc appears once, noting it covers both applications.
+  const shared = plan.find((t) => t.key === "doc-transcript");
+  assert.ok(shared);
+  assert.match(shared.detail, /2 applications/);
+  // u1 is already urgent, so its unique motivation letter isn't repeated.
+  assert.ok(!plan.some((t) => t.key === "appdoc-u1-personal_statement"));
+  // u2 (not urgent) does surface its unique letter.
+  assert.ok(plan.some((t) => t.key === "appdoc-u2-personal_statement"));
+});
+
 test("sortApplications: soonest deadline first (overdue leads), no-deadline last", () => {
   const mk = (id, days_left) => ({ uni_id: id, days_left });
   const sorted = journey.sortApplications([

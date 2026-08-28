@@ -31,6 +31,7 @@ const dataQuality = require("./lib/data-quality");
 const {
   scholarshipsFor,
   scholarshipsForDestinations,
+  scholarshipsOutbound,
 } = require("./lib/scholarships");
 const events = require("./lib/events");
 const validate = require("./lib/validate");
@@ -301,14 +302,16 @@ const publicStudent = (s) => {
 // gets the tighter 10-per-15-minutes cap that admin and partner logins use.
 // NOTE: the limiter is in-memory (lib/rate-limit.js) — counters reset when the
 // process restarts. Fine for a single instance; move to Redis if we scale out.
+// Auth caps are env-overridable so the test suite (many registrations/logins
+// from one IP within the window) isn't throttled; production keeps the defaults.
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
+  max: Number(process.env.UNIVERSO_AUTH_RATE_MAX) || 20,
   message: "Too many attempts. Try again in a few minutes.",
 });
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: Number(process.env.UNIVERSO_LOGIN_RATE_MAX) || 10,
   message: "Too many attempts. Try again in a few minutes.",
 });
 
@@ -382,9 +385,11 @@ api.post(
       career_goal: "",
       scholarship_required: false,
       documents: {},
-      // Self-tracked scholarship progress { schemeKey: status }. Older accounts
-      // read as {} via defensive reads — no migration.
+      // Self-tracked scholarship progress { schemeKey: { status, deadline } }.
+      // Older accounts read as {} (and legacy string values normalize) — no migration.
       scholarships: {},
+      // Optional expiry dates for shared documents { docKey: { expiry } }.
+      document_meta: {},
       consent_accepted: true,
       consent_date: now,
       // Separate opt-in for product-update emails (new universities,
@@ -1337,6 +1342,8 @@ function pruneApplication(app) {
     app.status === journey.DEFAULT_STATUS &&
     !app.deadline &&
     !app.program &&
+    !app.notes &&
+    !app.decision_date &&
     !Object.keys(app.req).length &&
     !Object.keys(app.docs).length &&
     !app.custom.length;
@@ -1420,9 +1427,43 @@ api.get("/me/journey", auth.requireAuth, (req, res) => {
         })
     : [];
 
-  // Scholarships follow where you're APPLYING (host-country funded), not where
-  // you're from: destinations = your saved unis' countries, else your preferred
-  // countries. Each scheme carries the student's own tracked status.
+  // ---- Documents (vault) with optional expiry ----
+  const sCounts = journey.statusCounts(apps, savedIds);
+  const docsState =
+    student.documents && typeof student.documents === "object"
+      ? student.documents
+      : {};
+  const docMeta =
+    student.document_meta && typeof student.document_meta === "object"
+      ? student.document_meta
+      : {};
+  const documents = journey.DOCUMENTS.map((d) => {
+    const expiry =
+      docMeta[d.key] && typeof docMeta[d.key].expiry === "string"
+        ? docMeta[d.key].expiry
+        : "";
+    return {
+      ...d,
+      done: docsState[d.key] === true,
+      expiry,
+      expiry_status: expiry ? journey.docExpiryStatus(expiry) : null,
+    };
+  });
+  const docsDone = documents.filter((d) => d.done).length;
+
+  // ---- Application command center (built first — scholarships + agenda + the
+  // action plan all read from it). Costs use the student's budget. ----
+  const budget = Number.isFinite(student.budget_max_eur_year)
+    ? student.budget_max_eur_year
+    : null;
+  const applications = journey.sortApplications(
+    journey.buildApplications(saved, apps, docsState, budget),
+  );
+  const overview = journey.applicationsOverview(applications);
+  const funding = journey.computeFunding(saved, budget);
+
+  // ---- Scholarships: destination-driven, each linked to the applications it
+  // could fund, plus your home country's outbound schemes. ----
   const homeCountry = student.home_country || student.country_of_origin || "";
   const destCountries = [...new Set(saved.map((u) => u.country).filter(Boolean))];
   const prefCountries = Array.isArray(student.country_preference)
@@ -1433,45 +1474,45 @@ api.get("/me/journey", auth.requireAuth, (req, res) => {
     student.scholarships && typeof student.scholarships === "object"
       ? student.scholarships
       : {};
-  const withStatus = (s) => ({ ...s, status: schTracked[s.key] || "" });
+  const appsByCountry = (country) =>
+    applications.filter((a) => a.country === country).map((a) => a.name);
+  const allAppNames = applications.map((a) => a.name);
+  const withMeta = (s, covers) => {
+    const meta = journey.normalizeScholarship(schTracked[s.key]);
+    return { ...s, status: meta.status, deadline: meta.deadline, covers };
+  };
   const schData = scholarshipsForDestinations(schCountries);
   const scholarships = {
     groups: schData.groups.map((g) => ({
       country: g.country,
-      scholarships: g.scholarships.map(withStatus),
+      scholarships: g.scholarships.map((s) => withMeta(s, appsByCountry(g.country))),
     })),
-    eu_wide: schData.eu_wide.map(withStatus),
+    eu_wide: schData.eu_wide.map((s) => withMeta(s, allAppNames)),
+    outbound: scholarshipsOutbound(homeCountry).map((s) => withMeta(s, allAppNames)),
     destinations: schCountries,
+    home_country: homeCountry,
     source: destCountries.length
       ? "applications"
       : prefCountries.length
         ? "preferences"
         : "none",
   };
-  const funding = journey.computeFunding(saved, student.budget_max_eur_year);
 
-  // ---- Dream Plan additions ----
-  const sCounts = journey.statusCounts(apps, savedIds);
-  const docsState =
-    student.documents && typeof student.documents === "object"
-      ? student.documents
-      : {};
-  const documents = journey.DOCUMENTS.map((d) => ({
-    ...d,
-    done: docsState[d.key] === true,
-  }));
-  const docsDone = documents.filter((d) => d.done).length;
+  // ---- Agenda + action plan (derived from the above) ----
+  const schFlat = [
+    ...scholarships.groups.flatMap((g) => g.scholarships),
+    ...scholarships.eu_wide,
+    ...scholarships.outbound,
+  ];
+  const schDeadlineItems = schFlat
+    .filter((s) => s.deadline)
+    .map((s) => ({ name: s.name, deadline: s.deadline }));
+  const agenda = journey.buildAgenda(applications, schDeadlineItems);
+  const action_plan = journey.buildActionPlan(applications, docsState);
+
   const scholarshipsResearched =
     Array.isArray(student.milestones) &&
     student.milestones.includes("scholarships_researched");
-
-  // Application command center: one view per saved uni (an application IS a
-  // saved uni). Shared-doc readiness is read from the vault (docsState).
-  const applications = journey.sortApplications(
-    journey.buildApplications(saved, apps, docsState),
-  );
-  const overview = journey.applicationsOverview(applications);
-
   const readiness = journey.readiness({
     completenessPercent: completeness.percent,
     missingProfile: completeness.missing,
@@ -1480,7 +1521,9 @@ api.get("/me/journey", auth.requireAuth, (req, res) => {
     docsDone,
     scholarshipRequired: student.scholarship_required === true,
     scholarshipsResearched,
-    scholarshipStatuses: Object.values(schTracked),
+    scholarshipStatuses: Object.values(schTracked).map(
+      (v) => journey.normalizeScholarship(v).status,
+    ),
   });
 
   res.json({
@@ -1507,6 +1550,9 @@ api.get("/me/journey", auth.requireAuth, (req, res) => {
     picks,
     scholarships,
     funding,
+    budget,
+    agenda,
+    action_plan,
     home_country: homeCountry,
     next_actions: journey.nextActions(saved.length, completeness),
     timeline: journey.buildTimeline(
@@ -1573,26 +1619,56 @@ api.post("/me/document", auth.requireAuth, (req, res) => {
   res.json({ documents: student.documents });
 });
 
-// Track progress on a specific scholarship scheme. Empty status clears it.
+// Set (or clear) the expiry date on a shared document so we can warn before it
+// lapses. The date is the student's own — never inferred.
+api.post("/me/document/expiry", auth.requireAuth, (req, res) => {
+  const key = typeof req.body.key === "string" ? req.body.key : "";
+  const expiry = typeof req.body.expiry === "string" ? req.body.expiry : "";
+  const doc = journey.DOCUMENTS.find((d) => d.key === key);
+  if (!doc || !doc.shared)
+    return res.status(400).json({ error: "Unknown document." });
+  if (expiry && !DATE_RE.test(expiry))
+    return res.status(400).json({ error: "Expiry must be YYYY-MM-DD." });
+
+  const students = store.read("students");
+  const student = students.find((s) => s.student_id === req.student.student_id);
+  if (!student.document_meta || typeof student.document_meta !== "object")
+    student.document_meta = {};
+  if (expiry) student.document_meta[key] = { expiry };
+  else delete student.document_meta[key];
+  store.write("students", students);
+  res.json({ key, expiry });
+});
+
+// Track progress on a specific scholarship scheme + its (student-entered)
+// deadline. Clears the entry only when both are empty.
 api.post("/me/scholarship", auth.requireAuth, (req, res) => {
   const key = typeof req.body.key === "string" ? req.body.key : "";
-  const status = typeof req.body.status === "string" ? req.body.status : "";
+  const b = req.body || {};
   if (!key) return res.status(400).json({ error: "Unknown scholarship." });
-  if (status && !journey.SCHOLARSHIP_STATUS_KEYS.has(status))
+  if (b.status !== undefined && b.status !== "" && !journey.SCHOLARSHIP_STATUS_KEYS.has(b.status))
     return res.status(400).json({ error: "Unknown status." });
+  if (
+    b.deadline !== undefined &&
+    !(b.deadline === "" || (typeof b.deadline === "string" && DATE_RE.test(b.deadline)))
+  )
+    return res.status(400).json({ error: "Deadline must be YYYY-MM-DD." });
 
   const students = store.read("students");
   const student = students.find((s) => s.student_id === req.student.student_id);
   if (!student.scholarships || typeof student.scholarships !== "object")
     student.scholarships = {};
-  if (status) student.scholarships[key] = status;
-  else delete student.scholarships[key];
+  const cur = journey.normalizeScholarship(student.scholarships[key]);
+  if (b.status !== undefined) cur.status = b.status;
+  if (b.deadline !== undefined) cur.deadline = b.deadline;
+  if (!cur.status && !cur.deadline) delete student.scholarships[key];
+  else student.scholarships[key] = cur;
   store.write("students", students);
   events.record("scholarship", {
     anon: req.anon,
-    ...(status ? { set: status } : {}),
+    ...(cur.status ? { set: cur.status } : {}),
   });
-  res.json({ key, status });
+  res.json({ key, status: cur.status, deadline: cur.deadline });
 });
 
 // ---- Applications: per-university document tracking ------------------------
@@ -1622,11 +1698,20 @@ api.post("/me/application/:id", auth.requireAuth, (req, res) => {
     return res.status(400).json({ error: "Deadline must be YYYY-MM-DD." });
   if (b.program !== undefined && typeof b.program !== "string")
     return res.status(400).json({ error: "Invalid program." });
+  if (b.notes !== undefined && typeof b.notes !== "string")
+    return res.status(400).json({ error: "Invalid notes." });
+  if (
+    b.decision_date !== undefined &&
+    !(b.decision_date === "" || (typeof b.decision_date === "string" && DATE_RE.test(b.decision_date)))
+  )
+    return res.status(400).json({ error: "Decision date must be YYYY-MM-DD." });
 
   const app = updateApplication(req, req.params.id, (a) => {
     if (b.status !== undefined) a.status = b.status;
     if (b.deadline !== undefined) a.deadline = b.deadline;
     if (b.program !== undefined) a.program = b.program.trim().slice(0, 120);
+    if (b.notes !== undefined) a.notes = b.notes.slice(0, 500);
+    if (b.decision_date !== undefined) a.decision_date = b.decision_date;
   });
   events.record("application_update", { anon: req.anon, uni: req.params.id });
   res.json({ id: req.params.id, application: app });

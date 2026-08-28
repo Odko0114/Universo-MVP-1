@@ -643,6 +643,58 @@ test("scholarships follow saved destinations and can be tracked; funding surface
   await req("DELETE", "/api/me");
 });
 
+test("application notes/decision, doc expiry, scholarship deadline, and the agenda", async () => {
+  const testAddr = `enrich_${Date.now()}@example.com`;
+  await req("POST", "/api/auth/register", {
+    full_name: "Enrich Flow",
+    email: testAddr,
+    password: "password123",
+    consent: true,
+    country_of_origin: "China",
+  });
+  await req("POST", "/api/me/saved/tum");
+
+  const patched = await req("POST", "/api/me/application/tum", {
+    status: "submitted",
+    notes: "Emailed the admissions office",
+    decision_date: "2027-04-01",
+  });
+  assert.equal(patched.status, 200);
+
+  const exp = await req("POST", "/api/me/document/expiry", {
+    key: "passport",
+    expiry: "2020-01-01",
+  });
+  assert.equal(exp.status, 200);
+
+  await req("POST", "/api/me/scholarship", {
+    key: "daad-scholarships",
+    status: "applying",
+    deadline: "2027-02-15",
+  });
+
+  const j = (await req("GET", "/api/me/journey")).json;
+  const tum = j.applications.find((a) => a.uni_id === "tum");
+  assert.equal(tum.notes, "Emailed the admissions office");
+  assert.equal(tum.decision_date, "2027-04-01");
+  assert.ok(tum.cost.known, "tum has a known cost");
+  const passport = j.documents.find((d) => d.key === "passport");
+  assert.equal(passport.expiry, "2020-01-01");
+  assert.equal(passport.expiry_status.level, "expired");
+  assert.ok(j.scholarships.outbound.some((s) => s.name.includes("CSC")));
+  assert.ok(Array.isArray(j.agenda) && j.agenda.length >= 2);
+  assert.ok(j.agenda.some((i) => i.kind === "scholarship"));
+  assert.ok(j.agenda.some((i) => i.kind === "decision"));
+  assert.ok(Array.isArray(j.action_plan));
+
+  const bad = await req("POST", "/api/me/application/tum", {
+    decision_date: "nope",
+  });
+  assert.equal(bad.status, 400);
+
+  await req("DELETE", "/api/me");
+});
+
 test("application status: requires the uni saved, validates status, persists, rolls up, clears on unsave", async () => {
   const testAddr = `appstatus_${Date.now()}@example.com`;
   await req("POST", "/api/auth/register", {

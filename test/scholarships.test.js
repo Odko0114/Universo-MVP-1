@@ -5,6 +5,7 @@ const assert = require("node:assert/strict");
 const {
   scholarshipsFor,
   scholarshipsForDestinations,
+  scholarshipsOutbound,
   slug,
 } = require("../lib/scholarships");
 
@@ -60,4 +61,14 @@ test("scholarshipsForDestinations: non-EU-only destinations get no EU-wide block
 test("slug is stable and url-safe", () => {
   assert.equal(slug("DAAD Scholarships"), "daad-scholarships");
   assert.equal(slug("Eiffel Excellence Scholarship"), "eiffel-excellence-scholarship");
+});
+
+test("scholarshipsOutbound: known home country gets its scheme; unknown gets an honest pointer", () => {
+  const cn = scholarshipsOutbound("China");
+  assert.ok(cn.some((s) => s.name.includes("CSC")));
+  assert.ok(cn.every((s) => s.verify === true && s.key));
+  const mn = scholarshipsOutbound("Mongolia");
+  assert.equal(mn.length, 1);
+  assert.equal(mn[0].scope, "home-generic", "no fabricated program name/URL");
+  assert.equal(mn[0].website, "");
 });

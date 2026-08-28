@@ -20,6 +20,15 @@ const os = require("os");
 const fs = require("fs");
 const path = require("path");
 
+// Lift the auth/login rate caps for the suite: every test registers/logs in
+// from the same loopback IP within one 15-min window, which otherwise trips the
+// production defaults (20 / 10). Tests that assert 429 use isolated IPs on other
+// routes, so this doesn't weaken them.
+if (!process.env.UNIVERSO_AUTH_RATE_MAX)
+  process.env.UNIVERSO_AUTH_RATE_MAX = "100000";
+if (!process.env.UNIVERSO_LOGIN_RATE_MAX)
+  process.env.UNIVERSO_LOGIN_RATE_MAX = "100000";
+
 if (!process.env.UNIVERSO_DATA_DIR) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "universo-test-"));
   process.env.UNIVERSO_DATA_DIR = dir;
