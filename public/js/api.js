@@ -127,6 +127,21 @@
         key,
         done,
       }),
+    addCustomDoc: (id, label) =>
+      request("POST", `/me/application/${encodeURIComponent(id)}/custom`, {
+        label,
+      }),
+    patchCustomDoc: (id, cid, patch) =>
+      request(
+        "POST",
+        `/me/application/${encodeURIComponent(id)}/custom/${encodeURIComponent(cid)}`,
+        patch,
+      ),
+    removeCustomDoc: (id, cid) =>
+      request(
+        "DELETE",
+        `/me/application/${encodeURIComponent(id)}/custom/${encodeURIComponent(cid)}`,
+      ),
     // Logo served through our caching proxy (no third-party hotlinking).
     logoUrl: (domain) => `/api/logo?domain=${encodeURIComponent(domain)}`,
   };

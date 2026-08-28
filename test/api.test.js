@@ -685,25 +685,30 @@ test("POST /me/milestone: auth-gated, validates the key, persists, and reflects 
   assert.equal(t0.stages.length, 9);
   assert.equal(t0.next_key, "profile_set");
 
-  // Mark a self stage → persists and shows done in the timeline.
-  const set = await req("POST", "/api/me/milestone", {
+  // The application stages are now DERIVED from application status, not
+  // client-settable — trying to toggle one is rejected.
+  const derived = await req("POST", "/api/me/milestone", {
     key: "application_submitted",
     done: true,
   });
+  assert.equal(derived.status, 400, "derived stages are not settable");
+
+  // Mark a genuine self stage → persists and shows done in the timeline.
+  const set = await req("POST", "/api/me/milestone", {
+    key: "visa_started",
+    done: true,
+  });
   assert.equal(set.status, 200);
-  assert.ok(set.json.milestones.includes("application_submitted"));
+  assert.ok(set.json.milestones.includes("visa_started"));
   const t1 = (await req("GET", "/api/me/journey")).json.timeline;
-  assert.equal(
-    t1.stages.find((s) => s.key === "application_submitted").done,
-    true,
-  );
+  assert.equal(t1.stages.find((s) => s.key === "visa_started").done, true);
 
   // Unmark → removed.
   const unset = await req("POST", "/api/me/milestone", {
-    key: "application_submitted",
+    key: "visa_started",
     done: false,
   });
-  assert.ok(!unset.json.milestones.includes("application_submitted"));
+  assert.ok(!unset.json.milestones.includes("visa_started"));
 
   await req("DELETE", "/api/me");
 });

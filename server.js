@@ -1332,7 +1332,8 @@ function pruneApplication(app) {
     !app.deadline &&
     !app.program &&
     !Object.keys(app.req).length &&
-    !Object.keys(app.docs).length;
+    !Object.keys(app.docs).length &&
+    !app.custom.length;
   return bare ? null : app;
 }
 
@@ -1435,7 +1436,9 @@ api.get("/me/journey", auth.requireAuth, (req, res) => {
 
   // Application command center: one view per saved uni (an application IS a
   // saved uni). Shared-doc readiness is read from the vault (docsState).
-  const applications = journey.buildApplications(saved, apps, docsState);
+  const applications = journey.sortApplications(
+    journey.buildApplications(saved, apps, docsState),
+  );
   const overview = journey.applicationsOverview(applications);
 
   const readiness = journey.readiness({
@@ -1473,7 +1476,12 @@ api.get("/me/journey", auth.requireAuth, (req, res) => {
     scholarships,
     home_country: homeCountry,
     next_actions: journey.nextActions(saved.length, completeness),
-    timeline: journey.buildTimeline(profiled, saved.length, student.milestones),
+    timeline: journey.buildTimeline(
+      profiled,
+      saved.length,
+      student.milestones,
+      applications.map((a) => a.status),
+    ),
   });
 });
 
@@ -1606,6 +1614,57 @@ api.post("/me/application/:id/document", auth.requireAuth, (req, res) => {
     else delete a.docs[key];
   });
   res.json({ id: req.params.id, key, done });
+});
+
+// Custom documents: extras a student adds to one application (portfolio, GRE,
+// a program-specific essay). Always unique to the application.
+const MAX_CUSTOM_DOCS = 12;
+
+api.post("/me/application/:id/custom", auth.requireAuth, (req, res) => {
+  if (!requireSaved(req, res)) return;
+  const label =
+    typeof req.body.label === "string" ? req.body.label.trim().slice(0, 60) : "";
+  if (!label) return res.status(400).json({ error: "Give the document a name." });
+  const level = journey.LEVEL_KEYS.has(req.body.level)
+    ? req.body.level
+    : "required";
+  const doc = { id: `c_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`, label, level, ready: false };
+  let over = false;
+  updateApplication(req, req.params.id, (a) => {
+    if (a.custom.length >= MAX_CUSTOM_DOCS) {
+      over = true;
+      return;
+    }
+    a.custom.push(doc);
+  });
+  if (over)
+    return res.status(400).json({ error: "That application has enough documents." });
+  res.json({ id: req.params.id, document: doc });
+});
+
+api.post("/me/application/:id/custom/:cid", auth.requireAuth, (req, res) => {
+  if (!requireSaved(req, res)) return;
+  const b = req.body || {};
+  if (b.level !== undefined && !journey.LEVEL_KEYS.has(b.level))
+    return res.status(400).json({ error: "Unknown level." });
+  let found = false;
+  updateApplication(req, req.params.id, (a) => {
+    const doc = a.custom.find((d) => d.id === req.params.cid);
+    if (!doc) return;
+    found = true;
+    if (b.level !== undefined) doc.level = b.level;
+    if (b.done !== undefined) doc.ready = b.done === true;
+  });
+  if (!found) return res.status(404).json({ error: "Document not found." });
+  res.json({ id: req.params.id, cid: req.params.cid });
+});
+
+api.delete("/me/application/:id/custom/:cid", auth.requireAuth, (req, res) => {
+  if (!requireSaved(req, res)) return;
+  updateApplication(req, req.params.id, (a) => {
+    a.custom = a.custom.filter((d) => d.id !== req.params.cid);
+  });
+  res.json({ id: req.params.id, cid: req.params.cid });
 });
 
 // ---- GDPR: data export + account deletion ---------------------------------

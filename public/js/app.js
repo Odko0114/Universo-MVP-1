@@ -1328,6 +1328,53 @@
         toast(e.message, true);
       }
     }
+    async function onCustomToggle(id, cid) {
+      const app = (data.applications || []).find((a) => a.uni_id === id);
+      const doc = app && app.docs.find((d) => d.key === cid);
+      if (!doc) return;
+      const target = !doc.ready;
+      doc.ready = target; // optimistic
+      paint();
+      try {
+        await API.patchCustomDoc(id, cid, { done: target });
+        data = await API.journey();
+        paint();
+      } catch (e) {
+        doc.ready = !target;
+        paint();
+        toast(e.message, true);
+      }
+    }
+    async function onCustomLevel(id, cid, level) {
+      try {
+        await API.patchCustomDoc(id, cid, { level });
+        data = await API.journey();
+        paint();
+      } catch (e) {
+        toast(e.message, true);
+      }
+    }
+    async function onAddCustom(id) {
+      const inp = view.querySelector(`[data-add-doc-for="${CSS.escape(id)}"]`);
+      const label = inp && inp.value.trim();
+      if (!label) return;
+      try {
+        await API.addCustomDoc(id, label);
+        data = await API.journey();
+        paint();
+      } catch (e) {
+        toast(e.message, true);
+      }
+    }
+    async function onRemoveCustom(id, cid) {
+      try {
+        await API.removeCustomDoc(id, cid);
+        data = await API.journey();
+        paint();
+      } catch (e) {
+        toast(e.message, true);
+      }
+    }
 
     function paint() {
       // Remember which applications are expanded so a repaint doesn't collapse
@@ -1370,6 +1417,32 @@
         btn.addEventListener("click", () =>
           onAppDoc(btn.dataset.appDocFor, btn.dataset.doc, btn.dataset.shared === "true"),
         );
+      });
+      view.querySelectorAll("[data-custom-doc-for]").forEach((btn) => {
+        btn.addEventListener("click", () =>
+          onCustomToggle(btn.dataset.customDocFor, btn.dataset.cid),
+        );
+      });
+      view.querySelectorAll("[data-custom-req]").forEach((sel) => {
+        sel.addEventListener("change", () =>
+          onCustomLevel(sel.dataset.customReq, sel.dataset.cid, sel.value),
+        );
+      });
+      view.querySelectorAll("[data-custom-remove]").forEach((btn) => {
+        btn.addEventListener("click", () =>
+          onRemoveCustom(btn.dataset.customRemove, btn.dataset.cid),
+        );
+      });
+      view.querySelectorAll("[data-add-doc-btn]").forEach((btn) => {
+        btn.addEventListener("click", () => onAddCustom(btn.dataset.addDocBtn));
+      });
+      view.querySelectorAll("[data-add-doc-for]").forEach((inp) => {
+        inp.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            onAddCustom(inp.dataset.addDocFor);
+          }
+        });
       });
       const editDream = document.getElementById("edit-dream");
       const dreamForm = document.getElementById("dream-form");
@@ -1719,14 +1792,36 @@
           <label class="app-field"><span>Deadline</span><input type="date" class="onb-input" data-app-deadline="${esc(a.uni_id)}" value="${esc(a.deadline)}" /></label>
           <label class="app-field"><span>Status</span><select class="onb-input" data-app-status="${esc(a.uni_id)}">${APP_STATUSES.map(([v, l]) => `<option value="${v}"${v === a.status ? " selected" : ""}>${esc(l)}</option>`).join("")}</select></label>
         </div>
+        ${a.portal ? `<a class="app-portal" href="${esc(a.portal)}" target="_blank" rel="noopener noreferrer">Open application portal ↗</a>` : ""}
+        ${
+          a.curated_deadline || a.curated_requirements
+            ? `<div class="app-hint"><span class="chip chip--plain">verify</span><div class="app-hint__body">${a.curated_deadline ? `<div><strong>Official deadline:</strong> ${esc(a.curated_deadline)}</div>` : ""}${a.curated_requirements ? `<div><strong>Requirements:</strong> ${esc(a.curated_requirements)}</div>` : ""}</div></div>`
+            : ""
+        }
         <ul class="doc-list app-docs">${a.docs.map((d) => appDocRow(a.uni_id, d)).join("")}</ul>
+        <div class="app-add">
+          <input type="text" class="onb-input" data-add-doc-for="${esc(a.uni_id)}" maxlength="60" placeholder="Add a document (e.g. Portfolio, GRE score)" />
+          <button type="button" class="btn btn--ghost btn--sm" data-add-doc-btn="${esc(a.uni_id)}">Add</button>
+        </div>
         <p class="muted" style="font-size:.8rem;margin:12px 0 0">Requirements and deadline are yours to set — check them on the university’s official application page.</p>
       </div>
     </details>`;
   }
 
+  function levelSelect(attrs, level) {
+    return `<select class="doc-level" ${attrs}>${LEVELS.map(([v, l]) => `<option value="${v}"${v === level ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
+  }
+
   function appDocRow(uniId, doc) {
-    const levelSel = `<select class="doc-level" data-req-for="${esc(uniId)}" data-doc="${esc(doc.key)}">${LEVELS.map(([v, l]) => `<option value="${v}"${v === doc.level ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
+    if (doc.custom) {
+      return `
+      <li class="doc-item doc-item--app${doc.ready ? " is-done" : ""}">
+        <button type="button" class="doc-check" data-custom-doc-for="${esc(uniId)}" data-cid="${esc(doc.key)}" aria-pressed="${doc.ready}" title="${doc.ready ? "Mark not ready" : "Mark ready"}">${doc.ready ? "✓" : ""}</button>
+        <div class="doc-body"><strong>${esc(doc.label)}</strong> <span class="muted" style="font-size:.8rem">Added by you</span></div>
+        ${levelSelect(`data-custom-req="${esc(uniId)}" data-cid="${esc(doc.key)}"`, doc.level)}
+        <button type="button" class="doc-remove" data-custom-remove="${esc(uniId)}" data-cid="${esc(doc.key)}" title="Remove document" aria-label="Remove ${esc(doc.label)}">×</button>
+      </li>`;
+    }
     const note = doc.shared
       ? doc.ready
         ? '<span class="chip chip--plain">✓ In your documents</span>'
@@ -1736,7 +1831,7 @@
       <li class="doc-item doc-item--app${doc.ready ? " is-done" : ""}">
         <button type="button" class="doc-check" data-app-doc-for="${esc(uniId)}" data-doc="${esc(doc.key)}" data-shared="${doc.shared}" aria-pressed="${doc.ready}" title="${doc.ready ? "Mark not ready" : "Mark ready"}">${doc.ready ? "✓" : ""}</button>
         <div class="doc-body"><strong>${esc(doc.label)}</strong> ${note}</div>
-        ${levelSel}
+        ${levelSelect(`data-req-for="${esc(uniId)}" data-doc="${esc(doc.key)}"`, doc.level)}
       </li>`;
   }
 

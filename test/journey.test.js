@@ -77,10 +77,11 @@ test("buildTimeline: auto stages reflect real state (profiled + saved)", () => {
   );
 });
 
-test("buildTimeline: self-reported milestones mark their stage done", () => {
-  const t = journey.buildTimeline(true, 1, [
-    "scholarships_researched",
-    "application_started",
+test("buildTimeline: self milestones mark their stage; application stages derive from statuses", () => {
+  // scholarships_researched is still self-reported; application_started is now
+  // DERIVED — a 'preparing' application marks it done without a second click.
+  const t = journey.buildTimeline(true, 1, ["scholarships_researched"], [
+    "preparing",
   ]);
   assert.equal(
     t.stages.find((s) => s.key === "scholarships_researched").done,
@@ -89,8 +90,26 @@ test("buildTimeline: self-reported milestones mark their stage done", () => {
   assert.equal(
     t.stages.find((s) => s.key === "application_started").done,
     true,
+    "a preparing application counts as started",
+  );
+  assert.equal(
+    t.stages.find((s) => s.key === "application_submitted").done,
+    false,
+    "preparing is not yet submitted",
   );
   assert.equal(t.next_key, "application_submitted");
+});
+
+test("buildTimeline: submitted/accepted statuses light the later derived stages", () => {
+  const t = journey.buildTimeline(true, 2, [], ["planning", "accepted"]);
+  const by = (k) => t.stages.find((s) => s.key === k).done;
+  assert.equal(by("application_started"), true, "accepted implies started");
+  assert.equal(by("application_submitted"), true, "accepted implies submitted");
+  assert.equal(by("offer_received"), true, "accepted is an offer");
+  // application_started/submitted/offer_received are no longer client-settable.
+  assert.ok(!journey.SELF_MILESTONE_KEYS.has("application_submitted"));
+  assert.ok(!journey.SELF_MILESTONE_KEYS.has("offer_received"));
+  assert.ok(journey.SELF_MILESTONE_KEYS.has("visa_started"));
 });
 
 test("buildTimeline: next is the FIRST incomplete stage even if a later one is marked", () => {
@@ -297,6 +316,56 @@ test("applicationsOverview: buckets by document completion and sorts deadlines",
   assert.equal(ov.upcoming_deadlines[0].name, "Aalto", "earliest deadline first");
 });
 
+test("sortApplications: soonest deadline first (overdue leads), no-deadline last", () => {
+  const mk = (id, days_left) => ({ uni_id: id, days_left });
+  const sorted = journey.sortApplications([
+    mk("none", null),
+    mk("far", 30),
+    mk("overdue", -2),
+    mk("soon", 3),
+  ]);
+  assert.deepEqual(
+    sorted.map((v) => v.uni_id),
+    ["overdue", "soon", "far", "none"],
+  );
+});
+
+test("applicationView: custom docs count toward required and carry the custom flag", () => {
+  const uni = { id: "u1", name: "Helsinki", application_link: "https://apply.example" };
+  const app = {
+    // Drop the built-in required docs so we isolate the custom one.
+    req: {
+      transcript: "not_required",
+      english_test: "not_required",
+      passport: "not_required",
+      personal_statement: "not_required",
+    },
+    custom: [{ id: "c_1", label: "Portfolio", level: "required", ready: true }],
+  };
+  const v = journey.applicationView(app, uni, {});
+  assert.equal(v.portal, "https://apply.example", "real portal link surfaced");
+  const portfolio = v.docs.find((d) => d.key === "c_1");
+  assert.equal(portfolio.custom, true);
+  assert.equal(v.required_total, 1, "only the custom Portfolio is required");
+  assert.equal(v.required_done, 1, "and it's marked ready");
+});
+
+test("applicationView: curated deadline/requirements surface as hints (never asserted as fact)", () => {
+  const uni = {
+    id: "u1",
+    name: "Curated U",
+    application_deadline: "May 31",
+    acceptance_requirements: "IELTS 6.5",
+  };
+  const v = journey.applicationView({}, uni, {});
+  assert.equal(v.curated_deadline, "May 31");
+  assert.equal(v.curated_requirements, "IELTS 6.5");
+  // A register uni with none of that yields empty hints, not fabricated text.
+  const bare = journey.applicationView({}, { id: "u2", name: "Register U" }, {});
+  assert.equal(bare.curated_deadline, "");
+  assert.equal(bare.curated_requirements, "");
+});
+
 test("nextBestAction: a near deadline with missing required docs outranks everything", () => {
   const soon = new Date();
   soon.setDate(soon.getDate() + 3);
@@ -352,7 +421,8 @@ test("SELF_MILESTONE_KEYS excludes the auto stages (they are never client-settab
   assert.ok(!journey.SELF_MILESTONE_KEYS.has("account_created"));
   assert.ok(!journey.SELF_MILESTONE_KEYS.has("profile_set"));
   assert.ok(!journey.SELF_MILESTONE_KEYS.has("shortlist_started"));
-  assert.ok(journey.SELF_MILESTONE_KEYS.has("application_submitted"));
+  // application_submitted is now derived from application status, not self.
+  assert.ok(!journey.SELF_MILESTONE_KEYS.has("application_submitted"));
   assert.ok(journey.SELF_MILESTONE_KEYS.has("arrived"));
 });
 

@@ -1356,6 +1356,57 @@ img {
   background: var(--surface);
   color: var(--ink-soft);
 }
+.doc-remove {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: none;
+  color: var(--ink-faint);
+  font-size: var(--text-xl);
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 6px;
+}
+.doc-remove:hover {
+  color: var(--danger);
+  background: #fbe4e6;
+}
+.app-portal {
+  display: inline-block;
+  margin: 0 0 14px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--teal-600);
+}
+.app-hint {
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+  margin: 0 0 16px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+.app-hint__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.app-add {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.app-add .onb-input {
+  flex: 1;
+  min-width: 0;
+}
+.app-add .btn {
+  flex: 0 0 auto;
+}
 @media (max-width: 520px) {
   .ov-stats {
     grid-template-columns: repeat(2, 1fr);
