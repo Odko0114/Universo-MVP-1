@@ -1266,7 +1266,7 @@ api.get("/me/saved", auth.requireAuth, (req, res) => {
       withPhoto({
         ...u,
         click_count: clickOf(u.id),
-        application_status: apps[u.id] || journey.DEFAULT_STATUS,
+        application_status: journey.normalizeApplication(apps[u.id]).status,
       }),
     );
   res.json({ count: saved.length, universities: saved });
@@ -1314,14 +1314,43 @@ api.post("/me/saved/:id/status", auth.requireAuth, (req, res) => {
   const students = store.read("students");
   const student = students.find((s) => s.student_id === req.student.student_id);
   if (!student.applications) student.applications = {};
-  // 'considering' is the implicit default — store it as absence to keep the map
-  // small, store anything else explicitly.
-  if (status === journey.DEFAULT_STATUS) delete student.applications[id];
-  else student.applications[id] = status;
+  const app = journey.normalizeApplication(student.applications[id]);
+  app.status = status;
+  student.applications[id] = pruneApplication(app);
+  if (student.applications[id] === null) delete student.applications[id];
   store.write("students", students);
   events.record("application_status", { anon: req.anon, uni: id, status });
   res.json({ id, status });
 });
+
+// Collapse a fully-default application (planning, nothing else set) back to
+// absence to keep the stored map small — returns null when there's nothing
+// worth keeping, otherwise the entry itself.
+function pruneApplication(app) {
+  const bare =
+    app.status === journey.DEFAULT_STATUS &&
+    !app.deadline &&
+    !app.program &&
+    !Object.keys(app.req).length &&
+    !Object.keys(app.docs).length;
+  return bare ? null : app;
+}
+
+// Load-or-create a normalized application entry for a saved uni, run `mutate`,
+// then persist (pruning back to absence if it ends up bare). Shared by the
+// application routes below. Assumes `id` is already known-saved.
+function updateApplication(req, id, mutate) {
+  const students = store.read("students");
+  const student = students.find((s) => s.student_id === req.student.student_id);
+  if (!student.applications) student.applications = {};
+  const app = journey.normalizeApplication(student.applications[id]);
+  mutate(app);
+  const pruned = pruneApplication(app);
+  if (pruned === null) delete student.applications[id];
+  else student.applications[id] = pruned;
+  store.write("students", students);
+  return app;
+}
 
 // "Recommended for you" — a transparent weighted match against the student's
 // profile (target degree, field of interest) and the platform's EU/affordable/
@@ -1361,7 +1390,7 @@ api.get("/me/journey", auth.requireAuth, (req, res) => {
       withPhoto({
         ...u,
         click_count: clickOf(u.id),
-        application_status: apps[u.id] || journey.DEFAULT_STATUS,
+        application_status: journey.normalizeApplication(apps[u.id]).status,
       }),
     );
 
@@ -1404,6 +1433,11 @@ api.get("/me/journey", auth.requireAuth, (req, res) => {
     Array.isArray(student.milestones) &&
     student.milestones.includes("scholarships_researched");
 
+  // Application command center: one view per saved uni (an application IS a
+  // saved uni). Shared-doc readiness is read from the vault (docsState).
+  const applications = journey.buildApplications(saved, apps, docsState);
+  const overview = journey.applicationsOverview(applications);
+
   const readiness = journey.readiness({
     completenessPercent: completeness.percent,
     missingProfile: completeness.missing,
@@ -1426,8 +1460,10 @@ api.get("/me/journey", auth.requireAuth, (req, res) => {
       scholarship_required: student.scholarship_required === true,
     },
     readiness,
-    next_best_action: journey.nextBestAction(readiness),
+    next_best_action: journey.nextBestAction(readiness, applications),
     documents,
+    applications,
+    overview,
     saved: {
       count: saved.length,
       universities: saved.slice(0, 6),
@@ -1494,6 +1530,82 @@ api.post("/me/document", auth.requireAuth, (req, res) => {
   store.write("students", students);
   events.record("document", { anon: req.anon, ...(done ? { set: key } : {}) });
   res.json({ documents: student.documents });
+});
+
+// ---- Applications: per-university document tracking ------------------------
+// Each saved uni is an application. These set student-owned facts about it —
+// deadline, program note, per-doc requirement level, and readiness of the docs
+// that are unique to this application (shared docs use /me/document above).
+const requireSaved = (req, res) => {
+  if (req.student.saved_universities.includes(req.params.id)) return true;
+  res.status(400).json({
+    error: "Save this university before working on its application.",
+  });
+  return false;
+};
+
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+// Patch the application's lifecycle status, deadline and/or program note.
+api.post("/me/application/:id", auth.requireAuth, (req, res) => {
+  if (!requireSaved(req, res)) return;
+  const b = req.body || {};
+  if (b.status !== undefined && !journey.APPLICATION_STATUS_KEYS.has(b.status))
+    return res.status(400).json({ error: "Unknown status." });
+  if (
+    b.deadline !== undefined &&
+    !(b.deadline === "" || (typeof b.deadline === "string" && DATE_RE.test(b.deadline)))
+  )
+    return res.status(400).json({ error: "Deadline must be YYYY-MM-DD." });
+  if (b.program !== undefined && typeof b.program !== "string")
+    return res.status(400).json({ error: "Invalid program." });
+
+  const app = updateApplication(req, req.params.id, (a) => {
+    if (b.status !== undefined) a.status = b.status;
+    if (b.deadline !== undefined) a.deadline = b.deadline;
+    if (b.program !== undefined) a.program = b.program.trim().slice(0, 120);
+  });
+  events.record("application_update", { anon: req.anon, uni: req.params.id });
+  res.json({ id: req.params.id, application: app });
+});
+
+// Set the requirement level for one document on this application.
+api.post("/me/application/:id/requirement", auth.requireAuth, (req, res) => {
+  if (!requireSaved(req, res)) return;
+  const key = typeof req.body.key === "string" ? req.body.key : "";
+  const level = typeof req.body.level === "string" ? req.body.level : "";
+  if (!journey.DOCUMENT_KEYS.has(key))
+    return res.status(400).json({ error: "Unknown document." });
+  if (!journey.LEVEL_KEYS.has(level))
+    return res.status(400).json({ error: "Unknown level." });
+
+  const doc = journey.DOCUMENTS.find((d) => d.key === key);
+  updateApplication(req, req.params.id, (a) => {
+    // Store only overrides — a level equal to the doc's default stays absent.
+    if (level === doc.default_level) delete a.req[key];
+    else a.req[key] = level;
+  });
+  res.json({ id: req.params.id, key, level });
+});
+
+// Toggle readiness of a document that is unique to this application (shared
+// docs live in the vault; only non-shared docs are tracked here).
+api.post("/me/application/:id/document", auth.requireAuth, (req, res) => {
+  if (!requireSaved(req, res)) return;
+  const key = typeof req.body.key === "string" ? req.body.key : "";
+  const doc = journey.DOCUMENTS.find((d) => d.key === key);
+  if (!doc) return res.status(400).json({ error: "Unknown document." });
+  if (doc.shared)
+    return res
+      .status(400)
+      .json({ error: "Shared documents are tracked in My Documents." });
+  const done = req.body.done === true;
+
+  updateApplication(req, req.params.id, (a) => {
+    if (done) a.docs[key] = true;
+    else delete a.docs[key];
+  });
+  res.json({ id: req.params.id, key, done });
 });
 
 // ---- GDPR: data export + account deletion ---------------------------------

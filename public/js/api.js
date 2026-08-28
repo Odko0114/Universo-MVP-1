@@ -114,6 +114,19 @@
     updateDream: (payload) => request("PATCH", "/me/dream", payload),
     toggleDocument: (key, done) =>
       request("POST", "/me/document", { key, done }),
+    // Applications (per-university document tracking)
+    patchApplication: (id, patch) =>
+      request("POST", `/me/application/${encodeURIComponent(id)}`, patch),
+    setRequirement: (id, key, level) =>
+      request("POST", `/me/application/${encodeURIComponent(id)}/requirement`, {
+        key,
+        level,
+      }),
+    toggleAppDocument: (id, key, done) =>
+      request("POST", `/me/application/${encodeURIComponent(id)}/document`, {
+        key,
+        done,
+      }),
     // Logo served through our caching proxy (no third-party hotlinking).
     logoUrl: (domain) => `/api/logo?domain=${encodeURIComponent(domain)}`,
   };

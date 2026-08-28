@@ -106,7 +106,7 @@ test("readiness: computes profile/application/documents dimensions from real sta
     completenessPercent: 50,
     missingProfile: ["Budget", "Study language"],
     savedCount: 2,
-    statusCounts: { considering: 1, applied: 1 },
+    statusCounts: { planning: 1, submitted: 1 },
     docsDone: 3,
     scholarshipRequired: false,
     scholarshipsResearched: false,
@@ -116,7 +116,7 @@ test("readiness: computes profile/application/documents dimensions from real sta
   assert.equal(
     by.application,
     75,
-    "an applied status lifts application readiness",
+    "a submitted status lifts application readiness",
   );
   assert.equal(by.documents, 50, "3 of 6 documents");
   assert.ok(
@@ -134,7 +134,7 @@ test("readiness: scholarship dimension appears only when required", () => {
     completenessPercent: 100,
     missingProfile: [],
     savedCount: 1,
-    statusCounts: { considering: 1 },
+    statusCounts: { planning: 1 },
     docsDone: 6,
     scholarshipRequired: true,
     scholarshipsResearched: true,
@@ -160,7 +160,7 @@ test("nextBestAction: picks the lowest-scoring incomplete dimension; null when a
     completenessPercent: 100,
     missingProfile: [],
     savedCount: 1,
-    statusCounts: { offer: 1 },
+    statusCounts: { accepted: 1 },
     docsDone: 6,
     scholarshipRequired: false,
     scholarshipsResearched: false,
@@ -179,31 +179,173 @@ test("DOCUMENT_KEYS holds the checklist keys and excludes unknowns", () => {
   assert.equal(journey.DOCUMENTS.length, journey.DOCUMENT_KEYS.size);
 });
 
-test("statusCounts: unset saved unis count as the default (considering)", () => {
+test("statusCounts: legacy string statuses migrate; unset saved unis default to planning", () => {
+  // 'applied'/'offer' are the OLD scheme — statusCounts normalizes them.
   const counts = journey.statusCounts({ a: "applied", b: "offer" }, [
     "a",
     "b",
     "c",
     "d",
   ]);
-  assert.equal(counts.applied, 1);
-  assert.equal(counts.offer, 1);
+  assert.equal(counts.submitted, 1, "applied → submitted");
+  assert.equal(counts.accepted, 1, "offer → accepted");
+  assert.equal(counts.planning, 2, "c and d have no status → planning");
+});
+
+test("statusCounts: object entries and empty list", () => {
+  assert.deepEqual(journey.statusCounts({}, []), {});
+  const counts = journey.statusCounts({ a: { status: "ready" } }, ["a"]);
+  assert.equal(counts.ready, 1);
+});
+
+test("APPLICATION_STATUS_KEYS holds exactly the seven lifecycle stages", () => {
+  assert.equal(journey.APPLICATION_STATUS_KEYS.size, 7);
+  assert.ok(journey.APPLICATION_STATUS_KEYS.has("planning"));
+  assert.ok(journey.APPLICATION_STATUS_KEYS.has("under_review"));
+  assert.ok(journey.APPLICATION_STATUS_KEYS.has("accepted"));
+  assert.ok(!journey.APPLICATION_STATUS_KEYS.has("offer"));
+  assert.equal(journey.DEFAULT_STATUS, "planning");
+});
+
+test("normalizeApplication: legacy string, object, and undefined", () => {
+  const fromStr = journey.normalizeApplication("researching");
+  assert.equal(fromStr.status, "preparing", "researching → preparing");
+  assert.deepEqual(fromStr.req, {});
+  assert.deepEqual(fromStr.docs, {});
+
+  const fromUndef = journey.normalizeApplication(undefined);
+  assert.equal(fromUndef.status, "planning");
+
+  const fromObj = journey.normalizeApplication({
+    status: "submitted",
+    deadline: "2026-01-15",
+    program: "CS",
+    req: { cv: "required" },
+    docs: { personal_statement: true },
+  });
+  assert.equal(fromObj.status, "submitted");
+  assert.equal(fromObj.deadline, "2026-01-15");
+  assert.equal(fromObj.req.cv, "required");
+
+  // An unknown status falls back to the default rather than trusting it.
+  assert.equal(journey.normalizeApplication({ status: "bogus" }).status, "planning");
+});
+
+test("applicationView: required_done counts required only; shared reads vault, unique reads app", () => {
+  const uni = { id: "u1", name: "Helsinki" };
+  // Vault: transcript + passport ready (shared). Motivation letter (unique) not.
+  const vault = { transcript: true, passport: true };
+  const app = {
+    status: "preparing",
+    req: { english_test: "not_required" }, // drop english from required
+    docs: {}, // personal_statement (unique) not ready
+  };
+  const v = journey.applicationView(app, uni, vault);
+  // Defaults required: transcript, english_test, passport, personal_statement.
+  // english_test overridden to not_required → required set = transcript, passport, personal_statement.
+  assert.equal(v.required_total, 3);
+  assert.equal(v.required_done, 2, "transcript + passport ready from vault");
+  assert.deepEqual(v.missing_required, ["Motivation letter"]);
+  const cv = v.docs.find((d) => d.key === "cv");
+  assert.equal(cv.shared, true);
+  assert.equal(cv.level, "recommended", "cv default level");
+});
+
+test("applicationView + buildApplications: unique doc readiness is per-application", () => {
+  const unis = [
+    { id: "u1", name: "Helsinki" },
+    { id: "u2", name: "Aalto" },
+  ];
+  const apps = {
+    u1: { docs: { personal_statement: true } }, // letter done for Helsinki only
+    u2: {},
+  };
+  const views = journey.buildApplications(unis, apps, {});
+  const helsinki = views.find((v) => v.uni_id === "u1");
+  const aalto = views.find((v) => v.uni_id === "u2");
   assert.equal(
-    counts.considering,
-    2,
-    "c and d have no explicit status → considering",
+    helsinki.docs.find((d) => d.key === "personal_statement").ready,
+    true,
+  );
+  assert.equal(
+    aalto.docs.find((d) => d.key === "personal_statement").ready,
+    false,
+    "the letter is unique per application, not shared",
   );
 });
 
-test("statusCounts: empty saved list yields no counts", () => {
-  assert.deepEqual(journey.statusCounts({}, []), {});
+test("applicationsOverview: buckets by document completion and sorts deadlines", () => {
+  const unis = [
+    { id: "u1", name: "Helsinki" },
+    { id: "u2", name: "Aalto" },
+    { id: "u3", name: "Turku" },
+  ];
+  // Shared required docs live in the vault; the unique motivation letter is
+  // tracked per application, so a "complete" app needs it in its own docs map.
+  const vault = { transcript: true, passport: true, english_test: true };
+  const letterDone = { personal_statement: true };
+  const apps = {
+    u1: { deadline: "2999-12-31", docs: { ...letterDone } },
+    u2: { deadline: "2999-01-01", docs: { ...letterDone } },
+  };
+  const views = journey.buildApplications(unis, apps, { ...vault });
+  const ov = journey.applicationsOverview(views);
+  assert.equal(ov.total, 3, "every saved uni is an application");
+  assert.equal(ov.ready, 2, "u1 and u2 have every required doc ready");
+  assert.equal(ov.in_progress, 1, "u3 has the shared docs but not its letter");
+  assert.equal(ov.upcoming_deadlines.length, 2, "only the two with a deadline");
+  assert.equal(ov.upcoming_deadlines[0].name, "Aalto", "earliest deadline first");
 });
 
-test("APPLICATION_STATUS_KEYS holds exactly the five valid statuses", () => {
-  assert.equal(journey.APPLICATION_STATUS_KEYS.size, 5);
-  assert.ok(journey.APPLICATION_STATUS_KEYS.has("considering"));
-  assert.ok(journey.APPLICATION_STATUS_KEYS.has("offer"));
-  assert.ok(!journey.APPLICATION_STATUS_KEYS.has("enrolled"));
+test("nextBestAction: a near deadline with missing required docs outranks everything", () => {
+  const soon = new Date();
+  soon.setDate(soon.getDate() + 3);
+  const iso = soon.toISOString().slice(0, 10);
+  const views = journey.buildApplications(
+    [{ id: "u1", name: "Helsinki" }],
+    { u1: { deadline: iso } }, // nothing ready → required docs missing
+    {},
+  );
+  const dims = journey.readiness({
+    completenessPercent: 100,
+    missingProfile: [],
+    savedCount: 1,
+    statusCounts: { planning: 1 },
+    docsDone: 6,
+    scholarshipRequired: false,
+    scholarshipsResearched: false,
+  });
+  const nba = journey.nextBestAction(dims, views);
+  assert.equal(nba.key, "deadline");
+  assert.match(nba.title, /Helsinki/);
+  assert.match(nba.title, /due in 3 days/);
+  assert.match(nba.body, /Motivation letter/);
+});
+
+test("deadlineAction: ignores far-off deadlines and fully-ready applications", () => {
+  // Far off (>14 days) → no urgent action.
+  const far = journey.buildApplications(
+    [{ id: "u1", name: "X" }],
+    { u1: { deadline: "2999-01-01" } },
+    {},
+  );
+  assert.equal(journey.deadlineAction(far), null);
+  // Soon but all required docs ready → nothing missing → no action.
+  const soon = new Date();
+  soon.setDate(soon.getDate() + 2);
+  const iso = soon.toISOString().slice(0, 10);
+  const ready = journey.buildApplications(
+    [{ id: "u1", name: "X" }],
+    { u1: { deadline: iso } },
+    {
+      transcript: true,
+      passport: true,
+      english_test: true,
+    },
+  );
+  // personal_statement (unique) still required+missing → still fires; drop it:
+  ready[0].missing_required = [];
+  assert.equal(journey.deadlineAction(ready), null);
 });
 
 test("SELF_MILESTONE_KEYS excludes the auto stages (they are never client-settable)", () => {

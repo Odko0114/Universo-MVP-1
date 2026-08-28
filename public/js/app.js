@@ -46,13 +46,22 @@
       ["small", "Small town"],
     ],
   };
-  // Per-university application status (mirrors lib/journey.js#APPLICATION_STATUSES).
+  // Per-university application lifecycle (mirrors lib/journey.js#APPLICATION_STATUSES).
   const APP_STATUSES = [
-    ["considering", "Considering"],
-    ["researching", "Researching"],
-    ["applied", "Applied"],
-    ["offer", "Offer received"],
+    ["planning", "Planning"],
+    ["preparing", "Preparing"],
+    ["ready", "Ready to submit"],
+    ["submitted", "Submitted"],
+    ["under_review", "Under review"],
+    ["accepted", "Accepted"],
     ["rejected", "Not accepted"],
+  ];
+  // Per-application document requirement levels (mirrors lib/journey.js#LEVELS).
+  const LEVELS = [
+    ["required", "Required"],
+    ["recommended", "Recommended"],
+    ["conditional", "Conditional"],
+    ["not_required", "Not required"],
   ];
   // Working copy of the profile while an onboarding/edit form is open.
   let draft = null;
@@ -1059,18 +1068,61 @@
           <p class="muted" style="font-size:.8rem;margin:14px 0 0">These show how prepared you are — not your chance of admission, which no one can honestly predict.</p>
         </div>`;
 
-      const documentsCard = `
-        <div class="section-head" style="margin-top:26px" id="documents"><h3 style="margin:0">Document checklist</h3></div>
+      // ---- Application command center: overview + applications + vault ----
+      const usedIn = (key) =>
+        (data.applications || []).filter((a) => {
+          const d = a.docs.find((x) => x.key === key);
+          return d && d.level !== "not_required";
+        }).length;
+
+      const ov = data.overview;
+      const overviewCard =
+        ov && ov.total
+          ? `
+        <div class="section-head" style="margin-top:26px"><h3 style="margin:0">Your application journey</h3></div>
         <div class="card">
+          <div class="ov-stats">
+            <div class="ov-stat"><span class="ov-stat__num">${ov.total}</span><span class="ov-stat__label">Applications</span></div>
+            <div class="ov-stat"><span class="ov-stat__num">${ov.ready}</span><span class="ov-stat__label">Ready</span></div>
+            <div class="ov-stat"><span class="ov-stat__num">${ov.in_progress}</span><span class="ov-stat__label">In progress</span></div>
+            <div class="ov-stat"><span class="ov-stat__num">${ov.missing}</span><span class="ov-stat__label">Missing docs</span></div>
+          </div>
+          ${
+            ov.upcoming_deadlines.length
+              ? `<div class="ov-deadlines">${ov.upcoming_deadlines
+                  .map(
+                    (d) =>
+                      `<div class="ov-deadline ov-deadline--${d.tone}"><span class="ov-deadline__dot" aria-hidden="true"></span><strong>${esc(d.name)}</strong><span class="muted">${esc(deadlineText(d.days_left))}</span></div>`,
+                  )
+                  .join("")}</div>`
+              : ""
+          }
+          <p class="muted" style="font-size:.85rem;margin:12px 0 0">${ov.requirements_done} / ${ov.requirements_total} required documents completed across your applications.</p>
+        </div>`
+          : "";
+
+      const applicationsCard =
+        data.applications && data.applications.length
+          ? `
+        <div class="section-head" style="margin-top:26px" id="applications"><h3 style="margin:0">My applications</h3></div>
+        <div class="app-list">${data.applications.map(appCard).join("")}</div>`
+          : "";
+
+      const sharedDocs = (data.documents || []).filter((d) => d.shared);
+      const documentsCard = `
+        <div class="section-head" style="margin-top:26px" id="documents"><h3 style="margin:0">My documents</h3></div>
+        <div class="card">
+          <p class="muted" style="margin:0 0 12px">Prepare each shared document once — it counts for every application that needs it.</p>
           <ul class="doc-list">
-            ${data.documents
-              .map(
-                (doc) => `
+            ${sharedDocs
+              .map((doc) => {
+                const used = usedIn(doc.key);
+                return `
               <li class="doc-item${doc.done ? " is-done" : ""}">
                 <button type="button" class="doc-check" data-document="${esc(doc.key)}" aria-pressed="${doc.done}" title="${doc.done ? "Mark not ready" : "Mark ready"}">${doc.done ? "✓" : ""}</button>
-                <div class="doc-body"><strong>${esc(doc.label)}</strong><p class="muted">${esc(doc.hint)}</p></div>
-              </li>`,
-              )
+                <div class="doc-body"><strong>${esc(doc.label)}</strong><p class="muted">${esc(doc.hint)}</p>${used ? `<p class="muted" style="font-size:.8rem;margin:2px 0 0">Used in ${used} application${used === 1 ? "" : "s"}</p>` : ""}</div>
+              </li>`;
+              })
               .join("")}
           </ul>
           <p class="muted" style="font-size:.8rem;margin:12px 0 0">You track these yourself — Universo never sees or stores your actual documents.</p>
@@ -1142,9 +1194,11 @@
           <div class="section-head"><h2>Your Dream Plan, ${first}</h2></div>
           ${dreamCard}
           ${nextBestCard}
+          ${overviewCard}
+          ${applicationsCard}
+          ${documentsCard}
           ${readinessCard}
           ${timelineCard}
-          ${documentsCard}
           ${picksCard}
           ${savedCard}
           ${scholarshipsCard}
@@ -1234,13 +1288,88 @@
       }
     }
 
+    // Persist an application entry's fact (status/deadline/program), or its
+    // requirement level, or a document's readiness — then refetch so the
+    // overview, readiness bars and next-best action stay consistent. A full
+    // repaint would collapse any open application, so paint() restores that.
+    async function onAppField(id, patch) {
+      try {
+        await API.patchApplication(id, patch);
+        data = await API.journey();
+        paint();
+      } catch (e) {
+        toast(e.message, true);
+      }
+    }
+    async function onRequirement(id, key, level) {
+      try {
+        await API.setRequirement(id, key, level);
+        data = await API.journey();
+        paint();
+      } catch (e) {
+        toast(e.message, true);
+      }
+    }
+    async function onAppDoc(id, key, shared) {
+      const app = (data.applications || []).find((a) => a.uni_id === id);
+      const doc = app && app.docs.find((d) => d.key === key);
+      if (!doc) return;
+      const target = !doc.ready;
+      doc.ready = target; // optimistic
+      paint();
+      try {
+        if (shared) await API.toggleDocument(key, target);
+        else await API.toggleAppDocument(id, key, target);
+        data = await API.journey();
+        paint();
+      } catch (e) {
+        doc.ready = !target;
+        paint();
+        toast(e.message, true);
+      }
+    }
+
     function paint() {
+      // Remember which applications are expanded so a repaint doesn't collapse
+      // the one the student is working in.
+      const open = [...view.querySelectorAll(".app-card[open]")].map(
+        (d) => d.dataset.app,
+      );
       view.innerHTML = build();
+      open.forEach((id) => {
+        const el = view.querySelector(`.app-card[data-app="${CSS.escape(id)}"]`);
+        if (el) el.open = true;
+      });
       view.querySelectorAll("[data-milestone]").forEach((btn) => {
         btn.addEventListener("click", () => onMilestone(btn.dataset.milestone));
       });
       view.querySelectorAll("[data-document]").forEach((btn) => {
         btn.addEventListener("click", () => onDocument(btn.dataset.document));
+      });
+      view.querySelectorAll("[data-app-status]").forEach((sel) => {
+        sel.addEventListener("change", () =>
+          onAppField(sel.dataset.appStatus, { status: sel.value }),
+        );
+      });
+      view.querySelectorAll("[data-app-deadline]").forEach((inp) => {
+        inp.addEventListener("change", () =>
+          onAppField(inp.dataset.appDeadline, { deadline: inp.value }),
+        );
+      });
+      view.querySelectorAll("[data-app-program]").forEach((inp) => {
+        inp.addEventListener("change", () =>
+          onAppField(inp.dataset.appProgram, { program: inp.value }),
+        );
+      });
+      view.querySelectorAll("[data-req-for]").forEach((sel) => {
+        sel.addEventListener("change", () =>
+          onRequirement(sel.dataset.reqFor, sel.dataset.doc, sel.value),
+        );
+      });
+      view.querySelectorAll("[data-app-doc-for]").forEach((btn) => {
+        btn.addEventListener("click", () =>
+          onAppDoc(btn.dataset.appDocFor, btn.dataset.doc, btn.dataset.shared === "true"),
+        );
       });
       const editDream = document.getElementById("edit-dream");
       const dreamForm = document.getElementById("dream-form");
@@ -1495,7 +1624,7 @@
   // A saved-list cell = the shared university card plus an editable application
   // status (only shown on Saved — the card itself stays reusable for Discover).
   function savedCell(u) {
-    const cur = u.application_status || "considering";
+    const cur = u.application_status || "planning";
     return `<div class="saved-cell">
       ${uniCard(u)}
       <label class="app-status">
@@ -1542,6 +1671,73 @@
           `<option value="${v}"${v === current ? " selected" : ""}>${esc(l)}</option>`,
       )
       .join("");
+  }
+
+  // ---- Application card (Dream Plan command center) ------------------------
+  const deadlineTone = (days) =>
+    days < 0 ? "overdue" : days <= 3 ? "red" : days <= 7 ? "amber" : "green";
+  const deadlineText = (days) =>
+    days < 0
+      ? `${-days} day${days === -1 ? "" : "s"} overdue`
+      : days === 0
+        ? "Due today"
+        : `Due in ${days} day${days === 1 ? "" : "s"}`;
+
+  const DOC_TONE_LABEL = {
+    complete: "🟢 Ready",
+    partial: "🟡 In progress",
+    missing: "🔴 Missing docs",
+  };
+
+  function appCard(a) {
+    const tone =
+      a.required_total === 0 || a.required_done === a.required_total
+        ? "complete"
+        : a.required_done === 0
+          ? "missing"
+          : "partial";
+    const statusLabel = (APP_STATUSES.find(([k]) => k === a.status) || [
+      "",
+      "Planning",
+    ])[1];
+    return `
+    <details class="app-card" data-app="${esc(a.uni_id)}">
+      <summary class="app-card__head">
+        <div class="app-card__title">
+          <strong>${esc(a.name)}</strong>
+          ${a.program ? `<span class="muted">${esc(a.program)}</span>` : ""}
+        </div>
+        <div class="app-card__meta">
+          <span class="chip chip--plain">${esc(statusLabel)}</span>
+          ${a.deadline ? `<span class="app-card__deadline app-card__deadline--${deadlineTone(a.days_left)}">${esc(deadlineText(a.days_left))}</span>` : ""}
+          <span class="app-card__docs">${a.required_done}/${a.required_total} required · ${DOC_TONE_LABEL[tone]}</span>
+        </div>
+      </summary>
+      <div class="app-card__body">
+        <div class="app-fields">
+          <label class="app-field"><span>Program <span class="muted">(optional)</span></span><input type="text" class="onb-input" data-app-program="${esc(a.uni_id)}" maxlength="120" placeholder="e.g. Computer Science" value="${esc(a.program)}" /></label>
+          <label class="app-field"><span>Deadline</span><input type="date" class="onb-input" data-app-deadline="${esc(a.uni_id)}" value="${esc(a.deadline)}" /></label>
+          <label class="app-field"><span>Status</span><select class="onb-input" data-app-status="${esc(a.uni_id)}">${APP_STATUSES.map(([v, l]) => `<option value="${v}"${v === a.status ? " selected" : ""}>${esc(l)}</option>`).join("")}</select></label>
+        </div>
+        <ul class="doc-list app-docs">${a.docs.map((d) => appDocRow(a.uni_id, d)).join("")}</ul>
+        <p class="muted" style="font-size:.8rem;margin:12px 0 0">Requirements and deadline are yours to set — check them on the university’s official application page.</p>
+      </div>
+    </details>`;
+  }
+
+  function appDocRow(uniId, doc) {
+    const levelSel = `<select class="doc-level" data-req-for="${esc(uniId)}" data-doc="${esc(doc.key)}">${LEVELS.map(([v, l]) => `<option value="${v}"${v === doc.level ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
+    const note = doc.shared
+      ? doc.ready
+        ? '<span class="chip chip--plain">✓ In your documents</span>'
+        : '<span class="muted" style="font-size:.8rem">Shared — prepare once in My documents</span>'
+      : '<span class="muted" style="font-size:.8rem">Written for this university</span>';
+    return `
+      <li class="doc-item doc-item--app${doc.ready ? " is-done" : ""}">
+        <button type="button" class="doc-check" data-app-doc-for="${esc(uniId)}" data-doc="${esc(doc.key)}" data-shared="${doc.shared}" aria-pressed="${doc.ready}" title="${doc.ready ? "Mark not ready" : "Mark ready"}">${doc.ready ? "✓" : ""}</button>
+        <div class="doc-body"><strong>${esc(doc.label)}</strong> ${note}</div>
+        ${levelSel}
+      </li>`;
   }
 
   // "2 considering · 1 applied · 1 offer" — ordered, zero counts skipped.
