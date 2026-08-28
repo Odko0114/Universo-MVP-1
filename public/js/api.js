@@ -114,6 +114,8 @@
     updateDream: (payload) => request("PATCH", "/me/dream", payload),
     toggleDocument: (key, done) =>
       request("POST", "/me/document", { key, done }),
+    setScholarshipStatus: (key, status) =>
+      request("POST", "/me/scholarship", { key, status }),
     // Applications (per-university document tracking)
     patchApplication: (id, patch) =>
       request("POST", `/me/application/${encodeURIComponent(id)}`, patch),

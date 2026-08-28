@@ -156,9 +156,19 @@ test("readiness: scholarship dimension appears only when required", () => {
     statusCounts: { planning: 1 },
     docsDone: 6,
     scholarshipRequired: true,
+    // Reviewed the list but not yet tracking a specific scheme → mid score.
     scholarshipsResearched: true,
   });
-  assert.ok(withReq.some((d) => d.key === "scholarship" && d.score === 100));
+  assert.ok(withReq.some((d) => d.key === "scholarship" && d.score === 50));
+  const notReq = journey.readiness({
+    completenessPercent: 100,
+    missingProfile: [],
+    savedCount: 1,
+    statusCounts: { planning: 1 },
+    docsDone: 6,
+    scholarshipRequired: false,
+  });
+  assert.ok(!notReq.some((d) => d.key === "scholarship"));
 });
 
 test("nextBestAction: picks the lowest-scoring incomplete dimension; null when all complete", () => {
@@ -314,6 +324,55 @@ test("applicationsOverview: buckets by document completion and sorts deadlines",
   assert.equal(ov.in_progress, 1, "u3 has the shared docs but not its letter");
   assert.equal(ov.upcoming_deadlines.length, 2, "only the two with a deadline");
   assert.equal(ov.upcoming_deadlines[0].name, "Aalto", "earliest deadline first");
+});
+
+test("computeFunding: uses hand-researched tuition + living, computes the gap", () => {
+  const unis = [
+    {
+      name: "A",
+      tuition_source: "curated_research",
+      tuition_range: { min: 0, max: 3000 },
+      estimated_living_cost: { min: 1000, max: 1500 }, // per month
+    },
+    {
+      name: "B (estimated tuition — ignored)",
+      tuition_source: "country_estimate",
+      tuition_range: { min: 5000, max: 9000 },
+      estimated_living_cost: { min: 900, max: 1200 },
+    },
+  ];
+  const f = journey.computeFunding(unis, 15000);
+  assert.equal(f.count, 1, "only the curated-tuition uni counts");
+  assert.equal(f.annual_min, 0 + 1000 * 12); // 12000
+  assert.equal(f.annual_max, 3000 + 1500 * 12); // 21000
+  assert.equal(f.gap, 21000 - 15000, "gap = max annual cost - budget");
+
+  assert.equal(
+    journey.computeFunding([], 15000),
+    null,
+    "nothing honest to show → null",
+  );
+  const noBudget = journey.computeFunding([unis[0]], null);
+  assert.equal(noBudget.gap, null, "no budget → no gap, but still a cost range");
+});
+
+test("readiness: scholarship dimension scores from tracked scheme statuses", () => {
+  const mk = (statuses) =>
+    journey
+      .readiness({
+        completenessPercent: 100,
+        missingProfile: [],
+        savedCount: 1,
+        statusCounts: { planning: 1 },
+        docsDone: 6,
+        scholarshipRequired: true,
+        scholarshipStatuses: statuses,
+      })
+      .find((d) => d.key === "scholarship").score;
+  assert.equal(mk(["applied"]), 100);
+  assert.equal(mk(["applying"]), 70);
+  assert.equal(mk(["researching"]), 50);
+  assert.equal(mk([]), 30, "needs one but tracking none → low");
 });
 
 test("sortApplications: soonest deadline first (overdue leads), no-deadline last", () => {

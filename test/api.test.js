@@ -531,15 +531,19 @@ test("GET /me/journey assembles the dashboard and gains match picks once a profi
       before.json.next_actions.length >= 1,
   );
   assert.equal(before.json.next_actions[0].key, "complete_profile");
-  // Scholarship pointers surfaced from home country (non-EU → no Erasmus Mundus).
+  // Scholarships are now destination-driven: with nothing saved and no
+  // preferred countries, there are no groups yet (home country is not a source).
   assert.ok(
-    before.json.scholarships.length >= 1,
-    "scholarship pointers surfaced for the home country",
+    before.json.scholarships &&
+      Array.isArray(before.json.scholarships.groups),
+    "scholarships payload is the grouped shape",
   );
-  assert.ok(
-    before.json.scholarships.every((s) => s.verify === true),
-    "every pointer is flagged verify",
+  assert.equal(
+    before.json.scholarships.source,
+    "none",
+    "no destinations → no scholarship source yet",
   );
+  assert.equal(before.json.scholarships.groups.length, 0);
 
   // Set a matching profile → picks appear, each with a "why" reason.
   await req("PATCH", "/api/me/profile", {
@@ -581,6 +585,60 @@ test("GET /me/journey assembles the dashboard and gains match picks once a profi
     after.json.dream && "target_intake" in after.json.dream,
     "dream fields present",
   );
+
+  await req("DELETE", "/api/me");
+});
+
+test("scholarships follow saved destinations and can be tracked; funding surfaces", async () => {
+  const testAddr = `sch_${Date.now()}@example.com`;
+  await req("POST", "/api/auth/register", {
+    full_name: "Sch Flow",
+    email: testAddr,
+    password: "password123",
+    consent: true,
+    country_of_origin: "Mongolia",
+  });
+  await req("PATCH", "/api/me/dream", { scholarship_required: true });
+
+  // Nothing saved → no scholarship groups.
+  let j = (await req("GET", "/api/me/journey")).json;
+  assert.equal(j.scholarships.source, "none");
+
+  // Save a German university → DAAD (+ Erasmus) surface, grouped under Germany.
+  await req("POST", "/api/me/saved/tum");
+  j = (await req("GET", "/api/me/journey")).json;
+  assert.equal(j.scholarships.source, "applications");
+  const germany = j.scholarships.groups.find((g) => g.country === "Germany");
+  assert.ok(germany, "Germany group present from the saved German uni");
+  const daad = germany.scholarships.find((s) => s.key === "daad-scholarships");
+  assert.ok(daad, "DAAD surfaced for a Germany destination");
+  assert.equal(daad.status, "", "not tracked yet");
+  // tum has hand-researched tuition + living → a funding estimate appears.
+  assert.ok(j.funding && j.funding.count >= 1, "funding estimate present");
+
+  // Track DAAD as applied → persists and lifts the Scholarship readiness to 100.
+  const set = await req("POST", "/api/me/scholarship", {
+    key: "daad-scholarships",
+    status: "applied",
+  });
+  assert.equal(set.status, 200);
+  j = (await req("GET", "/api/me/journey")).json;
+  const daad2 = j.scholarships.groups
+    .find((g) => g.country === "Germany")
+    .scholarships.find((s) => s.key === "daad-scholarships");
+  assert.equal(daad2.status, "applied");
+  assert.equal(
+    j.readiness.find((r) => r.key === "scholarship").score,
+    100,
+    "an applied scholarship maxes the scholarship readiness",
+  );
+
+  // Unknown status rejected.
+  const bad = await req("POST", "/api/me/scholarship", {
+    key: "daad-scholarships",
+    status: "enrolled",
+  });
+  assert.equal(bad.status, 400);
 
   await req("DELETE", "/api/me");
 });

@@ -1384,16 +1384,72 @@ img {
   gap: 10px;
   padding: 12px 14px;
   margin: 0 0 16px;
-  background: var(--bg);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--teal-500);
   border-radius: var(--radius-sm);
   font-size: var(--text-sm);
   color: var(--ink-soft);
+}
+.app-hint__icon {
+  flex: 0 0 auto;
+  color: var(--teal-600);
+  display: flex;
+  padding-top: 1px;
 }
 .app-hint__body {
   display: flex;
   flex-direction: column;
   gap: 4px;
   min-width: 0;
+}
+.app-hint__label {
+  font-weight: 600;
+  color: var(--ink);
+}
+.app-hint__body strong {
+  color: var(--ink);
+}
+
+/* ---- Scholarships & funding ---- */
+.funding-line {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  background: var(--teal-050);
+  border-radius: var(--radius-sm);
+  color: var(--ink-soft);
+}
+.funding-line strong {
+  color: var(--ink);
+}
+.sch-group + .sch-group {
+  margin-top: 6px;
+}
+.sch-group__title {
+  margin: 0 0 8px;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.sch-item__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.sch-item__head strong {
+  min-width: 0;
+}
+.sch-status {
+  flex: 0 0 auto;
+  font-size: var(--text-xs);
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink-soft);
 }
 .app-add {
   display: flex;

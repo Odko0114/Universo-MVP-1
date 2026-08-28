@@ -28,7 +28,10 @@ const match = require("./lib/match");
 const explain = require("./lib/explain");
 const journey = require("./lib/journey");
 const dataQuality = require("./lib/data-quality");
-const { scholarshipsFor } = require("./lib/scholarships");
+const {
+  scholarshipsFor,
+  scholarshipsForDestinations,
+} = require("./lib/scholarships");
 const events = require("./lib/events");
 const validate = require("./lib/validate");
 const ssr = require("./lib/ssr");
@@ -379,6 +382,9 @@ api.post(
       career_goal: "",
       scholarship_required: false,
       documents: {},
+      // Self-tracked scholarship progress { schemeKey: status }. Older accounts
+      // read as {} via defensive reads — no migration.
+      scholarships: {},
       consent_accepted: true,
       consent_date: now,
       // Separate opt-in for product-update emails (new universities,
@@ -1414,10 +1420,35 @@ api.get("/me/journey", auth.requireAuth, (req, res) => {
         })
     : [];
 
-  // Scholarship pointers for the student's home country (finally surfaced —
-  // lib/scholarships.js had tests but no live endpoint until now).
+  // Scholarships follow where you're APPLYING (host-country funded), not where
+  // you're from: destinations = your saved unis' countries, else your preferred
+  // countries. Each scheme carries the student's own tracked status.
   const homeCountry = student.home_country || student.country_of_origin || "";
-  const scholarships = homeCountry ? scholarshipsFor(homeCountry) : [];
+  const destCountries = [...new Set(saved.map((u) => u.country).filter(Boolean))];
+  const prefCountries = Array.isArray(student.country_preference)
+    ? student.country_preference
+    : [];
+  const schCountries = destCountries.length ? destCountries : prefCountries;
+  const schTracked =
+    student.scholarships && typeof student.scholarships === "object"
+      ? student.scholarships
+      : {};
+  const withStatus = (s) => ({ ...s, status: schTracked[s.key] || "" });
+  const schData = scholarshipsForDestinations(schCountries);
+  const scholarships = {
+    groups: schData.groups.map((g) => ({
+      country: g.country,
+      scholarships: g.scholarships.map(withStatus),
+    })),
+    eu_wide: schData.eu_wide.map(withStatus),
+    destinations: schCountries,
+    source: destCountries.length
+      ? "applications"
+      : prefCountries.length
+        ? "preferences"
+        : "none",
+  };
+  const funding = journey.computeFunding(saved, student.budget_max_eur_year);
 
   // ---- Dream Plan additions ----
   const sCounts = journey.statusCounts(apps, savedIds);
@@ -1449,6 +1480,7 @@ api.get("/me/journey", auth.requireAuth, (req, res) => {
     docsDone,
     scholarshipRequired: student.scholarship_required === true,
     scholarshipsResearched,
+    scholarshipStatuses: Object.values(schTracked),
   });
 
   res.json({
@@ -1474,6 +1506,7 @@ api.get("/me/journey", auth.requireAuth, (req, res) => {
     },
     picks,
     scholarships,
+    funding,
     home_country: homeCountry,
     next_actions: journey.nextActions(saved.length, completeness),
     timeline: journey.buildTimeline(
@@ -1538,6 +1571,28 @@ api.post("/me/document", auth.requireAuth, (req, res) => {
   store.write("students", students);
   events.record("document", { anon: req.anon, ...(done ? { set: key } : {}) });
   res.json({ documents: student.documents });
+});
+
+// Track progress on a specific scholarship scheme. Empty status clears it.
+api.post("/me/scholarship", auth.requireAuth, (req, res) => {
+  const key = typeof req.body.key === "string" ? req.body.key : "";
+  const status = typeof req.body.status === "string" ? req.body.status : "";
+  if (!key) return res.status(400).json({ error: "Unknown scholarship." });
+  if (status && !journey.SCHOLARSHIP_STATUS_KEYS.has(status))
+    return res.status(400).json({ error: "Unknown status." });
+
+  const students = store.read("students");
+  const student = students.find((s) => s.student_id === req.student.student_id);
+  if (!student.scholarships || typeof student.scholarships !== "object")
+    student.scholarships = {};
+  if (status) student.scholarships[key] = status;
+  else delete student.scholarships[key];
+  store.write("students", students);
+  events.record("scholarship", {
+    anon: req.anon,
+    ...(status ? { set: status } : {}),
+  });
+  res.json({ key, status });
 });
 
 // ---- Applications: per-university document tracking ------------------------

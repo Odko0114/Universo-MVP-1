@@ -63,6 +63,12 @@
     ["conditional", "Conditional"],
     ["not_required", "Not required"],
   ];
+  // Scholarship tracking (mirrors lib/journey.js#SCHOLARSHIP_STATUSES).
+  const SCHOLARSHIP_STATUSES = [
+    ["researching", "Researching"],
+    ["applying", "Applying"],
+    ["applied", "Applied"],
+  ];
   // Working copy of the profile while an onboarding/edit form is open.
   let draft = null;
   const emptyDraft = () => ({
@@ -1050,11 +1056,17 @@
           <p class="muted" style="margin:6px 0 0">Profile, applications, documents and scholarships are all in good shape.</p>
         </div>`;
 
+      // Application + Documents progress now live in the overview + command
+      // center above, so the readiness card shows only what isn't shown there:
+      // Profile strength (and Scholarship when the student says they need one).
+      const readinessDims = data.readiness.filter(
+        (r) => r.key === "profile" || r.key === "scholarship",
+      );
       const readinessCard = `
         <div class="section-head" style="margin-top:22px"><h3 style="margin:0">How ready are you?</h3></div>
         <div class="card">
           <div class="readiness">
-            ${data.readiness
+            ${readinessDims
               .map(
                 (r) => `
               <div class="readiness__row">
@@ -1159,35 +1171,28 @@
         <div class="grid">${data.picks.map(uniCard).join("")}</div>`
           : "";
 
-      const rollup = statusRollup(data.saved.status_counts);
-      const savedCard = `
-        <div class="section-head" style="margin-top:26px"><h3 style="margin:0">Your shortlist (${data.saved.count})</h3>${data.saved.count ? '<a class="link-btn" href="/saved">View all</a>' : ""}</div>
-        ${rollup ? `<p class="muted" style="margin:-4px 0 12px">${esc(rollup)}</p>` : ""}
-        ${
-          data.saved.count
-            ? `<div class="grid">${data.saved.universities.map(uniCard).join("")}</div>`
-            : `<div class="card"><p class="muted" style="margin:0">Nothing saved yet — tap “Save” on any university to start comparing your options here.</p></div>`
-        }`;
-
-      const scholarshipsCard = data.scholarships.length
-        ? `
-        <div class="section-head" style="margin-top:26px"><h3 style="margin:0">Scholarship pointers</h3></div>
+      // ---- Scholarships & funding (destination-driven, trackable) ----
+      const sch = data.scholarships || { groups: [], eu_wide: [], source: "none" };
+      const hasSchemes =
+        (sch.groups && sch.groups.length) || (sch.eu_wide && sch.eu_wide.length);
+      const needsScholarship = !!(data.dream && data.dream.scholarship_required);
+      const schGroup = (title, list) =>
+        `<div class="sch-group"><h4 class="sch-group__title">${esc(title)}</h4><ul class="journey-scholarships">${list.map(schItem).join("")}</ul></div>`;
+      const scholarshipsCard =
+        hasSchemes || data.funding || needsScholarship
+          ? `
+        <div class="section-head" style="margin-top:26px" id="scholarships"><h3 style="margin:0">Scholarships &amp; funding</h3></div>
         <div class="card">
-          <p class="muted" style="margin:0 0 12px">Real, named funding schemes for students from <strong>${esc(data.home_country)}</strong>. Always confirm current eligibility, amounts and deadlines on the official page.</p>
-          <ul class="journey-scholarships">
-            ${data.scholarships
-              .map(
-                (s) => `
-              <li>
-                <div><strong>${esc(s.name)}</strong> <span class="chip chip--plain">verify</span></div>
-                <p class="muted">${esc(s.note)}</p>
-                ${s.website ? `<a href="${esc(s.website)}" target="_blank" rel="noopener noreferrer">Official page ↗</a>` : ""}
-              </li>`,
-              )
-              .join("")}
-          </ul>
+          ${fundingLine(data.funding)}
+          ${
+            hasSchemes
+              ? `<p class="muted" style="margin:0 0 14px">Real, named schemes for where you’re applying${sch.source === "preferences" ? " (your preferred countries)" : ""}. Confirm current eligibility, amounts and deadlines on each official page.</p>
+                 ${sch.groups.map((g) => schGroup(g.country, g.scholarships)).join("")}
+                 ${sch.eu_wide.length ? schGroup("EU-wide", sch.eu_wide) : ""}`
+              : `<p class="muted" style="margin:0">Save universities — or set your preferred countries — to see funding schemes for your destinations.</p>`
+          }
         </div>`
-        : "";
+          : "";
 
       return `
         <div class="journey">
@@ -1197,11 +1202,10 @@
           ${overviewCard}
           ${applicationsCard}
           ${documentsCard}
-          ${readinessCard}
-          ${timelineCard}
-          ${picksCard}
-          ${savedCard}
           ${scholarshipsCard}
+          ${readinessCard}
+          ${picksCard}
+          ${timelineCard}
         </div>`;
     }
 
@@ -1375,6 +1379,15 @@
         toast(e.message, true);
       }
     }
+    async function onScholarship(key, status) {
+      try {
+        await API.setScholarshipStatus(key, status);
+        data = await API.journey(); // status feeds Scholarship readiness
+        paint();
+      } catch (e) {
+        toast(e.message, true);
+      }
+    }
 
     function paint() {
       // Remember which applications are expanded so a repaint doesn't collapse
@@ -1443,6 +1456,11 @@
             onAddCustom(inp.dataset.addDocFor);
           }
         });
+      });
+      view.querySelectorAll("[data-sch]").forEach((sel) => {
+        sel.addEventListener("change", () =>
+          onScholarship(sel.dataset.sch, sel.value),
+        );
       });
       const editDream = document.getElementById("edit-dream");
       const dreamForm = document.getElementById("dream-form");
@@ -1795,7 +1813,7 @@
         ${a.portal ? `<a class="app-portal" href="${esc(a.portal)}" target="_blank" rel="noopener noreferrer">Open application portal ↗</a>` : ""}
         ${
           a.curated_deadline || a.curated_requirements
-            ? `<div class="app-hint"><span class="chip chip--plain">verify</span><div class="app-hint__body">${a.curated_deadline ? `<div><strong>Official deadline:</strong> ${esc(a.curated_deadline)}</div>` : ""}${a.curated_requirements ? `<div><strong>Requirements:</strong> ${esc(a.curated_requirements)}</div>` : ""}</div></div>`
+            ? `<div class="app-hint"><span class="app-hint__icon" aria-hidden="true">${icon("alert", 15)}</span><div class="app-hint__body"><div class="app-hint__label">From ${esc(a.name)}’s public listing — always confirm on their official page</div>${a.curated_deadline ? `<div><strong>Deadline:</strong> ${esc(a.curated_deadline)}</div>` : ""}${a.curated_requirements ? `<div><strong>Requirements:</strong> ${esc(a.curated_requirements)}</div>` : ""}</div></div>`
             : ""
         }
         <ul class="doc-list app-docs">${a.docs.map((d) => appDocRow(a.uni_id, d)).join("")}</ul>
@@ -1835,12 +1853,38 @@
       </li>`;
   }
 
-  // "2 considering · 1 applied · 1 offer" — ordered, zero counts skipped.
-  function statusRollup(counts) {
-    if (!counts) return "";
-    return APP_STATUSES.filter(([k]) => counts[k])
-      .map(([k, l]) => `${counts[k]} ${l.toLowerCase()}`)
-      .join(" · ");
+  // One scholarship scheme with a "how far am I" tracker + official link.
+  function schItem(s) {
+    return `
+      <li class="sch-item">
+        <div class="sch-item__head">
+          <strong>${esc(s.name)}</strong>
+          <select class="sch-status" data-sch="${esc(s.key)}">
+            <option value="">Not tracking</option>
+            ${SCHOLARSHIP_STATUSES.map(([v, l]) => `<option value="${v}"${v === s.status ? " selected" : ""}>${esc(l)}</option>`).join("")}
+          </select>
+        </div>
+        <p class="muted">${esc(s.note)}</p>
+        ${s.website ? `<a href="${esc(s.website)}" target="_blank" rel="noopener noreferrer">Official page ↗</a>` : ""}
+      </li>`;
+  }
+
+  // Honest yearly funding estimate + gap against the student's budget.
+  function fundingLine(f) {
+    if (!f) return "";
+    const eur = (n) => "€" + nfmt(n);
+    const range =
+      f.annual_min === f.annual_max
+        ? eur(f.annual_max)
+        : `${eur(f.annual_min)}–${eur(f.annual_max)}`;
+    let gap = "";
+    if (f.budget != null) {
+      gap =
+        f.gap > 0
+          ? ` Your budget is ${eur(f.budget)}/yr — you’d need about <strong>${eur(f.gap)}/yr</strong> in funding to close the gap.`
+          : ` That’s within your ${eur(f.budget)}/yr budget.`;
+    }
+    return `<p class="muted funding-line"><strong>${range}/year</strong> — roughly what your ${f.count} researched option${f.count === 1 ? "" : "s"} cost (tuition + estimated living).${gap}</p>`;
   }
 
   function wireStatusSelects(root) {
