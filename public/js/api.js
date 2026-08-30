@@ -112,6 +112,8 @@
     toggleMilestone: (key, done) =>
       request("POST", "/me/milestone", { key, done }),
     updateDream: (payload) => request("PATCH", "/me/dream", payload),
+    updateNotifications: (payload) =>
+      request("PATCH", "/me/notifications", payload),
     toggleDocument: (key, done) =>
       request("POST", "/me/document", { key, done }),
     setScholarshipStatus: (key, status) =>

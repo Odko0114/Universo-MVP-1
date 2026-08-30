@@ -822,6 +822,34 @@ img {
   height: 18px;
   accent-color: var(--teal-500);
 }
+.notif-prefs {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+.notif-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  cursor: pointer;
+}
+.notif-row input {
+  margin-top: 3px;
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  accent-color: var(--teal-500);
+}
+.notif-row__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: var(--text-md);
+}
+.notif-row__body .muted {
+  font-size: var(--text-sm);
+}
 .form-error {
   background: #fdecee;
   color: var(--danger);

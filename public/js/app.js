@@ -69,6 +69,13 @@
     ["applying", "Applying"],
     ["applied", "Applied"],
   ];
+  // Email notification categories (mirrors lib/notify.js#NOTIFICATION_CATEGORIES).
+  const NOTIF_LABELS = [
+    ["weekly_digest", "Weekly summary", "A once-a-week recap of your deadlines and next steps."],
+    ["deadline_reminders", "Deadline reminders", "A nudge as an application deadline approaches."],
+    ["application_updates", "Application updates", "When something about a saved university changes."],
+    ["scholarship_updates", "Scholarship matches", "New funding that fits where you're applying."],
+  ];
   // Working copy of the profile while an onboarding/edit form is open.
   let draft = null;
   const emptyDraft = () => ({
@@ -2403,6 +2410,22 @@
           <button class="btn btn--primary" id="logout" style="flex:1">Log out</button>
         </div>
         <hr class="divider" />
+        <h3 style="font-size:.95rem;margin:0 0 8px">Email notifications</h3>
+        ${
+          u.email_verification_required
+            ? ""
+            : `<p class="muted" style="margin:0 0 10px;font-size:.85rem">Email delivery isn't switched on yet — your choices are saved and apply the moment it goes live.</p>`
+        }
+        <div class="notif-prefs">
+          ${NOTIF_LABELS.map(
+            ([k, label, desc]) => `
+          <label class="notif-row">
+            <input type="checkbox" data-notif="${k}"${(u.notifications || {})[k] ? " checked" : ""} />
+            <span class="notif-row__body"><strong>${esc(label)}</strong><span class="muted">${esc(desc)}</span></span>
+          </label>`,
+          ).join("")}
+        </div>
+        <hr class="divider" />
         <h3 style="font-size:.95rem;margin:0 0 8px">Security</h3>
         <p class="muted" style="margin:0 0 10px;font-size:.85rem">Signed in somewhere you don't recognize, or lost a device? End every other session — you'll need to log back in here too.</p>
         <button class="btn btn--ghost btn--sm" id="logout-everywhere" style="width:100%">Log out of all devices</button>
@@ -2454,6 +2477,21 @@
         btn.disabled = false;
         btn.textContent = "Update email";
       }
+    });
+
+    view.querySelectorAll("[data-notif]").forEach((cb) => {
+      cb.addEventListener("change", async () => {
+        try {
+          const { notifications } = await API.updateNotifications({
+            [cb.dataset.notif]: cb.checked,
+          });
+          if (state.user) state.user.notifications = notifications;
+          toast("Preferences saved");
+        } catch (e) {
+          cb.checked = !cb.checked; // revert on failure
+          toast(e.message, true);
+        }
+      });
     });
 
     const resendBtn = document.getElementById("resend-verification");

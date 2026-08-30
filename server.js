@@ -33,6 +33,7 @@ const {
   scholarshipsForDestinations,
   scholarshipsOutbound,
 } = require("./lib/scholarships");
+const notify = require("./lib/notify");
 const events = require("./lib/events");
 const validate = require("./lib/validate");
 const ssr = require("./lib/ssr");
@@ -282,10 +283,15 @@ const publicStudent = (s) => {
     email_verify_last_sent,
     password_reset_token_hash,
     password_reset_expires,
+    notifications: _rawNotifications,
+    reminders_sent,
+    last_digest_sent,
     ...safe
   } = s;
   return {
     ...safe,
+    // Resolved against defaults so the client always sees every category.
+    notifications: notify.notifPrefs(s),
     profile_completed: profileCompleted(s),
     // Computed per response, not stored: whether verification is actually
     // enforced right now (dormant until RESEND_API_KEY is set — see
@@ -397,6 +403,13 @@ api.post(
       // exports opted-in addresses; wire an email provider behind that list
       // when one exists.
       updates_optin: v.updates_optin === true,
+      // Per-category email notification prefs (deadline reminders + weekly
+      // digest). Empty {} reads as the defaults via lib/notify#notifPrefs — no
+      // migration. Dedup timestamps prevent duplicate sends; the unsubscribe
+      // link is a stateless HMAC (lib/auth#unsubscribeToken), nothing stored.
+      notifications: {},
+      last_digest_sent: "",
+      reminders_sent: {},
       signup_date: now,
       last_active_date: now,
       token_version: 0,
@@ -1390,8 +1403,10 @@ api.get("/me/recommendations", auth.requireAuth, (req, res) => {
 // and the honest country-level scholarship pointers (lib/scholarships.js — real
 // named schemes, flagged verify:true, never fabricated per-university amounts).
 // No new university-side data, no invented milestones.
-api.get("/me/journey", auth.requireAuth, (req, res) => {
-  const student = req.student;
+// Assemble the full Dream Plan payload for one student. A pure read over data we
+// already have — reused by GET /me/journey AND the email digest job (lib/notify)
+// so both see exactly the same "what's true for this student".
+function buildJourneyData(student) {
   const savedIds = student.saved_universities || [];
 
   // Saved (resolved to full records, capped for the summary card). Each carries
@@ -1526,7 +1541,7 @@ api.get("/me/journey", auth.requireAuth, (req, res) => {
     ),
   });
 
-  res.json({
+  return {
     completeness,
     has_profile: profiled,
     dream: {
@@ -1561,7 +1576,11 @@ api.get("/me/journey", auth.requireAuth, (req, res) => {
       student.milestones,
       applications.map((a) => a.status),
     ),
-  });
+  };
+}
+
+api.get("/me/journey", auth.requireAuth, (req, res) => {
+  res.json(buildJourneyData(req.student));
 });
 
 // Toggle a self-reported timeline milestone. Only the "self" keys are
@@ -1584,6 +1603,21 @@ api.post("/me/milestone", auth.requireAuth, (req, res) => {
   store.write("students", students);
   events.record("milestone", { anon: req.anon, ...(done ? { set: key } : {}) });
   res.json({ milestones: student.milestones });
+});
+
+// Email notification preferences (per category). Body may set any subset of the
+// known categories to booleans; unknown keys are ignored.
+api.patch("/me/notifications", auth.requireAuth, (req, res) => {
+  const body = req.body && typeof req.body === "object" ? req.body : {};
+  const students = store.read("students");
+  const student = students.find((s) => s.student_id === req.student.student_id);
+  if (!student.notifications || typeof student.notifications !== "object")
+    student.notifications = {};
+  for (const key of notify.NOTIFICATION_CATEGORIES) {
+    if (key in body) student.notifications[key] = body[key] === true;
+  }
+  store.write("students", students);
+  res.json({ notifications: notify.notifPrefs(student) });
 });
 
 // ---- Dream Plan: dream fields + document checklist -------------------------
@@ -2456,6 +2490,39 @@ app.get("/", (_req, res) =>
   res.sendFile(path.join(PUBLIC_DIR, "landing.html")),
 );
 
+// One-click unsubscribe (no login, no JS) from an email footer link. The token
+// is a stateless HMAC of the student id (lib/auth), so it works for any account
+// at any time. `?cat=` unsubscribes one category; otherwise all email off.
+app.get("/unsubscribe", (req, res) => {
+  const page = (title, body) =>
+    res
+      .status(200)
+      .type("html")
+      .send(
+        `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title} — Universo</title><body style="font-family:system-ui,Arial,sans-serif;max-width:520px;margin:12vh auto;padding:0 20px;color:#131B2E;line-height:1.6"><h1 style="font-size:1.3rem">${title}</h1>${body}<p style="margin-top:24px"><a href="/journey" style="color:#0d9488">Manage all email preferences →</a></p></body>`,
+      );
+
+  const id = auth.verifyUnsubscribeToken(req.query.token);
+  if (!id) return page("Link expired", "<p>This unsubscribe link isn't valid. You can manage email preferences from your account settings.</p>");
+  const students = store.read("students");
+  const student = students.find((s) => s.student_id === id);
+  if (!student) return page("Done", "<p>You won't receive these emails.</p>");
+
+  if (!student.notifications || typeof student.notifications !== "object")
+    student.notifications = {};
+  const cat = req.query.cat;
+  const targets = notify.NOTIFICATION_CATEGORIES.includes(cat)
+    ? [cat]
+    : notify.NOTIFICATION_CATEGORIES;
+  for (const k of targets) student.notifications[k] = false;
+  store.write("students", students);
+  events.record("unsubscribe", { anon: req.anon });
+  return page(
+    "You're unsubscribed",
+    `<p>You won't receive ${targets.length === 1 ? "these" : "Universo"} emails${targets.length === 1 ? "" : " anymore"}. You can turn any of them back on in your account settings whenever you like.</p>`,
+  );
+});
+
 // Public, account-free directory — browsing and searching require nothing.
 // Only actions gate on login (saving, recommendations), enforced at their own
 // endpoints; the page itself is open and server-rendered for crawlers. Its
@@ -2613,12 +2680,58 @@ if (require.main === module) {
       log.warn("photo prewarm failed", { error: e.message }),
     );
 
+  // Retention delivery: an in-process daily tick that emails due digests +
+  // deadline reminders (lib/notify decides who's due, deduped by per-student
+  // timestamps so a restart can't double-send). Only runs when email is live —
+  // dormant deployments schedule nothing. Ceiling: a single web process; if you
+  // scale out to multiple instances, move this to one worker / external cron.
+  let notifTimer = null;
+  if (email.ENABLED) {
+    const origin =
+      (() => {
+        try {
+          return process.env.UNIVERSO_APP_URL
+            ? new URL(process.env.UNIVERSO_APP_URL).origin
+            : "";
+        } catch {
+          return "";
+        }
+      })() || `http://localhost:${cfg.PORT}`;
+    const send = (kind, student, payload) => {
+      const unsubscribeUrl = `${origin}/unsubscribe?token=${auth.unsubscribeToken(student.student_id)}`;
+      const data = { origin, unsubscribeUrl, ...payload };
+      return kind === "digest"
+        ? email.sendWeeklyDigest(student, data)
+        : email.sendDeadlineReminder(student, data);
+    };
+    const runNotifications = async () => {
+      const students = store.read("students");
+      try {
+        const r = await notify.runDueEmails({
+          students,
+          now: new Date(),
+          buildData: buildJourneyData,
+          send,
+          persist: () => store.write("students", students),
+        });
+        if (r.digests || r.reminders) log.info("notifications sent", r);
+      } catch (e) {
+        log.captureError(e, { where: "notifications" });
+      }
+    };
+    const DAY = 24 * 60 * 60 * 1000;
+    notifTimer = setInterval(runNotifications, DAY);
+    notifTimer.unref?.();
+    setTimeout(runNotifications, 60 * 1000).unref?.(); // first pass ~1min after boot
+  }
+
   let shuttingDown = false;
   async function shutdown(signal) {
     if (shuttingDown) return;
     shuttingDown = true;
     log.info("shutdown", { signal });
     server.close();
+    if (notifTimer) clearInterval(notifTimer);
     try {
       await events.flush();
     } catch {
@@ -2632,3 +2745,4 @@ if (require.main === module) {
 }
 
 module.exports = app; // exported for tests
+module.exports.buildJourneyData = buildJourneyData; // for digest/notify tests

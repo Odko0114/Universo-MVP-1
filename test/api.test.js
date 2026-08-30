@@ -695,6 +695,54 @@ test("application notes/decision, doc expiry, scholarship deadline, and the agen
   await req("DELETE", "/api/me");
 });
 
+test("notification prefs resolve to defaults, PATCH persists, one-click unsubscribe works", async () => {
+  const authLib = require("../lib/auth");
+  const testAddr = `notif_${Date.now()}@example.com`;
+  const reg = await req("POST", "/api/auth/register", {
+    full_name: "Notif Flow",
+    email: testAddr,
+    password: "password123",
+    consent: true,
+  });
+  const id = reg.json.student.student_id;
+  // Defaults resolved on the public student object.
+  assert.equal(reg.json.student.notifications.weekly_digest, true);
+  assert.equal(reg.json.student.notifications.deadline_reminders, true);
+
+  // PATCH turns one category off; response echoes the resolved set.
+  const patched = await req("PATCH", "/api/me/notifications", {
+    weekly_digest: false,
+  });
+  assert.equal(patched.status, 200);
+  assert.equal(patched.json.notifications.weekly_digest, false);
+  assert.equal(patched.json.notifications.deadline_reminders, true, "others unchanged");
+
+  // Requires auth.
+  const unauth = await fetch(base + "/api/me/notifications", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ weekly_digest: true }),
+  });
+  assert.equal(unauth.status, 401);
+
+  // One-click unsubscribe (no login) via the stateless HMAC token.
+  const token = authLib.unsubscribeToken(id);
+  const un = await fetch(`${base}/unsubscribe?token=${encodeURIComponent(token)}`);
+  assert.equal(un.status, 200);
+  assert.match(await un.text(), /unsubscribed/i);
+  // All categories now off in the store.
+  const stored = store.read("students").find((s) => s.student_id === id);
+  assert.equal(stored.notifications.deadline_reminders, false);
+  assert.equal(stored.notifications.weekly_digest, false);
+
+  // A bogus token is rejected gracefully (no 500, no change).
+  const bad = await fetch(`${base}/unsubscribe?token=nope.deadbeef`);
+  assert.equal(bad.status, 200);
+  assert.match(await bad.text(), /isn't valid|expired/i);
+
+  await req("DELETE", "/api/me");
+});
+
 test("application status: requires the uni saved, validates status, persists, rolls up, clears on unsave", async () => {
   const testAddr = `appstatus_${Date.now()}@example.com`;
   await req("POST", "/api/auth/register", {

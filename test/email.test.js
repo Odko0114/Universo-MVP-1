@@ -79,3 +79,43 @@ test("all templates produce a non-empty plain-text alternative (deliverability)"
     assert.match(t.html, /<!doctype html>/i);
   }
 });
+
+test("layout uses the real mark + sans wordmark, not the old serif italic", () => {
+  const t = email.welcomeTemplate({ name: "A" });
+  assert.ok(
+    !/font-style:italic;font-weight:700;font-size:20px;color:#FFFFFF/.test(t.html),
+    "old serif-italic wordmark is gone",
+  );
+  assert.match(t.html, /viewBox="0 0 200 200"/, "the shared mark SVG is present");
+});
+
+test("weeklyDigestTemplate: built from real state, includes tasks/deadlines + unsubscribe", () => {
+  const t = email.weeklyDigestTemplate({
+    name: "Bat",
+    origin: "https://universo.app",
+    actionPlan: [{ label: "Finish Helsinki motivation letter", detail: "due in 3 days" }],
+    agenda: [{ label: "Helsinki — application deadline", days_left: 3 }],
+    funding: { annual_max: 25200, gap: 10200 },
+    unsubscribeUrl: "https://universo.app/unsubscribe?token=s1.abc",
+  });
+  assert.match(t.subject, /Universo week/);
+  assert.match(t.html, /Finish Helsinki motivation letter/);
+  assert.match(t.html, /due in 3 days/);
+  assert.match(t.html, /universo\.app\/journey/);
+  assert.match(t.html, /unsubscribe\?token=s1\.abc/);
+  assert.match(t.html, /over your budget/, "funding gap surfaces only as real");
+  assert.match(t.text, /Finish Helsinki/);
+});
+
+test("deadlineReminderTemplate: factual urgency + missing docs, deep-links to the app", () => {
+  const t = email.deadlineReminderTemplate({
+    name: "Bat",
+    origin: "https://universo.app",
+    application: { uni_id: "tum", name: "Helsinki", days_left: 3, missing_required: ["Diploma", "CV"] },
+    unsubscribeUrl: "https://universo.app/unsubscribe?token=s1.abc",
+  });
+  assert.match(t.subject, /due in 3 days/);
+  assert.match(t.html, /2 required documents still incomplete: Diploma, CV/);
+  assert.match(t.html, /journey#app-tum/);
+  assert.ok(!/LAST CHANCE|hurry|don't miss/i.test(t.html), "no manufactured urgency");
+});
