@@ -326,6 +326,36 @@ test("applicationsOverview: buckets by document completion and sorts deadlines",
   assert.equal(ov.upcoming_deadlines[0].name, "Aalto", "earliest deadline first");
 });
 
+test("sinceAway: honest deadline deltas after a real absence; null otherwise", () => {
+  const now = new Date("2026-02-20T00:00:00Z");
+  const tenDaysAgo = "2026-02-10T00:00:00Z";
+  const views = [
+    { uni_id: "u1", name: "Helsinki", days_left: 5 }, // was ~15d → newly urgent
+    { uni_id: "u2", name: "Aalto", days_left: -2 }, // was ~8d → newly overdue
+    { uni_id: "u3", name: "Turku", days_left: 40 }, // still far → excluded
+    { uni_id: "u4", name: "Oulu", days_left: null }, // no deadline → excluded
+  ];
+  const sa = journey.sinceAway(views, tenDaysAgo, now);
+  assert.equal(sa.away_days, 10);
+  assert.deepEqual(
+    sa.items.map((i) => `${i.uni_id}:${i.kind}`),
+    ["u1:urgent", "u2:overdue"],
+  );
+
+  // No previous visit, or too recent an absence → nothing.
+  assert.equal(journey.sinceAway(views, "", now), null);
+  assert.equal(
+    journey.sinceAway(views, "2026-02-19T18:00:00Z", now),
+    null,
+    "a few hours away is not 'since you were away'",
+  );
+  // Away a while but nothing changed → null (Turku alone).
+  assert.equal(
+    journey.sinceAway([views[2]], tenDaysAgo, now),
+    null,
+  );
+});
+
 test("computeFunding: uses hand-researched tuition + living, computes the gap", () => {
   const unis = [
     {

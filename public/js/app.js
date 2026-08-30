@@ -1317,9 +1317,28 @@
         </table></div>`
           : "";
 
+      // "Since you were away" — only real deadline deltas, only after a real
+      // absence (server returns null otherwise).
+      const sa = data.since_away;
+      const sinceAwayCard = sa
+        ? `
+        <div class="card since-away">
+          <div class="since-away__eyebrow">While you were away (${sa.away_days} day${sa.away_days === 1 ? "" : "s"})</div>
+          <ul class="since-away__list">
+            ${sa.items
+              .map(
+                (it) =>
+                  `<li><a class="journey-jump" href="#app-${esc(it.uni_id)}"><strong>${esc(it.name)}</strong> — ${it.kind === "overdue" ? "deadline has passed" : "deadline is " + esc(deadlineText(it.days_left).toLowerCase())}</a></li>`,
+              )
+              .join("")}
+          </ul>
+        </div>`
+        : "";
+
       return `
         <div class="journey">
           <div class="section-head"><h2>Your Dream Plan, ${first}</h2></div>
+          ${sinceAwayCard}
           ${dreamCard}
           ${nextBestCard}
           ${actionPlanCard}
@@ -2701,22 +2720,22 @@
     {
       key: "fields",
       title: "What do you want to study?",
-      sub: "Pick up to 3 — this drives your matches.",
+      sub: "Pick up to 3 — this ranks every university for you instead of A–Z.",
     },
     {
       key: "degree",
       title: "Level & budget",
-      sub: "What are you aiming for, and what can you afford per year?",
+      sub: "Your budget powers the funding-gap on each application and the cost comparisons.",
     },
     {
       key: "langs",
       title: "Which languages can you study in?",
-      sub: "Not your nationality — the languages you could take a degree in.",
+      sub: "So results only show programs you could actually take a degree in.",
     },
     {
       key: "place",
       title: "Where would you like to be?",
-      sub: "All optional — leave blank for no preference.",
+      sub: "Sharpens your matches and the scholarships suggested for those countries. All optional.",
     },
   ];
 

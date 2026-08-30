@@ -695,6 +695,43 @@ test("application notes/decision, doc expiry, scholarship deadline, and the agen
   await req("DELETE", "/api/me");
 });
 
+test("since_away surfaces real deadline deltas for a returning student", async () => {
+  const testAddr = `away_${Date.now()}@example.com`;
+  const reg = await req("POST", "/api/auth/register", {
+    full_name: "Away Flow",
+    email: testAddr,
+    password: "password123",
+    consent: true,
+  });
+  const id = reg.json.student.student_id;
+  await req("POST", "/api/me/saved/tum");
+  const soon = new Date();
+  soon.setDate(soon.getDate() + 3);
+  await req("POST", "/api/me/application/tum", {
+    status: "preparing",
+    deadline: soon.toISOString().slice(0, 10),
+  });
+
+  // Backdate the previous-visit marker to 10 days ago (in-process store access).
+  const students = store.read("students");
+  const s = students.find((x) => x.student_id === id);
+  const tenDaysAgo = new Date();
+  tenDaysAgo.setDate(tenDaysAgo.getDate() - 10);
+  s.last_journey_view = tenDaysAgo.toISOString();
+  store.write("students", students);
+
+  const j = (await req("GET", "/api/me/journey")).json;
+  assert.ok(j.since_away, "a returning student with a newly-urgent deadline gets a summary");
+  assert.equal(j.since_away.items[0].uni_id, "tum");
+  assert.equal(j.since_away.items[0].kind, "urgent");
+
+  // The marker advanced, so an immediate second load shows nothing.
+  const j2 = (await req("GET", "/api/me/journey")).json;
+  assert.equal(j2.since_away, null, "no phantom 'while away' on a fresh reload");
+
+  await req("DELETE", "/api/me");
+});
+
 test("notification prefs resolve to defaults, PATCH persists, one-click unsubscribe works", async () => {
   const authLib = require("../lib/auth");
   const testAddr = `notif_${Date.now()}@example.com`;

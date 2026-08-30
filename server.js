@@ -411,6 +411,9 @@ api.post(
       notifications: {},
       last_digest_sent: "",
       reminders_sent: {},
+      // Marks the previous Dream Plan visit, so "Since you were away" can show
+      // honest deadline deltas. Older accounts read as "" — no migration.
+      last_journey_view: "",
       signup_date: now,
       last_active_date: now,
       token_version: 0,
@@ -1582,7 +1585,20 @@ function buildJourneyData(student) {
 }
 
 api.get("/me/journey", auth.requireAuth, (req, res) => {
-  res.json(buildJourneyData(req.student));
+  const data = buildJourneyData(req.student);
+  // "Since you were away" is computed against the PREVIOUS visit, then the
+  // marker is advanced. Persisted debounced (a hot, low-value write).
+  data.since_away = journey.sinceAway(
+    data.applications,
+    req.student.last_journey_view,
+  );
+  const students = store.read("students");
+  const s = students.find((x) => x.student_id === req.student.student_id);
+  if (s) {
+    s.last_journey_view = new Date().toISOString();
+    store.writeDebounced("students", students);
+  }
+  res.json(data);
 });
 
 // Toggle a self-reported timeline milestone. Only the "self" keys are
