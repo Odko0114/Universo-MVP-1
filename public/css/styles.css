@@ -1072,6 +1072,15 @@ img {
   flex-direction: column;
   gap: 0;
 }
+.saved-cell__cta {
+  width: 100%;
+  margin-top: 8px;
+}
+.saved-cell__open {
+  display: inline-block;
+  margin-top: 6px;
+  align-self: flex-start;
+}
 .app-status {
   display: flex;
   align-items: center;

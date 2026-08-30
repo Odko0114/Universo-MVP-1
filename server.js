@@ -34,6 +34,7 @@ const {
   scholarshipsOutbound,
 } = require("./lib/scholarships");
 const notify = require("./lib/notify");
+const brand = require("./lib/brand");
 const events = require("./lib/events");
 const validate = require("./lib/validate");
 const ssr = require("./lib/ssr");
@@ -2289,14 +2290,31 @@ app.get("/healthz", (_req, res) =>
 // Static assets, SEO, and SSR
 // ---------------------------------------------------------------------------
 const PUBLIC_DIR = path.join(__dirname, "public");
-const SHELL = fs.readFileSync(path.join(PUBLIC_DIR, "index.html"), "utf8");
+
+// Single-source branding + cache-busting for every server-served HTML page.
+// `<!--BRAND_MARK-->` is filled from lib/brand.js (change the mark once, every
+// page updates), and the un-hashed CSS/JS get a per-deploy `?v=` so a branding
+// change never sits behind a stale cached asset (the logo-cache confusion).
+const ASSET_V =
+  (process.env.RENDER_GIT_COMMIT || "").slice(0, 8) || String(Date.now());
+const withBrand = (html) =>
+  html
+    .split("<!--BRAND_MARK-->")
+    .join(brand.markSvgInline())
+    .replace(/(\/css\/styles\.css|\/js\/app\.js)(?![?\w])/g, `$1?v=${ASSET_V}`);
+const readPage = (file) =>
+  withBrand(fs.readFileSync(path.join(PUBLIC_DIR, file), "utf8"));
+
+const SHELL = readPage("index.html");
+const LANDING = readPage("landing.html");
+const ADMIN_PAGE = readPage("admin.html");
+const PARTNERS_PAGE = readPage("partners.html");
+const PARTNERS_DEMO_PAGE = readPage("partners-demo.html");
+const sendHtml = (res, html) =>
+  res.set("Cache-Control", "no-cache").type("html").send(html);
 const FOR_UNIVERSITIES = (() => {
-  const raw = fs.readFileSync(
-    path.join(PUBLIC_DIR, "for-universities.html"),
-    "utf8",
-  );
   const fmt = (n) => n.toLocaleString("en-US");
-  return raw
+  return readPage("for-universities.html")
     .replace(/\{\{TOTAL_RAW\}\}/g, String(PLATFORM_COUNTS.total))
     .replace(/\{\{TOTAL\}\}/g, fmt(PLATFORM_COUNTS.total))
     .replace(/\{\{VERIFIED_RAW\}\}/g, String(PLATFORM_COUNTS.verified))
@@ -2330,21 +2348,15 @@ app.use(
   }),
 );
 
-app.get("/admin", (_req, res) =>
-  res.sendFile(path.join(PUBLIC_DIR, "admin.html")),
-);
+app.get("/admin", (_req, res) => sendHtml(res, ADMIN_PAGE));
 
 // Partner dashboard — one shared static page for every university account;
 // which university's data it shows is decided by the session server-side.
-app.get("/partners", (_req, res) =>
-  res.sendFile(path.join(PUBLIC_DIR, "partners.html")),
-);
+app.get("/partners", (_req, res) => sendHtml(res, PARTNERS_PAGE));
 
 // Public, no-login SALES demo of the partner dashboard — clearly labelled
 // "example data, not live". Sells the value prop before a university claims.
-app.get("/partners/demo", (_req, res) =>
-  res.sendFile(path.join(PUBLIC_DIR, "partners-demo.html")),
-);
+app.get("/partners/demo", (_req, res) => sendHtml(res, PARTNERS_DEMO_PAGE));
 
 // The B2B pitch (analytics, claim-a-profile, pilot contact form) lives on its
 // own page, off the student-facing homepage.
@@ -2484,11 +2496,13 @@ app.get("/university/:id", (req, res) => {
 // The homepage IS the product: visitors see real, browsable university data
 // immediately instead of a marketing page. Permanent redirect keeps one
 // canonical URL for the directory.
-// The front door: orients a cold visitor AND hands them the live matcher (the
-// same engine Discover uses), then flows into the app. Was a 301 to /discover.
-app.get("/", (_req, res) =>
-  res.sendFile(path.join(PUBLIC_DIR, "landing.html")),
-);
+// The front door: a logged-in student lands on their Dream Plan (the "what
+// should I do next" home — their next best action, deadlines, progress), NOT a
+// cold directory. Anonymous visitors get the marketing landing + live matcher.
+app.get("/", (req, res) => {
+  if (auth.loadStudent(req)) return res.redirect(302, "/journey");
+  sendHtml(res, LANDING);
+});
 
 // One-click unsubscribe (no login, no JS) from an email footer link. The token
 // is a stateless HMAC of the student id (lib/auth), so it works for any account

@@ -178,6 +178,14 @@
     target:
       '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
   };
+  // The Universo mark for client-rendered views (auth card). Cloned from the
+  // shell's nav logo, which the server fills from lib/brand.js — one source, so
+  // this can never drift from the rest of the product.
+  const brandMark = () => {
+    const m = document.querySelector(".topbar .brand__mark svg");
+    return m ? m.outerHTML : "";
+  };
+
   const icon = (name, size = 44) =>
     `<svg class="icon" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ""}</svg>`;
 
@@ -1649,6 +1657,16 @@
     }
 
     paint();
+
+    // Deep link (#app-<id>) — from a "Start application" click or an email
+    // reminder link: open that application and scroll to it once painted.
+    if (location.hash.startsWith("#app-")) {
+      const target = document.getElementById(location.hash.slice(1));
+      if (target) {
+        if (target.tagName === "DETAILS") target.open = true;
+        target.scrollIntoView({ block: "start" });
+      }
+    }
   }
 
   async function renderSaved() {
@@ -1658,7 +1676,7 @@
     }
     setActiveNav("saved");
     document.title = "Saved — Universo";
-    view.innerHTML = `<div class="section-head"><h2>Saved universities</h2><span id="cmp-link"></span></div><div id="results" class="grid">${'<div class="skeleton"></div>'.repeat(3)}</div>`;
+    view.innerHTML = `<div class="section-head"><h2>Saved universities</h2><span id="cmp-link"></span></div><div id="results"><div class="grid">${'<div class="skeleton"></div>'.repeat(3)}</div></div>`;
     try {
       const { universities } = await API.saved();
       state.savedIds = new Set(universities.map((u) => u.id));
@@ -1669,16 +1687,41 @@
           '<a class="link-btn" href="/compare" data-link>Compare side by side</a>';
       }
       const results = document.getElementById("results");
+      // Two clear buckets: universities you're actively applying to vs ones you
+      // saved to consider. Makes Saved (interested) and Dream Plan (applying)
+      // distinct instead of two lists of the same schools.
+      const applying = universities.filter(
+        (u) => (u.application_status || "planning") !== "planning",
+      );
+      const interested = universities.filter(
+        (u) => (u.application_status || "planning") === "planning",
+      );
+      const section = (title, sub, list) =>
+        list.length
+          ? `<div class="section-head" style="margin-top:20px"><h3 style="margin:0">${title} (${list.length})</h3></div><p class="muted" style="margin:-2px 0 12px">${sub}</p><div class="grid">${list.map(savedCell).join("")}</div>`
+          : "";
       results.innerHTML = universities.length
-        ? universities.map(savedCell).join("")
-        : `<div style="grid-column:1/-1">${emptyState({
+        ? section(
+            "Applying",
+            "Applications you've started — track deadlines, documents and status in your Dream Plan.",
+            applying,
+          ) +
+          section(
+            "Interested",
+            "Saved to compare. Start an application whenever you're ready to pursue one.",
+            interested,
+          )
+        : emptyState({
             iconName: "bookmark",
             title: "Your shortlist is empty",
             sub: "Tap “Save” on any university to start comparing your options side by side.",
             ctaHref: "/discover",
             ctaLabel: "Browse universities",
-          })}</div>`;
+          });
       wireStatusSelects(results);
+      results.querySelectorAll("[data-start-app]").forEach((btn) => {
+        btn.addEventListener("click", () => onStartApp(btn.dataset.startApp, btn));
+      });
     } catch (e) {
       view.innerHTML = emptyState({
         iconName: "alert",
@@ -1880,18 +1923,25 @@
     }
   }
 
-  // A saved-list cell = the shared university card plus an editable application
-  // status (only shown on Saved — the card itself stays reusable for Discover).
+  // A saved-list cell. "Interested" (status planning) gets a clear primary
+  // "Start application" action; once applying, it shows the status control and a
+  // link into the Dream Plan where the application is actually worked.
   function savedCell(u) {
     const cur = u.application_status || "planning";
+    const interested = cur === "planning";
     return `<div class="saved-cell">
       ${uniCard(u)}
-      <label class="app-status">
+      ${
+        interested
+          ? `<button class="btn btn--primary btn--sm saved-cell__cta" data-start-app="${esc(u.id)}">Start application →</button>`
+          : `<label class="app-status">
         <span class="app-status__label">Application status</span>
         <select class="app-status__select" data-status-for="${esc(u.id)}">
           ${APP_STATUSES.map(([v, l]) => `<option value="${v}"${v === cur ? " selected" : ""}>${esc(l)}</option>`).join("")}
         </select>
       </label>
+      <a class="link-btn saved-cell__open" href="/journey#app-${esc(u.id)}" data-link>Open in Dream Plan →</a>`
+      }
     </div>`;
   }
 
@@ -2095,6 +2145,20 @@
       else last.items.push(it);
     }
     return groups;
+  }
+
+  // "Start application" = promote from interested (planning) to preparing, then
+  // drop the student into that application in the Dream Plan.
+  async function onStartApp(id, btn) {
+    btn.disabled = true;
+    try {
+      await API.setApplicationStatus(id, "preparing");
+      toast("Application started");
+      navigate("/journey#app-" + id);
+    } catch (e) {
+      btn.disabled = false;
+      toast(e.message, true);
+    }
   }
 
   function wireStatusSelects(root) {
@@ -2788,12 +2852,7 @@
     view.innerHTML = `
       <div class="auth-card">
         <div class="auth-card__brand">
-          <span class="brand__mark" aria-hidden="true">
-            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-              <path fill="currentColor" d="M21.5 38.8 L28.6 42.7 L29.7 44.9 L65 70 L70.1 72.2 L80.6 80.6 L83.8 86.3 L85.3 86.8 L85.3 127.3 L86.1 127.8 L85.3 129.5 L85.7 146.7 L84.9 148 L86.1 148.9 L88.5 158.6 L94.7 164.8 L94.3 167 L92.4 165.2 L93.5 164.8 L92.8 163.9 L88.5 163.4 L80.6 158.6 L77.5 155.1 L29.4 120.3 L21.9 111 L19.2 101.3 L20 99.1 L19.2 88.5 L20.4 81.9 L19.6 67 L18.8 67.8 L20.4 60.8 L19.6 47.1 L20.4 39.6 Z"/>
-              <path fill="currentColor" d="M178.5 38.8 L171.4 42.7 L170.3 44.9 L135 70 L129.9 72.2 L119.4 80.6 L116.2 86.3 L114.7 86.8 L114.7 127.3 L113.9 127.8 L114.7 129.5 L114.3 146.7 L115.1 148 L113.9 148.9 L111.5 158.6 L105.3 164.8 L105.7 167 L107.6 165.2 L106.5 164.8 L107.2 163.9 L111.5 163.4 L119.4 158.6 L122.5 155.1 L170.6 120.3 L178.1 111 L180.8 101.3 L180 99.1 L180.8 88.5 L179.6 81.9 L180.4 67 L181.2 67.8 L179.6 60.8 L180.4 47.1 L179.6 39.6 Z"/>
-            </svg>
-          </span>
+          <span class="brand__mark" aria-hidden="true">${brandMark()}</span>
           <div>
             <div class="auth-card__name">Universo</div>
             <div class="auth-card__tag">Same Start. Equal Chance.</div>
@@ -3155,11 +3214,11 @@
     if (!savedY) window.scrollTo(0, 0);
     view.focus({ preventScroll: true });
 
-    // "/" is the marketing landing page, served as its own static page — the
-    // SPA should never actually be asked to render it. If it ever is (e.g. a
-    // stale link), send the visitor on into the app rather than show nothing.
+    // "/" is the marketing landing page (served statically). If the SPA is ever
+    // asked to render it, send a logged-in student to their plan (their "what
+    // next" home) and an anonymous visitor on into Discover.
     if (parts.length === 0) {
-      navigate("/discover", true);
+      navigate(state.user ? "/journey" : "/discover", true);
       return;
     }
 
