@@ -1305,11 +1305,11 @@
               .map(
                 (a) =>
                   `<tr>
-                <th scope="row"><a class="journey-jump" href="#app-${esc(a.uni_id)}">${esc(a.name)}</a></th>
-                <td>${a.deadline ? esc(deadlineText(a.days_left)) : "—"}</td>
-                <td>${esc((APP_STATUSES.find(([k]) => k === a.status) || ["", "Planning"])[1])}</td>
-                <td>${a.required_done}/${a.required_total}</td>
-                <td>${a.cost.known ? "~" + esc(eur(a.cost.min)) + "–" + esc(eur(a.cost.max)) : "—"}</td>
+                <th scope="row"><a class="journey-jump" href="#app-${esc(a.uni_id)}">${esc(a.name)}</a>${a.program || a.intake ? `<span class="cmp-apps__sub">${[a.program, a.intake].filter(Boolean).map(esc).join(" · ")}</span>` : ""}</th>
+                <td data-label="Deadline">${a.deadline ? esc(deadlineText(a.days_left)) : "—"}</td>
+                <td data-label="Status">${esc((APP_STATUSES.find(([k]) => k === a.status) || ["", "Planning"])[1])}</td>
+                <td data-label="Docs">${a.required_done}/${a.required_total}</td>
+                <td data-label="Est. cost/yr">${a.cost.known ? "~" + esc(eur(a.cost.min)) + "–" + esc(eur(a.cost.max)) : "—"}</td>
               </tr>`,
               )
               .join("")}
@@ -1563,6 +1563,11 @@
       view.querySelectorAll("[data-app-program]").forEach((inp) => {
         inp.addEventListener("change", () =>
           onAppField(inp.dataset.appProgram, { program: inp.value }),
+        );
+      });
+      view.querySelectorAll("[data-app-intake]").forEach((inp) => {
+        inp.addEventListener("change", () =>
+          onAppField(inp.dataset.appIntake, { intake: inp.value }),
         );
       });
       view.querySelectorAll("[data-req-for]").forEach((sel) => {
@@ -2023,7 +2028,11 @@
       <summary class="app-card__head">
         <div class="app-card__title">
           <strong>${esc(a.name)}</strong>
-          ${a.program ? `<span class="muted">${esc(a.program)}</span>` : ""}
+          ${
+            a.program || a.intake
+              ? `<span class="muted">${[a.program, a.intake].filter(Boolean).map(esc).join(" · ")}</span>`
+              : ""
+          }
         </div>
         <div class="app-card__meta">
           <span class="chip chip--plain">${esc(statusLabel)}</span>
@@ -2035,6 +2044,7 @@
       <div class="app-card__body">
         <div class="app-fields">
           <label class="app-field"><span>Program <span class="muted">(optional)</span></span><input type="text" class="onb-input" data-app-program="${esc(a.uni_id)}" maxlength="120" placeholder="e.g. Computer Science" value="${esc(a.program)}" /></label>
+          <label class="app-field"><span>Intake <span class="muted">(optional)</span></span><input type="text" class="onb-input" data-app-intake="${esc(a.uni_id)}" maxlength="60" placeholder="e.g. Fall 2027" value="${esc(a.intake)}" /></label>
           <label class="app-field"><span>Deadline</span><input type="date" class="onb-input" data-app-deadline="${esc(a.uni_id)}" value="${esc(a.deadline)}" /></label>
           <label class="app-field"><span>Status</span><select class="onb-input" data-app-status="${esc(a.uni_id)}">${APP_STATUSES.map(([v, l]) => `<option value="${v}"${v === a.status ? " selected" : ""}>${esc(l)}</option>`).join("")}</select></label>
           ${showDecision ? `<label class="app-field"><span>Decision expected</span><input type="date" class="onb-input" data-app-decision="${esc(a.uni_id)}" value="${esc(a.decision_date)}" /></label>` : ""}
@@ -2060,17 +2070,18 @@
     </details>`;
   }
 
-  function levelSelect(attrs, level) {
-    return `<select class="doc-level" ${attrs}>${LEVELS.map(([v, l]) => `<option value="${v}"${v === level ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
+  function levelSelect(attrs, level, label) {
+    return `<select class="doc-level" aria-label="Requirement level for ${esc(label || "document")}" ${attrs}>${LEVELS.map(([v, l]) => `<option value="${v}"${v === level ? " selected" : ""}>${esc(l)}</option>`).join("")}</select>`;
   }
 
   function appDocRow(uniId, doc) {
+    const checkLabel = `${doc.ready ? "Mark not ready" : "Mark ready"}: ${doc.label}`;
     if (doc.custom) {
       return `
       <li class="doc-item doc-item--app${doc.ready ? " is-done" : ""}">
-        <button type="button" class="doc-check" data-custom-doc-for="${esc(uniId)}" data-cid="${esc(doc.key)}" aria-pressed="${doc.ready}" title="${doc.ready ? "Mark not ready" : "Mark ready"}">${doc.ready ? "✓" : ""}</button>
+        <button type="button" class="doc-check" data-custom-doc-for="${esc(uniId)}" data-cid="${esc(doc.key)}" aria-pressed="${doc.ready}" aria-label="${esc(checkLabel)}" title="${doc.ready ? "Mark not ready" : "Mark ready"}">${doc.ready ? "✓" : ""}</button>
         <div class="doc-body"><strong>${esc(doc.label)}</strong> <span class="muted" style="font-size:.8rem">Added by you</span></div>
-        ${levelSelect(`data-custom-req="${esc(uniId)}" data-cid="${esc(doc.key)}"`, doc.level)}
+        ${levelSelect(`data-custom-req="${esc(uniId)}" data-cid="${esc(doc.key)}"`, doc.level, doc.label)}
         <button type="button" class="doc-remove" data-custom-remove="${esc(uniId)}" data-cid="${esc(doc.key)}" title="Remove document" aria-label="Remove ${esc(doc.label)}">×</button>
       </li>`;
     }
@@ -2079,11 +2090,16 @@
         ? '<span class="chip chip--plain">✓ In your documents</span>'
         : '<span class="muted" style="font-size:.8rem">Shared — prepare once in My documents</span>'
       : '<span class="muted" style="font-size:.8rem">Written for this university</span>';
+    // Honest signal: this requirement is mentioned in the university's OWN
+    // published listing (not asserted by Universo, and still editable).
+    const listed = doc.listed
+      ? ' <span class="doc-listed" title="Mentioned in the university’s published requirements — verify on their official page">listed by the university</span>'
+      : "";
     return `
       <li class="doc-item doc-item--app${doc.ready ? " is-done" : ""}">
-        <button type="button" class="doc-check" data-app-doc-for="${esc(uniId)}" data-doc="${esc(doc.key)}" data-shared="${doc.shared}" aria-pressed="${doc.ready}" title="${doc.ready ? "Mark not ready" : "Mark ready"}">${doc.ready ? "✓" : ""}</button>
-        <div class="doc-body"><strong>${esc(doc.label)}</strong> ${note}</div>
-        ${levelSelect(`data-req-for="${esc(uniId)}" data-doc="${esc(doc.key)}"`, doc.level)}
+        <button type="button" class="doc-check" data-app-doc-for="${esc(uniId)}" data-doc="${esc(doc.key)}" data-shared="${doc.shared}" aria-pressed="${doc.ready}" aria-label="${esc(checkLabel)}" title="${doc.ready ? "Mark not ready" : "Mark ready"}">${doc.ready ? "✓" : ""}</button>
+        <div class="doc-body"><strong>${esc(doc.label)}</strong> ${note}${listed}</div>
+        ${levelSelect(`data-req-for="${esc(uniId)}" data-doc="${esc(doc.key)}"`, doc.level, doc.label)}
       </li>`;
   }
 

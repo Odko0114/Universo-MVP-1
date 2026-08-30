@@ -390,6 +390,54 @@ test("annualCost: curated tuition + living, else unknown", () => {
   assert.equal(est.known, false, "estimated tuition is never treated as fact");
 });
 
+test("applicationView: program + intake flow through; normalizeApplication carries intake", () => {
+  const n = journey.normalizeApplication({ intake: "Fall 2027", program: "CS" });
+  assert.equal(n.intake, "Fall 2027");
+  assert.equal(journey.normalizeApplication("applied").intake, "");
+  const v = journey.applicationView(
+    { program: "Data Science", intake: "Spring 2028" },
+    { id: "u1", name: "X" },
+    {},
+  );
+  assert.equal(v.program, "Data Science");
+  assert.equal(v.intake, "Spring 2028");
+});
+
+test("applicationView: a curated listing marks docs 'listed', editable, never fabricated", () => {
+  const uni = {
+    id: "u1",
+    name: "Curated",
+    acceptance_requirements:
+      "Recognised prior degree, proof of English (IELTS 6.5), and a recommendation letter.",
+  };
+  const v = journey.applicationView({}, uni, {});
+  const eng = v.docs.find((d) => d.key === "english_test");
+  const rec = v.docs.find((d) => d.key === "recommendation");
+  const cv = v.docs.find((d) => d.key === "cv");
+  assert.equal(eng.listed, true, "IELTS mention → english listed");
+  assert.equal(eng.level, "required");
+  assert.equal(rec.listed, true, "recommendation letter mention → listed");
+  assert.equal(rec.level, "required", "listing nudges recommendation to required");
+  assert.equal(cv.listed, false, "CV not mentioned → not listed");
+
+  // A register uni with no listing text → nothing listed, defaults intact.
+  const bare = journey.applicationView({}, { id: "u2", name: "Register" }, {});
+  assert.ok(bare.docs.every((d) => d.listed === false));
+  assert.equal(bare.docs.find((d) => d.key === "cv").level, "recommended");
+
+  // Student override always wins over the listing suggestion.
+  const overridden = journey.applicationView(
+    { req: { recommendation: "not_required" } },
+    uni,
+    {},
+  );
+  assert.equal(
+    overridden.docs.find((d) => d.key === "recommendation").level,
+    "not_required",
+    "the student's own choice beats the listing",
+  );
+});
+
 test("applicationView: cost + over_budget from the student's budget", () => {
   const uni = {
     id: "u1",

@@ -1356,6 +1356,7 @@ function pruneApplication(app) {
     app.status === journey.DEFAULT_STATUS &&
     !app.deadline &&
     !app.program &&
+    !app.intake &&
     !app.notes &&
     !app.decision_date &&
     !Object.keys(app.req).length &&
@@ -1733,6 +1734,8 @@ api.post("/me/application/:id", auth.requireAuth, (req, res) => {
     return res.status(400).json({ error: "Deadline must be YYYY-MM-DD." });
   if (b.program !== undefined && typeof b.program !== "string")
     return res.status(400).json({ error: "Invalid program." });
+  if (b.intake !== undefined && typeof b.intake !== "string")
+    return res.status(400).json({ error: "Invalid intake." });
   if (b.notes !== undefined && typeof b.notes !== "string")
     return res.status(400).json({ error: "Invalid notes." });
   if (
@@ -1745,6 +1748,7 @@ api.post("/me/application/:id", auth.requireAuth, (req, res) => {
     if (b.status !== undefined) a.status = b.status;
     if (b.deadline !== undefined) a.deadline = b.deadline;
     if (b.program !== undefined) a.program = b.program.trim().slice(0, 120);
+    if (b.intake !== undefined) a.intake = b.intake.trim().slice(0, 60);
     if (b.notes !== undefined) a.notes = b.notes.slice(0, 500);
     if (b.decision_date !== undefined) a.decision_date = b.decision_date;
   });
