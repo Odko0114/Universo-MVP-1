@@ -56,6 +56,17 @@
     ["accepted", "Accepted"],
     ["rejected", "Not accepted"],
   ];
+  // The Dream Plan status picker shows only the four stages a student thinks in.
+  // The underlying enum keeps its finer states (ready, under_review) for anyone
+  // who set them before; those map onto the nearest of these for display.
+  const DREAM_STATUSES = [
+    ["preparing", "Preparing"],
+    ["submitted", "Submitted"],
+    ["accepted", "Accepted"],
+    ["rejected", "Not accepted"],
+  ];
+  const dreamStatusValue = (s) =>
+    ({ ready: "preparing", under_review: "submitted", planning: "preparing" }[s] || s);
   // Per-application document requirement levels (mirrors lib/journey.js#LEVELS).
   const LEVELS = [
     ["required", "Required"],
@@ -68,6 +79,12 @@
     ["researching", "Researching"],
     ["applying", "Applying"],
     ["applied", "Applied"],
+  ];
+  // Shortlist priority buckets (mirrors lib/journey.js#PRIORITIES).
+  const PRIORITIES = [
+    ["reach", "Reach"],
+    ["target", "Target"],
+    ["safety", "Safety"],
   ];
   // Email notification categories (mirrors lib/notify.js#NOTIFICATION_CATEGORIES).
   const NOTIF_LABELS = [
@@ -459,7 +476,7 @@
           <div class="card-actions">
             <a class="btn btn--ghost btn--sm" href="/university/${esc(u.id)}" style="flex:1">View</a>
             <button class="btn btn--sm ${saved ? "btn--saved" : "btn--primary"}" data-save="${esc(u.id)}" style="flex:1">
-              ${saved ? `${icon("bookmark", 15)} Saved` : "＋ Save"}
+              ${saved ? `${icon("bookmark", 15)} Shortlisted` : "＋ Save to shortlist"}
             </button>
           </div>
         </div>
@@ -483,7 +500,7 @@
           "btn--ghost",
           !saved && !b.classList.contains("btn--sm"),
         );
-        b.innerHTML = saved ? `${icon("bookmark", 15)} Saved` : "＋ Save";
+        b.innerHTML = saved ? `${icon("bookmark", 15)} Shortlisted` : "＋ Save to shortlist";
         b.disabled = false;
       });
   }
@@ -507,7 +524,7 @@
       } else {
         await API.save(id);
         state.savedIds.add(id);
-        toast("Saved to your list");
+        toast("Added to your shortlist ✓");
       }
       paintSaveButtons(id);
       // Only the Saved list actually changes shape when an item is removed.
@@ -680,9 +697,13 @@
 
       ${state.user ? "" : quickMatchHtml}
 
+      <div class="scope-head">
+        <span class="scope-head__label">Show</span>
+        <span class="scope-info" tabindex="0" role="note" aria-label="What unverified means" title="Verified universities have a checked profile — official enrolment data, tuition and photos. Unverified ones come straight from the European register: real universities, but with limited details we haven't confirmed yet.">ⓘ</span>
+      </div>
       <div class="scope-row" role="group" aria-label="Result scope">
-        <button class="niche-btn ${d.scope === "verified" ? "is-active" : ""}" id="scope-verified" type="button" aria-pressed="${d.scope === "verified"}">✓ Verified profiles (${verifiedN})</button>
-        <button class="niche-btn ${d.scope === "all" ? "is-active" : ""}" id="scope-all" type="button" aria-pressed="${d.scope === "all"}">Include unverified register entries (${registerN})</button>
+        <button class="niche-btn ${d.scope === "verified" ? "is-active" : ""}" id="scope-verified" type="button" aria-pressed="${d.scope === "verified"}">Verified only (${verifiedN})</button>
+        <button class="niche-btn ${d.scope === "all" ? "is-active" : ""}" id="scope-all" type="button" aria-pressed="${d.scope === "all"}">Include unverified (${registerN})</button>
       </div>
 
       <button class="niche-btn ${niche ? "is-active" : ""}" id="niche-toggle" type="button">
@@ -698,10 +719,7 @@
 
       <div class="filters">
         <div class="field"><label for="f-country">Country</label><select id="f-country"><option value="">All countries</option>${opts(m.countries, d.country)}</select></div>
-        <div class="field"><label for="f-type">Institution type</label><select id="f-type"><option value="">All types</option>${opts(m.institution_types, d.type)}</select></div>
         <div class="field"><label for="f-field">Field of study</label><select id="f-field"><option value="">All fields</option>${opts(m.fields_of_study, d.field)}</select></div>
-        <div class="field"><label for="f-language">Language</label><select id="f-language"><option value="">Any language</option>${opts(m.languages, d.language)}</select></div>
-        <div class="field"><label for="f-degree">Degree level</label><select id="f-degree"><option value="">Any degree</option>${opts(m.degree_levels, d.degree)}</select></div>
         <div class="field"><label for="f-budget">Tuition budget</label><select id="f-budget">${budgets.map(([v, l]) => `<option value="${v}" ${v === d.maxTuition ? "selected" : ""}>${l}</option>`).join("")}</select></div>
         <div class="field field--wide"><label for="f-sort">Sort by</label><select id="f-sort">
           <option value="" ${d.sort === "" ? "selected" : ""}>${profiled ? "Best match (your profile)" : "Verified first, then A–Z"}</option>
@@ -711,6 +729,18 @@
           <option value="popular" ${d.sort === "popular" ? "selected" : ""}>Most popular</option>
         </select></div>
       </div>
+      <details class="more-filters"${d.type || d.language || d.degree ? " open" : ""}>
+        <summary>More filters${
+          (d.type ? 1 : 0) + (d.language ? 1 : 0) + (d.degree ? 1 : 0)
+            ? ` <span class="more-filters__n">${(d.type ? 1 : 0) + (d.language ? 1 : 0) + (d.degree ? 1 : 0)}</span>`
+            : ""
+        }</summary>
+        <div class="filters">
+          <div class="field"><label for="f-type">Institution type</label><select id="f-type"><option value="">All types</option>${opts(m.institution_types, d.type)}</select></div>
+          <div class="field"><label for="f-language">Language</label><select id="f-language"><option value="">Any language</option>${opts(m.languages, d.language)}</select></div>
+          <div class="field"><label for="f-degree">Degree level</label><select id="f-degree"><option value="">Any degree</option>${opts(m.degree_levels, d.degree)}</select></div>
+        </div>
+      </details>
 
       <div class="filters-row">
         <span id="result-count" class="muted" aria-live="polite">Loading…</span>
@@ -1144,7 +1174,9 @@
           ? `
         <div class="section-head" style="margin-top:26px" id="applications"><h3 style="margin:0">My applications</h3></div>
         <div class="app-list">${data.applications.map((a) => appCard(a, schByApp[a.name] || [])).join("")}</div>`
-          : "";
+          : `
+        <div class="section-head" style="margin-top:26px" id="applications"><h3 style="margin:0">My applications</h3></div>
+        <div class="card"><p class="muted" style="margin:0">You haven't started any applications yet. Open your <a href="/saved" data-link>shortlist</a> and hit <strong>Start application</strong> on the universities you're ready to pursue — they'll appear here to plan and track.</p></div>`;
 
       const sharedDocs = (data.documents || []).filter((d) => d.shared);
       const documentsCard = `
@@ -1293,29 +1325,8 @@
         </div>`
           : "";
 
-      // ---- Compare your applications (decide where to focus) ----
-      const compareCard =
-        (data.applications || []).length >= 2
-          ? `
-        <div class="section-head" style="margin-top:26px"><h3 style="margin:0">Compare your applications</h3></div>
-        <div class="cmp-scroll"><table class="cmp cmp--apps">
-          <thead><tr><th scope="col">Application</th><th scope="col">Deadline</th><th scope="col">Status</th><th scope="col">Docs</th><th scope="col">Est. cost/yr</th></tr></thead>
-          <tbody>
-            ${data.applications
-              .map(
-                (a) =>
-                  `<tr>
-                <th scope="row"><a class="journey-jump" href="#app-${esc(a.uni_id)}">${esc(a.name)}</a>${a.program || a.intake ? `<span class="cmp-apps__sub">${[a.program, a.intake].filter(Boolean).map(esc).join(" · ")}</span>` : ""}</th>
-                <td data-label="Deadline">${a.deadline ? esc(deadlineText(a.days_left)) : "—"}</td>
-                <td data-label="Status">${esc((APP_STATUSES.find(([k]) => k === a.status) || ["", "Planning"])[1])}</td>
-                <td data-label="Docs">${a.required_done}/${a.required_total}</td>
-                <td data-label="Est. cost/yr">${a.cost.known ? "~" + esc(eur(a.cost.min)) + "–" + esc(eur(a.cost.max)) : "—"}</td>
-              </tr>`,
-              )
-              .join("")}
-          </tbody>
-        </table></div>`
-          : "";
+      // (Compare lives in the Shortlist now — it's a narrowing tool, not part of
+      // application planning. Removed from Dream Plan to end the duplication.)
 
       // "Since you were away" — only real deadline deltas, only after a real
       // absence (server returns null otherwise).
@@ -1345,7 +1356,6 @@
           ${overviewCard}
           ${agendaCard}
           ${applicationsCard}
-          ${compareCard}
           ${documentsCard}
           ${costsCard}
           ${scholarshipsCard}
@@ -1574,6 +1584,12 @@
           onAppField(sel.dataset.appStatus, { status: sel.value }),
         );
       });
+      view.querySelectorAll("[data-move-shortlist]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          await onAppField(btn.dataset.moveShortlist, { status: "planning" });
+          toast("Moved back to your shortlist");
+        });
+      });
       view.querySelectorAll("[data-app-deadline]").forEach((inp) => {
         inp.addEventListener("change", () =>
           onAppField(inp.dataset.appDeadline, { deadline: inp.value }),
@@ -1693,66 +1709,185 @@
     }
   }
 
+  // Shortlist view state (kept across the in-view re-renders that filtering,
+  // sorting and re-categorising trigger — no refetch needed).
+  let shortlistFilter = "all";
+  let shortlistSort = "recent";
+
+  const tuitionValue = (u) =>
+    u.tuition_source === "curated_research" &&
+    u.tuition_range &&
+    Number.isFinite(u.tuition_range.min)
+      ? u.tuition_range.min
+      : Infinity;
+
+  function sortShortlist(list) {
+    const arr = list.slice();
+    if (shortlistSort === "name")
+      arr.sort((a, b) => a.name.localeCompare(b.name));
+    else if (shortlistSort === "country")
+      arr.sort((a, b) => (a.country || "").localeCompare(b.country || ""));
+    else if (shortlistSort === "tuition")
+      arr.sort((a, b) => tuitionValue(a) - tuitionValue(b));
+    else arr.reverse(); // "recent": saved list is oldest-first → newest first
+    return arr;
+  }
+
   async function renderSaved() {
     if (!state.user) {
       navigate("/account?src=gate&next=%2Fsaved", true);
       return;
     }
     setActiveNav("saved");
-    document.title = "Saved — Universo";
-    view.innerHTML = `<div class="section-head"><h2>Saved universities</h2><span id="cmp-link"></span></div><div id="results"><div class="grid">${'<div class="skeleton"></div>'.repeat(3)}</div></div>`;
+    document.title = "Shortlist — Universo";
+    view.innerHTML = `<div class="section-head"><h2>Your shortlist</h2></div><p class="muted sl-lede">Universities you're considering, before you decide where to apply.</p><div id="sl-body"><div class="grid">${'<div class="skeleton"></div>'.repeat(3)}</div></div>`;
+    const body = () => document.getElementById("sl-body");
     try {
       const { universities } = await API.saved();
       state.savedIds = new Set(universities.map((u) => u.id));
-      // Comparing needs at least two, so the entry point only appears once it
-      // would actually do something.
-      if (universities.length >= 2) {
-        document.getElementById("cmp-link").innerHTML =
-          '<a class="link-btn" href="/compare" data-link>Compare side by side</a>';
-      }
-      const results = document.getElementById("results");
-      // Two clear buckets: universities you're actively applying to vs ones you
-      // saved to consider. Makes Saved (interested) and Dream Plan (applying)
-      // distinct instead of two lists of the same schools.
-      const applying = universities.filter(
-        (u) => (u.application_status || "planning") !== "planning",
-      );
+      for (const id of [...compareSel]) if (!state.savedIds.has(id)) compareSel.delete(id);
+
       const interested = universities.filter(
         (u) => (u.application_status || "planning") === "planning",
       );
-      const section = (title, sub, list) =>
-        list.length
-          ? `<div class="section-head" style="margin-top:20px"><h3 style="margin:0">${title} (${list.length})</h3></div><p class="muted" style="margin:-2px 0 12px">${sub}</p><div class="grid">${list.map(savedCell).join("")}</div>`
-          : "";
-      results.innerHTML = universities.length
-        ? section(
-            "Applying",
-            "Applications you've started — track deadlines, documents and status in your Dream Plan.",
-            applying,
-          ) +
-          section(
-            "Interested",
-            "Saved to compare. Start an application whenever you're ready to pursue one.",
-            interested,
+      const committed = universities.filter(
+        (u) => (u.application_status || "planning") !== "planning",
+      );
+
+      // Nothing saved at all.
+      if (!universities.length) {
+        body().innerHTML = emptyState({
+          iconName: "bookmark",
+          title: "Your shortlist is empty",
+          sub: "Find universities in Discover and save the ones you're interested in.",
+          ctaHref: "/discover",
+          ctaLabel: "Explore universities →",
+        });
+        return;
+      }
+      // Everything you saved is already an application.
+      if (!interested.length) {
+        body().innerHTML = `<div class="card sl-allmoved"><p style="margin:0 0 12px">Every university you saved has become an application. You plan and track those in your Dream Plan.</p><a class="btn btn--primary btn--sm" href="/journey" data-link>Go to Dream Plan →</a></div>`;
+        return;
+      }
+
+      // Repaints the toolbar + cards from the in-memory `interested` list.
+      function paint() {
+        const count = (k) =>
+          k === "all"
+            ? interested.length
+            : k === "unsorted"
+              ? interested.filter((u) => !u.application_priority).length
+              : interested.filter((u) => (u.application_priority || "") === k).length;
+        const tabs = [["all", "All"], ["reach", "Reach"], ["target", "Target"], ["safety", "Safety"]];
+        if (count("unsorted")) tabs.push(["unsorted", "Unsorted"]);
+        if (!tabs.some(([k]) => k === shortlistFilter)) shortlistFilter = "all";
+
+        let list =
+          shortlistFilter === "all"
+            ? interested.slice()
+            : shortlistFilter === "unsorted"
+              ? interested.filter((u) => !u.application_priority)
+              : interested.filter((u) => (u.application_priority || "") === shortlistFilter);
+        list = sortShortlist(list);
+
+        const tabsHtml = `<div class="sl-tabs" role="tablist">${tabs
+          .map(
+            ([k, l]) =>
+              `<button type="button" class="sl-tab${shortlistFilter === k ? " is-active" : ""}" data-filter="${k}" role="tab" aria-selected="${shortlistFilter === k}">${l} <span class="sl-tab__n">${count(k)}</span></button>`,
           )
-        : emptyState({
-            iconName: "bookmark",
-            title: "Your shortlist is empty",
-            sub: "Tap “Save” on any university to start comparing your options side by side.",
-            ctaHref: "/discover",
-            ctaLabel: "Browse universities",
+          .join("")}</div>`;
+        const sortHtml = `<label class="sl-sort">Sort <select data-sort>${[
+          ["recent", "Recently saved"],
+          ["name", "Name"],
+          ["tuition", "Tuition"],
+          ["country", "Country"],
+        ]
+          .map(([v, l]) => `<option value="${v}"${shortlistSort === v ? " selected" : ""}>${l}</option>`)
+          .join("")}</select></label>`;
+
+        body().innerHTML =
+          `<div class="sl-toolbar">${tabsHtml}${sortHtml}</div>` +
+          `<div id="compare-bar"></div>` +
+          (list.length
+            ? `<div class="grid">${list.map(shortlistCard).join("")}</div>`
+            : `<p class="muted" style="padding:8px 2px">Nothing in this category yet.</p>`);
+
+        // ---- wiring ----
+        const b = body();
+        b.querySelectorAll("[data-start-app]").forEach((btn) =>
+          btn.addEventListener("click", () => onStartApp(btn.dataset.startApp, btn)),
+        );
+        b.querySelectorAll("[data-cat-for]").forEach((btn) =>
+          btn.addEventListener("click", async () => {
+            const item = interested.find((u) => u.id === btn.dataset.catFor);
+            if (!item) return;
+            const next = item.application_priority === btn.dataset.cat ? "" : btn.dataset.cat;
+            item.application_priority = next; // optimistic
+            paint();
+            try {
+              await API.patchApplication(btn.dataset.catFor, { priority: next });
+            } catch (e) {
+              toast(e.message, true);
+            }
+          }),
+        );
+        b.querySelectorAll("[data-reason-for]").forEach((inp) =>
+          inp.addEventListener("change", async () => {
+            const item = interested.find((u) => u.id === inp.dataset.reasonFor);
+            if (item) item.application_reason = inp.value;
+            try {
+              await API.patchApplication(inp.dataset.reasonFor, { reason: inp.value });
+            } catch (e) {
+              toast(e.message, true);
+            }
+          }),
+        );
+        b.querySelectorAll("[data-remove]").forEach((btn) =>
+          btn.addEventListener("click", async () => {
+            const id = btn.dataset.remove;
+            try {
+              await API.unsave(id);
+            } catch (e) {
+              return toast(e.message, true);
+            }
+            const i = interested.findIndex((u) => u.id === id);
+            if (i >= 0) interested.splice(i, 1);
+            state.savedIds.delete(id);
+            compareSel.delete(id);
+            toast("Removed from shortlist");
+            interested.length ? paint() : renderSaved();
+          }),
+        );
+        b.querySelectorAll("[data-compare]").forEach((cb) =>
+          cb.addEventListener("change", () => {
+            if (cb.checked) compareSel.add(cb.dataset.compare);
+            else compareSel.delete(cb.dataset.compare);
+            updateCompareBar();
+          }),
+        );
+        b.querySelectorAll("[data-filter]").forEach((t) =>
+          t.addEventListener("click", () => {
+            shortlistFilter = t.dataset.filter;
+            paint();
+          }),
+        );
+        const sortSel = b.querySelector("[data-sort]");
+        if (sortSel)
+          sortSel.addEventListener("change", () => {
+            shortlistSort = sortSel.value;
+            paint();
           });
-      wireStatusSelects(results);
-      results.querySelectorAll("[data-start-app]").forEach((btn) => {
-        btn.addEventListener("click", () => onStartApp(btn.dataset.startApp, btn));
-      });
+        updateCompareBar();
+      }
+      paint();
     } catch (e) {
-      view.innerHTML = emptyState({
+      body().innerHTML = emptyState({
         iconName: "alert",
-        title: "Couldn’t load your saved list",
+        title: "Couldn’t load your shortlist",
         sub: e.message,
         ctaHref: "/discover",
-        ctaLabel: "Back to discover",
+        ctaLabel: "Back to Discover",
       });
     }
   }
@@ -1947,26 +2082,44 @@
     }
   }
 
-  // A saved-list cell. "Interested" (status planning) gets a clear primary
-  // "Start application" action; once applying, it shows the status control and a
-  // link into the Dream Plan where the application is actually worked.
-  function savedCell(u) {
-    const cur = u.application_status || "planning";
-    const interested = cur === "planning";
-    return `<div class="saved-cell">
-      ${uniCard(u)}
-      ${
-        interested
-          ? `<button class="btn btn--primary btn--sm saved-cell__cta" data-start-app="${esc(u.id)}">Start application →</button>`
-          : `<label class="app-status">
-        <span class="app-status__label">Application status</span>
-        <select class="app-status__select" data-status-for="${esc(u.id)}">
-          ${APP_STATUSES.map(([v, l]) => `<option value="${v}"${v === cur ? " selected" : ""}>${esc(l)}</option>`).join("")}
-        </select>
-      </label>
-      <a class="link-btn saved-cell__open" href="/journey#app-${esc(u.id)}" data-link>Open in Dream Plan →</a>`
-      }
-    </div>`;
+  // One calm shortlist card: the essentials, a one-click category, one primary
+  // action (Start application), and everything secondary behind a ••• menu.
+  function shortlistCard(u) {
+    const prio = u.application_priority || "";
+    const program = u.application_program || "";
+    const tuition =
+      u.tuition_source === "curated_research" && money(u.tuition_range)
+        ? money(u.tuition_range)
+        : "";
+    const line1 = [program, u.country].filter(Boolean).map(esc).join(" · ");
+    const line2 = [
+      tuition ? esc(tuition) : "",
+      u.application_deadline ? "Deadline " + esc(u.application_deadline) : "",
+    ]
+      .filter(Boolean)
+      .join(" · ");
+    return `<article class="sl-card">
+      <label class="sl-card__cmp" title="Select to compare"><input type="checkbox" data-compare="${esc(u.id)}"${compareSel.has(u.id) ? " checked" : ""} /><span>Compare</span></label>
+      <h3 class="sl-card__name"><a href="/university/${esc(u.id)}" data-link>${esc(u.name)}</a></h3>
+      ${line1 ? `<p class="sl-card__meta">${line1}</p>` : ""}
+      ${line2 ? `<p class="sl-card__meta sl-card__meta--muted">${line2}</p>` : ""}
+      <div class="sl-cat" role="group" aria-label="Category for ${esc(u.name)}">
+        ${PRIORITIES.map(([v, l]) => `<button type="button" class="sl-cat__btn sl-cat__btn--${v}${prio === v ? " is-active" : ""}" data-cat-for="${esc(u.id)}" data-cat="${v}" aria-pressed="${prio === v}">${esc(l)}</button>`).join("")}
+      </div>
+      <div class="sl-card__actions">
+        <button class="btn btn--primary btn--sm" data-start-app="${esc(u.id)}">Start application →</button>
+        <details class="sl-more">
+          <summary class="sl-more__btn" aria-label="More options" title="More">•••</summary>
+          <div class="sl-more__panel">
+            <a href="/university/${esc(u.id)}" data-link>View university ↗</a>
+            <label class="sl-note-label">Private note
+              <input type="text" class="sl-note" data-reason-for="${esc(u.id)}" maxlength="200" placeholder="Why you saved it" value="${esc(u.application_reason || "")}" />
+            </label>
+            <button type="button" class="link-btn sl-remove" data-remove="${esc(u.id)}">Remove from shortlist</button>
+          </div>
+        </details>
+      </div>
+    </article>`;
   }
 
   // An honest one-line dream statement — only the parts the student has set.
@@ -2065,9 +2218,10 @@
           <label class="app-field"><span>Program <span class="muted">(optional)</span></span><input type="text" class="onb-input" data-app-program="${esc(a.uni_id)}" maxlength="120" placeholder="e.g. Computer Science" value="${esc(a.program)}" /></label>
           <label class="app-field"><span>Intake <span class="muted">(optional)</span></span><input type="text" class="onb-input" data-app-intake="${esc(a.uni_id)}" maxlength="60" placeholder="e.g. Fall 2027" value="${esc(a.intake)}" /></label>
           <label class="app-field"><span>Deadline</span><input type="date" class="onb-input" data-app-deadline="${esc(a.uni_id)}" value="${esc(a.deadline)}" /></label>
-          <label class="app-field"><span>Status</span><select class="onb-input" data-app-status="${esc(a.uni_id)}">${APP_STATUSES.map(([v, l]) => `<option value="${v}"${v === a.status ? " selected" : ""}>${esc(l)}</option>`).join("")}</select></label>
+          <label class="app-field"><span>Status</span><select class="onb-input" data-app-status="${esc(a.uni_id)}">${DREAM_STATUSES.map(([v, l]) => `<option value="${v}"${v === dreamStatusValue(a.status) ? " selected" : ""}>${esc(l)}</option>`).join("")}</select></label>
           ${showDecision ? `<label class="app-field"><span>Decision expected</span><input type="date" class="onb-input" data-app-decision="${esc(a.uni_id)}" value="${esc(a.decision_date)}" /></label>` : ""}
         </div>
+        <button type="button" class="app-tosl" data-move-shortlist="${esc(a.uni_id)}">← Move back to shortlist</button>
         ${a.portal ? `<a class="app-portal" href="${esc(a.portal)}" target="_blank" rel="noopener noreferrer">Open application portal ↗</a>` : ""}
         ${
           schemes && schemes.length
@@ -2198,25 +2352,27 @@
     }
   }
 
-  function wireStatusSelects(root) {
-    root.querySelectorAll("[data-status-for]").forEach((sel) => {
-      sel.dataset.prev = sel.value;
-      sel.addEventListener("change", async () => {
-        const id = sel.dataset.statusFor;
-        const prev = sel.dataset.prev;
-        sel.disabled = true;
-        try {
-          await API.setApplicationStatus(id, sel.value);
-          sel.dataset.prev = sel.value;
-          toast("Application status updated");
-        } catch (e) {
-          sel.value = prev; // revert on failure
-          toast(e.message, true);
-        } finally {
-          sel.disabled = false;
-        }
+  // Select-to-compare: comparison is a narrowing tool, so the student picks the
+  // few schools they're deciding between rather than comparing everything.
+  // /compare?ids= already renders exactly that set.
+  const compareSel = new Set();
+  function updateCompareBar() {
+    const bar = document.getElementById("compare-bar");
+    if (!bar) return;
+    const ids = [...compareSel];
+    bar.innerHTML =
+      ids.length >= 2
+        ? `<div class="compare-bar"><span>${ids.length} selected to compare</span><span class="compare-bar__actions"><button class="btn btn--ghost-light btn--sm" id="compare-clear">Clear</button><a class="btn btn--gold btn--sm" href="/compare?ids=${ids.map(encodeURIComponent).join(",")}" data-link>Compare ${ids.length} →</a></span></div>`
+        : ids.length === 1
+          ? `<p class="muted compare-hint">Select one more to compare side by side.</p>`
+          : "";
+    const clear = document.getElementById("compare-clear");
+    if (clear)
+      clear.addEventListener("click", () => {
+        compareSel.clear();
+        document.querySelectorAll("[data-compare]").forEach((cb) => (cb.checked = false));
+        updateCompareBar();
       });
-    });
   }
 
   async function renderProfile(id) {
@@ -2342,7 +2498,7 @@
       <p class="photo-credit" id="photo-credit" hidden></p>
 
       <div class="profile__actions">
-        <button class="btn ${saved ? "btn--saved" : "btn--ghost"}" data-save="${esc(u.id)}">${saved ? `${icon("bookmark", 15)} Saved` : "＋ Save"}</button>
+        <button class="btn ${saved ? "btn--saved" : "btn--ghost"}" data-save="${esc(u.id)}">${saved ? `${icon("bookmark", 15)} Shortlisted` : "＋ Save to shortlist"}</button>
         <button class="btn btn--gold" id="apply-btn">Apply Now ↗</button>
       </div>
 
@@ -2507,7 +2663,7 @@
         </div>`
         }
         <div style="margin-top:18px;display:flex;gap:10px">
-          <a class="btn btn--ghost" href="/saved" style="flex:1">View saved (${savedCount})</a>
+          <a class="btn btn--ghost" href="/saved" style="flex:1">View shortlist (${savedCount})</a>
           <button class="btn btn--primary" id="logout" style="flex:1">Log out</button>
         </div>
         <hr class="divider" />

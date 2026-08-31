@@ -47,3 +47,10 @@ test("app.js SCHOLARSHIP_STATUSES mirrors journey.SCHOLARSHIP_STATUSES", () => {
 test("app.js NOTIF_LABELS mirrors notify.NOTIFICATION_CATEGORIES", () => {
   assert.deepEqual(mirrorKeys("NOTIF_LABELS"), notify.NOTIFICATION_CATEGORIES);
 });
+
+test("app.js PRIORITIES mirrors journey.PRIORITIES", () => {
+  assert.deepEqual(
+    mirrorKeys("PRIORITIES"),
+    journey.PRIORITIES.map((p) => p.key),
+  );
+});
