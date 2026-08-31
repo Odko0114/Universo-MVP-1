@@ -1150,7 +1150,7 @@
       const documentsCard = `
         <div class="section-head" style="margin-top:26px" id="documents"><h3 style="margin:0">My documents</h3></div>
         <div class="card">
-          <p class="muted" style="margin:0 0 12px">Prepare each shared document once — it counts for every application that needs it.</p>
+          <p class="muted" style="margin:0 0 12px">The documents you already have on file. Each application has its own checklist — the ones you have here are flagged there so you can tick them off quickly.</p>
           <ul class="doc-list">
             ${sharedDocs
               .map((doc) => {
@@ -1162,11 +1162,11 @@
                     : "";
                 return `
               <li class="doc-item${doc.done ? " is-done" : ""}">
-                <button type="button" class="doc-check" data-document="${esc(doc.key)}" aria-pressed="${doc.done}" title="${doc.done ? "Mark not ready" : "Mark ready"}">${doc.done ? "✓" : ""}</button>
+                <button type="button" class="doc-check" data-document="${esc(doc.key)}" aria-pressed="${doc.done}" aria-label="${doc.done ? "Remove" : "I have"} ${esc(doc.label)} on file" title="${doc.done ? "Remove from your documents" : "I have this on file"}">${doc.done ? "✓" : ""}</button>
                 <div class="doc-body">
                   <strong>${esc(doc.label)}</strong> ${warn}
                   <p class="muted">${esc(doc.hint)}</p>
-                  ${used ? `<p class="muted" style="font-size:.8rem;margin:2px 0 0">Used in ${used} application${used === 1 ? "" : "s"}</p>` : ""}
+                  ${used ? `<p class="muted" style="font-size:.8rem;margin:2px 0 0">Required by ${used} application${used === 1 ? "" : "s"}</p>` : ""}
                   <label class="doc-expiry muted">Valid until <input type="date" data-doc-expiry="${esc(doc.key)}" value="${esc(doc.expiry || "")}" /></label>
                 </div>
               </li>`;
@@ -1459,16 +1459,16 @@
         toast(e.message, true);
       }
     }
-    async function onAppDoc(id, key, shared) {
+    async function onAppDoc(id, key) {
       const app = (data.applications || []).find((a) => a.uni_id === id);
       const doc = app && app.docs.find((d) => d.key === key);
       if (!doc) return;
       const target = !doc.ready;
-      doc.ready = target; // optimistic
+      doc.ready = target; // optimistic — this application's state only
       paint();
       try {
-        if (shared) await API.toggleDocument(key, target);
-        else await API.toggleAppDocument(id, key, target);
+        // Always per-application: checking a doc here never touches another app.
+        await API.toggleAppDocument(id, key, target);
         data = await API.journey();
         paint();
       } catch (e) {
@@ -1596,7 +1596,7 @@
       });
       view.querySelectorAll("[data-app-doc-for]").forEach((btn) => {
         btn.addEventListener("click", () =>
-          onAppDoc(btn.dataset.appDocFor, btn.dataset.doc, btn.dataset.shared === "true"),
+          onAppDoc(btn.dataset.appDocFor, btn.dataset.doc),
         );
       });
       view.querySelectorAll("[data-custom-doc-for]").forEach((btn) => {
@@ -2104,10 +2104,12 @@
         <button type="button" class="doc-remove" data-custom-remove="${esc(uniId)}" data-cid="${esc(doc.key)}" title="Remove document" aria-label="Remove ${esc(doc.label)}">×</button>
       </li>`;
     }
+    // Recognition hint: the same underlying document may be one you already have
+    // on file (My documents). The checkbox itself is this application's own.
     const note = doc.shared
-      ? doc.ready
-        ? '<span class="chip chip--plain">✓ In your documents</span>'
-        : '<span class="muted" style="font-size:.8rem">Shared — prepare once in My documents</span>'
+      ? doc.have
+        ? '<span class="chip chip--plain" title="You have this in My documents — tick it here for this application">✓ you have this on file</span>'
+        : '<span class="muted" style="font-size:.8rem">Shared — you can save it once in My documents</span>'
       : '<span class="muted" style="font-size:.8rem">Written for this university</span>';
     // Honest signal: this requirement is mentioned in the university's OWN
     // published listing (not asserted by Universo, and still editable).
@@ -2116,7 +2118,7 @@
       : "";
     return `
       <li class="doc-item doc-item--app${doc.ready ? " is-done" : ""}">
-        <button type="button" class="doc-check" data-app-doc-for="${esc(uniId)}" data-doc="${esc(doc.key)}" data-shared="${doc.shared}" aria-pressed="${doc.ready}" aria-label="${esc(checkLabel)}" title="${doc.ready ? "Mark not ready" : "Mark ready"}">${doc.ready ? "✓" : ""}</button>
+        <button type="button" class="doc-check" data-app-doc-for="${esc(uniId)}" data-doc="${esc(doc.key)}" aria-pressed="${doc.ready}" aria-label="${esc(checkLabel)}" title="${doc.ready ? "Mark not ready" : "Mark ready"}">${doc.ready ? "✓" : ""}</button>
         <div class="doc-body"><strong>${esc(doc.label)}</strong> ${note}${listed}</div>
         ${levelSelect(`data-req-for="${esc(uniId)}" data-doc="${esc(doc.key)}"`, doc.level, doc.label)}
       </li>`;

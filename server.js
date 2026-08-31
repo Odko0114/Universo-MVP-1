@@ -1791,17 +1791,14 @@ api.post("/me/application/:id/requirement", auth.requireAuth, (req, res) => {
   res.json({ id: req.params.id, key, level });
 });
 
-// Toggle readiness of a document that is unique to this application (shared
-// docs live in the vault; only non-shared docs are tracked here).
+// Toggle readiness of a document FOR THIS APPLICATION. Completion is per-
+// application and independent (My Documents only records what the student
+// possesses — it never drives an application's checklist).
 api.post("/me/application/:id/document", auth.requireAuth, (req, res) => {
   if (!requireSaved(req, res)) return;
   const key = typeof req.body.key === "string" ? req.body.key : "";
   const doc = journey.DOCUMENTS.find((d) => d.key === key);
   if (!doc) return res.status(400).json({ error: "Unknown document." });
-  if (doc.shared)
-    return res
-      .status(400)
-      .json({ error: "Shared documents are tracked in My Documents." });
   const done = req.body.done === true;
 
   updateApplication(req, req.params.id, (a) => {

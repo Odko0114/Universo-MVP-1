@@ -695,6 +695,55 @@ test("application notes/decision, doc expiry, scholarship deadline, and the agen
   await req("DELETE", "/api/me");
 });
 
+test("application checklists are fully independent per application (incl. shared docs)", async () => {
+  const testAddr = `indep_${Date.now()}@example.com`;
+  await req("POST", "/api/auth/register", {
+    full_name: "Indep Flow",
+    email: testAddr,
+    password: "password123",
+    consent: true,
+  });
+  const ids = ["tum", "uni-freiburg", "uni-mannheim"];
+  for (const id of ids) await req("POST", `/api/me/saved/${id}`);
+
+  // Shared docs are now trackable per application (previously rejected).
+  const r = await req("POST", "/api/me/application/tum/document", {
+    key: "passport",
+    done: true,
+  });
+  assert.equal(r.status, 200);
+
+  const readyOf = (j, uni, key) =>
+    j.applications.find((a) => a.uni_id === uni).docs.find((d) => d.key === key).ready;
+
+  let j = (await req("GET", "/api/me/journey")).json;
+  assert.equal(readyOf(j, "tum", "passport"), true, "A: passport ticked");
+  assert.equal(readyOf(j, "uni-freiburg", "passport"), false, "B: untouched");
+  assert.equal(readyOf(j, "uni-mannheim", "passport"), false, "C: untouched");
+
+  // Tick a DIFFERENT doc on B — A must not change.
+  await req("POST", "/api/me/application/uni-freiburg/document", {
+    key: "personal_statement",
+    done: true,
+  });
+  j = (await req("GET", "/api/me/journey")).json;
+  assert.equal(readyOf(j, "tum", "passport"), true, "A unchanged");
+  assert.equal(readyOf(j, "tum", "personal_statement"), false, "A's letter still not done");
+  assert.equal(readyOf(j, "uni-freiburg", "passport"), false, "B passport still off");
+  assert.equal(readyOf(j, "uni-freiburg", "personal_statement"), true, "B's letter done");
+
+  // Possessing a doc in My Documents is a hint (`have`), never completion.
+  await req("POST", "/api/me/document", { key: "transcript", done: true });
+  j = (await req("GET", "/api/me/journey")).json;
+  const tumTranscript = j.applications
+    .find((a) => a.uni_id === "tum")
+    .docs.find((d) => d.key === "transcript");
+  assert.equal(tumTranscript.have, true, "recognized as on file");
+  assert.equal(tumTranscript.ready, false, "but not auto-completed for the application");
+
+  await req("DELETE", "/api/me");
+});
+
 test("since_away surfaces real deadline deltas for a returning student", async () => {
   const testAddr = `away_${Date.now()}@example.com`;
   const reg = await req("POST", "/api/auth/register", {

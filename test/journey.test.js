@@ -260,24 +260,38 @@ test("normalizeApplication: legacy string, object, and undefined", () => {
   assert.equal(journey.normalizeApplication({ status: "bogus" }).status, "planning");
 });
 
-test("applicationView: required_done counts required only; shared reads vault, unique reads app", () => {
+test("applicationView: completion is per-application (app.docs); vault only sets the `have` hint", () => {
   const uni = { id: "u1", name: "Helsinki" };
-  // Vault: transcript + passport ready (shared). Motivation letter (unique) not.
+  // The student HAS transcript + passport on file, but completion for THIS
+  // application comes only from its own docs map — the vault never ticks it.
   const vault = { transcript: true, passport: true };
   const app = {
     status: "preparing",
     req: { english_test: "not_required" }, // drop english from required
-    docs: {}, // personal_statement (unique) not ready
+    docs: { transcript: true }, // only transcript done for THIS application
   };
   const v = journey.applicationView(app, uni, vault);
-  // Defaults required: transcript, english_test, passport, personal_statement.
-  // english_test overridden to not_required → required set = transcript, passport, personal_statement.
+  // Required set = transcript, passport, personal_statement (english dropped).
   assert.equal(v.required_total, 3);
-  assert.equal(v.required_done, 2, "transcript + passport ready from vault");
-  assert.deepEqual(v.missing_required, ["Motivation letter"]);
+  assert.equal(v.required_done, 1, "only this app's own transcript counts");
+  assert.deepEqual(v.missing_required.sort(), ["Motivation letter", "Valid passport"]);
+  // Passport is on file (have) but not ticked for this application (ready).
+  const passport = v.docs.find((d) => d.key === "passport");
+  assert.equal(passport.have, true, "recognized as on file");
+  assert.equal(passport.ready, false, "but not done for this application");
   const cv = v.docs.find((d) => d.key === "cv");
   assert.equal(cv.shared, true);
-  assert.equal(cv.level, "recommended", "cv default level");
+  assert.equal(cv.have, false, "cv not on file → no hint");
+});
+
+test("applicationView: independent — the SAME shared doc differs across applications", () => {
+  const uni = { id: "u1", name: "Helsinki" };
+  const uni2 = { id: "u2", name: "Aalto" };
+  const vault = { passport: true }; // possessed on file
+  const a = journey.applicationView({ docs: { passport: true } }, uni, vault);
+  const b = journey.applicationView({ docs: {} }, uni2, vault);
+  assert.equal(a.docs.find((d) => d.key === "passport").ready, true);
+  assert.equal(b.docs.find((d) => d.key === "passport").ready, false, "checking passport for A never ticks B");
 });
 
 test("applicationView + buildApplications: unique doc readiness is per-application", () => {
@@ -309,19 +323,24 @@ test("applicationsOverview: buckets by document completion and sorts deadlines",
     { id: "u2", name: "Aalto" },
     { id: "u3", name: "Turku" },
   ];
-  // Shared required docs live in the vault; the unique motivation letter is
-  // tracked per application, so a "complete" app needs it in its own docs map.
-  const vault = { transcript: true, passport: true, english_test: true };
-  const letterDone = { personal_statement: true };
-  const apps = {
-    u1: { deadline: "2999-12-31", docs: { ...letterDone } },
-    u2: { deadline: "2999-01-01", docs: { ...letterDone } },
+  // Completion is per-application: every required doc must be ticked in the
+  // application's OWN docs map (the vault no longer completes anything).
+  const allRequired = {
+    transcript: true,
+    passport: true,
+    english_test: true,
+    personal_statement: true,
   };
-  const views = journey.buildApplications(unis, apps, { ...vault });
+  const apps = {
+    u1: { deadline: "2999-12-31", docs: { ...allRequired } },
+    u2: { deadline: "2999-01-01", docs: { ...allRequired } },
+  };
+  const views = journey.buildApplications(unis, apps, {});
   const ov = journey.applicationsOverview(views);
   assert.equal(ov.total, 3, "every saved uni is an application");
-  assert.equal(ov.ready, 2, "u1 and u2 have every required doc ready");
-  assert.equal(ov.in_progress, 1, "u3 has the shared docs but not its letter");
+  assert.equal(ov.ready, 2, "u1 and u2 have every required doc ticked");
+  assert.equal(ov.in_progress, 0);
+  assert.equal(ov.missing, 1, "u3 (empty) has nothing ticked");
   assert.equal(ov.upcoming_deadlines.length, 2, "only the two with a deadline");
   assert.equal(ov.upcoming_deadlines[0].name, "Aalto", "earliest deadline first");
 });
