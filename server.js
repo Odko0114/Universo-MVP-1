@@ -834,9 +834,12 @@ api.get("/universities", universitiesLimiter, (req, res) => {
   const result = search.query(INDEX, params, clickOf, { scoreFn });
   result.universities = result.universities.map((u) => {
     const withP = withPhoto(u);
-    // Attach a compressed per-card reason only when we actually ranked by fit.
+    // Attach the fit score + a compressed per-card reason only when we actually
+    // ranked by fit. The score is a FIT score (field/budget/country/language/
+    // verified), NOT an admission probability — the card labels it as such.
     if (profiled && params.sort === "match") {
       const m = match.matchUniversity(profile, u);
+      withP.match_score = Math.round(m.score);
       const reason = explain.compressedReason(m.components);
       if (reason) withP.match_reasons = [reason];
     }

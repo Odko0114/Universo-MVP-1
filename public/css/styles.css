@@ -645,6 +645,67 @@ img {
   background: var(--navy-900);
   color: #fff;
 }
+.chip--deadline {
+  background: #fdf3d7;
+  color: var(--gold-600);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.chip--deadline .icon {
+  width: 13px;
+  height: 13px;
+}
+
+/* Fit badge — the matcher's 0–100 score made visible. A FIT read, not
+   admission odds; the label spells that out ("how well it fits you"). */
+.uni-card__fit {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  align-self: flex-start;
+  padding: 4px 13px 4px 4px;
+  border-radius: 999px;
+  background: var(--teal-050);
+}
+.uni-card__fit-score {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--teal-500);
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+.uni-card__fit-label {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.12;
+  font-weight: 700;
+  font-size: var(--text-sm);
+  color: var(--teal-600);
+}
+.uni-card__fit-sub {
+  font-weight: 500;
+  font-size: var(--text-3xs);
+  color: var(--ink-faint);
+}
+.fit--good .uni-card__fit-score {
+  background: #4bbfb2;
+}
+.fit--partial {
+  background: #eef1f6;
+}
+.fit--partial .uni-card__fit-score {
+  background: #8a97a8;
+}
+.fit--partial .uni-card__fit-label {
+  color: var(--ink-soft);
+}
 
 .card-actions {
   display: flex;

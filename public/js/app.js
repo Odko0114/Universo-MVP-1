@@ -194,6 +194,8 @@
       '<path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.5 2.5M16.5 16.5 19 19M19 5l-2.5 2.5M7.5 16.5 5 19"/>',
     target:
       '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+    calendar:
+      '<rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/>',
   };
   // The Universo mark for client-rendered views (auth card). Cloned from the
   // shell's nav logo, which the server fills from lib/brand.js — one source, so
@@ -425,6 +427,12 @@
     if (t && u.tuition_source === "curated_research") {
       chips.push(`<span class="chip chip--gold">${esc(t)}</span>`);
     }
+    // Deadline only exists for the ~40 curated unis — honest when shown, and
+    // its absence on register entries is honest too (we don't invent one).
+    if (u.application_deadline)
+      chips.push(
+        `<span class="chip chip--deadline">${icon("calendar", 13)} ${esc(u.application_deadline)}</span>`,
+      );
     const langs = (u.language_of_instruction || []).slice(0, 2).join(", ");
     if (langs)
       chips.push(`<span class="chip chip--plain">${esc(langs)}</span>`);
@@ -449,8 +457,18 @@
   const PLACEHOLDER_GLYPH =
     '<svg class="uni-card__glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M3 21h18M4 21V9l8-5 8 5v12M9 21v-6h6v6"/></svg>';
 
+  // A FIT band (not admission odds) from the matcher's 0–100 score. The list is
+  // already ordered by this, so the band just names what the ordering means.
+  function fitBand(score) {
+    if (score == null) return null;
+    if (score >= 75) return { label: "Strong match", cls: "fit--strong" };
+    if (score >= 55) return { label: "Good match", cls: "fit--good" };
+    return { label: "Partial match", cls: "fit--partial" };
+  }
+
   function uniCard(u) {
     const saved = state.savedIds.has(u.id);
+    const band = fitBand(u.match_score);
     return `
       <article class="uni-card">
         <a class="uni-card__cover" href="/university/${esc(u.id)}" style="${coverStyle(u)}" aria-label="${esc(u.name)}">
@@ -466,6 +484,7 @@
           <span class="uni-card__loc">${esc(u.city || u.country)}</span>
         </a>
         <div class="uni-card__body">
+          ${band ? `<div class="uni-card__fit ${band.cls}"><span class="uni-card__fit-score">${u.match_score}</span><span class="uni-card__fit-label">${band.label}<span class="uni-card__fit-sub">how well it fits you</span></span></div>` : ""}
           <div class="uni-card__title">
             ${logoHtml(u, "logo--card")}
             <div><a href="/university/${esc(u.id)}"><h3 class="uni-card__name">${esc(u.name)}</h3></a></div>
@@ -474,7 +493,6 @@
           <div class="uni-card__meta">${metaChips(u)}</div>
           ${(u.match_reasons || []).length ? `<p class="match-why">${icon("target", 14)} ${esc(u.match_reasons.join(" · "))}</p>` : ""}
           <div class="card-actions">
-            <a class="btn btn--ghost btn--sm" href="/university/${esc(u.id)}" style="flex:1">View</a>
             <button class="btn btn--sm ${saved ? "btn--saved" : "btn--primary"}" data-save="${esc(u.id)}" style="flex:1">
               ${saved ? `${icon("bookmark", 15)} Shortlisted` : "＋ Save to shortlist"}
             </button>
@@ -679,6 +697,34 @@
         </form>
       </section>`;
 
+    // When results will be fit-ranked (a logged-in profile, or an anonymous
+    // quick-match), lead with "for you" instead of the catalogue's size — the
+    // ranking IS the product. The result-count line below states the number.
+    const fitActive = profiled || !!(qm && (qm.field || qm.budget));
+    const fitSummary = qm
+      ? [qm.field, qm.country, qm.budget ? budgetLabel(qm.budget) : ""]
+          .filter(Boolean)
+          .map(esc)
+          .join(" · ")
+      : "";
+    const heroHtml = fitActive
+      ? `
+      <section class="hero hero--fit">
+        <p class="hero__tagline">${icon("target", 15)} Ranked for you</p>
+        <h1>Universities that fit <span class="accent">you</span></h1>
+        <p>${
+          fitSummary
+            ? `Your best matches for <strong>${fitSummary}</strong> lead the list — each with a fit score and the reason it fits. Change an answer above to re-rank.`
+            : `Your best matches lead the list — each with a fit score and the reason it fits. <a href="/onboarding">Refine your profile</a> to sharpen them.`
+        }</p>
+      </section>`
+      : `
+      <section class="hero">
+        <p class="hero__tagline">Same Start. Equal Chance.</p>
+        <h1>Find your university <span class="accent">in Europe</span></h1>
+        <p><strong>${totalN}</strong> European universities listed — <strong>${verifiedN}</strong> with a complete, checked profile (photo, official enrolment data, scholarships). The rest are entries from the official European register; open any profile to see exactly what we do and don't know about it.</p>
+      </section>`;
+
     view.innerHTML = `
       ${
         !state.user
@@ -689,11 +735,7 @@
       </div>`
           : ""
       }
-      <section class="hero">
-        <p class="hero__tagline">Same Start. Equal Chance.</p>
-        <h1>Find your university <span class="accent">in Europe</span></h1>
-        <p><strong>${totalN}</strong> European universities listed — <strong>${verifiedN}</strong> with a complete, checked profile (photo, official enrolment data, scholarships). The rest are entries from the official European register; open any profile to see exactly what we do and don't know about it.</p>
-      </section>
+      ${heroHtml}
 
       ${state.user ? "" : quickMatchHtml}
 

@@ -1996,13 +1996,22 @@ test("anonymous quick-match sanitizes junk and does not rank on it", async () =>
   );
 });
 
-test("the quick-match internal score never leaks into the public response", async () => {
+test("the fit score is exposed but the internal component breakdown is not", async () => {
   const r = await req(
     "GET",
     "/api/universities?verified=1&limit=3&fitFields=Computer%20Science&fitBudget=6000",
   );
   for (const u of r.json.universities) {
-    assert.ok(!("match_score" in u), "raw score must stay server-side");
+    // The 0–100 fit score IS user-facing now (it drives the card's fit badge).
+    assert.ok("match_score" in u, "fit score should be exposed");
+    assert.ok(
+      Number.isInteger(u.match_score) &&
+        u.match_score >= 0 &&
+        u.match_score <= 100,
+      "fit score is a rounded 0–100 integer",
+    );
+    // The per-component breakdown stays server-side — the card shows a score
+    // and one compressed reason, never the raw scoring internals.
     assert.ok(
       !("match_components" in u),
       "component breakdown must stay server-side",
