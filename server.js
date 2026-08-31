@@ -1298,6 +1298,7 @@ api.get("/me/saved", auth.requireAuth, (req, res) => {
         application_status: a.status,
         application_priority: a.priority,
         application_reason: a.reason,
+        application_program: a.program,
       });
     });
   res.json({ count: saved.length, universities: saved });

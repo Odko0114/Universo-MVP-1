@@ -504,6 +504,16 @@ test("applicationView: cost + over_budget from the student's budget", () => {
   assert.equal(noBudget.over_budget, null);
 });
 
+test("normalizeApplication: priority validates + migrates legacy 'likely' → 'safety'", () => {
+  assert.equal(journey.normalizeApplication({ priority: "reach" }).priority, "reach");
+  assert.equal(journey.normalizeApplication({ priority: "likely" }).priority, "safety");
+  assert.equal(journey.normalizeApplication({ priority: "bogus" }).priority, "");
+  assert.deepEqual(
+    journey.PRIORITIES.map((p) => p.key),
+    ["reach", "target", "safety"],
+  );
+});
+
 test("normalizeScholarship: legacy string and object", () => {
   assert.deepEqual(journey.normalizeScholarship("applied"), {
     status: "applied",
