@@ -697,6 +697,34 @@ test("application notes/decision, doc expiry, scholarship deadline, and the agen
   await req("DELETE", "/api/me");
 });
 
+test("shortlist priority + reason persist and surface on /me/saved", async () => {
+  const testAddr = `prio_${Date.now()}@example.com`;
+  await req("POST", "/api/auth/register", {
+    full_name: "Prio Flow",
+    email: testAddr,
+    password: "password123",
+    consent: true,
+  });
+  await req("POST", "/api/me/saved/tum");
+  const r = await req("POST", "/api/me/application/tum", {
+    priority: "target",
+    reason: "Strong CS program, English-taught",
+  });
+  assert.equal(r.status, 200);
+
+  const saved = (await req("GET", "/api/me/saved")).json;
+  const tum = saved.universities.find((u) => u.id === "tum");
+  assert.equal(tum.application_priority, "target");
+  assert.equal(tum.application_reason, "Strong CS program, English-taught");
+  assert.equal(tum.application_status, "planning", "priority doesn't start an application");
+
+  // Unknown priority rejected.
+  const bad = await req("POST", "/api/me/application/tum", { priority: "dream" });
+  assert.equal(bad.status, 400);
+
+  await req("DELETE", "/api/me");
+});
+
 test("Dream Plan shows only committed applications (planning stays on the shortlist)", async () => {
   const testAddr = `scope_${Date.now()}@example.com`;
   await req("POST", "/api/auth/register", {

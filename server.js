@@ -1290,13 +1290,16 @@ api.get("/me/saved", auth.requireAuth, (req, res) => {
   const saved = req.student.saved_universities
     .map((id) => BY_ID.get(id))
     .filter(Boolean)
-    .map((u) =>
-      withPhoto({
+    .map((u) => {
+      const a = journey.normalizeApplication(apps[u.id]);
+      return withPhoto({
         ...u,
         click_count: clickOf(u.id),
-        application_status: journey.normalizeApplication(apps[u.id]).status,
-      }),
-    );
+        application_status: a.status,
+        application_priority: a.priority,
+        application_reason: a.reason,
+      });
+    });
   res.json({ count: saved.length, universities: saved });
 });
 
@@ -1362,6 +1365,8 @@ function pruneApplication(app) {
     !app.intake &&
     !app.notes &&
     !app.decision_date &&
+    !app.priority &&
+    !app.reason &&
     !Object.keys(app.req).length &&
     !Object.keys(app.docs).length &&
     !app.custom.length;
@@ -1762,6 +1767,13 @@ api.post("/me/application/:id", auth.requireAuth, (req, res) => {
   if (b.notes !== undefined && typeof b.notes !== "string")
     return res.status(400).json({ error: "Invalid notes." });
   if (
+    b.priority !== undefined &&
+    !(b.priority === "" || journey.PRIORITY_KEYS.has(b.priority))
+  )
+    return res.status(400).json({ error: "Unknown priority." });
+  if (b.reason !== undefined && typeof b.reason !== "string")
+    return res.status(400).json({ error: "Invalid reason." });
+  if (
     b.decision_date !== undefined &&
     !(b.decision_date === "" || (typeof b.decision_date === "string" && DATE_RE.test(b.decision_date)))
   )
@@ -1774,6 +1786,8 @@ api.post("/me/application/:id", auth.requireAuth, (req, res) => {
     if (b.intake !== undefined) a.intake = b.intake.trim().slice(0, 60);
     if (b.notes !== undefined) a.notes = b.notes.slice(0, 500);
     if (b.decision_date !== undefined) a.decision_date = b.decision_date;
+    if (b.priority !== undefined) a.priority = b.priority;
+    if (b.reason !== undefined) a.reason = b.reason.trim().slice(0, 200);
   });
   events.record("application_update", { anon: req.anon, uni: req.params.id });
   res.json({ id: req.params.id, application: app });

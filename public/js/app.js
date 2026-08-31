@@ -69,6 +69,12 @@
     ["applying", "Applying"],
     ["applied", "Applied"],
   ];
+  // Shortlist priority buckets (mirrors lib/journey.js#PRIORITIES).
+  const PRIORITIES = [
+    ["reach", "Reach"],
+    ["target", "Target"],
+    ["likely", "Likely"],
+  ];
   // Email notification categories (mirrors lib/notify.js#NOTIFICATION_CATEGORIES).
   const NOTIF_LABELS = [
     ["weekly_digest", "Weekly summary", "A once-a-week recap of your deadlines and next steps."],
@@ -1704,27 +1710,62 @@
         list.length
           ? `<div class="section-head" style="margin-top:20px"><h3 style="margin:0">${title} (${list.length})</h3></div><p class="muted" style="margin:-2px 0 12px">${sub}</p><div class="grid">${list.map(savedCell).join("")}</div>`
           : "";
+      // Interested = the shortlist: narrow it down by how likely each option is
+      // (Reach / Target / Likely), note why you saved each, and start an
+      // application when ready.
+      const PRIORITY_BUCKETS = [
+        ["reach", "🚀 Reach", "Ambitious — a stretch worth trying for."],
+        ["target", "🎯 Target", "Strong fit — realistic and appealing."],
+        ["likely", "✅ Likely", "Safer bets you'd be glad to have."],
+        ["", "Unsorted", "Tag these Reach / Target / Likely to compare like with like."],
+      ];
+      const bucket = (title, sub, list) =>
+        list.length
+          ? `<div class="section-head" style="margin-top:14px"><h4 style="margin:0;font-size:.92rem">${title} · ${list.length}</h4></div><p class="muted" style="margin:-2px 0 10px;font-size:.84rem">${sub}</p><div class="grid">${list.map(savedCell).join("")}</div>`
+          : "";
+      const interestedHtml = interested.length
+        ? `<div class="section-head" style="margin-top:22px"><h3 style="margin:0">Interested (${interested.length})</h3></div><p class="muted" style="margin:-2px 0 6px">Not ready to apply yet — sort by how likely each is, jot why you saved it, and hit Start application when you're ready.</p>` +
+          PRIORITY_BUCKETS.map(([k, t, s]) =>
+            bucket(t, s, interested.filter((u) => (u.application_priority || "") === k)),
+          ).join("")
+        : "";
       results.innerHTML = universities.length
         ? section(
             "Applying",
-            "Applications you've started — track deadlines, documents and status in your Dream Plan.",
+            "Applications you've started — plan and track them in your Dream Plan.",
             applying,
-          ) +
-          section(
-            "Interested",
-            "Saved to compare. Start an application whenever you're ready to pursue one.",
-            interested,
-          )
+          ) + interestedHtml
         : emptyState({
             iconName: "bookmark",
             title: "Your shortlist is empty",
-            sub: "Tap “Save” on any university to start comparing your options side by side.",
+            sub: "Tap “Save” on any university to start building your shortlist.",
             ctaHref: "/discover",
             ctaLabel: "Browse universities",
           });
       wireStatusSelects(results);
       results.querySelectorAll("[data-start-app]").forEach((btn) => {
         btn.addEventListener("click", () => onStartApp(btn.dataset.startApp, btn));
+      });
+      // Priority change re-renders so the card jumps to its bucket; reason just
+      // persists.
+      results.querySelectorAll("[data-priority-for]").forEach((sel) => {
+        sel.addEventListener("change", async () => {
+          try {
+            await API.patchApplication(sel.dataset.priorityFor, { priority: sel.value });
+            renderSaved();
+          } catch (e) {
+            toast(e.message, true);
+          }
+        });
+      });
+      results.querySelectorAll("[data-reason-for]").forEach((inp) => {
+        inp.addEventListener("change", async () => {
+          try {
+            await API.patchApplication(inp.dataset.reasonFor, { reason: inp.value });
+          } catch (e) {
+            toast(e.message, true);
+          }
+        });
       });
     } catch (e) {
       view.innerHTML = emptyState({
@@ -1933,11 +1974,19 @@
   function savedCell(u) {
     const cur = u.application_status || "planning";
     const interested = cur === "planning";
+    const prio = u.application_priority || "";
     return `<div class="saved-cell">
       ${uniCard(u)}
       ${
         interested
-          ? `<button class="btn btn--primary btn--sm saved-cell__cta" data-start-app="${esc(u.id)}">Start application →</button>`
+          ? `<div class="saved-cell__controls">
+        <select class="saved-priority" data-priority-for="${esc(u.id)}" aria-label="Priority for ${esc(u.name)}">
+          <option value="">Set priority…</option>
+          ${PRIORITIES.map(([v, l]) => `<option value="${v}"${v === prio ? " selected" : ""}>${esc(l)}</option>`).join("")}
+        </select>
+        <input class="saved-reason" type="text" data-reason-for="${esc(u.id)}" maxlength="200" placeholder="Why you saved it (optional)" value="${esc(u.application_reason || "")}" aria-label="Why you saved ${esc(u.name)}" />
+      </div>
+      <button class="btn btn--primary btn--sm saved-cell__cta" data-start-app="${esc(u.id)}">Start application →</button>`
           : `<label class="app-status">
         <span class="app-status__label">Application status</span>
         <select class="app-status__select" data-status-for="${esc(u.id)}">

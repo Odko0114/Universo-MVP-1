@@ -1102,6 +1102,35 @@ img {
   width: 100%;
   margin-top: 8px;
 }
+.saved-cell__controls {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.saved-priority {
+  flex: 0 0 auto;
+  font-size: var(--text-sm);
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink-soft);
+}
+.saved-reason {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-sm);
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+}
+@media (max-width: 420px) {
+  .saved-cell__controls {
+    flex-direction: column;
+  }
+}
 .saved-cell__open {
   display: inline-block;
   margin-top: 6px;
