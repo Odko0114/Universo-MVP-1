@@ -318,6 +318,76 @@ img {
    Styled as ONE segmented control, not two pills: it's a binary either/or, and
    as two separate full-width pills it read as two competing CTAs — worse, it
    looked identical to the niche button below, which does something unrelated. */
+.more-filters {
+  margin: 4px 0 8px;
+}
+.more-filters > summary {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--teal-600);
+  padding: 4px 2px;
+  list-style: none;
+}
+.more-filters > summary::-webkit-details-marker {
+  display: none;
+}
+.more-filters > summary::before {
+  content: "▸";
+  font-size: 0.85em;
+}
+.more-filters[open] > summary::before {
+  content: "▾";
+}
+.more-filters__n {
+  background: var(--teal-500);
+  color: #fff;
+  border-radius: 999px;
+  padding: 0 7px;
+  font-size: var(--text-xs);
+  line-height: 1.6;
+}
+.more-filters > .filters {
+  margin-top: 8px;
+}
+.app-tosl {
+  background: none;
+  border: 0;
+  padding: 4px 0;
+  margin-top: 4px;
+  font-size: var(--text-sm);
+  color: var(--ink-faint);
+  cursor: pointer;
+}
+.app-tosl:hover,
+.app-tosl:focus-visible {
+  color: var(--teal-600);
+  text-decoration: underline;
+}
+.scope-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.scope-head__label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+.scope-info {
+  cursor: help;
+  font-size: var(--text-sm);
+  color: var(--ink-faint);
+  line-height: 1;
+}
+.scope-info:hover,
+.scope-info:focus-visible {
+  color: var(--teal-600);
+}
 .scope-row {
   display: flex;
   margin-bottom: 12px;
@@ -339,6 +409,17 @@ img {
 .scope-row .niche-btn.is-active {
   background: var(--teal-500);
   color: #fff;
+}
+/* Bug fix: the base `.niche-btn:hover` sets white text, but the scope segments
+   have a transparent background — so hovering an UNSELECTED segment rendered
+   white-on-white (the label vanished). Give the inactive hover a real tint. */
+.scope-row .niche-btn:not(.is-active):hover {
+  background: var(--teal-050);
+  color: var(--teal-600);
+}
+.scope-row .niche-btn:focus-visible {
+  outline: 2px solid var(--teal-600);
+  outline-offset: -2px;
 }
 .scope-row .niche-btn + .niche-btn {
   border-left: 1.5px solid var(--teal-500);

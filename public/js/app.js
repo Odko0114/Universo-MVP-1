@@ -56,6 +56,17 @@
     ["accepted", "Accepted"],
     ["rejected", "Not accepted"],
   ];
+  // The Dream Plan status picker shows only the four stages a student thinks in.
+  // The underlying enum keeps its finer states (ready, under_review) for anyone
+  // who set them before; those map onto the nearest of these for display.
+  const DREAM_STATUSES = [
+    ["preparing", "Preparing"],
+    ["submitted", "Submitted"],
+    ["accepted", "Accepted"],
+    ["rejected", "Not accepted"],
+  ];
+  const dreamStatusValue = (s) =>
+    ({ ready: "preparing", under_review: "submitted", planning: "preparing" }[s] || s);
   // Per-application document requirement levels (mirrors lib/journey.js#LEVELS).
   const LEVELS = [
     ["required", "Required"],
@@ -465,7 +476,7 @@
           <div class="card-actions">
             <a class="btn btn--ghost btn--sm" href="/university/${esc(u.id)}" style="flex:1">View</a>
             <button class="btn btn--sm ${saved ? "btn--saved" : "btn--primary"}" data-save="${esc(u.id)}" style="flex:1">
-              ${saved ? `${icon("bookmark", 15)} Saved` : "＋ Save"}
+              ${saved ? `${icon("bookmark", 15)} Shortlisted` : "＋ Save to shortlist"}
             </button>
           </div>
         </div>
@@ -489,7 +500,7 @@
           "btn--ghost",
           !saved && !b.classList.contains("btn--sm"),
         );
-        b.innerHTML = saved ? `${icon("bookmark", 15)} Saved` : "＋ Save";
+        b.innerHTML = saved ? `${icon("bookmark", 15)} Shortlisted` : "＋ Save to shortlist";
         b.disabled = false;
       });
   }
@@ -513,7 +524,7 @@
       } else {
         await API.save(id);
         state.savedIds.add(id);
-        toast("Saved to your list");
+        toast("Added to your shortlist ✓");
       }
       paintSaveButtons(id);
       // Only the Saved list actually changes shape when an item is removed.
@@ -686,9 +697,13 @@
 
       ${state.user ? "" : quickMatchHtml}
 
+      <div class="scope-head">
+        <span class="scope-head__label">Show</span>
+        <span class="scope-info" tabindex="0" role="note" aria-label="What unverified means" title="Verified universities have a checked profile — official enrolment data, tuition and photos. Unverified ones come straight from the European register: real universities, but with limited details we haven't confirmed yet.">ⓘ</span>
+      </div>
       <div class="scope-row" role="group" aria-label="Result scope">
-        <button class="niche-btn ${d.scope === "verified" ? "is-active" : ""}" id="scope-verified" type="button" aria-pressed="${d.scope === "verified"}">✓ Verified profiles (${verifiedN})</button>
-        <button class="niche-btn ${d.scope === "all" ? "is-active" : ""}" id="scope-all" type="button" aria-pressed="${d.scope === "all"}">Include unverified register entries (${registerN})</button>
+        <button class="niche-btn ${d.scope === "verified" ? "is-active" : ""}" id="scope-verified" type="button" aria-pressed="${d.scope === "verified"}">Verified only (${verifiedN})</button>
+        <button class="niche-btn ${d.scope === "all" ? "is-active" : ""}" id="scope-all" type="button" aria-pressed="${d.scope === "all"}">Include unverified (${registerN})</button>
       </div>
 
       <button class="niche-btn ${niche ? "is-active" : ""}" id="niche-toggle" type="button">
@@ -704,10 +719,7 @@
 
       <div class="filters">
         <div class="field"><label for="f-country">Country</label><select id="f-country"><option value="">All countries</option>${opts(m.countries, d.country)}</select></div>
-        <div class="field"><label for="f-type">Institution type</label><select id="f-type"><option value="">All types</option>${opts(m.institution_types, d.type)}</select></div>
         <div class="field"><label for="f-field">Field of study</label><select id="f-field"><option value="">All fields</option>${opts(m.fields_of_study, d.field)}</select></div>
-        <div class="field"><label for="f-language">Language</label><select id="f-language"><option value="">Any language</option>${opts(m.languages, d.language)}</select></div>
-        <div class="field"><label for="f-degree">Degree level</label><select id="f-degree"><option value="">Any degree</option>${opts(m.degree_levels, d.degree)}</select></div>
         <div class="field"><label for="f-budget">Tuition budget</label><select id="f-budget">${budgets.map(([v, l]) => `<option value="${v}" ${v === d.maxTuition ? "selected" : ""}>${l}</option>`).join("")}</select></div>
         <div class="field field--wide"><label for="f-sort">Sort by</label><select id="f-sort">
           <option value="" ${d.sort === "" ? "selected" : ""}>${profiled ? "Best match (your profile)" : "Verified first, then A–Z"}</option>
@@ -717,6 +729,18 @@
           <option value="popular" ${d.sort === "popular" ? "selected" : ""}>Most popular</option>
         </select></div>
       </div>
+      <details class="more-filters"${d.type || d.language || d.degree ? " open" : ""}>
+        <summary>More filters${
+          (d.type ? 1 : 0) + (d.language ? 1 : 0) + (d.degree ? 1 : 0)
+            ? ` <span class="more-filters__n">${(d.type ? 1 : 0) + (d.language ? 1 : 0) + (d.degree ? 1 : 0)}</span>`
+            : ""
+        }</summary>
+        <div class="filters">
+          <div class="field"><label for="f-type">Institution type</label><select id="f-type"><option value="">All types</option>${opts(m.institution_types, d.type)}</select></div>
+          <div class="field"><label for="f-language">Language</label><select id="f-language"><option value="">Any language</option>${opts(m.languages, d.language)}</select></div>
+          <div class="field"><label for="f-degree">Degree level</label><select id="f-degree"><option value="">Any degree</option>${opts(m.degree_levels, d.degree)}</select></div>
+        </div>
+      </details>
 
       <div class="filters-row">
         <span id="result-count" class="muted" aria-live="polite">Loading…</span>
@@ -1325,7 +1349,6 @@
       return `
         <div class="journey">
           <div class="section-head"><h2>Your Dream Plan, ${first}</h2></div>
-          ${pipelineRibbon(data.saved.status_counts, "plan")}
           ${sinceAwayCard}
           ${dreamCard}
           ${nextBestCard}
@@ -1561,6 +1584,12 @@
           onAppField(sel.dataset.appStatus, { status: sel.value }),
         );
       });
+      view.querySelectorAll("[data-move-shortlist]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          await onAppField(btn.dataset.moveShortlist, { status: "planning" });
+          toast("Moved back to your shortlist");
+        });
+      });
       view.querySelectorAll("[data-app-deadline]").forEach((inp) => {
         inp.addEventListener("change", () =>
           onAppField(inp.dataset.appDeadline, { deadline: inp.value }),
@@ -1724,12 +1753,6 @@
       const committed = universities.filter(
         (u) => (u.application_status || "planning") !== "planning",
       );
-      const statusCounts = {};
-      universities.forEach((u) => {
-        const s = u.application_status || "planning";
-        statusCounts[s] = (statusCounts[s] || 0) + 1;
-      });
-      const ribbon = pipelineRibbon(statusCounts, "shortlist");
 
       // Nothing saved at all.
       if (!universities.length) {
@@ -1744,9 +1767,7 @@
       }
       // Everything you saved is already an application.
       if (!interested.length) {
-        body().innerHTML =
-          ribbon +
-          `<div class="card sl-allmoved"><p style="margin:0 0 12px">Every university you saved has become an application. You plan and track those in your Dream Plan.</p><a class="btn btn--primary btn--sm" href="/journey" data-link>Go to Dream Plan →</a></div>`;
+        body().innerHTML = `<div class="card sl-allmoved"><p style="margin:0 0 12px">Every university you saved has become an application. You plan and track those in your Dream Plan.</p><a class="btn btn--primary btn--sm" href="/journey" data-link>Go to Dream Plan →</a></div>`;
         return;
       }
 
@@ -1786,7 +1807,6 @@
           .join("")}</select></label>`;
 
         body().innerHTML =
-          ribbon +
           `<div class="sl-toolbar">${tabsHtml}${sortHtml}</div>` +
           `<div id="compare-bar"></div>` +
           (list.length
@@ -2062,36 +2082,6 @@
     }
   }
 
-  // The pipeline ribbon: one glanceable row across the whole journey, shared by
-  // the Shortlist and the Dream Plan. Aggregates the lifecycle statuses into the
-  // four stages a student thinks in, and links each to where those items live
-  // (Interested → Shortlist; the rest → Dream Plan). `current` emphasises the
-  // stages that belong to the page you're on.
-  function pipelineRibbon(statusCounts, current) {
-    const c = statusCounts || {};
-    const n = (...keys) => keys.reduce((s, k) => s + (c[k] || 0), 0);
-    const stages = [
-      ["interested", "💡", "Interested", n("planning"), "/saved"],
-      ["applying", "🎯", "Applying", n("preparing", "ready"), "/journey"],
-      ["submitted", "📤", "Submitted", n("submitted", "under_review"), "/journey"],
-      ["accepted", "🎉", "Accepted", n("accepted"), "/journey"],
-    ];
-    const rejected = n("rejected");
-    if (!stages.some(([, , , v]) => v) && !rejected) return "";
-    const active =
-      current === "shortlist" ? ["interested"] : ["applying", "submitted", "accepted"];
-    return `<div class="pipeline">${stages
-      .map(
-        ([key, ic, label, val, href]) =>
-          `<a class="pipeline__stage${active.includes(key) ? " is-active" : ""}" href="${href}" data-link><span class="pipeline__num">${val}</span><span class="pipeline__label">${ic} ${label}</span></a>`,
-      )
-      .join("")}${
-      rejected
-        ? `<span class="pipeline__stage pipeline__stage--muted"><span class="pipeline__num">${rejected}</span><span class="pipeline__label">Not accepted</span></span>`
-        : ""
-    }</div>`;
-  }
-
   // One calm shortlist card: the essentials, a one-click category, one primary
   // action (Start application), and everything secondary behind a ••• menu.
   function shortlistCard(u) {
@@ -2228,9 +2218,10 @@
           <label class="app-field"><span>Program <span class="muted">(optional)</span></span><input type="text" class="onb-input" data-app-program="${esc(a.uni_id)}" maxlength="120" placeholder="e.g. Computer Science" value="${esc(a.program)}" /></label>
           <label class="app-field"><span>Intake <span class="muted">(optional)</span></span><input type="text" class="onb-input" data-app-intake="${esc(a.uni_id)}" maxlength="60" placeholder="e.g. Fall 2027" value="${esc(a.intake)}" /></label>
           <label class="app-field"><span>Deadline</span><input type="date" class="onb-input" data-app-deadline="${esc(a.uni_id)}" value="${esc(a.deadline)}" /></label>
-          <label class="app-field"><span>Status</span><select class="onb-input" data-app-status="${esc(a.uni_id)}">${APP_STATUSES.map(([v, l]) => `<option value="${v}"${v === a.status ? " selected" : ""}>${esc(l)}</option>`).join("")}</select></label>
+          <label class="app-field"><span>Status</span><select class="onb-input" data-app-status="${esc(a.uni_id)}">${DREAM_STATUSES.map(([v, l]) => `<option value="${v}"${v === dreamStatusValue(a.status) ? " selected" : ""}>${esc(l)}</option>`).join("")}</select></label>
           ${showDecision ? `<label class="app-field"><span>Decision expected</span><input type="date" class="onb-input" data-app-decision="${esc(a.uni_id)}" value="${esc(a.decision_date)}" /></label>` : ""}
         </div>
+        <button type="button" class="app-tosl" data-move-shortlist="${esc(a.uni_id)}">← Move back to shortlist</button>
         ${a.portal ? `<a class="app-portal" href="${esc(a.portal)}" target="_blank" rel="noopener noreferrer">Open application portal ↗</a>` : ""}
         ${
           schemes && schemes.length
@@ -2507,7 +2498,7 @@
       <p class="photo-credit" id="photo-credit" hidden></p>
 
       <div class="profile__actions">
-        <button class="btn ${saved ? "btn--saved" : "btn--ghost"}" data-save="${esc(u.id)}">${saved ? `${icon("bookmark", 15)} Saved` : "＋ Save"}</button>
+        <button class="btn ${saved ? "btn--saved" : "btn--ghost"}" data-save="${esc(u.id)}">${saved ? `${icon("bookmark", 15)} Shortlisted` : "＋ Save to shortlist"}</button>
         <button class="btn btn--gold" id="apply-btn">Apply Now ↗</button>
       </div>
 
