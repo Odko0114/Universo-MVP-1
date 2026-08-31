@@ -646,11 +646,7 @@
       d.region === "EU" && d.language === "English" && d.maxTuition === "6000";
     const counts = m.counts || {};
     const verifiedN = counts.verified ? nfmt(counts.verified) : "300";
-    const totalN = counts.total ? nfmt(counts.total) : "4,000+";
-    const registerN =
-      counts.total && counts.verified
-        ? nfmt(counts.total - counts.verified)
-        : "3,700+";
+    const totalN = counts.total ? nfmt(counts.total) : "2,899";
     const profiled = !!(state.user && state.user.profile_completed);
 
     // Anonymous "What fits you?" card — two states: a prompt to answer, or a
@@ -722,7 +718,7 @@
       <section class="hero">
         <p class="hero__tagline">Same Start. Equal Chance.</p>
         <h1>Find your university <span class="accent">in Europe</span></h1>
-        <p><strong>${totalN}</strong> European universities listed — <strong>${verifiedN}</strong> with a complete, checked profile (photo, official enrolment data, scholarships). The rest are entries from the official European register; open any profile to see exactly what we do and don't know about it.</p>
+        <p><strong>${totalN}</strong> European universities — <strong>${verifiedN}</strong> with a full Universo profile (photo, official enrolment data, scholarships), the rest sourced straight from the official European register. Every profile shows where its information comes from.</p>
       </section>`;
 
     view.innerHTML = `
@@ -741,11 +737,11 @@
 
       <div class="scope-head">
         <span class="scope-head__label">Show</span>
-        <span class="scope-info" tabindex="0" role="note" aria-label="What unverified means" title="Verified universities have a checked profile — official enrolment data, tuition and photos. Unverified ones come straight from the European register: real universities, but with limited details we haven't confirmed yet.">ⓘ</span>
+        <span class="scope-info" tabindex="0" role="note" aria-label="What full profiles means" title="Full profiles have a photo, official enrolment data and tuition we've checked. The rest are real universities from the official European register — with fewer details on file, so confirm specifics on their official site.">ⓘ</span>
       </div>
       <div class="scope-row" role="group" aria-label="Result scope">
-        <button class="niche-btn ${d.scope === "verified" ? "is-active" : ""}" id="scope-verified" type="button" aria-pressed="${d.scope === "verified"}">Verified only (${verifiedN})</button>
-        <button class="niche-btn ${d.scope === "all" ? "is-active" : ""}" id="scope-all" type="button" aria-pressed="${d.scope === "all"}">Include unverified (${registerN})</button>
+        <button class="niche-btn ${d.scope === "verified" ? "is-active" : ""}" id="scope-verified" type="button" aria-pressed="${d.scope === "verified"}">Full profiles (${verifiedN})</button>
+        <button class="niche-btn ${d.scope === "all" ? "is-active" : ""}" id="scope-all" type="button" aria-pressed="${d.scope === "all"}">All universities (${totalN})</button>
       </div>
 
       <button class="niche-btn ${niche ? "is-active" : ""}" id="niche-toggle" type="button">
@@ -1938,8 +1934,8 @@
   // Rows are attributes, columns are universities. The honesty problem a table
   // has and a profile doesn't: a row renders for EVERY university, so a missing
   // value needs a marker that reads as "we don't know" rather than an empty
-  // cell, which reads as zero or free. Every gap says "Not verified".
-  const UNKNOWN = '<span class="cmp__unknown">Not verified</span>';
+  // cell, which reads as zero or free. Every gap says "Not on file".
+  const UNKNOWN = '<span class="cmp__unknown">Not on file</span>';
 
   // Same rules as the profile: a tuition figure only when it was actually
   // researched, estimates flagged as estimates. Never a bare number we can't
@@ -2106,7 +2102,7 @@
 
       view.innerHTML = `
         <div class="section-head"><h2>Compare</h2>${state.user ? '<a class="link-btn" href="/saved" data-link>Back to shortlist</a>' : '<a class="link-btn" href="/discover" data-link>Browse universities</a>'}</div>
-        <p class="muted cmp__note">Comparing ${universities.length} universities. Blank facts are ones we haven't verified for that university — not zero.</p>
+        <p class="muted cmp__note">Comparing ${universities.length} universities. “Not on file” means we don't have that detail yet — not that it's zero or free.</p>
         <div class="cmp-scroll">
           <table class="cmp">
             <thead><tr><th scope="col"><span class="sr-only">Attribute</span></th>${head}</tr></thead>
@@ -2571,13 +2567,13 @@
         isCurated
           ? `<div class="verify-flag"><span>${icon("alert", 16)}</span><span>${banner}</span></div>`
           : `<div class="unverified-note">
-             <strong>We have not verified tuition, programs or entry requirements for this university yet.</strong>
-             Everything on this page comes from the official European register (ETER).
-             ${u.website ? `Check <a href="${esc(u.website)}" target="_blank" rel="noopener">the official website</a> for fees and admission details.` : ""}
+             <strong>This profile is sourced from the official European register (ETER).</strong>
+             It covers the essentials; tuition, programs and entry requirements live on the university's own site.
+             ${u.website ? `<a href="${esc(u.website)}" target="_blank" rel="noopener">Open the official website</a> to confirm fees and admission details.` : ""}
            </div>`
       }
       <div class="info-card"><h3>Overview</h3><p id="overview-text" style="margin:0;color:var(--ink-soft)">${esc(u.short_description || "")}</p></div>
-      ${facts.length ? `<div class="info-card"><h3>Key facts</h3><div class="info-grid">${factCards}</div>${(u.estimated_living_cost && u.estimated_living_cost.estimated) || u.language_estimated ? '<p class="muted" style="margin:10px 0 0;font-size:.82rem">~ / “est.” / “typical” = <strong>country-level estimate</strong>, not verified per-university. Confirm with the university.</p>' : ""}</div>` : ""}
+      ${facts.length ? `<div class="info-card"><h3>Key facts</h3><div class="info-grid">${factCards}</div>${(u.estimated_living_cost && u.estimated_living_cost.estimated) || u.language_estimated ? '<p class="muted" style="margin:10px 0 0;font-size:.82rem">~ / “est.” / “typical” = a <strong>country-level estimate</strong>, not a figure for this specific university. Confirm on their official site.</p>' : ""}</div>` : ""}
       ${section("Programs offered", taglist(u.programs_offered, "chip"))}
       ${section("Fields of study", taglist(u.fields_of_study, "chip--gold"))}
       ${section("Admission requirements", u.acceptance_requirements ? `<p style="margin:0;color:var(--ink-soft)">${esc(u.acceptance_requirements)}</p>` : "")}
