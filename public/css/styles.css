@@ -314,6 +314,56 @@ img {
   color: #fff;
 }
 
+/* One "What are you looking for?" panel — collapses the old stack of loose
+   controls (scope + niche + search + filters) into a single scannable unit. */
+.intent {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 18px 18px 14px;
+  margin-bottom: 18px;
+}
+.intent__title {
+  margin: 0 0 12px;
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.intent .searchbar {
+  margin-bottom: 12px;
+}
+.intent .filters {
+  margin-bottom: 0;
+}
+/* Quiet options row (scope + niche preset) — demoted below the primary inputs
+   so verified-only, the default, no longer competes for attention at the top. */
+.intent__opts {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.intent__opts-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink-faint);
+}
+.intent__opts .scope-row {
+  margin-bottom: 0;
+}
+.niche-btn--preset {
+  display: inline-flex;
+  align-items: center;
+  width: auto;
+  margin-bottom: 0;
+  padding: 7px 14px;
+  font-size: var(--text-sm);
+}
+
 /* Verified-vs-directory scope toggle (sits above the niche button).
    Styled as ONE segmented control, not two pills: it's a binary either/or, and
    as two separate full-width pills it read as two competing CTAs — worse, it

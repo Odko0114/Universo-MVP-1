@@ -735,55 +735,59 @@
 
       ${state.user ? "" : quickMatchHtml}
 
-      <div class="scope-head">
-        <span class="scope-head__label">Show</span>
-        <span class="scope-info" tabindex="0" role="note" aria-label="What full profiles means" title="Full profiles have a photo, official enrolment data and tuition we've checked. The rest are real universities from the official European register — with fewer details on file, so confirm specifics on their official site.">ⓘ</span>
-      </div>
-      <div class="scope-row" role="group" aria-label="Result scope">
-        <button class="niche-btn ${d.scope === "verified" ? "is-active" : ""}" id="scope-verified" type="button" aria-pressed="${d.scope === "verified"}">Full profiles (${verifiedN})</button>
-        <button class="niche-btn ${d.scope === "all" ? "is-active" : ""}" id="scope-all" type="button" aria-pressed="${d.scope === "all"}">All universities (${totalN})</button>
-      </div>
-
-      <button class="niche-btn ${niche ? "is-active" : ""}" id="niche-toggle" type="button">
-        🇪🇺 ${niche ? "✓ " : ""}Affordable, English-taught, EU
-      </button>
-
       <div id="recommended-wrap"></div>
 
-      <form class="searchbar" role="search" onsubmit="return false">
-        <label for="q" class="sr-only">Search universities</label>
-        <input id="q" type="search" placeholder="Search by name, city, program…" value="${esc(d.q)}" autocomplete="off" />
-      </form>
+      <section class="intent" aria-label="Search and filter universities">
+        <h2 class="intent__title">What are you looking for?</h2>
 
-      <div class="filters">
-        <div class="field"><label for="f-country">Country</label><select id="f-country"><option value="">All countries</option>${opts(m.countries, d.country)}</select></div>
-        <div class="field"><label for="f-field">Field of study</label><select id="f-field"><option value="">All fields</option>${opts(m.fields_of_study, d.field)}</select></div>
-        <div class="field"><label for="f-budget">Tuition budget</label><select id="f-budget">${budgets.map(([v, l]) => `<option value="${v}" ${v === d.maxTuition ? "selected" : ""}>${l}</option>`).join("")}</select></div>
-        <div class="field field--wide"><label for="f-sort">Sort by</label><select id="f-sort">
-          <option value="" ${d.sort === "" ? "selected" : ""}>${fitActive ? "Best match (for you)" : "Verified first, then A–Z"}</option>
-          <option value="name" ${d.sort === "name" ? "selected" : ""}>Name (A–Z)</option>
-          <option value="size" ${d.sort === "size" ? "selected" : ""}>Largest (students)</option>
-          <option value="tuition" ${d.sort === "tuition" ? "selected" : ""}>Lowest tuition</option>
-          <option value="popular" ${d.sort === "popular" ? "selected" : ""}>Most popular</option>
-        </select></div>
-      </div>
-      <details class="more-filters"${d.type || d.language || d.degree ? " open" : ""}>
-        <summary>More filters${
-          (d.type ? 1 : 0) + (d.language ? 1 : 0) + (d.degree ? 1 : 0)
-            ? ` <span class="more-filters__n">${(d.type ? 1 : 0) + (d.language ? 1 : 0) + (d.degree ? 1 : 0)}</span>`
-            : ""
-        }</summary>
+        <form class="searchbar" role="search" onsubmit="return false">
+          <label for="q" class="sr-only">Search universities</label>
+          <input id="q" type="search" placeholder="Search by name, city, program…" value="${esc(d.q)}" autocomplete="off" />
+        </form>
+
         <div class="filters">
-          <div class="field"><label for="f-type">Institution type</label><select id="f-type"><option value="">All types</option>${opts(m.institution_types, d.type)}</select></div>
-          <div class="field"><label for="f-language">Language</label><select id="f-language"><option value="">Any language</option>${opts(m.languages, d.language)}</select></div>
-          <div class="field"><label for="f-degree">Degree level</label><select id="f-degree"><option value="">Any degree</option>${opts(m.degree_levels, d.degree)}</select></div>
+          <div class="field"><label for="f-country">Country</label><select id="f-country"><option value="">All countries</option>${opts(m.countries, d.country)}</select></div>
+          <div class="field"><label for="f-field">Field of study</label><select id="f-field"><option value="">All fields</option>${opts(m.fields_of_study, d.field)}</select></div>
+          <div class="field"><label for="f-budget">Tuition budget</label><select id="f-budget">${budgets.map(([v, l]) => `<option value="${v}" ${v === d.maxTuition ? "selected" : ""}>${l}</option>`).join("")}</select></div>
+          <div class="field field--wide"><label for="f-sort">Sort by</label><select id="f-sort">
+            <option value="" ${d.sort === "" ? "selected" : ""}>${fitActive ? "Best match (for you)" : "Verified first, then A–Z"}</option>
+            <option value="name" ${d.sort === "name" ? "selected" : ""}>Name (A–Z)</option>
+            <option value="size" ${d.sort === "size" ? "selected" : ""}>Largest (students)</option>
+            <option value="tuition" ${d.sort === "tuition" ? "selected" : ""}>Lowest tuition</option>
+            <option value="popular" ${d.sort === "popular" ? "selected" : ""}>Most popular</option>
+          </select></div>
         </div>
-      </details>
 
-      <div class="filters-row">
-        <span id="result-count" class="muted" aria-live="polite">Loading…</span>
-        <button class="link-btn" id="clear-filters">Clear all</button>
-      </div>
+        <details class="more-filters"${d.type || d.language || d.degree ? " open" : ""}>
+          <summary>More filters${
+            (d.type ? 1 : 0) + (d.language ? 1 : 0) + (d.degree ? 1 : 0)
+              ? ` <span class="more-filters__n">${(d.type ? 1 : 0) + (d.language ? 1 : 0) + (d.degree ? 1 : 0)}</span>`
+              : ""
+          }</summary>
+          <div class="filters">
+            <div class="field"><label for="f-type">Institution type</label><select id="f-type"><option value="">All types</option>${opts(m.institution_types, d.type)}</select></div>
+            <div class="field"><label for="f-language">Language</label><select id="f-language"><option value="">Any language</option>${opts(m.languages, d.language)}</select></div>
+            <div class="field"><label for="f-degree">Degree level</label><select id="f-degree"><option value="">Any degree</option>${opts(m.degree_levels, d.degree)}</select></div>
+          </div>
+        </details>
+
+        <!-- Quiet options: verified-only is the default, so these sit below the
+             primary intent inputs rather than competing at the top. -->
+        <div class="intent__opts">
+          <span class="intent__opts-label">Show</span>
+          <div class="scope-row" role="group" aria-label="Result scope">
+            <button class="niche-btn ${d.scope === "verified" ? "is-active" : ""}" id="scope-verified" type="button" aria-pressed="${d.scope === "verified"}">Full profiles (${verifiedN})</button>
+            <button class="niche-btn ${d.scope === "all" ? "is-active" : ""}" id="scope-all" type="button" aria-pressed="${d.scope === "all"}">All universities (${totalN})</button>
+          </div>
+          <span class="scope-info" tabindex="0" role="note" aria-label="What full profiles means" title="Full profiles have a photo, official enrolment data and tuition we've checked. The rest are real universities from the official European register — with fewer details on file, so confirm specifics on their official site.">ⓘ</span>
+          <button class="niche-btn niche-btn--preset ${niche ? "is-active" : ""}" id="niche-toggle" type="button">🇪🇺 ${niche ? "✓ " : ""}Affordable, English-taught, EU</button>
+        </div>
+
+        <div class="filters-row">
+          <span id="result-count" class="muted" aria-live="polite">Loading…</span>
+          <button class="link-btn" id="clear-filters">Clear all</button>
+        </div>
+      </section>
       <p class="hint muted" id="filter-hint"></p>
       <!-- Shown only while results are actually fit-ranked (res.sort==="match"),
            so the visitor connects the order to the answers they gave. -->
