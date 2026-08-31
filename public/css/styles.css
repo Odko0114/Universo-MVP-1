@@ -713,6 +713,37 @@ img {
   margin-top: 12px;
 }
 
+/* Fit-ranked banner above the results — ties the list order to the student's
+   own answers. Shown only while the server actually ranked by match. */
+.fit-rank-note {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin: 2px 0 14px;
+  padding: 9px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--teal-050);
+  border: 1px solid #bfe9e2;
+  font-size: var(--text-sm);
+}
+.fit-rank-note__txt {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 700;
+  color: var(--teal-600);
+}
+.fit-rank-note__txt .icon {
+  width: 14px;
+  height: 14px;
+}
+.fit-rank-note .link-btn,
+.fit-rank-note a {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
 /* ---------- Buttons ---------- */
 .btn {
   appearance: none;

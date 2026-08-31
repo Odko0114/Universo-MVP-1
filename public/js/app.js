@@ -760,7 +760,7 @@
         <div class="field"><label for="f-field">Field of study</label><select id="f-field"><option value="">All fields</option>${opts(m.fields_of_study, d.field)}</select></div>
         <div class="field"><label for="f-budget">Tuition budget</label><select id="f-budget">${budgets.map(([v, l]) => `<option value="${v}" ${v === d.maxTuition ? "selected" : ""}>${l}</option>`).join("")}</select></div>
         <div class="field field--wide"><label for="f-sort">Sort by</label><select id="f-sort">
-          <option value="" ${d.sort === "" ? "selected" : ""}>${profiled ? "Best match (your profile)" : "Verified first, then A–Z"}</option>
+          <option value="" ${d.sort === "" ? "selected" : ""}>${fitActive ? "Best match (for you)" : "Verified first, then A–Z"}</option>
           <option value="name" ${d.sort === "name" ? "selected" : ""}>Name (A–Z)</option>
           <option value="size" ${d.sort === "size" ? "selected" : ""}>Largest (students)</option>
           <option value="tuition" ${d.sort === "tuition" ? "selected" : ""}>Lowest tuition</option>
@@ -785,6 +785,9 @@
         <button class="link-btn" id="clear-filters">Clear all</button>
       </div>
       <p class="hint muted" id="filter-hint"></p>
+      <!-- Shown only while results are actually fit-ranked (res.sort==="match"),
+           so the visitor connects the order to the answers they gave. -->
+      <div id="fit-rank-note" class="fit-rank-note" hidden></div>
       <!-- Names the results region so the heading outline doesn't jump h1 -> h3
            (the card titles) when logged out with no "Recommended" h2 above. -->
       <h2 class="sr-only">Search results</h2>
@@ -1023,6 +1026,31 @@
       countEl.textContent = res.count
         ? `${nfmt(res.count)} ${res.count === 1 ? "university" : "universities"} · showing ${nfmt(from)}–${nfmt(to)} (page ${d.page} of ${nfmt(totalPages)})`
         : "No universities";
+
+      // The list is fit-ranked only when the server actually ranked by match
+      // (a profile or quick-match, and no explicit sort/search override). Say so
+      // AT the list, so the reorder reads as "these answered my questions".
+      const noteEl = document.getElementById("fit-rank-note");
+      if (noteEl) {
+        if (res.sort === "match" && res.count) {
+          const edit = state.user
+            ? '<a href="/onboarding" data-link>Refine your profile</a>'
+            : '<button class="link-btn" id="fit-edit" type="button">Change your answers</button>';
+          noteEl.innerHTML = `<span class="fit-rank-note__txt">${icon("target", 14)} Ranked by how well each one fits you</span>${edit}`;
+          noteEl.hidden = false;
+          const fitEdit = document.getElementById("fit-edit");
+          if (fitEdit)
+            fitEdit.addEventListener("click", () => {
+              const t =
+                document.querySelector(".quickmatch") ||
+                document.querySelector(".hero");
+              if (t) t.scrollIntoView({ behavior: "smooth", block: "start" });
+            });
+        } else {
+          noteEl.hidden = true;
+          noteEl.innerHTML = "";
+        }
+      }
 
       box.innerHTML = state.results.items.length
         ? state.results.items.map(uniCard).join("")
