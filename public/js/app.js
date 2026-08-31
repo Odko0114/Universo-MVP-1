@@ -1144,7 +1144,9 @@
           ? `
         <div class="section-head" style="margin-top:26px" id="applications"><h3 style="margin:0">My applications</h3></div>
         <div class="app-list">${data.applications.map((a) => appCard(a, schByApp[a.name] || [])).join("")}</div>`
-          : "";
+          : `
+        <div class="section-head" style="margin-top:26px" id="applications"><h3 style="margin:0">My applications</h3></div>
+        <div class="card"><p class="muted" style="margin:0">You haven't started any applications yet. Open your <a href="/saved" data-link>shortlist</a> and hit <strong>Start application</strong> on the universities you're ready to pursue — they'll appear here to plan and track.</p></div>`;
 
       const sharedDocs = (data.documents || []).filter((d) => d.shared);
       const documentsCard = `
@@ -1293,29 +1295,8 @@
         </div>`
           : "";
 
-      // ---- Compare your applications (decide where to focus) ----
-      const compareCard =
-        (data.applications || []).length >= 2
-          ? `
-        <div class="section-head" style="margin-top:26px"><h3 style="margin:0">Compare your applications</h3></div>
-        <div class="cmp-scroll"><table class="cmp cmp--apps">
-          <thead><tr><th scope="col">Application</th><th scope="col">Deadline</th><th scope="col">Status</th><th scope="col">Docs</th><th scope="col">Est. cost/yr</th></tr></thead>
-          <tbody>
-            ${data.applications
-              .map(
-                (a) =>
-                  `<tr>
-                <th scope="row"><a class="journey-jump" href="#app-${esc(a.uni_id)}">${esc(a.name)}</a>${a.program || a.intake ? `<span class="cmp-apps__sub">${[a.program, a.intake].filter(Boolean).map(esc).join(" · ")}</span>` : ""}</th>
-                <td data-label="Deadline">${a.deadline ? esc(deadlineText(a.days_left)) : "—"}</td>
-                <td data-label="Status">${esc((APP_STATUSES.find(([k]) => k === a.status) || ["", "Planning"])[1])}</td>
-                <td data-label="Docs">${a.required_done}/${a.required_total}</td>
-                <td data-label="Est. cost/yr">${a.cost.known ? "~" + esc(eur(a.cost.min)) + "–" + esc(eur(a.cost.max)) : "—"}</td>
-              </tr>`,
-              )
-              .join("")}
-          </tbody>
-        </table></div>`
-          : "";
+      // (Compare lives in the Shortlist now — it's a narrowing tool, not part of
+      // application planning. Removed from Dream Plan to end the duplication.)
 
       // "Since you were away" — only real deadline deltas, only after a real
       // absence (server returns null otherwise).
@@ -1345,7 +1326,6 @@
           ${overviewCard}
           ${agendaCard}
           ${applicationsCard}
-          ${compareCard}
           ${documentsCard}
           ${costsCard}
           ${scholarshipsCard}

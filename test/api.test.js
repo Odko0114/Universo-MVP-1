@@ -605,7 +605,9 @@ test("scholarships follow saved destinations and can be tracked; funding surface
   assert.equal(j.scholarships.source, "none");
 
   // Save a German university → DAAD (+ Erasmus) surface, grouped under Germany.
+  // Started (preparing) so it's a committed application the Dream Plan works.
   await req("POST", "/api/me/saved/tum");
+  await req("POST", "/api/me/application/tum", { status: "preparing" });
   j = (await req("GET", "/api/me/journey")).json;
   assert.equal(j.scholarships.source, "applications");
   const germany = j.scholarships.groups.find((g) => g.country === "Germany");
@@ -695,6 +697,36 @@ test("application notes/decision, doc expiry, scholarship deadline, and the agen
   await req("DELETE", "/api/me");
 });
 
+test("Dream Plan shows only committed applications (planning stays on the shortlist)", async () => {
+  const testAddr = `scope_${Date.now()}@example.com`;
+  await req("POST", "/api/auth/register", {
+    full_name: "Scope Flow",
+    email: testAddr,
+    password: "password123",
+    consent: true,
+  });
+  await req("POST", "/api/me/saved/tum");
+  await req("POST", "/api/me/saved/uni-freiburg");
+
+  // Both saved (status planning) → neither is a Dream Plan application yet.
+  let j = (await req("GET", "/api/me/journey")).json;
+  assert.equal(j.applications.length, 0, "planning universities aren't applications");
+
+  // Start one → it appears in the Dream Plan; the other stays out.
+  await req("POST", "/api/me/application/tum", { status: "preparing" });
+  j = (await req("GET", "/api/me/journey")).json;
+  assert.deepEqual(
+    j.applications.map((a) => a.uni_id),
+    ["tum"],
+    "only the started application is in the Dream Plan",
+  );
+  // The all-saved status counts still see both (for the shortlist / ribbon).
+  assert.equal(j.saved.status_counts.planning, 1);
+  assert.equal(j.saved.status_counts.preparing, 1);
+
+  await req("DELETE", "/api/me");
+});
+
 test("application checklists are fully independent per application (incl. shared docs)", async () => {
   const testAddr = `indep_${Date.now()}@example.com`;
   await req("POST", "/api/auth/register", {
@@ -705,6 +737,9 @@ test("application checklists are fully independent per application (incl. shared
   });
   const ids = ["tum", "uni-freiburg", "uni-mannheim"];
   for (const id of ids) await req("POST", `/api/me/saved/${id}`);
+  // Start each so they're committed applications the Dream Plan works.
+  for (const id of ids)
+    await req("POST", `/api/me/application/${id}`, { status: "preparing" });
 
   // Shared docs are now trackable per application (previously rejected).
   const r = await req("POST", "/api/me/application/tum/document", {

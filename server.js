@@ -1476,11 +1476,18 @@ function buildJourneyData(student) {
   const budget = Number.isFinite(student.budget_max_eur_year)
     ? student.budget_max_eur_year
     : null;
-  const applications = journey.sortApplications(
+  const allApplications = journey.sortApplications(
     journey.buildApplications(saved, apps, docsState, budget),
   );
+  // Dream Plan works ONLY the applications the student has committed to
+  // (Start application → status past "planning"). Interested-but-not-started
+  // universities live in the Shortlist, not here — so the two features never
+  // show the same school. `sCounts` (all saved) still powers the status ribbon.
+  const applications = allApplications.filter((a) => a.status !== "planning");
+  const committedIds = new Set(applications.map((a) => a.uni_id));
+  const committedUnis = saved.filter((u) => committedIds.has(u.id));
   const overview = journey.applicationsOverview(applications);
-  const funding = journey.computeFunding(saved, budget);
+  const funding = journey.computeFunding(committedUnis, budget);
 
   // ---- Scholarships: destination-driven, each linked to the applications it
   // could fund, plus your home country's outbound schemes. ----
