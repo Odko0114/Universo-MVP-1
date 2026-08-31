@@ -1098,6 +1098,46 @@ img {
   flex-direction: column;
   gap: 0;
 }
+/* Pipeline ribbon (shared by Shortlist + Dream Plan) */
+.pipeline {
+  display: flex;
+  gap: 8px;
+  margin: 0 0 6px;
+  flex-wrap: wrap;
+}
+.pipeline__stage {
+  flex: 1 1 0;
+  min-width: 84px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  text-decoration: none;
+  color: var(--ink-soft);
+}
+.pipeline__stage.is-active {
+  border-color: var(--teal-500);
+  background: var(--teal-050);
+}
+.pipeline__stage--muted {
+  opacity: 0.7;
+}
+a.pipeline__stage:hover {
+  border-color: var(--teal-500);
+}
+.pipeline__num {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ink);
+}
+.pipeline__label {
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
 .saved-cell__cta {
   width: 100%;
   margin-top: 8px;

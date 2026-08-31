@@ -1325,6 +1325,7 @@
       return `
         <div class="journey">
           <div class="section-head"><h2>Your Dream Plan, ${first}</h2></div>
+          ${pipelineRibbon(data.saved.status_counts, "plan")}
           ${sinceAwayCard}
           ${dreamCard}
           ${nextBestCard}
@@ -1706,6 +1707,12 @@
       const interested = universities.filter(
         (u) => (u.application_status || "planning") === "planning",
       );
+      const statusCounts = {};
+      universities.forEach((u) => {
+        const s = u.application_status || "planning";
+        statusCounts[s] = (statusCounts[s] || 0) + 1;
+      });
+      const ribbon = pipelineRibbon(statusCounts, "shortlist");
       const section = (title, sub, list) =>
         list.length
           ? `<div class="section-head" style="margin-top:20px"><h3 style="margin:0">${title} (${list.length})</h3></div><p class="muted" style="margin:-2px 0 12px">${sub}</p><div class="grid">${list.map(savedCell).join("")}</div>`
@@ -1730,7 +1737,8 @@
           ).join("")
         : "";
       results.innerHTML = universities.length
-        ? section(
+        ? ribbon +
+          section(
             "Applying",
             "Applications you've started — plan and track them in your Dream Plan.",
             applying,
@@ -1966,6 +1974,36 @@
         ctaLabel: "Back to shortlist",
       });
     }
+  }
+
+  // The pipeline ribbon: one glanceable row across the whole journey, shared by
+  // the Shortlist and the Dream Plan. Aggregates the lifecycle statuses into the
+  // four stages a student thinks in, and links each to where those items live
+  // (Interested → Shortlist; the rest → Dream Plan). `current` emphasises the
+  // stages that belong to the page you're on.
+  function pipelineRibbon(statusCounts, current) {
+    const c = statusCounts || {};
+    const n = (...keys) => keys.reduce((s, k) => s + (c[k] || 0), 0);
+    const stages = [
+      ["interested", "💡", "Interested", n("planning"), "/saved"],
+      ["applying", "🎯", "Applying", n("preparing", "ready"), "/journey"],
+      ["submitted", "📤", "Submitted", n("submitted", "under_review"), "/journey"],
+      ["accepted", "🎉", "Accepted", n("accepted"), "/journey"],
+    ];
+    const rejected = n("rejected");
+    if (!stages.some(([, , , v]) => v) && !rejected) return "";
+    const active =
+      current === "shortlist" ? ["interested"] : ["applying", "submitted", "accepted"];
+    return `<div class="pipeline">${stages
+      .map(
+        ([key, ic, label, val, href]) =>
+          `<a class="pipeline__stage${active.includes(key) ? " is-active" : ""}" href="${href}" data-link><span class="pipeline__num">${val}</span><span class="pipeline__label">${ic} ${label}</span></a>`,
+      )
+      .join("")}${
+      rejected
+        ? `<span class="pipeline__stage pipeline__stage--muted"><span class="pipeline__num">${rejected}</span><span class="pipeline__label">Not accepted</span></span>`
+        : ""
+    }</div>`;
   }
 
   // A saved-list cell. "Interested" (status planning) gets a clear primary
