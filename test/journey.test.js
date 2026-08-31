@@ -640,7 +640,11 @@ test("applicationView: curated deadline/requirements surface as hints (never ass
 test("nextBestAction: a near deadline with missing required docs outranks everything", () => {
   const soon = new Date();
   soon.setDate(soon.getDate() + 3);
-  const iso = soon.toISOString().slice(0, 10);
+  // Build the ISO from LOCAL date parts, matching how journey.daysUntil parses
+  // it ("YYYY-MM-DDT00:00:00", local). toISOString() is UTC, which drifts this
+  // exact "3 days" assertion by a day when the clock is early-morning in a
+  // positive-UTC timezone — a test-only flake, not a product bug.
+  const iso = `${soon.getFullYear()}-${String(soon.getMonth() + 1).padStart(2, "0")}-${String(soon.getDate()).padStart(2, "0")}`;
   const views = journey.buildApplications(
     [{ id: "u1", name: "Helsinki" }],
     { u1: { deadline: iso } }, // nothing ready → required docs missing

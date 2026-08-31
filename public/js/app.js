@@ -194,6 +194,8 @@
       '<path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.5 2.5M16.5 16.5 19 19M19 5l-2.5 2.5M7.5 16.5 5 19"/>',
     target:
       '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+    calendar:
+      '<rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/>',
   };
   // The Universo mark for client-rendered views (auth card). Cloned from the
   // shell's nav logo, which the server fills from lib/brand.js — one source, so
@@ -425,6 +427,12 @@
     if (t && u.tuition_source === "curated_research") {
       chips.push(`<span class="chip chip--gold">${esc(t)}</span>`);
     }
+    // Deadline only exists for the ~40 curated unis — honest when shown, and
+    // its absence on register entries is honest too (we don't invent one).
+    if (u.application_deadline)
+      chips.push(
+        `<span class="chip chip--deadline">${icon("calendar", 13)} ${esc(u.application_deadline)}</span>`,
+      );
     const langs = (u.language_of_instruction || []).slice(0, 2).join(", ");
     if (langs)
       chips.push(`<span class="chip chip--plain">${esc(langs)}</span>`);
@@ -449,8 +457,18 @@
   const PLACEHOLDER_GLYPH =
     '<svg class="uni-card__glyph" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M3 21h18M4 21V9l8-5 8 5v12M9 21v-6h6v6"/></svg>';
 
+  // A FIT band (not admission odds) from the matcher's 0–100 score. The list is
+  // already ordered by this, so the band just names what the ordering means.
+  function fitBand(score) {
+    if (score == null) return null;
+    if (score >= 75) return { label: "Strong match", cls: "fit--strong" };
+    if (score >= 55) return { label: "Good match", cls: "fit--good" };
+    return { label: "Partial match", cls: "fit--partial" };
+  }
+
   function uniCard(u) {
     const saved = state.savedIds.has(u.id);
+    const band = fitBand(u.match_score);
     return `
       <article class="uni-card">
         <a class="uni-card__cover" href="/university/${esc(u.id)}" style="${coverStyle(u)}" aria-label="${esc(u.name)}">
@@ -466,6 +484,7 @@
           <span class="uni-card__loc">${esc(u.city || u.country)}</span>
         </a>
         <div class="uni-card__body">
+          ${band ? `<div class="uni-card__fit ${band.cls}"><span class="uni-card__fit-score">${u.match_score}</span><span class="uni-card__fit-label">${band.label}<span class="uni-card__fit-sub">how well it fits you</span></span></div>` : ""}
           <div class="uni-card__title">
             ${logoHtml(u, "logo--card")}
             <div><a href="/university/${esc(u.id)}"><h3 class="uni-card__name">${esc(u.name)}</h3></a></div>
@@ -474,7 +493,6 @@
           <div class="uni-card__meta">${metaChips(u)}</div>
           ${(u.match_reasons || []).length ? `<p class="match-why">${icon("target", 14)} ${esc(u.match_reasons.join(" · "))}</p>` : ""}
           <div class="card-actions">
-            <a class="btn btn--ghost btn--sm" href="/university/${esc(u.id)}" style="flex:1">View</a>
             <button class="btn btn--sm ${saved ? "btn--saved" : "btn--primary"}" data-save="${esc(u.id)}" style="flex:1">
               ${saved ? `${icon("bookmark", 15)} Shortlisted` : "＋ Save to shortlist"}
             </button>
@@ -628,11 +646,7 @@
       d.region === "EU" && d.language === "English" && d.maxTuition === "6000";
     const counts = m.counts || {};
     const verifiedN = counts.verified ? nfmt(counts.verified) : "300";
-    const totalN = counts.total ? nfmt(counts.total) : "4,000+";
-    const registerN =
-      counts.total && counts.verified
-        ? nfmt(counts.total - counts.verified)
-        : "3,700+";
+    const totalN = counts.total ? nfmt(counts.total) : "2,899";
     const profiled = !!(state.user && state.user.profile_completed);
 
     // Anonymous "What fits you?" card — two states: a prompt to answer, or a
@@ -679,6 +693,34 @@
         </form>
       </section>`;
 
+    // When results will be fit-ranked (a logged-in profile, or an anonymous
+    // quick-match), lead with "for you" instead of the catalogue's size — the
+    // ranking IS the product. The result-count line below states the number.
+    const fitActive = profiled || !!(qm && (qm.field || qm.budget));
+    const fitSummary = qm
+      ? [qm.field, qm.country, qm.budget ? budgetLabel(qm.budget) : ""]
+          .filter(Boolean)
+          .map(esc)
+          .join(" · ")
+      : "";
+    const heroHtml = fitActive
+      ? `
+      <section class="hero hero--fit">
+        <p class="hero__tagline">${icon("target", 15)} Ranked for you</p>
+        <h1>Universities that fit <span class="accent">you</span></h1>
+        <p>${
+          fitSummary
+            ? `Your best matches for <strong>${fitSummary}</strong> lead the list — each with a fit score and the reason it fits. Change an answer above to re-rank.`
+            : `Your best matches lead the list — each with a fit score and the reason it fits. <a href="/onboarding">Refine your profile</a> to sharpen them.`
+        }</p>
+      </section>`
+      : `
+      <section class="hero">
+        <p class="hero__tagline">Same Start. Equal Chance.</p>
+        <h1>Find your university <span class="accent">in Europe</span></h1>
+        <p><strong>${totalN}</strong> European universities — <strong>${verifiedN}</strong> with a full Universo profile (photo, official enrolment data, scholarships), the rest sourced straight from the official European register. Every profile shows where its information comes from.</p>
+      </section>`;
+
     view.innerHTML = `
       ${
         !state.user
@@ -689,21 +731,17 @@
       </div>`
           : ""
       }
-      <section class="hero">
-        <p class="hero__tagline">Same Start. Equal Chance.</p>
-        <h1>Find your university <span class="accent">in Europe</span></h1>
-        <p><strong>${totalN}</strong> European universities listed — <strong>${verifiedN}</strong> with a complete, checked profile (photo, official enrolment data, scholarships). The rest are entries from the official European register; open any profile to see exactly what we do and don't know about it.</p>
-      </section>
+      ${heroHtml}
 
       ${state.user ? "" : quickMatchHtml}
 
       <div class="scope-head">
         <span class="scope-head__label">Show</span>
-        <span class="scope-info" tabindex="0" role="note" aria-label="What unverified means" title="Verified universities have a checked profile — official enrolment data, tuition and photos. Unverified ones come straight from the European register: real universities, but with limited details we haven't confirmed yet.">ⓘ</span>
+        <span class="scope-info" tabindex="0" role="note" aria-label="What full profiles means" title="Full profiles have a photo, official enrolment data and tuition we've checked. The rest are real universities from the official European register — with fewer details on file, so confirm specifics on their official site.">ⓘ</span>
       </div>
       <div class="scope-row" role="group" aria-label="Result scope">
-        <button class="niche-btn ${d.scope === "verified" ? "is-active" : ""}" id="scope-verified" type="button" aria-pressed="${d.scope === "verified"}">Verified only (${verifiedN})</button>
-        <button class="niche-btn ${d.scope === "all" ? "is-active" : ""}" id="scope-all" type="button" aria-pressed="${d.scope === "all"}">Include unverified (${registerN})</button>
+        <button class="niche-btn ${d.scope === "verified" ? "is-active" : ""}" id="scope-verified" type="button" aria-pressed="${d.scope === "verified"}">Full profiles (${verifiedN})</button>
+        <button class="niche-btn ${d.scope === "all" ? "is-active" : ""}" id="scope-all" type="button" aria-pressed="${d.scope === "all"}">All universities (${totalN})</button>
       </div>
 
       <button class="niche-btn ${niche ? "is-active" : ""}" id="niche-toggle" type="button">
@@ -722,7 +760,7 @@
         <div class="field"><label for="f-field">Field of study</label><select id="f-field"><option value="">All fields</option>${opts(m.fields_of_study, d.field)}</select></div>
         <div class="field"><label for="f-budget">Tuition budget</label><select id="f-budget">${budgets.map(([v, l]) => `<option value="${v}" ${v === d.maxTuition ? "selected" : ""}>${l}</option>`).join("")}</select></div>
         <div class="field field--wide"><label for="f-sort">Sort by</label><select id="f-sort">
-          <option value="" ${d.sort === "" ? "selected" : ""}>${profiled ? "Best match (your profile)" : "Verified first, then A–Z"}</option>
+          <option value="" ${d.sort === "" ? "selected" : ""}>${fitActive ? "Best match (for you)" : "Verified first, then A–Z"}</option>
           <option value="name" ${d.sort === "name" ? "selected" : ""}>Name (A–Z)</option>
           <option value="size" ${d.sort === "size" ? "selected" : ""}>Largest (students)</option>
           <option value="tuition" ${d.sort === "tuition" ? "selected" : ""}>Lowest tuition</option>
@@ -747,6 +785,9 @@
         <button class="link-btn" id="clear-filters">Clear all</button>
       </div>
       <p class="hint muted" id="filter-hint"></p>
+      <!-- Shown only while results are actually fit-ranked (res.sort==="match"),
+           so the visitor connects the order to the answers they gave. -->
+      <div id="fit-rank-note" class="fit-rank-note" hidden></div>
       <!-- Names the results region so the heading outline doesn't jump h1 -> h3
            (the card titles) when logged out with no "Recommended" h2 above. -->
       <h2 class="sr-only">Search results</h2>
@@ -985,6 +1026,31 @@
       countEl.textContent = res.count
         ? `${nfmt(res.count)} ${res.count === 1 ? "university" : "universities"} · showing ${nfmt(from)}–${nfmt(to)} (page ${d.page} of ${nfmt(totalPages)})`
         : "No universities";
+
+      // The list is fit-ranked only when the server actually ranked by match
+      // (a profile or quick-match, and no explicit sort/search override). Say so
+      // AT the list, so the reorder reads as "these answered my questions".
+      const noteEl = document.getElementById("fit-rank-note");
+      if (noteEl) {
+        if (res.sort === "match" && res.count) {
+          const edit = state.user
+            ? '<a href="/onboarding" data-link>Refine your profile</a>'
+            : '<button class="link-btn" id="fit-edit" type="button">Change your answers</button>';
+          noteEl.innerHTML = `<span class="fit-rank-note__txt">${icon("target", 14)} Ranked by how well each one fits you</span>${edit}`;
+          noteEl.hidden = false;
+          const fitEdit = document.getElementById("fit-edit");
+          if (fitEdit)
+            fitEdit.addEventListener("click", () => {
+              const t =
+                document.querySelector(".quickmatch") ||
+                document.querySelector(".hero");
+              if (t) t.scrollIntoView({ behavior: "smooth", block: "start" });
+            });
+        } else {
+          noteEl.hidden = true;
+          noteEl.innerHTML = "";
+        }
+      }
 
       box.innerHTML = state.results.items.length
         ? state.results.items.map(uniCard).join("")
@@ -1896,8 +1962,8 @@
   // Rows are attributes, columns are universities. The honesty problem a table
   // has and a profile doesn't: a row renders for EVERY university, so a missing
   // value needs a marker that reads as "we don't know" rather than an empty
-  // cell, which reads as zero or free. Every gap says "Not verified".
-  const UNKNOWN = '<span class="cmp__unknown">Not verified</span>';
+  // cell, which reads as zero or free. Every gap says "Not on file".
+  const UNKNOWN = '<span class="cmp__unknown">Not on file</span>';
 
   // Same rules as the profile: a tuition figure only when it was actually
   // researched, estimates flagged as estimates. Never a bare number we can't
@@ -2064,7 +2130,7 @@
 
       view.innerHTML = `
         <div class="section-head"><h2>Compare</h2>${state.user ? '<a class="link-btn" href="/saved" data-link>Back to shortlist</a>' : '<a class="link-btn" href="/discover" data-link>Browse universities</a>'}</div>
-        <p class="muted cmp__note">Comparing ${universities.length} universities. Blank facts are ones we haven't verified for that university — not zero.</p>
+        <p class="muted cmp__note">Comparing ${universities.length} universities. “Not on file” means we don't have that detail yet — not that it's zero or free.</p>
         <div class="cmp-scroll">
           <table class="cmp">
             <thead><tr><th scope="col"><span class="sr-only">Attribute</span></th>${head}</tr></thead>
@@ -2529,13 +2595,13 @@
         isCurated
           ? `<div class="verify-flag"><span>${icon("alert", 16)}</span><span>${banner}</span></div>`
           : `<div class="unverified-note">
-             <strong>We have not verified tuition, programs or entry requirements for this university yet.</strong>
-             Everything on this page comes from the official European register (ETER).
-             ${u.website ? `Check <a href="${esc(u.website)}" target="_blank" rel="noopener">the official website</a> for fees and admission details.` : ""}
+             <strong>This profile is sourced from the official European register (ETER).</strong>
+             It covers the essentials; tuition, programs and entry requirements live on the university's own site.
+             ${u.website ? `<a href="${esc(u.website)}" target="_blank" rel="noopener">Open the official website</a> to confirm fees and admission details.` : ""}
            </div>`
       }
       <div class="info-card"><h3>Overview</h3><p id="overview-text" style="margin:0;color:var(--ink-soft)">${esc(u.short_description || "")}</p></div>
-      ${facts.length ? `<div class="info-card"><h3>Key facts</h3><div class="info-grid">${factCards}</div>${(u.estimated_living_cost && u.estimated_living_cost.estimated) || u.language_estimated ? '<p class="muted" style="margin:10px 0 0;font-size:.82rem">~ / “est.” / “typical” = <strong>country-level estimate</strong>, not verified per-university. Confirm with the university.</p>' : ""}</div>` : ""}
+      ${facts.length ? `<div class="info-card"><h3>Key facts</h3><div class="info-grid">${factCards}</div>${(u.estimated_living_cost && u.estimated_living_cost.estimated) || u.language_estimated ? '<p class="muted" style="margin:10px 0 0;font-size:.82rem">~ / “est.” / “typical” = a <strong>country-level estimate</strong>, not a figure for this specific university. Confirm on their official site.</p>' : ""}</div>` : ""}
       ${section("Programs offered", taglist(u.programs_offered, "chip"))}
       ${section("Fields of study", taglist(u.fields_of_study, "chip--gold"))}
       ${section("Admission requirements", u.acceptance_requirements ? `<p style="margin:0;color:var(--ink-soft)">${esc(u.acceptance_requirements)}</p>` : "")}
