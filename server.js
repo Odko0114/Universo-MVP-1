@@ -825,6 +825,7 @@ api.get("/universities", universitiesLimiter, (req, res) => {
     if (match.hasProfile(anon)) profile = anon;
   }
   const profiled = !!profile;
+  const maxFit = profiled ? match.maxScore(profile) : 1;
   const params = { ...req.query };
   if (profiled && !params.sort && !params.q) params.sort = "match";
   const scoreFn = profiled
@@ -836,10 +837,12 @@ api.get("/universities", universitiesLimiter, (req, res) => {
     const withP = withPhoto(u);
     // Attach the fit score + a compressed per-card reason only when we actually
     // ranked by fit. The score is a FIT score (field/budget/country/language/
-    // verified), NOT an admission probability — the card labels it as such.
+    // verified), NOT an admission probability. It's normalised to what THIS
+    // profile could achieve (match.maxScore), so a best-possible match reads as
+    // ~100 rather than the raw 60 a field+budget search would cap at.
     if (profiled && params.sort === "match") {
       const m = match.matchUniversity(profile, u);
-      withP.match_score = Math.round(m.score);
+      withP.match_score = Math.round((m.score / maxFit) * 100);
       const reason = explain.compressedReason(m.components);
       if (reason) withP.match_reasons = [reason];
     }

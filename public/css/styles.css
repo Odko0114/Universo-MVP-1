@@ -363,6 +363,12 @@ img {
   padding: 7px 14px;
   font-size: var(--text-sm);
 }
+.preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex-basis: 100%;
+}
 
 /* Verified-vs-directory scope toggle (sits above the niche button).
    Styled as ONE segmented control, not two pills: it's a binary either/or, and
@@ -732,20 +738,29 @@ img {
   font-variant-numeric: tabular-nums;
 }
 .uni-card__fit-label {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.12;
   font-weight: 700;
   font-size: var(--text-sm);
-  color: var(--teal-600);
+  letter-spacing: -0.01em;
 }
-.uni-card__fit-sub {
-  font-weight: 500;
-  font-size: var(--text-3xs);
-  color: var(--ink-faint);
+/* Colour-coded by band so the quality reads at a glance, before the number:
+   green = strong, amber = good, slate = partial. */
+.fit--strong {
+  background: #e4f5ea;
+}
+.fit--strong .uni-card__fit-score {
+  background: #16a34a;
+}
+.fit--strong .uni-card__fit-label {
+  color: #15803d;
+}
+.fit--good {
+  background: #fbf1d9;
 }
 .fit--good .uni-card__fit-score {
-  background: #4bbfb2;
+  background: #cf9a1c;
+}
+.fit--good .uni-card__fit-label {
+  color: #916609;
 }
 .fit--partial {
   background: #eef1f6;

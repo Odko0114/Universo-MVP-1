@@ -461,8 +461,8 @@
   // already ordered by this, so the band just names what the ordering means.
   function fitBand(score) {
     if (score == null) return null;
-    if (score >= 75) return { label: "Strong match", cls: "fit--strong" };
-    if (score >= 55) return { label: "Good match", cls: "fit--good" };
+    if (score >= 90) return { label: "Strong match", cls: "fit--strong" };
+    if (score >= 65) return { label: "Good match", cls: "fit--good" };
     return { label: "Partial match", cls: "fit--partial" };
   }
 
@@ -484,7 +484,7 @@
           <span class="uni-card__loc">${esc(u.city || u.country)}</span>
         </a>
         <div class="uni-card__body">
-          ${band ? `<div class="uni-card__fit ${band.cls}"><span class="uni-card__fit-score">${u.match_score}</span><span class="uni-card__fit-label">${band.label}<span class="uni-card__fit-sub">how well it fits you</span></span></div>` : ""}
+          ${band ? `<div class="uni-card__fit ${band.cls}"><span class="uni-card__fit-score">${u.match_score}</span><span class="uni-card__fit-label">${band.label}</span></div>` : ""}
           <div class="uni-card__title">
             ${logoHtml(u, "logo--card")}
             <div><a href="/university/${esc(u.id)}"><h3 class="uni-card__name">${esc(u.name)}</h3></a></div>
@@ -642,8 +642,17 @@
       ["20000", "Under €20,000/yr"],
     ];
 
-    const niche =
-      d.region === "EU" && d.language === "English" && d.maxTuition === "6000";
+    // One-tap discovery shortcuts. Each is just a combination of EXISTING
+    // filters (region/language/budget) — honest, no new data — and active only
+    // when the current filters match its triple exactly, so they're mutually
+    // exclusive and also light up if the student sets the same filters by hand.
+    const PRESETS = [
+      { id: "eu-affordable", label: "🇪🇺 Affordable, English-taught, EU", region: "EU", language: "English", maxTuition: "6000" },
+      { id: "english-eu", label: "🌍 English-taught in Europe", region: "EU", language: "English", maxTuition: "" },
+      { id: "low-tuition", label: "💶 Low tuition · ≤ €3,000", region: "", language: "", maxTuition: "3000" },
+    ];
+    const presetActive = (p) =>
+      d.region === p.region && d.language === p.language && d.maxTuition === p.maxTuition;
     const counts = m.counts || {};
     const verifiedN = counts.verified ? nfmt(counts.verified) : "300";
     const totalN = counts.total ? nfmt(counts.total) : "2,899";
@@ -780,7 +789,7 @@
             <button class="niche-btn ${d.scope === "all" ? "is-active" : ""}" id="scope-all" type="button" aria-pressed="${d.scope === "all"}">All universities (${totalN})</button>
           </div>
           <span class="scope-info" tabindex="0" role="note" aria-label="What full profiles means" title="Full profiles have a photo, official enrolment data and tuition we've checked. The rest are real universities from the official European register — with fewer details on file, so confirm specifics on their official site.">ⓘ</span>
-          <button class="niche-btn niche-btn--preset ${niche ? "is-active" : ""}" id="niche-toggle" type="button">🇪🇺 ${niche ? "✓ " : ""}Affordable, English-taught, EU</button>
+          <div class="preset-row">${PRESETS.map((p) => `<button class="niche-btn niche-btn--preset ${presetActive(p) ? "is-active" : ""}" data-preset="${p.id}" type="button">${presetActive(p) ? "✓ " : ""}${p.label}</button>`).join("")}</div>
         </div>
 
         <div class="filters-row">
@@ -853,20 +862,24 @@
         renderDiscover();
       }
     });
-    document.getElementById("niche-toggle").addEventListener("click", () => {
-      if (niche) {
-        d.region = "";
-        d.language = "";
-        d.maxTuition = "";
-      } else {
-        d.region = "EU";
-        d.language = "English";
-        d.maxTuition = "6000";
-        trackFilter("niche", "eu-affordable-english");
-      }
-      d.page = 1;
-      syncDiscoverUrl();
-      renderDiscover();
+    document.querySelectorAll("[data-preset]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const p = PRESETS.find((x) => x.id === btn.dataset.preset);
+        if (!p) return;
+        if (presetActive(p)) {
+          d.region = "";
+          d.language = "";
+          d.maxTuition = "";
+        } else {
+          d.region = p.region;
+          d.language = p.language;
+          d.maxTuition = p.maxTuition;
+          trackFilter("preset", p.id);
+        }
+        d.page = 1;
+        syncDiscoverUrl();
+        renderDiscover();
+      });
     });
 
     // Quick-match: submitting saves the answers and re-renders (which re-runs
@@ -3035,7 +3048,7 @@
       body = `<label class="onb-label">City size</label>${chips("city_preference", MATCH.CITY)}
         <label class="onb-label" style="margin-top:16px">Countries (optional — pick any)</label>${chips("country_preference", countries)}
         <label class="onb-label" style="margin-top:16px">Home country (for language/visa context only)</label>
-        <input id="onb-home" type="text" placeholder="e.g. Mongolia" value="${esc(draft.home_country)}" class="onb-input" />`;
+        <input id="onb-home" type="text" placeholder="Your home country" value="${esc(draft.home_country)}" class="onb-input" />`;
     }
 
     const last = draft._step === ONBOARD_STEPS.length - 1;
@@ -3153,7 +3166,7 @@
         <div class="form-group"><label>Full name *</label><input type="text" name="full_name" required autocomplete="name" /></div>
         <div class="form-group"><label>Email *</label><input type="email" name="email" required autocomplete="email" /></div>
         <div class="form-group"><label>Password * <span class="muted">(min 8 characters)</span></label><input type="password" name="password" required minlength="8" autocomplete="new-password" /></div>
-        <div class="form-group"><label>Country of origin</label><input type="text" name="country_of_origin" placeholder="e.g. Mongolia" /></div>
+        <div class="form-group"><label>Country of origin</label><input type="text" name="country_of_origin" placeholder="Your country" /></div>
         <div class="form-group"><label>Field of interest</label><input type="text" name="field_of_interest" placeholder="e.g. Computer Science" /></div>
         <div class="form-group"><label>Target degree level</label><select name="target_degree_level"><option value="">Select…</option><option>Bachelor</option><option>Master</option><option>PhD</option></select></div>
         <div class="form-group"><label class="consent"><input type="checkbox" name="consent" /><span>I have read and accept the <a href="/privacy">privacy policy</a>, and consent to Universo storing my account data. *</span></label></div>
