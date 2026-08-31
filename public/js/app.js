@@ -1686,17 +1686,13 @@
       return;
     }
     setActiveNav("saved");
-    document.title = "Saved — Universo";
-    view.innerHTML = `<div class="section-head"><h2>Saved universities</h2><span id="cmp-link"></span></div><div id="results"><div class="grid">${'<div class="skeleton"></div>'.repeat(3)}</div></div>`;
+    document.title = "Shortlist — Universo";
+    view.innerHTML = `<div class="section-head"><h2>Your shortlist</h2></div><p class="muted" style="margin:-6px 0 14px">Universities you're considering. Narrow them down, then start an application when you're ready.</p><div id="compare-bar"></div><div id="results"><div class="grid">${'<div class="skeleton"></div>'.repeat(3)}</div></div>`;
     try {
       const { universities } = await API.saved();
       state.savedIds = new Set(universities.map((u) => u.id));
-      // Comparing needs at least two, so the entry point only appears once it
-      // would actually do something.
-      if (universities.length >= 2) {
-        document.getElementById("cmp-link").innerHTML =
-          '<a class="link-btn" href="/compare" data-link>Compare side by side</a>';
-      }
+      // Drop any comparison selections for schools no longer saved.
+      for (const id of [...compareSel]) if (!state.savedIds.has(id)) compareSel.delete(id);
       const results = document.getElementById("results");
       // Two clear buckets: universities you're actively applying to vs ones you
       // saved to consider. Makes Saved (interested) and Dream Plan (applying)
@@ -1775,6 +1771,14 @@
           }
         });
       });
+      results.querySelectorAll("[data-compare]").forEach((cb) => {
+        cb.addEventListener("change", () => {
+          if (cb.checked) compareSel.add(cb.dataset.compare);
+          else compareSel.delete(cb.dataset.compare);
+          updateCompareBar();
+        });
+      });
+      updateCompareBar();
     } catch (e) {
       view.innerHTML = emptyState({
         iconName: "alert",
@@ -2033,6 +2037,7 @@
       </label>
       <a class="link-btn saved-cell__open" href="/journey#app-${esc(u.id)}" data-link>Open in Dream Plan →</a>`
       }
+      <label class="saved-compare"><input type="checkbox" data-compare="${esc(u.id)}"${compareSel.has(u.id) ? " checked" : ""} /> Compare</label>
     </div>`;
   }
 
@@ -2263,6 +2268,29 @@
       btn.disabled = false;
       toast(e.message, true);
     }
+  }
+
+  // Select-to-compare: comparison is a narrowing tool, so the student picks the
+  // few schools they're deciding between rather than comparing everything.
+  // /compare?ids= already renders exactly that set.
+  const compareSel = new Set();
+  function updateCompareBar() {
+    const bar = document.getElementById("compare-bar");
+    if (!bar) return;
+    const ids = [...compareSel];
+    bar.innerHTML =
+      ids.length >= 2
+        ? `<div class="compare-bar"><span>${ids.length} selected to compare</span><span class="compare-bar__actions"><button class="btn btn--ghost btn--sm" id="compare-clear">Clear</button><a class="btn btn--primary btn--sm" href="/compare?ids=${ids.map(encodeURIComponent).join(",")}" data-link>Compare ${ids.length} →</a></span></div>`
+        : ids.length === 1
+          ? `<p class="muted compare-hint">Select one more to compare side by side.</p>`
+          : "";
+    const clear = document.getElementById("compare-clear");
+    if (clear)
+      clear.addEventListener("click", () => {
+        compareSel.clear();
+        document.querySelectorAll("[data-compare]").forEach((cb) => (cb.checked = false));
+        updateCompareBar();
+      });
   }
 
   function wireStatusSelects(root) {
@@ -2574,7 +2602,7 @@
         </div>`
         }
         <div style="margin-top:18px;display:flex;gap:10px">
-          <a class="btn btn--ghost" href="/saved" style="flex:1">View saved (${savedCount})</a>
+          <a class="btn btn--ghost" href="/saved" style="flex:1">View shortlist (${savedCount})</a>
           <button class="btn btn--primary" id="logout" style="flex:1">Log out</button>
         </div>
         <hr class="divider" />

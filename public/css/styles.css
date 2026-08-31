@@ -1142,6 +1142,45 @@ a.pipeline__stage:hover {
   width: 100%;
   margin-top: 8px;
 }
+.compare-bar {
+  position: sticky;
+  top: 8px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  background: var(--navy-900);
+  color: #fff;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  box-shadow: var(--shadow-md);
+}
+.compare-bar__actions {
+  display: flex;
+  gap: 8px;
+}
+.compare-hint {
+  margin: 0 0 12px;
+  font-size: var(--text-sm);
+}
+.saved-compare {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.saved-compare input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--teal-500);
+}
 .saved-cell__controls {
   display: flex;
   gap: 8px;
