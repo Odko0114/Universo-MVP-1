@@ -1,0 +1,20 @@
+[
+  { "id": "cn-tsinghua", "name": "Tsinghua University", "country": "China", "city": "Beijing", "website": "https://www.tsinghua.edu.cn", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "cn-peking", "name": "Peking University", "country": "China", "city": "Beijing", "website": "https://www.pku.edu.cn", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "cn-fudan", "name": "Fudan University", "country": "China", "city": "Shanghai", "website": "https://www.fudan.edu.cn", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "cn-sjtu", "name": "Shanghai Jiao Tong University", "country": "China", "city": "Shanghai", "website": "https://en.sjtu.edu.cn", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "cn-zju", "name": "Zhejiang University", "country": "China", "city": "Hangzhou", "website": "https://www.zju.edu.cn", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "cn-ustc", "name": "University of Science and Technology of China", "country": "China", "city": "Hefei", "website": "https://en.ustc.edu.cn", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "cn-nju", "name": "Nanjing University", "country": "China", "city": "Nanjing", "website": "https://www.nju.edu.cn", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "cn-whu", "name": "Wuhan University", "country": "China", "city": "Wuhan", "website": "https://en.whu.edu.cn", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "cn-hit", "name": "Harbin Institute of Technology", "country": "China", "city": "Harbin", "website": "http://en.hit.edu.cn", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "cn-sysu", "name": "Sun Yat-sen University", "country": "China", "city": "Guangzhou", "website": "https://www.sysu.edu.cn", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "cn-scu", "name": "Sichuan University", "country": "China", "city": "Chengdu", "website": "https://en.scu.edu.cn", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "cn-xjtu", "name": "Xi'an Jiaotong University", "country": "China", "city": "Xi'an", "website": "http://en.xjtu.edu.cn", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "cn-tongji", "name": "Tongji University", "country": "China", "city": "Shanghai", "website": "https://en.tongji.edu.cn", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "cn-hust", "name": "Huazhong University of Science and Technology", "country": "China", "city": "Wuhan", "website": "http://english.hust.edu.cn", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "cn-nankai", "name": "Nankai University", "country": "China", "city": "Tianjin", "website": "https://en.nankai.edu.cn", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "cn-ruc", "name": "Renmin University of China", "country": "China", "city": "Beijing", "website": "http://www.ruc.edu.cn", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "cn-seu", "name": "Southeast University", "country": "China", "city": "Nanjing", "website": "https://www.seu.edu.cn", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "cn-jlu", "name": "Jilin University", "country": "China", "city": "Changchun", "website": "https://en.jlu.edu.cn", "source": "global", "discover_scope": "scholarship-only" }
+]

@@ -1103,5 +1103,76 @@
     "country_pathway": "Europe",
     "university_ids": [],
     "universities_note": "At universities in the 15 CEEPUS member countries (Central/SE Europe) — explore European universities; the official CEEPUS site lists the networks."
+  },
+  {
+    "id": "chinese-government-scholarship-csc",
+    "key": "chinese-government-scholarship-csc",
+    "name": "Chinese Government Scholarship (CSC)",
+    "provider": "China Scholarship Council (CSC), Government of China",
+    "country": "China",
+    "type": "government",
+    "scope": "curated",
+    "tagline": "China's flagship government scholarship — full funding for Bachelor's, Master's or PhD at designated Chinese universities.",
+    "verification": {
+      "sources": [
+        "http://www.campuschina.org/content/details3_74776.html",
+        "https://www.campuschina.org/content/details3_74779.html"
+      ],
+      "date": "2026-09-01",
+      "status": "verified"
+    },
+    "degree_levels": ["Bachelor's", "Master's", "Doctoral (PhD)", "Chinese language / research"],
+    "fields": "A wide range — sciences, engineering, agriculture, medicine, economics, law, management, education, humanities and arts — at designated Chinese universities.",
+    "funding": {
+      "tuition": { "level": "full", "text": "Full tuition waiver (under the full-scholarship programs)." },
+      "accommodation": { "level": "full", "text": "Free on-campus accommodation, or a housing subsidy." },
+      "stipend": { "level": "partial", "text": "A monthly living stipend, higher for higher degree levels — confirm the current amount on the official site." },
+      "insurance": { "level": "full", "text": "Comprehensive medical insurance for international students in China." }
+    },
+    "duration": "The standard length of your degree programme (plus a preparatory Chinese-language year where required).",
+    "eligibility": {
+      "countries_note": "Open to non-Chinese citizens in good health. Availability and quotas depend on the programme/channel (e.g. the bilateral program via your country, or the Chinese University Program).",
+      "academic": "Bachelor's applicants: a high-school graduate; Master's: a bachelor's degree; PhD: a master's degree.",
+      "age": "Master's: under 35. PhD: under 40. (Bachelor's and other categories have their own limits.)",
+      "language": "Chinese or English depending on the programme; a funded Chinese-language year may be required for Chinese-taught programmes.",
+      "notes": "Apply either through the Chinese Embassy in your country (bilateral program) OR directly to a designated Chinese university that accepts individual applications."
+    },
+    "requirements": [
+      "Your highest diploma and transcripts (notarised)",
+      "A study or research plan",
+      "Two recommendation letters (for graduate levels)",
+      "A passport copy",
+      "The Foreigner Physical Examination Form (medical)",
+      "A language certificate (HSK for Chinese-taught, or English proof)",
+      "Any programme-specific documents"
+    ],
+    "application": {
+      "route": "Two possible channels: (1) the Chinese Embassy/Consulate in your home country (the bilateral program), or (2) directly to a designated Chinese university that accepts individual applications — the university then nominates you to CSC.",
+      "steps": [
+        "Choose your degree level and target designated universities/programmes.",
+        "Pick your channel — your Chinese Embassy (bilateral) or a designated university.",
+        "Apply on the CSC online system AND to your chosen agency/university.",
+        "The agency/university reviews and nominates; CSC makes the final decision.",
+        "Results are announced (typically by late July)."
+      ],
+      "portal": "https://www.campuschina.org",
+      "deadline": "",
+      "deadline_note": "The application window is roughly early January to early April, but exact deadlines are set by each embassy/university. Results around late July. Confirm on campuschina.org / csc.edu.cn.",
+      "cycle": "annual"
+    },
+    "important": [
+      "Apply through EITHER your Chinese Embassy (bilateral) OR a designated university — there's no single central form, and deadlines differ by channel.",
+      "There are several CSC programs (bilateral, Chinese University Program, EU Program, etc.) with different quotas and eligibility.",
+      "Chinese-taught programmes may require a preparatory Chinese-language year.",
+      "Age limits apply (Master's under 35, PhD under 40).",
+      "Competitive — quotas are limited per country and per university."
+    ],
+    "competition": "Competitive — quotas are limited by country and by university. No official acceptance rate is published.",
+    "university_ids": [
+      "cn-tsinghua", "cn-peking", "cn-fudan", "cn-sjtu", "cn-zju", "cn-ustc",
+      "cn-nju", "cn-whu", "cn-hit", "cn-sysu", "cn-scu", "cn-xjtu", "cn-tongji",
+      "cn-hust", "cn-nankai", "cn-ruc", "cn-seu", "cn-jlu"
+    ],
+    "universities_note": "These are major CSC-designated universities in our catalogue. CSC has around 300 designated universities in total — see the official CSC list for the complete set."
   }
 ]

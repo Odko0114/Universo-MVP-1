@@ -99,7 +99,21 @@ events
 const UNIVERSITIES = store.read("universities");
 const INDEX = search.buildIndex(UNIVERSITIES); // built once (dataset is static)
 const FILTERS = search.buildFilters(UNIVERSITIES); // cached
-const BY_ID = new Map(UNIVERSITIES.map((u) => [u.id, u]));
+// Non-EU universities that exist ONLY as part of a curated scholarship (e.g. the
+// Chinese universities under CSC). They are deliberately NOT in UNIVERSITIES /
+// INDEX / FILTERS / recommendations, so normal EU Discover, filters and counts
+// never surface them — they're reachable only through the scholarship (the `via`
+// path) or a direct profile link. Added to BY_ID so those two paths resolve them.
+let SCHOLARSHIP_UNIS = [];
+try {
+  SCHOLARSHIP_UNIS = require("./data/scholarship-universities.json");
+  if (!Array.isArray(SCHOLARSHIP_UNIS)) SCHOLARSHIP_UNIS = [];
+} catch {
+  SCHOLARSHIP_UNIS = [];
+}
+const BY_ID = new Map(
+  [...UNIVERSITIES, ...SCHOLARSHIP_UNIS].map((u) => [u.id, u]),
+);
 
 // Internal data-quality audit — computed ONCE at boot (the dataset is static),
 // never per user request (Phase 10 / performance). Admin-only: the aggregate
@@ -836,18 +850,38 @@ api.get("/universities", universitiesLimiter, (req, res) => {
 
   // Scholarship context: ?via=<scholarshipKey> narrows Discover to a curated
   // scholarship's participating universities — the honest path by which non-EU
-  // (or otherwise unlisted) universities become discoverable. Scope is forced
-  // open here so participating register-only unis aren't hidden by verified-only.
+  // (or otherwise unlisted) universities become discoverable. Resolved from BY_ID
+  // (which includes the scholarship-only overlay), so it works for both EU and
+  // non-EU universities. A small fixed set, so no pagination/ranking needed.
   const viaKey = String(req.query.via || "");
   const viaSch = viaKey ? curatedScholarships.curatedByKey(viaKey) : null;
-  let index = INDEX;
   if (viaSch) {
-    const ids = new Set(viaSch.university_ids || []);
-    index = INDEX.filter((e) => ids.has(e.u.id));
-    params.verified = "";
+    const q = String(req.query.q || "")
+      .trim()
+      .toLowerCase();
+    let unis = (viaSch.university_ids || [])
+      .map((id) => BY_ID.get(id))
+      .filter(Boolean);
+    if (q)
+      unis = unis.filter((u) =>
+        `${u.name} ${u.city || ""} ${u.country || ""}`.toLowerCase().includes(q),
+      );
+    const universities = unis.map((u) => {
+      const withP = withPhoto({ ...u, click_count: clickOf(u.id) });
+      if (curatedScholarships.isCuratedUniversity(u.id)) withP.has_funding = true;
+      return withP;
+    });
+    return res.json({
+      universities,
+      count: universities.length,
+      offset: 0,
+      hasMore: false,
+      sort: "scholarship",
+      via: { key: viaSch.key, name: viaSch.name, country: viaSch.country },
+    });
   }
 
-  const result = search.query(index, params, clickOf, { scoreFn });
+  const result = search.query(INDEX, params, clickOf, { scoreFn });
   result.universities = result.universities.map((u) => {
     const withP = withPhoto(u);
     // Attach the fit score + a compressed per-card reason only when we actually
@@ -866,8 +900,6 @@ api.get("/universities", universitiesLimiter, (req, res) => {
     if (curatedScholarships.isCuratedUniversity(u.id)) withP.has_funding = true;
     return withP;
   });
-  if (viaSch)
-    result.via = { key: viaSch.key, name: viaSch.name, country: viaSch.country };
   result.sort = params.sort || (req.query.q ? "relevance" : "name");
   const q = String(req.query.q || "").trim();
   if (q) {
@@ -1777,12 +1809,12 @@ api.get("/scholarships", (req, res) => {
   }
   // Resolve each curated scholarship's participating university_ids into
   // {id,name,city} so the detail page can list them (names live in the
-  // universities dataset — no duplication, just a lookup).
-  const uniById = new Map(UNIVERSITIES.map((u) => [u.id, u]));
+  // universities dataset / scholarship-only overlay — no duplication, just a
+  // BY_ID lookup, so non-EU (CSC) universities resolve too).
   const curated = curatedScholarships.allCurated().map((s) => ({
     ...s,
     universities: (s.university_ids || [])
-      .map((id) => uniById.get(id))
+      .map((id) => BY_ID.get(id))
       .filter(Boolean)
       .map((u) => ({ id: u.id, name: u.name, city: u.city || "" })),
   }));
