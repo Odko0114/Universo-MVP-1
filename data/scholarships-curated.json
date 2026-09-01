@@ -985,5 +985,123 @@
     "country_pathway": "Norway",
     "university_ids": [],
     "universities_note": "Explore Norwegian universities and check each one's fees and any funding; PhD positions are usually salaried."
+  },
+  {
+    "id": "maec-aecid-scholarships",
+    "key": "maec-aecid-scholarships",
+    "name": "MAEC-AECID Scholarships (Spain)",
+    "provider": "Spanish Agency for International Development Cooperation (AECID), Ministry of Foreign Affairs",
+    "country": "Spain",
+    "type": "government",
+    "scope": "curated",
+    "tagline": "Spain's development-cooperation scholarships — mainly Master's study in Spanish — for students from partner countries.",
+    "verification": {
+      "sources": [
+        "https://www.aecid.es",
+        "https://www.european-funding-guide.eu/scholarship/3816-maec-aecid-grants-development-cooperation"
+      ],
+      "date": "2026-09-01",
+      "status": "verified"
+    },
+    "degree_levels": ["Master's", "Some doctoral / training lines"],
+    "fields": "Master's programmes at Spanish institutions (the main MASTER programme targets public-sector applicants from Latin America and the Philippines); other AECID lines exist.",
+    "funding": {
+      "tuition": { "level": "partial", "text": "Tuition support of up to about €4,000." },
+      "stipend": { "level": "partial", "text": "Monthly allowance of about €1,200." },
+      "travel": { "level": "partial", "text": "Up to about €340 towards travel." },
+      "insurance": { "level": "partial", "text": "About €37 per month towards insurance." }
+    },
+    "duration": "The master's programme (varies by call).",
+    "eligibility": {
+      "countries_note": "RESTRICTED to partner countries (Latin America, Africa, Asia, the Caribbean). The main MASTER programme targets public employees from Latin American countries and the Philippines. NOT open to all nationalities — check the specific AECID call.",
+      "academic": "Accepted to a Spanish institution and meeting the call's requirements.",
+      "age": "Usually up to 35 (master's) or 40 (doctoral).",
+      "language": "Usually Spanish — most programmes are taught in Spanish.",
+      "notes": "You must not be a Spanish citizen. Apply via the AECID electronic office."
+    },
+    "requirements": [
+      "Acceptance at a Spanish institution",
+      "Meet the specific call's requirements",
+      "Spanish language ability (usually)",
+      "Application via the AECID electronic office"
+    ],
+    "application": {
+      "route": "Apply online via the AECID electronic office for the specific call.",
+      "steps": [
+        "Check the specific AECID call and whether your country/profile is eligible.",
+        "Secure acceptance at a Spanish institution.",
+        "Apply online via the AECID electronic office before the deadline.",
+        "Selection by AECID."
+      ],
+      "portal": "https://www.aecid.es",
+      "deadline": "",
+      "deadline_note": "Calls are annual, typically with a deadline around March. Check aecid.es for the current call.",
+      "cycle": "annual"
+    },
+    "important": [
+      "Restricted to partner countries — check the specific AECID call for your eligibility.",
+      "Most programmes are taught in Spanish.",
+      "Often aimed at public-sector / development profiles (especially the MASTER programme).",
+      "Age limits apply (usually ≤35 master's / ≤40 doctoral)."
+    ],
+    "competition": "Competitive. No official acceptance rate is published.",
+    "country_pathway": "Spain",
+    "university_ids": [],
+    "universities_note": "At Spanish institutions offering eligible programmes — explore Spanish universities and check the AECID call."
+  },
+  {
+    "id": "ceepus-scholarships",
+    "key": "ceepus-scholarships",
+    "name": "CEEPUS — Central European Exchange (mobility, not a full degree)",
+    "provider": "CEEPUS (Central European Exchange Program for University Studies)",
+    "country": "Central Europe",
+    "type": "government",
+    "scope": "curated",
+    "tagline": "A Central-European university EXCHANGE programme — a semester or short study/research stay, NOT a full-degree scholarship.",
+    "verification": {
+      "sources": ["https://www.ceepus.info/content/about", "https://www.ceepus.info/content/apply"],
+      "date": "2026-09-01",
+      "status": "verified"
+    },
+    "degree_levels": ["Exchange mobility (semester / short stay)"],
+    "fields": "Any field, within a CEEPUS network or as a freemover.",
+    "funding": {
+      "stipend": { "level": "partial", "text": "A mobility grant covering cost of living (and housing/insurance where applicable) during your stay — the amount is set by the host country." }
+    },
+    "duration": "Short mobility — typically a semester or a short study/research stay. It does NOT fund a full degree.",
+    "eligibility": {
+      "countries_note": "For students and teachers at institutions in the 15 CEEPUS member countries (Central and South-Eastern Europe). You join through a CEEPUS network, or as a 'freemover' where accepted. It is NOT a full-degree scholarship.",
+      "academic": "Enrolled at a home institution in a CEEPUS country.",
+      "age": "Not applicable.",
+      "language": "As required by the host institution.",
+      "notes": "This funds an exchange stay, not a full degree — apply via the CEEPUS system."
+    },
+    "requirements": [
+      "Enrolment at a home institution in a CEEPUS country",
+      "A host institution (via a network, or as a freemover)",
+      "Application via the CEEPUS online system"
+    ],
+    "application": {
+      "route": "Apply via the CEEPUS online system — through a network, or as a freemover where the host country accepts them.",
+      "steps": [
+        "Check your home institution is in a CEEPUS country / network.",
+        "Find a host institution (network or freemover).",
+        "Apply via the CEEPUS online system before the round's deadline."
+      ],
+      "portal": "https://www.ceepus.info",
+      "deadline": "",
+      "deadline_note": "Deadlines are set per network/round (network mobilities around June; freemover around November). Check ceepus.info.",
+      "cycle": "annual"
+    },
+    "important": [
+      "This is an EXCHANGE programme (a semester/short stay), NOT a full-degree scholarship.",
+      "Only for students at institutions in the 15 CEEPUS member countries.",
+      "You join via a CEEPUS network, or as a freemover where accepted.",
+      "Grants cover living costs during the stay, set by the host country."
+    ],
+    "competition": "Depends on the network/host; only a limited number of freemover grants.",
+    "country_pathway": "Europe",
+    "university_ids": [],
+    "universities_note": "At universities in the 15 CEEPUS member countries (Central/SE Europe) — explore European universities; the official CEEPUS site lists the networks."
   }
 ]
