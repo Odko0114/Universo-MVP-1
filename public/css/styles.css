@@ -792,7 +792,9 @@ img {
   display: inline-flex;
   align-items: center;
   gap: 9px;
-  align-self: flex-start;
+  /* Right-aligned so it clears the university logo, which is pulled up into the
+     top-left of the body (margin-top:-32px) and would otherwise sit under it. */
+  align-self: flex-end;
   padding: 4px 13px 4px 4px;
   border-radius: 999px;
   background: var(--teal-050);
