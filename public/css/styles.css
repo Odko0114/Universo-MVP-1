@@ -671,10 +671,10 @@ img {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 .uni-card__body {
-  padding: 12px 16px 16px;
+  padding: 14px 18px 18px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 11px;
   flex: 1;
 }
 .uni-card__title {
@@ -745,6 +745,35 @@ img {
 .chip--deadline .icon {
   width: 13px;
   height: 13px;
+}
+
+/* Calm the meta chips on DISCOVER cards only — one neutral pill so the fit badge
+   is the single bold accent. Scoped so the coloured variants still carry meaning
+   elsewhere (Dream Plan "next", "scholarship needed", profile fields of study). */
+.uni-card__meta .chip {
+  background: #eef2f7;
+  color: var(--ink-soft);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.uni-card__meta .chip .icon {
+  width: 13px;
+  height: 13px;
+  opacity: 0.7;
+}
+.uni-card__meta .chip--gold {
+  background: #eef2f7;
+  color: var(--ink);
+  font-weight: 700;
+}
+.uni-card__meta .chip--rank {
+  background: #eef2f7;
+  color: var(--ink-soft);
+}
+.uni-card__meta .chip--deadline {
+  background: #eef2f7;
+  color: var(--ink-soft);
 }
 
 /* Fit badge — the matcher's 0–100 score made visible. A FIT read, not
