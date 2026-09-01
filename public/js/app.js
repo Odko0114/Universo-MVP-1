@@ -742,6 +742,19 @@
       }
       ${heroHtml}
 
+      ${
+        state.user && !profiled
+          ? `
+      <div class="match-nudge">
+        <div class="match-nudge__body">
+          <p class="match-nudge__title">${icon("target", 16)} See your best matches</p>
+          <p class="match-nudge__sub">Set up matching in 30 seconds — your field, budget and destination — and we'll rank every university by how well it fits you, and tell you why.</p>
+        </div>
+        <a class="btn btn--primary btn--sm" href="/onboarding">Set up matching →</a>
+      </div>`
+          : ""
+      }
+
       ${state.user ? "" : quickMatchHtml}
 
       <div id="recommended-wrap"></div>

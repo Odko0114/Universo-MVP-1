@@ -1401,6 +1401,11 @@ function updateApplication(req, id, mutate) {
 // English-taught niche. See lib/match.js for why this is a scoring algorithm
 // rather than a live AI call. Excludes universities already saved.
 api.get("/me/recommendations", auth.requireAuth, (req, res) => {
+  // No profile → no honest recommendations. Ranking every verified university
+  // against an empty profile just scores them all on "verified" (100% of a
+  // ceiling of 10), which would present meaningless "Strong match" cards. The
+  // client shows a "set up matching" nudge instead.
+  if (!match.hasProfile(req.student)) return res.json({ universities: [] });
   const limit = Math.min(
     24,
     Math.max(1, parseInt(String(req.query.limit || ""), 10) || 6),

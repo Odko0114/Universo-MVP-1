@@ -370,6 +370,40 @@ img {
   flex-basis: 100%;
 }
 
+/* Set-up-matching nudge — shown to a logged-in student with no profile yet, who
+   otherwise gets no fit ranking and no reason to know it exists. */
+.match-nudge {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: var(--teal-050);
+  border: 1px solid #bfe9e2;
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-bottom: 18px;
+}
+.match-nudge__body {
+  flex: 1;
+  min-width: 220px;
+}
+.match-nudge__title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 4px;
+  font-weight: 700;
+  color: var(--teal-600);
+}
+.match-nudge__sub {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+.match-nudge .btn {
+  white-space: nowrap;
+}
+
 /* Verified-vs-directory scope toggle (sits above the niche button).
    Styled as ONE segmented control, not two pills: it's a binary either/or, and
    as two separate full-width pills it read as two competing CTAs — worse, it
