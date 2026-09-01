@@ -2796,6 +2796,11 @@
       .filter(Boolean)
       .join(" · ");
     const uniCount = (s.university_ids || []).length;
+    const where = uniCount
+      ? `${uniCount} participating universities`
+      : s.country_pathway
+        ? `Universities across ${esc(s.country_pathway)}`
+        : "";
     return `
       <article class="sch-card sch-card--curated${tracked ? " is-tracked" : ""}">
         <div class="sch-card__top">
@@ -2805,7 +2810,7 @@
         <h3 class="sch-card__name"><a href="/scholarship/${esc(s.key)}" data-link>${esc(s.name)}</a></h3>
         <div class="sch-card__chips">${(s.degree_levels || []).map((d) => `<span class="chip chip--plain">${esc(d)}</span>`).join("")}</div>
         ${fund ? `<p class="sch-card__fund">${icon("award", 13)} ${esc(fund)}</p>` : ""}
-        <p class="sch-card__meta-line">${uniCount ? `${uniCount} participating universities` : ""}${dl ? ` · ${esc(dl)}` : ""}</p>
+        <p class="sch-card__meta-line">${where}${dl ? ` · ${esc(dl)}` : ""}</p>
         <div class="sch-card__foot">
           <a class="btn btn--primary btn--sm" href="/scholarship/${esc(s.key)}" data-link>View scholarship →</a>
         </div>
@@ -2837,12 +2842,18 @@
     }
     const tracked = data.tracked || {};
     const isTracked = (k) => !!(tracked[k] && (tracked[k].status || tracked[k].deadline));
+    // A curated entry replaces its country-pointer everywhere, so hide the
+    // matching pointer from the browse groups (it lives in "Verified in depth").
+    const curatedKeys = new Set((data.curated || []).map((s) => s.key));
+    const notCurated = (list) => (list || []).filter((s) => !curatedKeys.has(s.key));
     const cards = (list) =>
       `<div class="grid grid--rec">${list.map((s) => scholarshipCard(s, isTracked(s.key))).join("")}</div>`;
-    const block = (title, sub, list) =>
-      list && list.length
-        ? `<section class="sch-block"><div class="section-head"><h2>${esc(title)}</h2>${sub ? `<span class="muted">${esc(sub)}</span>` : ""}</div>${cards(list)}</section>`
+    const block = (title, sub, list) => {
+      const filtered = notCurated(list);
+      return filtered.length
+        ? `<section class="sch-block"><div class="section-head"><h2>${esc(title)}</h2>${sub ? `<span class="muted">${esc(sub)}</span>` : ""}</div>${cards(filtered)}</section>`
         : "";
+    };
 
     // "For your destinations" — dedupe by key so it doesn't repeat below.
     let forYou = [];
@@ -2851,7 +2862,9 @@
       forYou = [
         ...(data.for_you.eu_wide || []),
         ...(data.for_you.groups || []).flatMap((g) => g.scholarships),
-      ].filter((s) => (seen.has(s.key) ? false : seen.add(s.key)));
+      ].filter((s) =>
+        curatedKeys.has(s.key) || seen.has(s.key) ? false : seen.add(s.key),
+      );
     }
 
     view.innerHTML = `
@@ -2986,9 +2999,13 @@
       ${section("How competitive is it?", s.competition ? `<p style="margin:0;color:var(--ink-soft)">${esc(s.competition)}</p>` : "")}
 
       <div class="info-card"><h3>Where can I study?</h3>
-        <p style="margin:0 0 12px;color:var(--ink-soft)">${(s.universities || []).length} participating universities in our catalogue.${s.universities_note ? " " + esc(s.universities_note) : ""}</p>
-        <div class="sch-unis">${uniCards}</div>
-        <a class="btn btn--primary btn--sm" href="/discover?via=${esc(s.key)}" data-link style="margin-top:12px">Explore all eligible universities →</a>
+        <p style="margin:0 0 12px;color:var(--ink-soft)">${(s.universities || []).length ? `${(s.universities || []).length} participating ${(s.universities || []).length === 1 ? "university" : "universities"} in our catalogue.` : s.country_pathway ? `Offered through participating institutions across ${esc(s.country_pathway)}.` : ""}${s.universities_note ? " " + esc(s.universities_note) : ""}</p>
+        ${uniCards ? `<div class="sch-unis">${uniCards}</div>` : ""}
+        ${
+          s.country_pathway
+            ? `<a class="btn btn--primary btn--sm" href="/discover?country=${encodeURIComponent(s.country_pathway)}" data-link style="margin-top:12px">Explore universities in ${esc(s.country_pathway)} →</a>`
+            : `<a class="btn btn--primary btn--sm" href="/discover?via=${esc(s.key)}" data-link style="margin-top:12px">Explore all eligible universities →</a>`
+        }
       </div>
 
       <p class="source-note muted">Sources: ${(s.verification && s.verification.sources ? s.verification.sources : []).map((u) => `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${esc(u.replace(/^https?:\/\//, "").replace(/\/$/, ""))}</a>`).join(" · ")} · verified ${esc(s.verification ? s.verification.date : "")}.</p>

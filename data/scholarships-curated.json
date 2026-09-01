@@ -74,5 +74,131 @@
       "eter-hu0028"
     ],
     "universities_note": "These are participating institutions we have in our catalogue. Stipendium Hungaricum has around 30 participating institutions in total — see the official institutions list for the complete, current set."
+  },
+  {
+    "id": "eiffel-excellence-scholarship",
+    "key": "eiffel-excellence-scholarship",
+    "name": "Eiffel Excellence Scholarship",
+    "provider": "French Ministry for Europe and Foreign Affairs (via Campus France)",
+    "country": "France",
+    "type": "government",
+    "scope": "curated",
+    "tagline": "France's prestige government scholarship for top international Master's and PhD students — but your French university must nominate you.",
+    "verification": {
+      "sources": [
+        "https://www.campusfrance.org/en/eiffel-scholarship-program-of-excellence",
+        "https://www.campusfrance.org/en/the-france-excellence-eiffel-scholarship-program"
+      ],
+      "date": "2026-09-01",
+      "status": "verified"
+    },
+    "degree_levels": ["Master's", "Doctoral (PhD)"],
+    "fields": "Awarded in priority fields set each year (broadly sciences & engineering, economics & management, and law & political science). Confirm the current priority areas on Campus France.",
+    "funding": {
+      "tuition": { "level": "none", "text": "Not covered by the grant. Some host institutions separately exempt Eiffel holders from tuition — confirm with the university." },
+      "stipend": { "level": "partial", "text": "Monthly allowance: €1,200 (Master's) and €2,100 (PhD), as of January 2026." },
+      "accommodation": { "level": "none", "text": "Not paid, but the programme assists with finding housing." },
+      "insurance": { "level": "full", "text": "Health insurance is included." },
+      "travel": { "level": "full", "text": "International and national transport are included." }
+    },
+    "duration": "Master's: 12–36 months. PhD: a 12-month mobility period, which may be split into several stays.",
+    "eligibility": {
+      "countries_note": "Open to international (non-French) students. It cannot be held together with another French government grant.",
+      "academic": "An excellent academic record — institutions put forward only their strongest candidates.",
+      "age": "Age limit in the selection year: up to 29 for Master's, up to 35 for PhD.",
+      "language": "Language requirement depends on the programme (French or English).",
+      "notes": "You do NOT apply yourself — a French higher-education institution must submit your application. Contact the international office of the university you want to attend."
+    },
+    "requirements": [
+      "A French host institution willing to submit your application (this is essential)",
+      "Academic transcripts and diplomas",
+      "CV and references",
+      "A study/research project or motivation statement",
+      "Language proof as required by the programme"
+    ],
+    "application": {
+      "route": "The French host institution applies on your behalf — students cannot apply directly to Campus France.",
+      "steps": [
+        "Identify and contact a French institution's international office well before the deadline.",
+        "The institution assembles and submits your Eiffel application (there is an internal deadline, earlier than the national one).",
+        "Campus France and a selection committee review the nominated files.",
+        "Results are published (around end of March); admission to the programme is handled separately by the institution."
+      ],
+      "portal": "https://www.campusfrance.org/en/eiffel-scholarship-program-of-excellence",
+      "deadline": "2026-01-08",
+      "deadline_note": "8 January 2026 is the national submission deadline for institutions (call opened October 2025; results end of March). Your target institution's internal deadline is earlier — contact them first.",
+      "cycle": "annual"
+    },
+    "important": [
+      "You can't apply yourself — a French institution must nominate you, so start with their international office.",
+      "The grant does not pay tuition (though some institutions waive it separately).",
+      "Age limits apply: ≤29 for Master's, ≤35 for PhD.",
+      "Priority fields are defined each year.",
+      "Highly competitive — each institution nominates only a few candidates."
+    ],
+    "competition": "Highly competitive — institutions submit a limited number of candidates. No official acceptance rate is published.",
+    "country_pathway": "France",
+    "university_ids": [],
+    "universities_note": "Eiffel is offered through participating French higher-education institutions, which nominate candidates — it is not tied to a fixed public list. Explore French universities and contact the international office of the one you're interested in."
+  },
+  {
+    "id": "holland-scholarship",
+    "key": "holland-scholarship",
+    "name": "Holland Scholarship (NL Scholarship)",
+    "provider": "Dutch Ministry of Education, Culture and Science + participating institutions",
+    "country": "Netherlands",
+    "type": "government",
+    "scope": "curated",
+    "tagline": "A €5,000 first-year contribution for non-EEA students at participating Dutch universities.",
+    "verification": {
+      "sources": ["https://www.studyinnl.org/finances/holland-scholarship"],
+      "date": "2026-09-01",
+      "status": "verified"
+    },
+    "degree_levels": ["Bachelor's", "Master's"],
+    "fields": "Most full-time bachelor's and master's programmes at participating Dutch institutions.",
+    "funding": {
+      "tuition": { "level": "none", "text": "Not a full-tuition scholarship — tuition is not covered." },
+      "stipend": { "level": "partial", "text": "€5,000, paid once in your first year of study. It is a one-time contribution, not a recurring stipend." },
+      "accommodation": { "level": "none", "text": "Not covered." },
+      "insurance": { "level": "none", "text": "Not covered." },
+      "travel": { "level": "none", "text": "Not covered." }
+    },
+    "duration": "A one-time award in the first year of study.",
+    "eligibility": {
+      "countries_note": "Non-EEA nationality only (from outside the European Economic Area). You must not already hold a degree from a Dutch education institution.",
+      "academic": "You must meet the admission requirements of your chosen programme.",
+      "age": "No general age limit stated.",
+      "language": "As required by your programme (usually English).",
+      "notes": "Apply directly to the participating institution — each one runs its own selection and deadline."
+    },
+    "requirements": [
+      "An application/admission to a participating Dutch programme",
+      "The institution's own Holland Scholarship application (process varies by institution)",
+      "Meet the institution's requirements"
+    ],
+    "application": {
+      "route": "Apply directly to the participating institution — there is no central application.",
+      "steps": [
+        "Choose a participating Dutch university and a full-time bachelor's or master's programme.",
+        "Check that institution's Holland Scholarship page for its process and deadline.",
+        "Apply for admission and for the scholarship as the institution directs.",
+        "The institution selects the recipients."
+      ],
+      "portal": "https://www.studyinnl.org/finances/holland-scholarship",
+      "deadline": "",
+      "deadline_note": "No single deadline — each institution sets its own (applications for 2026/27 opened 1 November 2025). Common deadlines are 1 February or 1 May; confirm on your institution's page.",
+      "cycle": "annual"
+    },
+    "important": [
+      "It's €5,000 once — a contribution toward your first year, not full funding.",
+      "Only non-EEA students are eligible.",
+      "You can't already hold a Dutch degree.",
+      "Each institution has its own deadline and selection — apply directly to them, not centrally."
+    ],
+    "competition": "Competitive; each institution awards a limited number. No central acceptance rate is published.",
+    "country_pathway": "Netherlands",
+    "university_ids": ["eter-nl0002", "eter-nl0012", "tue", "eter-nl0013"],
+    "universities_note": "These are participating institutions the official page names; the scholarship runs at 11 Dutch research universities and 23 universities of applied sciences in total (2026/27) — see the official page for the full list, and explore all Dutch universities below."
   }
 ]
