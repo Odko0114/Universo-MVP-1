@@ -689,8 +689,8 @@ img {
 }
 .uni-card__title {
   display: flex;
-  gap: 12px;
-  align-items: flex-start;
+  gap: 11px;
+  align-items: center;
 }
 .uni-card__logo {
   flex: 0 0 auto;
@@ -2699,7 +2699,6 @@ a.ov-deadline:hover strong {
   height: 40px;
   border-radius: 9px;
   font-size: var(--text-base);
-  margin-top: -32px;
   box-shadow: var(--shadow-sm);
   z-index: 1;
 }
