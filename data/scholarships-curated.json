@@ -865,5 +865,125 @@
     "country_pathway": "Denmark",
     "university_ids": [],
     "universities_note": "Administered by Danish universities — explore them and check each one's admission and scholarship details."
+  },
+  {
+    "id": "nawa-scholarships",
+    "key": "nawa-scholarships",
+    "name": "NAWA Scholarships — Poland (Banach & Łukasiewicz)",
+    "provider": "Polish National Agency for Academic Exchange (NAWA)",
+    "country": "Poland",
+    "type": "government",
+    "scope": "curated",
+    "tagline": "Polish government Master's scholarships — tuition-free study plus a stipend — for citizens of specific partner countries.",
+    "verification": {
+      "sources": [
+        "https://nawa.gov.pl/en/students/foreign-students/the-banach-scholarship-programme",
+        "https://nawa.gov.pl/en/students/foreign-students/the-ignacy-lukasiewicz-scholarship-programme"
+      ],
+      "date": "2026-09-01",
+      "status": "verified"
+    },
+    "degree_levels": ["Master's"],
+    "fields": "Banach: most fields (studies in Polish or English). Łukasiewicz: engineering & technical, agricultural, and natural sciences (STEM).",
+    "funding": {
+      "tuition": { "level": "full", "text": "Exemption from tuition fees at public universities." },
+      "stipend": { "level": "partial", "text": "Monthly scholarship of PLN 2,500 (Banach)." },
+      "travel": { "level": "partial", "text": "Travel allowance of PLN 2,500 (Banach)." }
+    },
+    "duration": "The 2nd-cycle (Master's) programme, preceded by a funded preparatory course.",
+    "eligibility": {
+      "countries_note": "RESTRICTED to citizens of specific partner countries. Banach covers 36 Polish-Aid countries (Eastern Europe, Asia, Africa, Latin America); Łukasiewicz covers ~18 countries (e.g. India, Indonesia, Kenya, Vietnam, Nigeria, Mexico). NOT open to all nationalities — check the official country list.",
+      "academic": "A bachelor's degree, for 2nd-cycle (Master's) studies.",
+      "age": "Check the current call.",
+      "language": "Polish or English (a funded Polish preparatory course is included).",
+      "notes": "Apply to NAWA online for the specific programme (Banach or Łukasiewicz)."
+    },
+    "requirements": [
+      "Citizenship of an eligible partner country",
+      "A bachelor's degree",
+      "Application to NAWA for Banach or Łukasiewicz",
+      "Documents listed in the current call"
+    ],
+    "application": {
+      "route": "Apply to NAWA online for the specific programme (Banach or Łukasiewicz).",
+      "steps": [
+        "Check your country is eligible for Banach or Łukasiewicz.",
+        "Apply to NAWA online for that programme.",
+        "NAWA selects scholarship holders (limits apply per country).",
+        "A funded Polish preparatory course precedes the Master's."
+      ],
+      "portal": "https://nawa.gov.pl/en/students/foreign-students",
+      "deadline": "2026-05-08",
+      "deadline_note": "The Banach call is open until 8 May 2026 (or until the per-country limit is reached). Łukasiewicz has its own call — check nawa.gov.pl.",
+      "cycle": "annual"
+    },
+    "important": [
+      "Only citizens of specific partner countries can apply — check the official list for Banach and Łukasiewicz.",
+      "Łukasiewicz is limited to STEM and agricultural fields.",
+      "It includes a funded Polish preparatory course.",
+      "Master's (2nd-cycle) level only."
+    ],
+    "competition": "Competitive; limited places per country. No official acceptance rate is published.",
+    "country_pathway": "Poland",
+    "university_ids": [],
+    "universities_note": "Held at Polish public universities (our catalogue currently has limited Polish coverage) — apply via NAWA and see the eligible universities on nawa.gov.pl."
+  },
+  {
+    "id": "norwegian-government-scholarship-schemes",
+    "key": "norwegian-government-scholarship-schemes",
+    "name": "Studying in Norway — funding (no general government scholarship)",
+    "provider": "Norwegian universities / external foundations (no general state scholarship)",
+    "country": "Norway",
+    "type": "government",
+    "scope": "curated",
+    "tagline": "Norway has no general government scholarship for international students — and since 2023 non-EU/EEA students pay tuition.",
+    "verification": {
+      "sources": [
+        "https://studyinnorway.no/tuition-fees-students",
+        "https://studyinnorway.no/scholarships-degree-students"
+      ],
+      "date": "2026-09-01",
+      "status": "verified"
+    },
+    "degree_levels": ["Bachelor's", "Master's", "Doctoral (PhD)"],
+    "fields": "Varies.",
+    "funding": {
+      "tuition": { "level": "none", "text": "Since autumn 2023, non-EU/EEA (and non-Swiss) students pay tuition fees, which vary by institution and programme. EU/EEA and Swiss students study free at public universities." },
+      "stipend": { "level": "none", "text": "No general government stipend — funding is limited to a few external foundations and schemes." }
+    },
+    "duration": "Not applicable — there is no single scheme.",
+    "eligibility": {
+      "countries_note": "There is NO Norwegian government scholarship open to all international students. EU/EEA/Swiss students don't pay tuition; non-EU/EEA students do (since 2023) and must arrange their own funding.",
+      "academic": "Not applicable.",
+      "age": "Not applicable.",
+      "language": "As required by the programme.",
+      "notes": "A few external foundations/schemes exist, and PhD positions in Norway are usually salaried jobs — a realistic funding route."
+    },
+    "requirements": [
+      "Admission to a Norwegian programme",
+      "Your own funding plan — there is no general scholarship to apply for"
+    ],
+    "application": {
+      "route": "There is no single scholarship to apply for — check individual universities and external foundations. PhD positions are usually salaried jobs.",
+      "steps": [
+        "Check the tuition fees for your chosen Norwegian programme.",
+        "Look at the university's own funding options and external foundations.",
+        "For PhD level, apply for salaried PhD positions."
+      ],
+      "portal": "https://studyinnorway.no/scholarships-degree-students",
+      "deadline": "",
+      "deadline_note": "Not applicable — there is no central scholarship. Check universities and foundations for any options.",
+      "cycle": "annual"
+    },
+    "important": [
+      "Norway has NO general government scholarship for international students.",
+      "Since autumn 2023, non-EU/EEA students pay tuition fees.",
+      "PhD positions are usually paid jobs — often the best funding route.",
+      "Check individual universities and external foundations for any support."
+    ],
+    "competition": "Not applicable — there is no central scholarship.",
+    "country_pathway": "Norway",
+    "university_ids": [],
+    "universities_note": "Explore Norwegian universities and check each one's fees and any funding; PhD positions are usually salaried."
   }
 ]
