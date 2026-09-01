@@ -1245,5 +1245,201 @@
       "tr-gtu", "tr-ktu", "tr-erciyes", "tr-selcuk"
     ],
     "universities_note": "These are major Turkish universities. Türkiye Bursları places awardees among many participating universities across Türkiye — you list preferences rather than applying to one."
+  },
+  {
+    "id": "global-korea-scholarship-gks",
+    "key": "global-korea-scholarship-gks",
+    "name": "Global Korea Scholarship (GKS / KGSP)",
+    "provider": "NIIED, Ministry of Education, South Korea",
+    "country": "South Korea",
+    "type": "government",
+    "scope": "curated",
+    "tagline": "South Korea's fully-funded government scholarship for Bachelor's, Master's and PhD — plus a year of Korean language training.",
+    "verification": {
+      "sources": ["https://www.studyinkorea.go.kr", "https://gksscholarship.com/"],
+      "date": "2026-09-01",
+      "status": "verified"
+    },
+    "degree_levels": ["Bachelor's", "Master's", "Doctoral (PhD)"],
+    "fields": "A wide range of fields at participating Korean universities.",
+    "funding": {
+      "tuition": { "level": "full", "text": "Tuition covered up to KRW 5 million per semester; the university covers any excess." },
+      "stipend": { "level": "partial", "text": "Monthly allowance: ₩900,000 (undergraduate) / ₩1,000,000 (graduate)." },
+      "insurance": { "level": "full", "text": "Medical/health insurance for the scholarship period." },
+      "travel": { "level": "full", "text": "A round-trip economy flight is provided." }
+    },
+    "duration": "The full degree, plus a 1-year Korean language course before your programme.",
+    "eligibility": {
+      "countries_note": "Open to non-Korean citizens (both you and your parents must be non-Korean). Availability is set by country quota through the Embassy track.",
+      "academic": "A strong record — typically 80%+ (or top 20% of class). Undergraduate: high-school completion; Master's: bachelor's; PhD: master's.",
+      "age": "Undergraduate: under 25. Graduate (Master's/PhD): under 40.",
+      "language": "Korean or English by programme; a funded 1-year Korean course is included.",
+      "notes": "Apply via the Embassy track (up to 3 university choices) OR the University track (1 university)."
+    },
+    "requirements": [
+      "GKS application forms",
+      "Diploma and transcripts",
+      "A study/research plan",
+      "Recommendation letters",
+      "Passport",
+      "Language certificate where applicable",
+      "Medical assessment"
+    ],
+    "application": {
+      "route": "Two tracks: the Embassy track (apply via the Korean Embassy in your country, up to 3 universities) OR the University track (apply directly to one participating university).",
+      "steps": [
+        "Choose your track — Embassy (3 choices) or University (1).",
+        "Prepare the GKS documents and apply through your chosen channel.",
+        "Screening by the embassy/university, then NIIED.",
+        "Placement and final results; attend the 1-year Korean course."
+      ],
+      "portal": "https://www.studyinkorea.go.kr",
+      "deadline": "",
+      "deadline_note": "Deadlines differ by track and country (Embassy track often around February–March; University track later in the year). Check studyinkorea.go.kr / your Korean Embassy.",
+      "cycle": "annual"
+    },
+    "important": [
+      "Two application tracks (Embassy vs University) with different deadlines and choices — pick one.",
+      "Age limits apply (undergraduate <25, graduate <40).",
+      "A 1-year Korean language course is part of the scholarship.",
+      "You (and your parents) must be non-Korean citizens.",
+      "Highly competitive."
+    ],
+    "competition": "Highly competitive — country quotas are limited. No official acceptance rate is published.",
+    "university_ids": [
+      "kr-snu", "kr-kaist", "kr-yonsei", "kr-korea", "kr-postech", "kr-skku",
+      "kr-hanyang", "kr-khu", "kr-ewha", "kr-pnu"
+    ],
+    "universities_note": "Major participating Korean universities. GKS covers many designated universities — see the official GKS guidelines for the full list per track."
+  },
+  {
+    "id": "mext-scholarship",
+    "key": "mext-scholarship",
+    "name": "MEXT Scholarship (Japanese Government)",
+    "provider": "MEXT — Ministry of Education, Culture, Sports, Science and Technology, Japan",
+    "country": "Japan",
+    "type": "government",
+    "scope": "curated",
+    "tagline": "Japan's fully-funded government scholarship — undergraduate, research (Master's/PhD) and more — usually via your Japanese embassy.",
+    "verification": {
+      "sources": [
+        "https://www.studyinjapan.go.jp/en/",
+        "https://www.studyinjapan.go.jp/en/_mt/2026/04/01-2027_Research_Guidelines_E.pdf"
+      ],
+      "date": "2026-09-01",
+      "status": "verified"
+    },
+    "degree_levels": ["Undergraduate", "Research student (Master's / PhD)", "Japanese studies / non-degree"],
+    "fields": "A wide range of fields at Japanese universities.",
+    "funding": {
+      "tuition": { "level": "full", "text": "Entrance, matriculation and tuition fees are waived." },
+      "stipend": { "level": "partial", "text": "Monthly allowance around ¥117,000 (undergraduate) / ¥144,000–145,000 (graduate/research)." },
+      "travel": { "level": "full", "text": "A round-trip economy flight between your country and Japan is provided." }
+    },
+    "duration": "The programme's standard length, usually preceded by a Japanese-language/preparatory period.",
+    "eligibility": {
+      "countries_note": "You must hold the nationality of a country that has diplomatic relations with Japan (so a few nationalities are excluded).",
+      "academic": "Undergraduate: completed 12 years of schooling. Research (graduate): a university graduate / 16 years of schooling.",
+      "age": "Undergraduate: under 25. Research students: under 35.",
+      "language": "Japanese or English by programme; a preparatory Japanese course is usually included.",
+      "notes": "Most applicants apply through the Japanese Embassy/Consulate (embassy recommendation); some apply via a university recommendation."
+    },
+    "requirements": [
+      "Application via your Japanese Embassy (embassy track)",
+      "Academic transcripts and diplomas",
+      "A field-of-study / research plan",
+      "A recommendation letter",
+      "Passport",
+      "Medical certificate",
+      "Written exams / interview (embassy track)"
+    ],
+    "application": {
+      "route": "Two main routes: Embassy Recommendation (apply via the Japanese Embassy/Consulate in your country) OR University Recommendation (via a Japanese university).",
+      "steps": [
+        "Choose your route — Embassy Recommendation is the most common.",
+        "Apply to the Japanese Embassy/Consulate on their schedule.",
+        "Take the written exams and interview (embassy track).",
+        "Primary screening → university placement → final MEXT decision."
+      ],
+      "portal": "https://www.studyinjapan.go.jp/en/",
+      "deadline": "",
+      "deadline_note": "Each Japanese embassy sets its own schedule (embassy-track screening is often around spring/early summer for the following year). Check your local Japanese Embassy.",
+      "cycle": "annual"
+    },
+    "important": [
+      "You must be from a country with diplomatic relations with Japan.",
+      "Deadlines are set by each Japanese embassy — start with your local embassy.",
+      "Age limits apply (undergraduate <25, research <35).",
+      "Several categories (undergraduate, research, Japanese studies) with different rules.",
+      "Highly competitive."
+    ],
+    "competition": "Highly competitive — limited places per country. No official acceptance rate is published.",
+    "university_ids": [
+      "jp-tokyo", "jp-kyoto", "jp-osaka", "jp-tohoku", "jp-nagoya", "jp-titech",
+      "jp-kyushu", "jp-hokkaido", "jp-waseda", "jp-keio", "jp-tsukuba"
+    ],
+    "universities_note": "Major Japanese universities. MEXT scholars are placed at Japanese universities based on field and route — see the official guidelines."
+  },
+  {
+    "id": "taiwan-moe-scholarship",
+    "key": "taiwan-moe-scholarship",
+    "name": "Taiwan Scholarship (MOE)",
+    "provider": "Ministry of Education (MOE), Taiwan",
+    "country": "Taiwan",
+    "type": "government",
+    "scope": "curated",
+    "tagline": "Taiwan's government scholarship — a tuition subsidy plus a monthly stipend — for Bachelor's, Master's and PhD.",
+    "verification": {
+      "sources": [
+        "https://taiwanscholarship.moe.gov.tw",
+        "https://taiwanscholarship.moe.gov.tw/web/data/moe/MOETaiwanScholarshipProgramGuidelines.pdf"
+      ],
+      "date": "2026-09-01",
+      "status": "verified"
+    },
+    "degree_levels": ["Bachelor's", "Master's", "Doctoral (PhD)"],
+    "fields": "A wide range of fields at Taiwanese universities.",
+    "funding": {
+      "tuition": { "level": "partial", "text": "Up to NT$40,000 per semester towards tuition & approved fees — if your tuition is higher, you pay the difference. It does NOT cover admin fees, thesis fees, insurance, accommodation or internet." },
+      "stipend": { "level": "partial", "text": "Monthly living allowance: NT$15,000 (Bachelor's) / NT$20,000 (Master's & PhD)." }
+    },
+    "duration": "Up to 4 years (Bachelor's), 2 years (Master's) or 4 years (PhD) — with a lifetime cap of 5 years across all levels.",
+    "eligibility": {
+      "countries_note": "For foreign nationals only. ROC (Taiwan) citizens and residents of mainland China, Hong Kong and Macau are NOT eligible.",
+      "academic": "Meet the admission requirements of a Taiwanese university, with a good academic record.",
+      "age": "Check the current guidelines.",
+      "language": "Chinese or English by programme.",
+      "notes": "You cannot hold another Taiwan government/institution scholarship at the same time. You apply for university admission separately."
+    },
+    "requirements": [
+      "A separate application for admission to a Taiwanese university",
+      "The Taiwan Scholarship application at your local TECO/ROC mission",
+      "Academic records",
+      "Your official university admission letter (by 30 June)",
+      "Other documents in the guidelines"
+    ],
+    "application": {
+      "route": "Two separate steps: apply to the university for ADMISSION, and apply for the SCHOLARSHIP at your local TECO/ROC overseas mission. You must submit the admission letter to TECO by 30 June or the scholarship is forfeited.",
+      "steps": [
+        "Apply for admission to a Taiwanese university (each sets its own deadline).",
+        "Apply for the Taiwan Scholarship at your local TECO/ROC mission (portal window ~Feb 1–Mar 31).",
+        "Submit your official admission letter to TECO by 30 June.",
+        "Selection by MOE / the mission."
+      ],
+      "portal": "https://taiwanscholarship.moe.gov.tw",
+      "deadline": "",
+      "deadline_note": "The official portal window is around 1 February – 31 March; your local TECO mission may set a different date, and university admission deadlines are separate. Confirm current dates.",
+      "cycle": "annual"
+    },
+    "important": [
+      "The tuition subsidy is CAPPED (NT$40,000/semester) — you pay any excess, and accommodation/insurance are NOT covered.",
+      "You must apply to the university for admission SEPARATELY and submit the admission letter by 30 June.",
+      "Foreign nationals only; not for ROC/mainland China/HK/Macau.",
+      "You can't combine it with another Taiwan scholarship.",
+      "There's a 5-year lifetime cap across all levels."
+    ],
+    "competition": "Competitive. No official acceptance rate is published.",
+    "university_ids": ["tw-ntu", "tw-nthu", "tw-ncku", "tw-nycu", "tw-ntnu", "tw-nccu"],
+    "universities_note": "Major Taiwanese universities. The scholarship can be used at accredited Taiwanese universities — you apply to the university for admission separately."
   }
 ]
