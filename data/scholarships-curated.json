@@ -379,5 +379,248 @@
     "country_pathway": "Ireland",
     "university_ids": [],
     "universities_note": "Held at eligible Irish higher-education institutions — explore Irish universities and secure an admission offer first."
+  },
+  {
+    "id": "daad-scholarships",
+    "key": "daad-scholarships",
+    "name": "DAAD Study Scholarship – Master's",
+    "provider": "German Academic Exchange Service (DAAD)",
+    "country": "Germany",
+    "type": "government",
+    "scope": "curated",
+    "tagline": "Germany's flagship government scholarship for international Master's students — a monthly grant plus insurance and travel.",
+    "verification": {
+      "sources": [
+        "https://www.daad.de/en/studying-in-germany/scholarships/daad-scholarships/",
+        "https://www2.daad.de/deutschland/stipendium/datenbank/en/21148-scholarship-database/?detail=50026200"
+      ],
+      "date": "2026-09-01",
+      "status": "verified"
+    },
+    "degree_levels": ["Master's"],
+    "fields": "Study Scholarships are offered for Master's in all academic disciplines (plus specialised streams). DAAD funds many other programmes too — search the DAAD scholarship database for your level, field and country.",
+    "funding": {
+      "tuition": { "level": "none", "text": "Not paid directly — but most German public universities charge little or no tuition; check your programme." },
+      "stipend": { "level": "partial", "text": "Monthly allowance of €934 for Master's students." },
+      "insurance": { "level": "full", "text": "Contributions towards health, accident and personal liability insurance." },
+      "travel": { "level": "full", "text": "A travel allowance, plus an annual study allowance, is included." }
+    },
+    "duration": "For the standard length of the Master's programme (typically up to 24 months), subject to progress.",
+    "eligibility": {
+      "countries_note": "Open to graduates from many countries worldwide. Specific eligibility and deadlines vary by your country and the programme — always check the DAAD database for your case.",
+      "academic": "A completed first degree (Bachelor's) with strong results, before the funding starts.",
+      "age": "No general age limit stated (some programmes limit years since graduation).",
+      "language": "English or German, depending on the programme.",
+      "notes": "You apply through the DAAD portal for the specific programme; deadlines differ by country (often in autumn)."
+    },
+    "requirements": [
+      "Completed Bachelor's degree & transcripts",
+      "CV and letter of motivation",
+      "Language certificate as required by the programme",
+      "References",
+      "Programme-specific documents (check the call)"
+    ],
+    "application": {
+      "route": "Apply directly to DAAD for the specific scholarship programme (via the DAAD portal). Admission to a German programme is handled separately.",
+      "steps": [
+        "Find your programme in the DAAD scholarship database (funding-guide.de).",
+        "Check its eligibility and deadline for your country.",
+        "Prepare and submit your application on the DAAD portal.",
+        "An independent committee selects; arrange university admission in parallel."
+      ],
+      "portal": "https://www.daad.de/en/studying-in-germany/scholarships/daad-scholarships/",
+      "deadline": "",
+      "deadline_note": "Deadlines vary by country and programme (frequently in autumn for the following year). Check the DAAD database for your country.",
+      "cycle": "annual"
+    },
+    "important": [
+      "DAAD is an umbrella funder with many programmes — this describes the main Master's Study Scholarship; others have different terms.",
+      "Deadlines and eligibility depend on your home country — always check the DAAD database.",
+      "It's a monthly allowance, not a lump sum; German public universities usually charge little tuition anyway.",
+      "Competitive, merit-based selection."
+    ],
+    "competition": "Competitive and merit-based. No official acceptance rate is published.",
+    "country_pathway": "Germany",
+    "university_ids": [],
+    "universities_note": "Held at German universities — explore German universities, and use the DAAD scholarship database to match programmes to funding."
+  },
+  {
+    "id": "swedish-institute-scholarships",
+    "key": "swedish-institute-scholarships",
+    "name": "Swedish Institute Scholarships for Global Professionals (SISGP)",
+    "provider": "Swedish Institute (SI), Government of Sweden",
+    "country": "Sweden",
+    "type": "government",
+    "scope": "curated",
+    "tagline": "A full scholarship for Master's study in Sweden — but only for citizens of 34 specific countries, with work and leadership experience.",
+    "verification": {
+      "sources": ["https://si.se/en/apply/scholarships/swedish-institute-scholarships-for-global-professionals/"],
+      "date": "2026-09-01",
+      "status": "verified"
+    },
+    "degree_levels": ["Master's"],
+    "fields": "Eligible master's programmes at Swedish universities (as listed by SI each year).",
+    "funding": {
+      "tuition": { "level": "full", "text": "Full tuition fees, paid by SI directly to the university each semester." },
+      "stipend": { "level": "partial", "text": "Living allowance of SEK 12,000 per month for the study period." },
+      "travel": { "level": "partial", "text": "A one-time travel grant of SEK 15,000." },
+      "insurance": { "level": "full", "text": "Insurance against illness and accident is included." }
+    },
+    "duration": "The full length of the eligible master's programme.",
+    "eligibility": {
+      "countries_note": "RESTRICTED to citizens of 34 specific countries (across Africa, Asia, Latin America and Eastern Europe) — e.g. Bangladesh, Brazil, Egypt, Indonesia, Kenya, Ukraine, Vietnam. It is NOT open to all international students. Check SI's official eligible-country list for the current year.",
+      "academic": "Meet the admission requirements of an eligible master's programme.",
+      "age": "No general age limit stated.",
+      "language": "As required by the programme (usually English).",
+      "notes": "You must also show relevant work experience (usually 3,000+ hours) and demonstrated leadership experience."
+    },
+    "requirements": [
+      "Admission application via University Admissions (universityadmissions.se)",
+      "The SI scholarship application on SI's portal",
+      "Proof of work experience",
+      "Proof of leadership experience",
+      "CV and motivation (per SI's form)"
+    ],
+    "application": {
+      "route": "Two steps: first apply and be admitted to an eligible master's programme via University Admissions; then apply separately to SI for the scholarship.",
+      "steps": [
+        "Apply to eligible master's programmes via University Admissions by mid-January.",
+        "Once eligible, submit the SI scholarship application in the SI portal (late February).",
+        "SI selects scholarship holders; admission results follow."
+      ],
+      "portal": "https://si.se/en/apply/scholarships/swedish-institute-scholarships-for-global-professionals/",
+      "deadline": "2026-01-15",
+      "deadline_note": "University Admissions deadline ~15 January 2026; the SI scholarship window is ~9–25 February 2026. Confirm the current year's dates on si.se.",
+      "cycle": "annual"
+    },
+    "important": [
+      "Only citizens of 34 specific countries can apply — check the official list first.",
+      "You need documented work AND leadership experience.",
+      "You must apply and be admitted through University Admissions before the SI application.",
+      "Highly competitive — a limited number of awards each year."
+    ],
+    "competition": "Highly competitive — a few hundred awards worldwide each year. No official acceptance rate is published.",
+    "country_pathway": "Sweden",
+    "university_ids": [],
+    "universities_note": "Tenable at Swedish universities offering eligible master's programmes — explore Swedish universities and check SI's list of eligible programmes."
+  },
+  {
+    "id": "oead-scholarships",
+    "key": "oead-scholarships",
+    "name": "Ernst Mach Grant (OeAD, Austria)",
+    "provider": "OeAD — Austria's Agency for Education and Internationalisation",
+    "country": "Austria",
+    "type": "government",
+    "scope": "curated",
+    "tagline": "Austria's OeAD grant for short research or study STAYS (1–9 months) — not for funding a full degree.",
+    "verification": {
+      "sources": ["https://oead.at/en/study-research-teaching/overview-grants-and-scholarships/ernst-mach-grant"],
+      "date": "2026-09-01",
+      "status": "verified"
+    },
+    "degree_levels": ["Research / study stay (PhD, postgraduate, postdoc)"],
+    "fields": "All fields.",
+    "funding": {
+      "stipend": { "level": "partial", "text": "A monthly grant — OeAD notes it may not cover all living costs in Austria, so you will likely need additional funds." },
+      "insurance": { "level": "partial", "text": "Insurance/accident cover is typically arranged — check the current call." }
+    },
+    "duration": "1 to 9 months (a research/study stay). It does NOT fund a complete regular Master's or PhD degree — regional ASEA-UNINET variants fund full PhDs only for a few Asian countries.",
+    "eligibility": {
+      "countries_note": "Open to students/researchers from all countries except Austria — but for a short research or study stay, not a full degree.",
+      "academic": "PhD students, postgraduates, postdocs and researchers from universities outside Austria.",
+      "age": "No general age limit stated.",
+      "language": "As required by the host institution/project.",
+      "notes": "This is a mobility grant for a visiting stay — you arrange a host institution/supervisor in Austria."
+    },
+    "requirements": [
+      "A host institution / supervisor in Austria",
+      "A research or study plan",
+      "Academic records & CV",
+      "Documents listed in the current OeAD call"
+    ],
+    "application": {
+      "route": "Apply to OeAD via grants.at for the specific Ernst Mach call.",
+      "steps": [
+        "Find a host institution and agree a research/study plan.",
+        "Apply on grants.at before the deadline.",
+        "OeAD selects grant holders."
+      ],
+      "portal": "https://oead.at/en/study-research-teaching/overview-grants-and-scholarships/ernst-mach-grant",
+      "deadline": "2026-12-01",
+      "deadline_note": "1 December 2026 (23:59 CET) for stays in 2027/28. Confirm the current call on oead.at.",
+      "cycle": "annual"
+    },
+    "important": [
+      "This does NOT finance a full Master's or PhD degree — it's for short research/study stays (1–9 months).",
+      "The grant may not cover all your living costs — plan for extra funds.",
+      "You need a host institution in Austria.",
+      "To fund a full degree in Austria, look at university or programme-specific scholarships instead."
+    ],
+    "competition": "Competitive; a limited number of grants. No official acceptance rate is published.",
+    "country_pathway": "Austria",
+    "university_ids": [],
+    "universities_note": "For a research/study stay at an Austrian host institution — explore Austrian universities to find a host."
+  },
+  {
+    "id": "vlir-uos-scholarships",
+    "key": "vlir-uos-scholarships",
+    "name": "VLIR-UOS Scholarships (ICP Connect)",
+    "provider": "VLIR-UOS (Flemish Interuniversity Council), funded by the Belgian government",
+    "country": "Belgium",
+    "type": "government",
+    "scope": "curated",
+    "tagline": "Full funding for specific English-taught master's programmes in Flanders — but only for applicants from ~37 partner countries.",
+    "verification": {
+      "sources": [
+        "https://www.vliruos.be/get-funded/study-scholarships",
+        "https://www.vliruos.be/country-list-scholarships"
+      ],
+      "date": "2026-09-01",
+      "status": "verified"
+    },
+    "degree_levels": ["Master's"],
+    "fields": "A fixed set of about 15 English-taught master's programmes (ICP) at Flemish universities — see the official list.",
+    "funding": {
+      "tuition": { "level": "full", "text": "Tuition fees are covered." },
+      "stipend": { "level": "full", "text": "Living expenses (board and lodging) are covered for the full programme." },
+      "travel": { "level": "full", "text": "Travel is covered." },
+      "insurance": { "level": "full", "text": "Insurance is covered." }
+    },
+    "duration": "The full length of the master's programme (12 / 24 / 36 months).",
+    "eligibility": {
+      "countries_note": "RESTRICTED to nationals of ~37 partner countries in Africa, Asia and Latin America (29 core + 8 recently added such as Bangladesh, Brazil, Colombia, Ghana, India, Sri Lanka, Suriname, Zambia). You must also reside in an eligible country when applying. NOT open to all international students — check the official country list.",
+      "academic": "Meet the admission requirements of one of the eligible ICP master's programmes.",
+      "age": "Up to 35 (initial master) or 45 (advanced master) on 1 January of the intake year.",
+      "language": "English — the ICP programmes are English-taught.",
+      "notes": "Preference for applicants working in, or heading toward, higher education, government or civil society."
+    },
+    "requirements": [
+      "Nationality and residence in an eligible country",
+      "Application to an eligible ICP master's programme",
+      "Academic records",
+      "Motivation and (often) professional-background documents"
+    ],
+    "application": {
+      "route": "Apply to a participating ICP master's programme; the scholarship is applied for together with programme admission, per VLIR-UOS/programme instructions.",
+      "steps": [
+        "Check you're from an eligible country and pick an eligible ICP master's programme.",
+        "Apply to the programme and for the VLIR-UOS scholarship as instructed.",
+        "Selection by the programme / VLIR-UOS."
+      ],
+      "portal": "https://www.vliruos.be/get-funded/study-scholarships",
+      "deadline": "",
+      "deadline_note": "Set per programme/intake (often early in the year). Check the specific ICP programme and vliruos.be.",
+      "cycle": "annual"
+    },
+    "important": [
+      "Only nationals of ~37 partner countries (Africa/Asia/Latin America) can apply — check the official country list first.",
+      "Only a fixed set of ~15 ICP master's programmes are covered, not any programme.",
+      "Age limits apply (≤35 initial / ≤45 advanced master).",
+      "Preference for those in, or heading to, higher education, government or civil society."
+    ],
+    "competition": "Competitive; a limited number of scholarships per programme. No official acceptance rate is published.",
+    "country_pathway": "Belgium",
+    "university_ids": [],
+    "universities_note": "Tenable at Flemish universities offering the eligible ICP master's programmes — explore Belgian universities and see the official programme list."
   }
 ]
