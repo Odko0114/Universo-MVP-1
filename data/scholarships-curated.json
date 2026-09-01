@@ -1,0 +1,78 @@
+[
+  {
+    "id": "stipendium-hungaricum",
+    "key": "stipendium-hungaricum",
+    "name": "Stipendium Hungaricum",
+    "provider": "Tempus Public Foundation (Hungarian Government)",
+    "country": "Hungary",
+    "type": "government",
+    "scope": "curated",
+    "tagline": "Hungary's flagship government scholarship — tuition-free study for students from partner countries.",
+    "verification": {
+      "sources": [
+        "https://stipendiumhungaricum.hu/about/",
+        "https://stipendiumhungaricum.hu/apply/",
+        "https://apply.stipendiumhungaricum.hu/"
+      ],
+      "date": "2026-09-01",
+      "status": "verified"
+    },
+    "degree_levels": ["Bachelor's", "Master's", "One-tier master's", "Doctoral (PhD)", "Non-degree"],
+    "fields": "Around 900 programmes across most fields, taught mainly in English (some in Hungarian, a few in German or French). Which programmes you can choose depends on your sending country — check the official Study Finder.",
+    "funding": {
+      "tuition": { "level": "full", "text": "Tuition-free at all degree levels." },
+      "stipend": { "level": "partial", "text": "Monthly stipend — Bachelor's / Master's / one-tier / non-degree: HUF 43,700 (~€110). PhD Phase 1: HUF 140,000 (~€355). PhD Phase 2: HUF 180,000 (~€460)." },
+      "accommodation": { "level": "partial", "text": "Free dormitory place, OR a HUF 40,000/month (~€100) housing contribution. Officially noted this often does not cover full rent in larger cities like Budapest." },
+      "insurance": { "level": "full", "text": "Medical care under Hungarian law, plus supplementary health insurance up to HUF 65,000/year (~€165)." },
+      "travel": { "level": "none", "text": "Not covered — travel to and from Hungary is not included." }
+    },
+    "duration": "Funded for the full standard length of your programme, subject to meeting academic progression requirements each year.",
+    "eligibility": {
+      "countries_note": "Open to citizens of the 100+ sending-partner countries that hold a bilateral education agreement with Hungary — NOT to every nationality. Your country must currently be a sending partner, and you must be nominated by it.",
+      "academic": "You must have completed the level of education required for your target programme, with a strong academic record.",
+      "age": "No general age limit is stated (individual programmes may set their own).",
+      "language": "Proof of language ability (usually English, sometimes Hungarian) as required by your specific programme — check each programme's requirement.",
+      "notes": "Nomination by your sending partner (the Hungarian embassy, or the responsible ministry/agency in your country) is mandatory — only nominated applicants proceed."
+    },
+    "requirements": [
+      "Online application on apply.stipendiumhungaricum.hu (up to 2 programme choices)",
+      "Certificate & transcripts for your prior studies",
+      "Language certificate as required by your chosen programme",
+      "Motivation letter",
+      "Medical certificate of general health",
+      "Copy of your passport or ID",
+      "Any programme-specific documents (e.g. portfolio, or a research plan for PhD)"
+    ],
+    "application": {
+      "route": "Two applications are required — the online Stipendium Hungaricum system AND your home-country sending partner.",
+      "steps": [
+        "Check your country is a current sending partner, and contact them for their own process and deadline.",
+        "Register and apply online at apply.stipendiumhungaricum.hu, choosing available programmes in the Study Finder.",
+        "Submit your application to your sending partner (embassy / ministry) — they nominate the candidates.",
+        "Nominated applications are reviewed by your chosen Hungarian institutions (their own admission requirements apply).",
+        "Final scholarship and admission decision."
+      ],
+      "portal": "https://apply.stipendiumhungaricum.hu",
+      "deadline": "2026-01-15",
+      "deadline_note": "15 January 2026, 14:00 CET for the online system (2026/27 cycle). Your sending partner's deadline may be earlier — confirm it with them.",
+      "cycle": "annual"
+    },
+    "important": [
+      "You must be a citizen of a current sending-partner country AND be nominated — you can't apply on nationality alone.",
+      "Only programmes marked 'available' for your country in the Study Finder can be chosen.",
+      "The stipend is modest relative to living costs in Budapest; the housing contribution may not cover full rent.",
+      "You still need to meet each university's own admission requirements.",
+      "It runs on an annual cycle with a mid-January online deadline — prepare documents well ahead.",
+      "Travel costs are not covered."
+    ],
+    "competition": "Highly competitive — nominations per country are limited. No official acceptance rate is published.",
+    "university_ids": [
+      "eter-hu0004", "eter-hu0002", "eter-hu0001", "eter-hu0013", "eter-hu0003",
+      "eter-hu0015", "eter-hu0012", "eter-hu0014", "eter-hu0016", "eter-hu0025",
+      "eter-hu0030", "eter-hu0073", "eter-hu0008", "eter-hu0010", "eter-hu0027",
+      "eter-hu0026", "eter-hu0044", "eter-hu0009", "eter-hu0006", "eter-hu0078",
+      "eter-hu0028"
+    ],
+    "universities_note": "These are participating institutions we have in our catalogue. Stipendium Hungaricum has around 30 participating institutions in total — see the official institutions list for the complete, current set."
+  }
+]

@@ -492,6 +492,344 @@ img {
   }
 }
 
+/* Curated scholarship card (richer than a pointer) */
+.sch-card--curated {
+  border-color: #cfe6df;
+}
+.sch-card__badge-v {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--teal-600);
+  background: var(--teal-050);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: var(--text-3xs);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+.sch-card__badge-v .icon {
+  width: 12px;
+  height: 12px;
+}
+.sch-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.sch-card__fund {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--gold-600);
+}
+.sch-card__fund .icon {
+  width: 13px;
+  height: 13px;
+}
+.sch-card__meta-line {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--ink-faint);
+}
+
+/* Curated detail page */
+.sch-hd {
+  margin-bottom: 16px;
+}
+.sch-hd__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  color: var(--teal-600);
+  background: var(--teal-050);
+  border-radius: 999px;
+  padding: 3px 10px;
+  margin-bottom: 8px;
+}
+.sch-hd__badge .icon {
+  width: 13px;
+  height: 13px;
+}
+.sch-hd h1 {
+  margin: 0 0 4px;
+}
+.sch-hd__tag {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: var(--text-lg);
+}
+.sch-glance {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+.sch-glance__item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sch-glance__k {
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.sch-glance__v {
+  font-weight: 600;
+  color: var(--ink);
+}
+.sch-glance__item--flag {
+  grid-column: 1 / -1;
+  flex-direction: row;
+  align-items: center;
+  gap: 7px;
+  color: var(--gold-600);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+.sch-glance__item--flag .icon {
+  width: 15px;
+  height: 15px;
+}
+
+/* Eligibility indicator */
+.elig-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.elig-list__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: var(--text-md);
+  color: var(--ink-soft);
+}
+.elig-list__item .icon {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  width: 16px;
+  height: 16px;
+}
+.elig-list__item--ok .icon {
+  color: var(--success);
+}
+.elig-list__item--warn .icon {
+  color: var(--gold-600);
+}
+
+/* Funding breakdown */
+.fund-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.fund-row__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+.fund-row__label {
+  font-weight: 700;
+}
+.fund-row__text {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: var(--text-md);
+}
+.fund-badge {
+  font-size: var(--text-3xs);
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+.fund-badge--full {
+  background: #e4f5ea;
+  color: #15803d;
+}
+.fund-badge--partial {
+  background: #fbf1d9;
+  color: #916609;
+}
+.fund-badge--none {
+  background: #eef1f6;
+  color: var(--ink-soft);
+}
+
+/* Definition list, ordered steps, bullet lists */
+.sch-dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 16px;
+}
+.sch-dl dt {
+  font-weight: 700;
+  color: var(--ink);
+}
+.sch-dl dd {
+  margin: 0;
+  color: var(--ink-soft);
+}
+.sch-ul {
+  margin: 0;
+  padding-left: 1.15em;
+  color: var(--ink-soft);
+}
+.sch-ul li {
+  margin-bottom: 6px;
+}
+.sch-steps {
+  margin: 0 0 14px;
+  padding-left: 1.3em;
+  color: var(--ink-soft);
+}
+.sch-steps li {
+  margin-bottom: 8px;
+}
+.sch-important h3 {
+  color: var(--gold-600);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.sch-important h3 .icon {
+  width: 16px;
+  height: 16px;
+}
+.sch-status {
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.sch-status--open {
+  background: #e4f5ea;
+  color: #15803d;
+}
+.sch-status--soon {
+  background: #fbf1d9;
+  color: #916609;
+}
+.sch-status--closed {
+  background: #eef1f6;
+  color: var(--ink-soft);
+}
+@media (max-width: 520px) {
+  .sch-dl {
+    grid-template-columns: 1fr;
+    gap: 2px 0;
+  }
+  .sch-dl dd {
+    margin-bottom: 8px;
+  }
+}
+
+/* Participating universities */
+.sch-unis {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+.sch-uni {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  text-decoration: none;
+  color: var(--ink);
+}
+.sch-uni:hover {
+  border-color: var(--teal-500);
+}
+.sch-uni .muted {
+  font-size: var(--text-xs);
+}
+
+/* Discover "via scholarship" context ribbon */
+.via-context {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin: 2px 0 14px;
+  padding: 9px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--gold-050, #faf3e2);
+  border: 1px solid #ecd9a3;
+  font-size: var(--text-sm);
+}
+.via-context__txt {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 600;
+  color: var(--gold-600);
+}
+.via-context__txt .icon {
+  width: 14px;
+  height: 14px;
+}
+.via-context a {
+  color: var(--gold-600);
+  font-weight: 700;
+}
+
+/* University-card funding chip + profile funding callout */
+.uni-card__meta .chip--funding {
+  background: #faf3e2;
+  color: var(--gold-600);
+}
+.uni-card__meta .chip--funding .icon {
+  opacity: 1;
+  color: var(--gold-600);
+}
+.funding-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #faf3e2;
+  border: 1px solid #ecd9a3;
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  color: var(--ink);
+}
+.funding-callout .icon {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  color: var(--gold-600);
+  margin-top: 1px;
+}
+.funding-callout a {
+  font-weight: 700;
+}
+
 /* Verified-vs-directory scope toggle (sits above the niche button).
    Styled as ONE segmented control, not two pills: it's a binary either/or, and
    as two separate full-width pills it read as two competing CTAs — worse, it

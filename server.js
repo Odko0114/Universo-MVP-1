@@ -34,6 +34,7 @@ const {
   scholarshipsOutbound,
   catalog: scholarshipCatalog,
 } = require("./lib/scholarships");
+const curatedScholarships = require("./lib/scholarships-curated");
 const notify = require("./lib/notify");
 const brand = require("./lib/brand");
 const events = require("./lib/events");
@@ -833,7 +834,20 @@ api.get("/universities", universitiesLimiter, (req, res) => {
     ? (u) => match.matchUniversity(profile, u).score
     : undefined;
 
-  const result = search.query(INDEX, params, clickOf, { scoreFn });
+  // Scholarship context: ?via=<scholarshipKey> narrows Discover to a curated
+  // scholarship's participating universities — the honest path by which non-EU
+  // (or otherwise unlisted) universities become discoverable. Scope is forced
+  // open here so participating register-only unis aren't hidden by verified-only.
+  const viaKey = String(req.query.via || "");
+  const viaSch = viaKey ? curatedScholarships.curatedByKey(viaKey) : null;
+  let index = INDEX;
+  if (viaSch) {
+    const ids = new Set(viaSch.university_ids || []);
+    index = INDEX.filter((e) => ids.has(e.u.id));
+    params.verified = "";
+  }
+
+  const result = search.query(index, params, clickOf, { scoreFn });
   result.universities = result.universities.map((u) => {
     const withP = withPhoto(u);
     // Attach the fit score + a compressed per-card reason only when we actually
@@ -847,8 +861,13 @@ api.get("/universities", universitiesLimiter, (req, res) => {
       const reason = explain.compressedReason(m.components);
       if (reason) withP.match_reasons = [reason];
     }
+    // A quiet "funding available" signal when a curated scholarship lists this
+    // university (the card shows one chip → the scholarship).
+    if (curatedScholarships.isCuratedUniversity(u.id)) withP.has_funding = true;
     return withP;
   });
+  if (viaSch)
+    result.via = { key: viaSch.key, name: viaSch.name, country: viaSch.country };
   result.sort = params.sort || (req.query.q ? "relevance" : "name");
   const q = String(req.query.q || "").trim();
   if (q) {
@@ -893,6 +912,15 @@ api.get(
         m.flags,
       );
     }
+    // Curated scholarships this university participates in (University→Scholarship
+    // direction) — a lightweight {key,name,country} list the profile links to.
+    const funding = curatedScholarships.curatedForUniversity(uni.id);
+    if (funding.length)
+      out.funding_scholarships = funding.map((s) => ({
+        key: s.key,
+        name: s.name,
+        country: s.country,
+      }));
     res.json({ university: out });
   }),
 );
@@ -1747,7 +1775,19 @@ api.get("/scholarships", (req, res) => {
         for_you = { ...sd, destinations: schCountries };
     }
   }
-  res.json({ ...scholarshipCatalog(), for_you, tracked });
+  // Resolve each curated scholarship's participating university_ids into
+  // {id,name,city} so the detail page can list them (names live in the
+  // universities dataset — no duplication, just a lookup).
+  const uniById = new Map(UNIVERSITIES.map((u) => [u.id, u]));
+  const curated = curatedScholarships.allCurated().map((s) => ({
+    ...s,
+    universities: (s.university_ids || [])
+      .map((id) => uniById.get(id))
+      .filter(Boolean)
+      .map((u) => ({ id: u.id, name: u.name, city: u.city || "" })),
+  }));
+
+  res.json({ curated, ...scholarshipCatalog(), for_you, tracked });
 });
 
 // Track progress on a specific scholarship scheme + its (student-entered)
