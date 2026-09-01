@@ -32,6 +32,7 @@ const {
   scholarshipsFor,
   scholarshipsForDestinations,
   scholarshipsOutbound,
+  catalog: scholarshipCatalog,
 } = require("./lib/scholarships");
 const notify = require("./lib/notify");
 const brand = require("./lib/brand");
@@ -1714,6 +1715,39 @@ api.post("/me/document/expiry", auth.requireAuth, (req, res) => {
   else delete student.document_meta[key];
   store.write("students", students);
   res.json({ key, expiry });
+});
+
+// Browsable scholarship catalog for the /scholarships page: the honest
+// country-level pointers (EU-wide + per-destination + home-country outbound).
+// Adds a personalized "for_you" group from the student's destinations (saved
+// unis' countries, else preferred countries) and their tracked-status map.
+api.get("/scholarships", (req, res) => {
+  const student = auth.loadStudent(req);
+  const tracked =
+    student && student.scholarships && typeof student.scholarships === "object"
+      ? student.scholarships
+      : {};
+  let for_you = null;
+  if (student) {
+    const savedIds = new Set(student.saved_universities || []);
+    const destCountries = [
+      ...new Set(
+        UNIVERSITIES.filter((u) => savedIds.has(u.id))
+          .map((u) => u.country)
+          .filter(Boolean),
+      ),
+    ];
+    const prefCountries = Array.isArray(student.country_preference)
+      ? student.country_preference
+      : [];
+    const schCountries = destCountries.length ? destCountries : prefCountries;
+    if (schCountries.length) {
+      const sd = scholarshipsForDestinations(schCountries);
+      if (sd.groups.length || sd.eu_wide.length)
+        for_you = { ...sd, destinations: schCountries };
+    }
+  }
+  res.json({ ...scholarshipCatalog(), for_you, tracked });
 });
 
 // Track progress on a specific scholarship scheme + its (student-entered)

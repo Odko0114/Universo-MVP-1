@@ -414,6 +414,84 @@ img {
   white-space: nowrap;
 }
 
+/* ---------- Scholarships ---------- */
+.sch-block {
+  margin-bottom: 26px;
+}
+.sch-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.sch-card.is-tracked {
+  border-color: var(--teal-500);
+}
+.sch-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.sch-card__scope {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.sch-card__scope .icon {
+  width: 13px;
+  height: 13px;
+  color: var(--gold-600);
+}
+.sch-card__tracked {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  color: var(--teal-600);
+}
+.sch-card__tracked .icon {
+  width: 13px;
+  height: 13px;
+}
+.sch-card__name {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  line-height: 1.2;
+}
+.sch-card__note {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: var(--text-md);
+  flex: 1;
+}
+.sch-card__foot {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+.sch-track {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 520px) {
+  .sch-track {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Verified-vs-directory scope toggle (sits above the niche button).
    Styled as ONE segmented control, not two pills: it's a binary either/or, and
    as two separate full-width pills it read as two competing CTAs — worse, it

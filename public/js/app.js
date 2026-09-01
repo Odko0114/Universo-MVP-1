@@ -2709,6 +2709,169 @@
       .catch(() => {});
   }
 
+  // =========================================================================
+  // Scholarships — a browsable funding function over the honest country-level
+  // pointers (lib/scholarships.js). No fabricated amounts/deadlines: every card
+  // links to the official page and is plainly labelled a starting point.
+  // =========================================================================
+  const SCOPE_LABEL = (s) =>
+    ({
+      "eu-wide": "EU-wide",
+      country: s.country ? "Study in " + s.country : "By destination",
+      home: "Home-country scheme",
+      "home-generic": "Home-country",
+      generic: "General",
+    })[s.scope] || "";
+
+  function scholarshipCard(s, tracked) {
+    return `
+      <article class="sch-card${tracked ? " is-tracked" : ""}">
+        <div class="sch-card__top">
+          <span class="sch-card__scope">${icon("award", 13)} ${esc(SCOPE_LABEL(s))}</span>
+          ${tracked ? `<span class="sch-card__tracked">${icon("check", 13)} Tracking</span>` : ""}
+        </div>
+        <h3 class="sch-card__name"><a href="/scholarship/${esc(s.key)}" data-link>${esc(s.name)}</a></h3>
+        <p class="sch-card__note">${esc(s.note || "")}</p>
+        <div class="sch-card__foot">
+          <a class="btn btn--primary btn--sm" href="/scholarship/${esc(s.key)}" data-link>Details</a>
+          ${s.website ? `<a class="btn btn--ghost btn--sm" href="${esc(s.website)}" target="_blank" rel="noopener noreferrer">Official ↗</a>` : ""}
+        </div>
+      </article>`;
+  }
+
+  const schAll = (data) => [
+    ...(data.eu_wide || []),
+    ...(data.destinations || []).flatMap((g) => g.scholarships),
+    ...(data.outbound || []).flatMap((g) => g.scholarships),
+  ];
+
+  async function renderScholarships() {
+    setActiveNav("scholarships");
+    document.title = "Scholarships — Universo";
+    view.innerHTML = `<div class="skeleton" style="height:280px"></div>`;
+    let data;
+    try {
+      data = state.scholarships = await API.scholarships();
+    } catch (e) {
+      view.innerHTML = emptyState({
+        iconName: "alert",
+        title: "Couldn't load scholarships",
+        sub: e.message,
+      });
+      return;
+    }
+    const tracked = data.tracked || {};
+    const isTracked = (k) => !!(tracked[k] && (tracked[k].status || tracked[k].deadline));
+    const cards = (list) =>
+      `<div class="grid grid--rec">${list.map((s) => scholarshipCard(s, isTracked(s.key))).join("")}</div>`;
+    const block = (title, sub, list) =>
+      list && list.length
+        ? `<section class="sch-block"><div class="section-head"><h2>${esc(title)}</h2>${sub ? `<span class="muted">${esc(sub)}</span>` : ""}</div>${cards(list)}</section>`
+        : "";
+
+    // "For your destinations" — dedupe by key so it doesn't repeat below.
+    let forYou = [];
+    if (data.for_you) {
+      const seen = new Set();
+      forYou = [
+        ...(data.for_you.eu_wide || []),
+        ...(data.for_you.groups || []).flatMap((g) => g.scholarships),
+      ].filter((s) => (seen.has(s.key) ? false : seen.add(s.key)));
+    }
+
+    view.innerHTML = `
+      <section class="hero">
+        <p class="hero__tagline">${icon("award", 15)} Funding</p>
+        <h1>How to <span class="accent">fund</span> your studies</h1>
+        <p>Real, named government and EU scholarship programs for studying in Europe — plus your home country's schemes for studying abroad. These are honest starting points: always confirm current eligibility, amounts and deadlines on the official page.</p>
+      </section>
+      ${forYou.length ? block("For your destinations", (data.for_you.destinations || []).join(" · "), forYou) : ""}
+      ${block("EU-wide", "Available across the European Union", data.eu_wide)}
+      ${block("By destination country", "Funding to study in a specific country", (data.destinations || []).flatMap((g) => g.scholarships))}
+      ${block("From your home country", "Schemes that fund citizens to study abroad", (data.outbound || []).flatMap((g) => g.scholarships))}`;
+  }
+
+  async function renderScholarshipDetail(key) {
+    setActiveNav("scholarships");
+    view.innerHTML = `<div class="skeleton" style="height:320px"></div>`;
+    let data = state.scholarships;
+    if (!data) {
+      try {
+        data = state.scholarships = await API.scholarships();
+      } catch (e) {
+        view.innerHTML = `<a class="back-link" href="/scholarships" data-back>← Back</a>${emptyState({ iconName: "alert", title: "Couldn't load", sub: e.message })}`;
+        return;
+      }
+    }
+    const s = schAll(data).find((x) => x.key === key);
+    if (!s) {
+      view.innerHTML = `<a class="back-link" href="/scholarships" data-back>← Back to scholarships</a>${emptyState({ iconName: "alert", title: "Scholarship not found", sub: "It may have moved — browse the full list.", ctaHref: "/scholarships", ctaLabel: "All scholarships" })}`;
+      return;
+    }
+    document.title = `${s.name} — Universo`;
+    const t = (data.tracked || {})[key] || {};
+    // Only offer "explore universities" when we actually list universities in
+    // that country (EU catalogue) — non-EU destinations (Australia, Japan…) have
+    // real funding pointers but no browsable universities here yet.
+    if (!state.filterMeta) {
+      try {
+        state.filterMeta = await API.filters();
+      } catch {
+        state.filterMeta = { countries: [] };
+      }
+    }
+    const haveUnis = (state.filterMeta.countries || []).includes(s.country);
+    const showDiscover = s.scope === "country" && s.country && haveUnis;
+
+    view.innerHTML = `
+      <a class="back-link" href="/scholarships" data-back>← Back to scholarships</a>
+      <div class="section-head" style="margin-bottom:4px"><h1>${esc(s.name)}</h1></div>
+      <p class="muted" style="margin:0 0 14px">${icon("award", 14)} ${esc(SCOPE_LABEL(s))}</p>
+
+      <div class="verify-flag"><span>${icon("alert", 16)}</span><span>This is a <strong>starting point</strong>, not an application. Confirm current eligibility, funding amounts and deadlines on the official page before you rely on them — they change every year.</span></div>
+
+      <div class="info-card"><h3>Overview</h3><p style="margin:0;color:var(--ink-soft)">${esc(s.note || "")}</p></div>
+      ${
+        s.website
+          ? `<div class="info-card"><h3>Official source</h3><p style="margin:0"><a href="${esc(s.website)}" target="_blank" rel="noopener noreferrer">${esc(s.website.replace(/^https?:\/\//, "").replace(/\/$/, ""))} ↗</a></p></div>`
+          : ""
+      }
+      ${
+        showDiscover
+          ? `<div class="info-card"><h3>Where can I study?</h3><p style="margin:0 0 12px;color:var(--ink-soft)">Explore universities in ${esc(s.country)} you could apply to with this funding.</p><a class="btn btn--primary btn--sm" href="/discover?country=${encodeURIComponent(s.country)}" data-link>Universities in ${esc(s.country)} →</a></div>`
+          : ""
+      }
+      ${
+        state.user
+          ? `<div class="info-card"><h3>Track this scholarship</h3>
+             <div class="sch-track">
+               <label class="app-field"><span>Status</span><select class="onb-input" id="sch-detail-status">
+                 <option value="">Not tracking</option>
+                 ${SCHOLARSHIP_STATUSES.map(([v, l]) => `<option value="${v}"${v === t.status ? " selected" : ""}>${esc(l)}</option>`).join("")}
+               </select></label>
+               <label class="app-field"><span>Deadline <span class="muted">(you set this)</span></span><input type="date" class="onb-input" id="sch-detail-deadline" value="${esc(t.deadline || "")}" /></label>
+             </div>
+             <p class="muted" style="margin:10px 0 0;font-size:.82rem">Tracked scholarships show up in your Dream Plan with their deadlines.</p></div>`
+          : `<div class="signup-nudge"><div><strong>Save this for later?</strong> Create a free account to track scholarships and see their deadlines in your Dream Plan.</div><a class="btn btn--primary btn--sm" href="/account?mode=register&src=scholarship&next=${encodeURIComponent("/scholarship/" + s.key)}">Sign up free</a></div>`
+      }`;
+
+    const statusSel = document.getElementById("sch-detail-status");
+    const deadlineInp = document.getElementById("sch-detail-deadline");
+    const saveTrack = async (patch) => {
+      try {
+        await API.setScholarship(key, patch);
+        toast("Saved to your tracking");
+        state.scholarships = null; // refetch next visit so the badge updates
+      } catch (e) {
+        toast(e.message, true);
+      }
+    };
+    if (statusSel)
+      statusSel.addEventListener("change", () => saveTrack({ status: statusSel.value }));
+    if (deadlineInp)
+      deadlineInp.addEventListener("change", () => saveTrack({ deadline: deadlineInp.value }));
+  }
+
   // ---- account ------------------------------------------------------------
   // Where to send the user after auth + which CTA brought them here (funnel
   // attribution). Captured from the URL when the account page renders.
@@ -3546,6 +3709,9 @@
     let p;
     try {
       if (parts[0] === "discover") p = renderDiscover();
+      else if (parts[0] === "scholarships") p = renderScholarships();
+      else if (parts[0] === "scholarship" && parts[1])
+        p = renderScholarshipDetail(decodeURIComponent(parts[1]));
       else if (parts[0] === "journey") p = renderJourney();
       else if (parts[0] === "saved") p = renderSaved();
       else if (parts[0] === "compare") p = renderCompare();
