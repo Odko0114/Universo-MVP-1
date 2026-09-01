@@ -1174,5 +1174,76 @@
       "cn-hust", "cn-nankai", "cn-ruc", "cn-seu", "cn-jlu"
     ],
     "universities_note": "These are major CSC-designated universities in our catalogue. CSC has around 300 designated universities in total — see the official CSC list for the complete set."
+  },
+  {
+    "id": "turkiye-burslari",
+    "key": "turkiye-burslari",
+    "name": "Türkiye Bursları (Türkiye Scholarships)",
+    "provider": "Government of Türkiye (Presidency for Turks Abroad — YTB)",
+    "country": "Türkiye",
+    "type": "government",
+    "scope": "curated",
+    "tagline": "Türkiye's fully-funded government scholarship — open to applicants worldwide, with the university placement done for you.",
+    "verification": {
+      "sources": [
+        "https://www.turkiyeburslari.gov.tr/scholarshipsprograms",
+        "https://www.turkiyeburslari.gov.tr/applysteps"
+      ],
+      "date": "2026-09-01",
+      "status": "verified"
+    },
+    "degree_levels": ["Bachelor's", "Master's", "Doctoral (PhD)"],
+    "fields": "A wide range of fields at Turkish universities. You list programme/university preferences and Türkiye Bursları places you — you don't choose freely.",
+    "funding": {
+      "tuition": { "level": "full", "text": "Full tuition — Türkiye Bursları places you at a Turkish university and covers the fees." },
+      "accommodation": { "level": "full", "text": "Accommodation is provided (state dormitory) or arranged." },
+      "stipend": { "level": "partial", "text": "A monthly living stipend, higher for higher degree levels — confirm the current amount on the official site." },
+      "insurance": { "level": "full", "text": "Health insurance is included." },
+      "travel": { "level": "full", "text": "A one-time round-trip flight (to Türkiye at the start, home at the end) is provided." }
+    },
+    "duration": "The full degree, plus a one-year Turkish language course (required if you don't already hold a C1 Turkish certificate — even for English-taught programmes).",
+    "eligibility": {
+      "countries_note": "Open to applicants of ALL nationalities EXCEPT Turkish citizens (and those who have previously studied in Türkiye). Genuinely worldwide.",
+      "academic": "Bachelor's: at least 70% in high school. Master's/PhD: at least 75%. Medicine/dentistry/pharmacy: at least 90%.",
+      "age": "Bachelor's: under 21. Master's: under 30. PhD: under 35.",
+      "language": "Programmes are in Turkish or English; a funded 1-year Turkish course to C1 is required if you don't already have it.",
+      "notes": "One free online application — you list your university/programme preferences and Türkiye Bursları places you."
+    },
+    "requirements": [
+      "Online application via the Türkiye Bursları system",
+      "Diploma and transcripts",
+      "A personal statement",
+      "Letters of recommendation",
+      "Passport / ID",
+      "Any required exam scores"
+    ],
+    "application": {
+      "route": "One free online application on the official Türkiye Bursları system — you list preferences and are placed; you do NOT apply to universities individually.",
+      "steps": [
+        "Create an account on the Türkiye Bursları online system.",
+        "Complete the single application and list your programme/university preferences.",
+        "Submit before the deadline (applications are free).",
+        "Shortlisted candidates are interviewed; awardees are placed at a university.",
+        "Attend the 1-year Turkish course if required."
+      ],
+      "portal": "https://www.turkiyeburslari.gov.tr",
+      "deadline": "",
+      "deadline_note": "The window usually opens in January and closes in February each year; late applications aren't accepted. Confirm the current dates on turkiyeburslari.gov.tr.",
+      "cycle": "annual"
+    },
+    "important": [
+      "You don't choose your university freely — you list preferences and Türkiye Bursları places you.",
+      "Age limits apply (Bachelor's <21, Master's <30, PhD <35).",
+      "A 1-year Turkish course to C1 is required if you don't already have it — even for English-taught programmes.",
+      "Turkish citizens and those who previously studied in Türkiye can't apply.",
+      "One application per cycle, and it's highly competitive."
+    ],
+    "competition": "Highly competitive — one of the most popular fully-funded scholarships worldwide. No official acceptance rate is published.",
+    "university_ids": [
+      "tr-metu", "tr-bogazici", "tr-istanbul", "tr-itu", "tr-hacettepe",
+      "tr-ankara", "tr-ege", "tr-gazi", "tr-marmara", "tr-yildiz", "tr-deu",
+      "tr-gtu", "tr-ktu", "tr-erciyes", "tr-selcuk"
+    ],
+    "universities_note": "These are major Turkish universities. Türkiye Bursları places awardees among many participating universities across Türkiye — you list preferences rather than applying to one."
   }
 ]

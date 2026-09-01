@@ -2844,8 +2844,19 @@
     const isTracked = (k) => !!(tracked[k] && (tracked[k].status || tracked[k].deadline));
     // A curated entry replaces its country-pointer everywhere, so hide the
     // matching pointer from the browse groups (it lives in "Verified in depth").
+    // Match by key, and also by country for destination pointers — a country's
+    // single scheme is the one we curated even when the auto-slug differs (e.g.
+    // Türkiye's accented name).
     const curatedKeys = new Set((data.curated || []).map((s) => s.key));
-    const notCurated = (list) => (list || []).filter((s) => !curatedKeys.has(s.key));
+    const curatedCountries = new Set(
+      (data.curated || []).map((s) => s.country).filter(Boolean),
+    );
+    const notCurated = (list) =>
+      (list || []).filter(
+        (s) =>
+          !curatedKeys.has(s.key) &&
+          !(s.scope === "country" && curatedCountries.has(s.country)),
+      );
     const cards = (list) =>
       `<div class="grid grid--rec">${list.map((s) => scholarshipCard(s, isTracked(s.key))).join("")}</div>`;
     const block = (title, sub, list) => {

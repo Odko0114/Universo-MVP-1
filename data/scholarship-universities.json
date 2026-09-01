@@ -16,5 +16,20 @@
   { "id": "cn-nankai", "name": "Nankai University", "country": "China", "city": "Tianjin", "website": "https://en.nankai.edu.cn", "source": "global", "discover_scope": "scholarship-only" },
   { "id": "cn-ruc", "name": "Renmin University of China", "country": "China", "city": "Beijing", "website": "http://www.ruc.edu.cn", "source": "global", "discover_scope": "scholarship-only" },
   { "id": "cn-seu", "name": "Southeast University", "country": "China", "city": "Nanjing", "website": "https://www.seu.edu.cn", "source": "global", "discover_scope": "scholarship-only" },
-  { "id": "cn-jlu", "name": "Jilin University", "country": "China", "city": "Changchun", "website": "https://en.jlu.edu.cn", "source": "global", "discover_scope": "scholarship-only" }
+  { "id": "cn-jlu", "name": "Jilin University", "country": "China", "city": "Changchun", "website": "https://en.jlu.edu.cn", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "tr-metu", "name": "Middle East Technical University (METU)", "country": "Türkiye", "city": "Ankara", "website": "https://www.metu.edu.tr", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "tr-bogazici", "name": "Boğaziçi University", "country": "Türkiye", "city": "Istanbul", "website": "https://bogazici.edu.tr", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "tr-istanbul", "name": "Istanbul University", "country": "Türkiye", "city": "Istanbul", "website": "https://www.istanbul.edu.tr", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "tr-itu", "name": "Istanbul Technical University", "country": "Türkiye", "city": "Istanbul", "website": "https://www.itu.edu.tr", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "tr-hacettepe", "name": "Hacettepe University", "country": "Türkiye", "city": "Ankara", "website": "https://www.hacettepe.edu.tr", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "tr-ankara", "name": "Ankara University", "country": "Türkiye", "city": "Ankara", "website": "https://www.ankara.edu.tr", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "tr-ege", "name": "Ege University", "country": "Türkiye", "city": "Izmir", "website": "https://ege.edu.tr", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "tr-gazi", "name": "Gazi University", "country": "Türkiye", "city": "Ankara", "website": "https://gazi.edu.tr", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "tr-marmara", "name": "Marmara University", "country": "Türkiye", "city": "Istanbul", "website": "https://www.marmara.edu.tr", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "tr-yildiz", "name": "Yıldız Technical University", "country": "Türkiye", "city": "Istanbul", "website": "https://www.yildiz.edu.tr", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "tr-deu", "name": "Dokuz Eylül University", "country": "Türkiye", "city": "Izmir", "website": "https://www.deu.edu.tr", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "tr-gtu", "name": "Gebze Technical University", "country": "Türkiye", "city": "Kocaeli", "website": "https://www.gtu.edu.tr", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "tr-ktu", "name": "Karadeniz Technical University", "country": "Türkiye", "city": "Trabzon", "website": "https://www.ktu.edu.tr", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "tr-erciyes", "name": "Erciyes University", "country": "Türkiye", "city": "Kayseri", "website": "https://www.erciyes.edu.tr", "source": "global", "discover_scope": "scholarship-only" },
+  { "id": "tr-selcuk", "name": "Selçuk University", "country": "Türkiye", "city": "Konya", "website": "https://www.selcuk.edu.tr", "source": "global", "discover_scope": "scholarship-only" }
 ]
