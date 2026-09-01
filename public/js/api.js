@@ -116,6 +116,7 @@
       request("PATCH", "/me/notifications", payload),
     toggleDocument: (key, done) =>
       request("POST", "/me/document", { key, done }),
+    scholarships: () => request("GET", "/scholarships"),
     setScholarshipStatus: (key, status) =>
       request("POST", "/me/scholarship", { key, status }),
     setScholarship: (key, patch) =>
