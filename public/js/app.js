@@ -3002,9 +3002,11 @@
         <p style="margin:0 0 12px;color:var(--ink-soft)">${(s.universities || []).length ? `${(s.universities || []).length} participating ${(s.universities || []).length === 1 ? "university" : "universities"} in our catalogue.` : s.country_pathway ? `Offered through participating institutions across ${esc(s.country_pathway)}.` : ""}${s.universities_note ? " " + esc(s.universities_note) : ""}</p>
         ${uniCards ? `<div class="sch-unis">${uniCards}</div>` : ""}
         ${
-          s.country_pathway
-            ? `<a class="btn btn--primary btn--sm" href="/discover?country=${encodeURIComponent(s.country_pathway)}" data-link style="margin-top:12px">Explore universities in ${esc(s.country_pathway)} →</a>`
-            : `<a class="btn btn--primary btn--sm" href="/discover?via=${esc(s.key)}" data-link style="margin-top:12px">Explore all eligible universities →</a>`
+          s.country_pathway === "Europe"
+            ? `<a class="btn btn--primary btn--sm" href="/discover" data-link style="margin-top:12px">Explore European universities →</a>`
+            : s.country_pathway
+              ? `<a class="btn btn--primary btn--sm" href="/discover?country=${encodeURIComponent(s.country_pathway)}" data-link style="margin-top:12px">Explore universities in ${esc(s.country_pathway)} →</a>`
+              : `<a class="btn btn--primary btn--sm" href="/discover?via=${esc(s.key)}" data-link style="margin-top:12px">Explore all eligible universities →</a>`
         }
       </div>
 

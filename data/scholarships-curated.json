@@ -200,5 +200,184 @@
     "country_pathway": "Netherlands",
     "university_ids": ["eter-nl0002", "eter-nl0012", "tue", "eter-nl0013"],
     "universities_note": "These are participating institutions the official page names; the scholarship runs at 11 Dutch research universities and 23 universities of applied sciences in total (2026/27) — see the official page for the full list, and explore all Dutch universities below."
+  },
+  {
+    "id": "erasmus-mundus-joint-master-degrees",
+    "key": "erasmus-mundus-joint-master-degrees",
+    "name": "Erasmus Mundus Joint Masters",
+    "provider": "European Union (Erasmus+ programme)",
+    "country": "European Union",
+    "type": "government",
+    "scope": "curated",
+    "tagline": "Full EU scholarships for prestigious joint master's programmes taught across several European universities — open to the whole world.",
+    "verification": {
+      "sources": [
+        "https://erasmus-plus.ec.europa.eu/opportunities/individuals/students/erasmus-mundus-joint-masters-scholarships",
+        "https://erasmus-plus.ec.europa.eu/erasmus-mundus-catalogue"
+      ],
+      "date": "2026-09-01",
+      "status": "verified"
+    },
+    "degree_levels": ["Master's"],
+    "fields": "Hundreds of joint master's programmes across all disciplines, each delivered by a consortium of universities (mostly European). Browse the official Erasmus Mundus Catalogue.",
+    "funding": {
+      "tuition": { "level": "full", "text": "The full scholarship covers the programme's participation costs (tuition). Exact terms are set by each joint master." },
+      "stipend": { "level": "partial", "text": "A monthly living allowance (the amount is set by the programme)." },
+      "travel": { "level": "full", "text": "Travel, visa and installation costs are covered." }
+    },
+    "duration": "1–2 academic years (60, 90 or 120 ECTS).",
+    "eligibility": {
+      "countries_note": "Open to students of ALL nationalities worldwide (students from Partner Countries may have more scholarship places). You need a completed bachelor's degree, or to be in your final bachelor year.",
+      "academic": "The limited full scholarships go to the best-ranked applicants worldwide — it is highly competitive.",
+      "age": "No age limit stated.",
+      "language": "As required by the programme (usually English).",
+      "notes": "There is no central application — you apply directly to each joint master consortium you're interested in."
+    },
+    "requirements": [
+      "A completed bachelor's degree (or final-year student graduating before the programme starts)",
+      "Application to your chosen joint master programme",
+      "Programme-specific documents (transcripts, language proof, motivation letter)"
+    ],
+    "application": {
+      "route": "Apply directly to each joint master's consortium — each runs its own selection and ranks candidates for the scholarships.",
+      "steps": [
+        "Browse the official Erasmus Mundus Catalogue and shortlist programmes that fit you.",
+        "Apply directly on each programme's website (you can apply to several).",
+        "The consortium selects and ranks applicants for the full scholarships.",
+        "Admission and scholarship results come from the consortium."
+      ],
+      "portal": "https://erasmus-plus.ec.europa.eu/erasmus-mundus-catalogue",
+      "deadline": "",
+      "deadline_note": "No single deadline — each programme sets its own, most between October and January for the following academic year. Check each programme's page.",
+      "cycle": "annual"
+    },
+    "important": [
+      "Scholarships are limited and highly competitive — awarded to the best-ranked applicants worldwide.",
+      "There's no central application — apply to each joint master separately, each with its own deadline.",
+      "You typically study in two or more countries as part of the consortium."
+    ],
+    "competition": "Highly competitive — the full scholarships go to top-ranked applicants worldwide. No fixed acceptance rate is published.",
+    "country_pathway": "Europe",
+    "university_ids": [],
+    "universities_note": "Delivered by consortia of (mostly European) universities — browse the official Erasmus Mundus Catalogue for the joint programmes and their partner universities."
+  },
+  {
+    "id": "finland-scholarship",
+    "key": "finland-scholarship",
+    "name": "University scholarships in Finland (tuition-fee waivers)",
+    "provider": "Individual Finnish universities (there is no single national scheme)",
+    "country": "Finland",
+    "type": "government",
+    "scope": "curated",
+    "tagline": "Finland has no single national scholarship — instead, individual universities offer tuition-fee waivers to non-EU/EEA students.",
+    "verification": {
+      "sources": [
+        "https://www.studyinfinland.fi/funding-your-studies/bachelors-and-masters-scholarships"
+      ],
+      "date": "2026-09-01",
+      "status": "verified"
+    },
+    "degree_levels": ["Bachelor's", "Master's"],
+    "fields": "Varies by university and programme.",
+    "funding": {
+      "tuition": { "level": "partial", "text": "Individual universities offer tuition-fee waivers (often full or partial) to non-EU/EEA fee-paying students. Competitive, and set per programme." },
+      "stipend": { "level": "none", "text": "Usually not covered — most of these scholarships cover tuition only, not living costs." }
+    },
+    "duration": "Varies by university and scholarship.",
+    "eligibility": {
+      "countries_note": "For non-EU/EEA students who are required to pay tuition. EU/EEA students study for free in Finland and do not need this.",
+      "academic": "Competitive — awarded on academic merit by each university.",
+      "age": "No age limit stated.",
+      "language": "As required by the programme (usually English).",
+      "notes": "You usually apply for the scholarship at the same time as admission, via Studyinfo.fi — check each programme's own terms."
+    },
+    "requirements": [
+      "An admission application via Studyinfo.fi",
+      "A programme that offers a scholarship / tuition-fee waiver option",
+      "Programme-specific documents"
+    ],
+    "application": {
+      "route": "Apply through the university (Studyinfo.fi) when you apply for admission — there is no separate national scholarship application.",
+      "steps": [
+        "Find a fee-charging Finnish bachelor's/master's programme on Studyinfo.fi.",
+        "Check whether it offers a scholarship or tuition-fee waiver for non-EU/EEA students.",
+        "Apply for admission (and the scholarship, where offered together).",
+        "The university selects scholarship recipients."
+      ],
+      "portal": "https://www.studyinfinland.fi/funding-your-studies/bachelors-and-masters-scholarships",
+      "deadline": "",
+      "deadline_note": "Set by each university's admission round — the main joint application is usually in January. Check Studyinfo.fi and the programme.",
+      "cycle": "annual"
+    },
+    "important": [
+      "There is NO single Finnish government scholarship for bachelor's/master's — funding comes from individual universities.",
+      "These scholarships usually cover tuition only, not living costs.",
+      "Only non-EU/EEA fee-paying students need them (EU/EEA study for free).",
+      "Competitive and programme-specific — always check each programme."
+    ],
+    "competition": "Competitive; awarded by each university. No central acceptance rate is published.",
+    "country_pathway": "Finland",
+    "university_ids": [],
+    "universities_note": "Offered by individual Finnish universities — explore them and check each programme's scholarship option on Studyinfo.fi."
+  },
+  {
+    "id": "government-of-ireland-international-scholarships",
+    "key": "government-of-ireland-international-scholarships",
+    "name": "Government of Ireland International Education Scholarship",
+    "provider": "Higher Education Authority (HEA), Government of Ireland",
+    "country": "Ireland",
+    "type": "government",
+    "scope": "curated",
+    "tagline": "A one-year award — €10,000 plus a full tuition-fee waiver — for high-calibre non-EU/EEA postgraduate students in Ireland.",
+    "verification": {
+      "sources": [
+        "https://hea.ie/policy/internationalisation/goi-ies/",
+        "https://hea.ie/assets/uploads/2026/01/2026-GOI-IES-Call-Document.pdf"
+      ],
+      "date": "2026-09-01",
+      "status": "verified"
+    },
+    "degree_levels": ["Master's", "Postgraduate diploma", "Doctoral (PhD)"],
+    "fields": "All disciplines (NFQ level 9 or 10).",
+    "funding": {
+      "tuition": { "level": "full", "text": "The host institution gives a full tuition-fee waiver for the scholarship year." },
+      "stipend": { "level": "partial", "text": "€10,000 stipend for one year of full-time study." }
+    },
+    "duration": "One year of full-time study at NFQ level 9 or 10.",
+    "eligibility": {
+      "countries_note": "For students whose country of origin is OUTSIDE the EU/EEA, Switzerland and the UK. Russian and Belarusian nationals are NOT eligible.",
+      "academic": "High-calibre applicants — only 60 scholarships are awarded each year.",
+      "age": "No age limit stated.",
+      "language": "As required by the programme.",
+      "notes": "You must already hold a conditional or final offer of admission to an eligible Irish institution when you apply. Previous GOI-IES holders can't reapply."
+    },
+    "requirements": [
+      "A conditional or final offer of admission to an eligible Irish higher-education institution",
+      "A GOI-IES application to the HEA (see the annual call document)",
+      "Academic records and the documents listed in the current call"
+    ],
+    "application": {
+      "route": "Apply to the HEA once you already have an admission offer — this is separate from your university application.",
+      "steps": [
+        "Apply for and secure an offer at an eligible Irish institution.",
+        "Prepare your GOI-IES application per the current HEA call document.",
+        "Submit to the HEA before the annual deadline.",
+        "The HEA selects the 60 awardees."
+      ],
+      "portal": "https://hea.ie/policy/internationalisation/goi-ies/",
+      "deadline": "",
+      "deadline_note": "Set annually by the HEA — check hea.ie for the current call's opening and deadline.",
+      "cycle": "annual"
+    },
+    "important": [
+      "Only for students domiciled outside the EU/EEA, Switzerland and the UK; Russian and Belarusian nationals are excluded.",
+      "You must already have an admission offer before you apply.",
+      "Only 60 scholarships a year — highly competitive.",
+      "Covers one year of study only (NFQ level 9 or 10)."
+    ],
+    "competition": "Highly competitive — 60 awards each year. No official acceptance rate is published.",
+    "country_pathway": "Ireland",
+    "university_ids": [],
+    "universities_note": "Held at eligible Irish higher-education institutions — explore Irish universities and secure an admission offer first."
   }
 ]
