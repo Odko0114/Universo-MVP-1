@@ -28,6 +28,16 @@
     0 1px 2px rgba(11, 31, 58, 0.06), 0 1px 3px rgba(11, 31, 58, 0.08);
   --shadow-md: 0 6px 20px rgba(11, 31, 58, 0.1);
 
+  /* Motion tokens — one source so components don't each invent their own.
+     Motion must explain a change, acknowledge an action, or guide attention;
+     nothing over --dur-3, nothing ambient/continuous. */
+  --dur-1: 120ms; /* micro-feedback (hover, press) */
+  --dur-2: 200ms;
+  --dur-3: 320ms; /* entrances */
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --rise: 12px; /* entrance travel distance */
+  --stagger: 40ms; /* per-card cascade */
+
   /* Type scale. Steps were chosen to hug the sizes already in use, so adopting
      them moved no text by more than ~5%. Pick the nearest step for new work
      rather than inventing a value — the 36 ad-hoc sizes this replaced were how
@@ -314,6 +324,96 @@ img {
   color: #fff;
 }
 
+/* One "What are you looking for?" panel — collapses the old stack of loose
+   controls (scope + niche + search + filters) into a single scannable unit. */
+.intent {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 18px 18px 14px;
+  margin-bottom: 18px;
+}
+.intent__title {
+  margin: 0 0 12px;
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.intent .searchbar {
+  margin-bottom: 12px;
+}
+.intent .filters {
+  margin-bottom: 0;
+}
+/* Quiet options row (scope + niche preset) — demoted below the primary inputs
+   so verified-only, the default, no longer competes for attention at the top. */
+.intent__opts {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.intent__opts-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink-faint);
+}
+.intent__opts .scope-row {
+  margin-bottom: 0;
+}
+.niche-btn--preset {
+  display: inline-flex;
+  align-items: center;
+  width: auto;
+  margin-bottom: 0;
+  padding: 7px 14px;
+  font-size: var(--text-sm);
+}
+.preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex-basis: 100%;
+}
+
+/* Set-up-matching nudge — shown to a logged-in student with no profile yet, who
+   otherwise gets no fit ranking and no reason to know it exists. */
+.match-nudge {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: var(--teal-050);
+  border: 1px solid #bfe9e2;
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-bottom: 18px;
+}
+.match-nudge__body {
+  flex: 1;
+  min-width: 220px;
+}
+.match-nudge__title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 4px;
+  font-weight: 700;
+  color: var(--teal-600);
+}
+.match-nudge__sub {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+}
+.match-nudge .btn {
+  white-space: nowrap;
+}
+
 /* Verified-vs-directory scope toggle (sits above the niche button).
    Styled as ONE segmented control, not two pills: it's a binary either/or, and
    as two separate full-width pills it read as two competing CTAs — worse, it
@@ -544,8 +644,8 @@ img {
   display: flex;
   flex-direction: column;
   transition:
-    transform 0.12s ease,
-    box-shadow 0.12s ease;
+    transform var(--dur-1) var(--ease-out),
+    box-shadow var(--dur-1) var(--ease-out);
 }
 .uni-card:hover {
   transform: translateY(-2px);
@@ -581,10 +681,10 @@ img {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 .uni-card__body {
-  padding: 12px 16px 16px;
+  padding: 14px 18px 18px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 11px;
   flex: 1;
 }
 .uni-card__title {
@@ -657,6 +757,35 @@ img {
   height: 13px;
 }
 
+/* Calm the meta chips on DISCOVER cards only — one neutral pill so the fit badge
+   is the single bold accent. Scoped so the coloured variants still carry meaning
+   elsewhere (Dream Plan "next", "scholarship needed", profile fields of study). */
+.uni-card__meta .chip {
+  background: #eef2f7;
+  color: var(--ink-soft);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.uni-card__meta .chip .icon {
+  width: 13px;
+  height: 13px;
+  opacity: 0.7;
+}
+.uni-card__meta .chip--gold {
+  background: #eef2f7;
+  color: var(--ink);
+  font-weight: 700;
+}
+.uni-card__meta .chip--rank {
+  background: #eef2f7;
+  color: var(--ink-soft);
+}
+.uni-card__meta .chip--deadline {
+  background: #eef2f7;
+  color: var(--ink-soft);
+}
+
 /* Fit badge — the matcher's 0–100 score made visible. A FIT read, not
    admission odds; the label spells that out ("how well it fits you"). */
 .uni-card__fit {
@@ -682,20 +811,29 @@ img {
   font-variant-numeric: tabular-nums;
 }
 .uni-card__fit-label {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.12;
   font-weight: 700;
   font-size: var(--text-sm);
-  color: var(--teal-600);
+  letter-spacing: -0.01em;
 }
-.uni-card__fit-sub {
-  font-weight: 500;
-  font-size: var(--text-3xs);
-  color: var(--ink-faint);
+/* Colour-coded by band so the quality reads at a glance, before the number:
+   green = strong, amber = good, slate = partial. */
+.fit--strong {
+  background: #e4f5ea;
+}
+.fit--strong .uni-card__fit-score {
+  background: #16a34a;
+}
+.fit--strong .uni-card__fit-label {
+  color: #15803d;
+}
+.fit--good {
+  background: #fbf1d9;
 }
 .fit--good .uni-card__fit-score {
-  background: #4bbfb2;
+  background: #cf9a1c;
+}
+.fit--good .uni-card__fit-label {
+  color: #916609;
 }
 .fit--partial {
   background: #eef1f6;
@@ -3896,15 +4034,17 @@ a.ov-deadline:hover strong {
 }
 
 /* Skeletons already shimmer; content arriving with a hard swap after that is
-   the jarring part. */
+   the jarring part. Result cards fade+rise in — staggered per card (delay set in
+   loadResults) so a filter/page change visibly reshapes the list. Tokenized
+   entrance; disabled under reduced-motion below. */
 @keyframes fade-in-up {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(var(--rise));
   }
 }
 .grid .uni-card {
-  animation: fade-in-up 0.28s ease both;
+  animation: fade-in-up var(--dur-3) var(--ease-out) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
