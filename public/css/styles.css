@@ -791,31 +791,37 @@ img {
 .uni-card__fit {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   /* Right-aligned so it clears the university logo, which is pulled up into the
-     top-left of the body (margin-top:-32px) and would otherwise sit under it. */
+     top-left of the body (margin-top:-32px) and would otherwise sit under it.
+     min-width keeps every badge the same size across bands so, right-aligned,
+     their edges line up card-to-card. */
   align-self: flex-end;
-  padding: 4px 13px 4px 4px;
+  min-width: 8.5rem;
+  padding: 3px 14px 3px 3px;
   border-radius: 999px;
   background: var(--teal-050);
+  box-shadow: var(--shadow-sm);
 }
 .uni-card__fit-score {
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   background: var(--teal-500);
   color: #fff;
-  font-weight: 800;
-  font-size: 0.82rem;
+  font-weight: 700;
+  font-size: 0.8rem;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
 }
 .uni-card__fit-label {
-  font-weight: 700;
+  font-weight: 600;
   font-size: var(--text-sm);
-  letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 /* Colour-coded by band so the quality reads at a glance, before the number:
    green = strong, amber = good, slate = partial. */
