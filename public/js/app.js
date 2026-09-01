@@ -648,8 +648,6 @@
     // exclusive and also light up if the student sets the same filters by hand.
     const PRESETS = [
       { id: "eu-affordable", label: "🇪🇺 Affordable, English-taught, EU", region: "EU", language: "English", maxTuition: "6000" },
-      { id: "english-eu", label: "🌍 English-taught in Europe", region: "EU", language: "English", maxTuition: "" },
-      { id: "low-tuition", label: "💶 Low tuition · ≤ €3,000", region: "", language: "", maxTuition: "3000" },
     ];
     const presetActive = (p) =>
       d.region === p.region && d.language === p.language && d.maxTuition === p.maxTuition;
