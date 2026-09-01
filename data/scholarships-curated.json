@@ -622,5 +622,248 @@
     "country_pathway": "Belgium",
     "university_ids": [],
     "universities_note": "Tenable at Flemish universities offering the eligible ICP master's programmes — explore Belgian universities and see the official programme list."
+  },
+  {
+    "id": "chevening-scholarships",
+    "key": "chevening-scholarships",
+    "name": "Chevening Scholarship",
+    "provider": "UK Government (Foreign, Commonwealth & Development Office)",
+    "country": "United Kingdom",
+    "type": "government",
+    "scope": "curated",
+    "tagline": "The UK government's fully-funded one-year master's scholarship for emerging leaders — for eligible countries, with work experience and a return-home commitment.",
+    "verification": {
+      "sources": [
+        "https://www.chevening.org/scholarships/",
+        "https://www.chevening.org/scholarships/who-can-apply/"
+      ],
+      "date": "2026-09-01",
+      "status": "verified"
+    },
+    "degree_levels": ["Master's (one-year taught)"],
+    "fields": "Almost any subject, at any UK university, for a one-year taught master's.",
+    "funding": {
+      "tuition": { "level": "full", "text": "Full tuition fees." },
+      "stipend": { "level": "full", "text": "A monthly living allowance for the duration of the course." },
+      "travel": { "level": "full", "text": "Return economy airfare to the UK, plus arrival and departure allowances." }
+    },
+    "duration": "One year (a taught master's).",
+    "eligibility": {
+      "countries_note": "For citizens of a Chevening-eligible country or territory (over 160 — but not every country). Check the official eligibility list for yours.",
+      "academic": "An undergraduate degree good enough to enter a UK master's.",
+      "age": "No age limit.",
+      "language": "Meet UK universities' English requirements (by the later English deadline).",
+      "notes": "You must commit to returning to your home country for at least two years after the scholarship ends."
+    },
+    "requirements": [
+      "An undergraduate degree",
+      "At least 2 years (2,800 hours) of work experience",
+      "Three eligible UK one-year master's course choices",
+      "English language requirement (met by a later deadline)",
+      "References and essays via the Chevening application"
+    ],
+    "application": {
+      "route": "Apply directly to Chevening online — and separately apply to UK universities yourself.",
+      "steps": [
+        "Check your country is Chevening-eligible and you meet the work-experience rule.",
+        "Apply on the Chevening online system and choose three eligible courses.",
+        "If shortlisted, interview at the local British embassy/high commission.",
+        "Secure an unconditional university offer by the set deadline."
+      ],
+      "portal": "https://www.chevening.org/scholarships/",
+      "deadline": "",
+      "deadline_note": "Applications usually open in August and close in early November each year. Check chevening.org for the current cycle.",
+      "cycle": "annual"
+    },
+    "important": [
+      "Only citizens of Chevening-eligible countries can apply — check the official list.",
+      "You need at least 2 years of work experience.",
+      "You must commit to returning home for 2 years afterwards.",
+      "It funds a one-year master's only.",
+      "Prestigious and highly competitive."
+    ],
+    "competition": "Highly competitive — a selective global leadership programme. No official acceptance rate is published.",
+    "country_pathway": "United Kingdom",
+    "university_ids": [],
+    "universities_note": "Tenable at UK universities — explore UK universities and pick eligible one-year master's courses."
+  },
+  {
+    "id": "swiss-government-excellence-scholarships",
+    "key": "swiss-government-excellence-scholarships",
+    "name": "Swiss Government Excellence Scholarships",
+    "provider": "Swiss Confederation (Federal Commission for Scholarships / SBFI)",
+    "country": "Switzerland",
+    "type": "government",
+    "scope": "curated",
+    "tagline": "Switzerland's scholarships for early-career RESEARCHERS (research fellowships and PhDs) — not for a taught master's degree.",
+    "verification": {
+      "sources": [
+        "https://www.sbfi.admin.ch/en/swiss-government-excellence-scholarships-at-a-glance",
+        "https://www.sbfi.admin.ch/sbfi/en/home/education/scholarships-and-grants/swiss-government-excellence-scholarships.html"
+      ],
+      "date": "2026-09-01",
+      "status": "verified"
+    },
+    "degree_levels": ["Doctoral (PhD)", "Research fellowship (during a doctorate)"],
+    "fields": "Any discipline — for research at a Swiss university, ETH Zurich / EPFL, or an ETH-Domain research institute.",
+    "funding": {
+      "stipend": { "level": "partial", "text": "A monthly contribution of CHF 2,450 (from January 2026)." },
+      "accommodation": { "level": "partial", "text": "A one-off housing allowance (CHF 600)." },
+      "insurance": { "level": "full", "text": "Health and accident insurance is paid by the federal government." }
+    },
+    "duration": "Research fellowship: one year (as part of doctoral studies). PhD scholarship: up to 36 months. (Postdoctoral scholarships are discontinued from 2027/28.)",
+    "eligibility": {
+      "countries_note": "Open to applicants from around 183 countries, but the available types and deadlines vary by country (check the A–Z country list). Mainly for early-career researchers who have ALREADY completed a Master's — this is NOT for a taught master's degree.",
+      "academic": "A completed Master's (by the stated cut-off) and a strong research record.",
+      "age": "You must be born after 31 December 1991.",
+      "language": "As required by the host institution/project (English, German or French).",
+      "notes": "You need a Swiss host professor/supervisor. Priority goes to those who haven't previously studied or researched in Switzerland."
+    },
+    "requirements": [
+      "A completed Master's degree",
+      "A Swiss host institution and a supervisor's acceptance",
+      "A research proposal",
+      "Academic references",
+      "The documents listed in your country-specific call"
+    ],
+    "application": {
+      "route": "Apply through your home country's route (often via the Swiss embassy) to the Federal Commission for Scholarships — the process is set per country.",
+      "steps": [
+        "Find a Swiss host supervisor and agree a research plan.",
+        "Check your country's call, opening and deadline on the SBFI country page.",
+        "Submit your application before your country's deadline.",
+        "Selection by the Federal Commission for Scholarships."
+      ],
+      "portal": "https://www.sbfi.admin.ch/sbfi/en/home/education/scholarships-and-grants/swiss-government-excellence-scholarships.html",
+      "deadline": "",
+      "deadline_note": "Deadlines are set per country — the call opens and closes on different dates depending on your country. Check the SBFI country page for yours.",
+      "cycle": "annual"
+    },
+    "important": [
+      "This is a RESEARCH scholarship (research fellowship / PhD) — NOT for a taught master's degree.",
+      "You need a completed Master's and a Swiss host supervisor.",
+      "Age limit: you must be born after 31 December 1991.",
+      "Deadlines and available scholarship types depend on your country.",
+      "Postdoctoral scholarships are being discontinued from 2027/28."
+    ],
+    "competition": "Highly competitive and selective. No official acceptance rate is published.",
+    "country_pathway": "Switzerland",
+    "university_ids": [],
+    "universities_note": "For research at Swiss universities, ETH/EPFL or ETH-Domain institutes — explore Swiss universities to find a host."
+  },
+  {
+    "id": "invest-your-talent-in-italy",
+    "key": "invest-your-talent-in-italy",
+    "name": "Invest Your Talent in Italy",
+    "provider": "Italian Ministry of Foreign Affairs and International Cooperation",
+    "country": "Italy",
+    "type": "government",
+    "scope": "curated",
+    "tagline": "An Italian government master's scholarship combining study with a company internship — for citizens of a specific list of countries.",
+    "verification": {
+      "sources": ["https://investyourtalentapplication.esteri.it/SitoIYT/EN/courses"],
+      "date": "2026-09-01",
+      "status": "verified"
+    },
+    "degree_levels": ["Master's"],
+    "fields": "Master's in engineering, advanced technologies, architecture, design, and economics/management, at participating Italian universities — including a mandatory 3–4 month company internship.",
+    "funding": {
+      "tuition": { "level": "full", "text": "Tuition-fee waiver." },
+      "stipend": { "level": "partial", "text": "A monthly allowance, paid quarterly." }
+    },
+    "duration": "The length of the master's programme (with an internship component).",
+    "eligibility": {
+      "countries_note": "RESTRICTED to citizens of a specific list of eligible countries (e.g. India, China, Vietnam, Türkiye, Egypt, Brazil, Kazakhstan and others) — NOT open to all nationalities. Check the official Invest Your Talent portal for the current list.",
+      "academic": "A bachelor's degree (or equivalent).",
+      "age": "For new applicants, born on or after 1 January 1999.",
+      "language": "An English certification (or in the process of obtaining one).",
+      "notes": "You apply to ONE eligible master's programme on the official portal — one application per candidate."
+    },
+    "requirements": [
+      "Bachelor's degree",
+      "English language certificate",
+      "Application via the official IYT portal for one master's programme",
+      "Programme-specific documents"
+    ],
+    "application": {
+      "route": "Apply on the official Invest Your Talent portal for one participating master's programme.",
+      "steps": [
+        "Check your country is on the eligible list and pick one eligible master's programme.",
+        "Apply on the official IYT portal (one application only).",
+        "Selection by the programme / Ministry.",
+        "Includes a mandatory 3–4 month internship at an Italian company."
+      ],
+      "portal": "https://investyourtalentapplication.esteri.it/SitoIYT/EN/courses",
+      "deadline": "",
+      "deadline_note": "Annual cycle, typically opening late in the year. Check the official portal for the current dates.",
+      "cycle": "annual"
+    },
+    "important": [
+      "Only citizens of the specific eligible countries can apply — check the official portal list.",
+      "There's an age limit (born on or after 1 January 1999 for new applicants).",
+      "It covers specific fields and specific universities, and includes a mandatory internship.",
+      "One application per candidate."
+    ],
+    "competition": "Competitive. No official acceptance rate is published.",
+    "country_pathway": "Italy",
+    "university_ids": [],
+    "universities_note": "At participating Italian universities offering the eligible master's programmes — explore Italian universities and check the official IYT course list."
+  },
+  {
+    "id": "danish-government-scholarships",
+    "key": "danish-government-scholarships",
+    "name": "Danish Government Scholarships",
+    "provider": "Danish Ministry of Higher Education and Science (administered by the universities)",
+    "country": "Denmark",
+    "type": "government",
+    "scope": "curated",
+    "tagline": "University-administered tuition waivers (and sometimes living grants) for non-EU/EEA students in Denmark.",
+    "verification": {
+      "sources": ["https://studyindenmark.dk/study-options/scholarships"],
+      "date": "2026-09-01",
+      "status": "verified"
+    },
+    "degree_levels": ["Bachelor's", "Master's"],
+    "fields": "Full-degree programmes at Danish universities.",
+    "funding": {
+      "tuition": { "level": "partial", "text": "A full or partial tuition-fee waiver (varies by university)." },
+      "stipend": { "level": "partial", "text": "May include a grant towards living costs (e.g. at the University of Southern Denmark, about US$950/month) — varies by university." }
+    },
+    "duration": "Varies by university and programme.",
+    "eligibility": {
+      "countries_note": "For non-EU/EEA and Swiss students who are required to pay tuition. EU/EEA students study for free and do not need it.",
+      "academic": "Awarded to the best-qualified admitted applicants.",
+      "age": "No general age limit.",
+      "language": "As required by the programme.",
+      "notes": "Administered by each university — at many, you are automatically considered when you apply for admission (no separate application)."
+    },
+    "requirements": [
+      "An admission application to a Danish university",
+      "Meet the university's requirements",
+      "Usually no separate scholarship application — check the university"
+    ],
+    "application": {
+      "route": "Apply for admission to a Danish university — the university selects scholarship recipients (often automatically among eligible applicants).",
+      "steps": [
+        "Choose a full-degree programme at a Danish university.",
+        "Apply for admission before the university's deadline.",
+        "Eligible admitted applicants are considered for the scholarship.",
+        "The university selects the recipients."
+      ],
+      "portal": "https://studyindenmark.dk/study-options/scholarships",
+      "deadline": "",
+      "deadline_note": "Tied to each university's admission deadlines — check your university.",
+      "cycle": "annual"
+    },
+    "important": [
+      "Only non-EU/EEA (and Swiss) fee-paying students are eligible.",
+      "Administered per university — amounts, and whether a living grant is included, vary.",
+      "Limited numbers each year; awarded to the best-qualified.",
+      "Often no separate application — check your university's admission details."
+    ],
+    "competition": "Competitive; a limited number per university. No central acceptance rate is published.",
+    "country_pathway": "Denmark",
+    "university_ids": [],
+    "universities_note": "Administered by Danish universities — explore them and check each one's admission and scholarship details."
   }
 ]
