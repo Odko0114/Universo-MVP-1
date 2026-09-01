@@ -28,6 +28,16 @@
     0 1px 2px rgba(11, 31, 58, 0.06), 0 1px 3px rgba(11, 31, 58, 0.08);
   --shadow-md: 0 6px 20px rgba(11, 31, 58, 0.1);
 
+  /* Motion tokens — one source so components don't each invent their own.
+     Motion must explain a change, acknowledge an action, or guide attention;
+     nothing over --dur-3, nothing ambient/continuous. */
+  --dur-1: 120ms; /* micro-feedback (hover, press) */
+  --dur-2: 200ms;
+  --dur-3: 320ms; /* entrances */
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --rise: 12px; /* entrance travel distance */
+  --stagger: 40ms; /* per-card cascade */
+
   /* Type scale. Steps were chosen to hug the sizes already in use, so adopting
      them moved no text by more than ~5%. Pick the nearest step for new work
      rather than inventing a value — the 36 ad-hoc sizes this replaced were how
@@ -634,8 +644,8 @@ img {
   display: flex;
   flex-direction: column;
   transition:
-    transform 0.12s ease,
-    box-shadow 0.12s ease;
+    transform var(--dur-1) var(--ease-out),
+    box-shadow var(--dur-1) var(--ease-out);
 }
 .uni-card:hover {
   transform: translateY(-2px);
@@ -4024,15 +4034,17 @@ a.ov-deadline:hover strong {
 }
 
 /* Skeletons already shimmer; content arriving with a hard swap after that is
-   the jarring part. */
+   the jarring part. Result cards fade+rise in — staggered per card (delay set in
+   loadResults) so a filter/page change visibly reshapes the list. Tokenized
+   entrance; disabled under reduced-motion below. */
 @keyframes fade-in-up {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(var(--rise));
   }
 }
 .grid .uni-card {
-  animation: fade-in-up 0.28s ease both;
+  animation: fade-in-up var(--dur-3) var(--ease-out) both;
 }
 
 @media (prefers-reduced-motion: reduce) {

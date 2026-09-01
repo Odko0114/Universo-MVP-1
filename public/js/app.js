@@ -1091,6 +1091,13 @@
             secondary:
               '<button class="btn btn--primary" id="empty-clear">Clear all filters</button>',
           })}</div>`;
+      // Stagger the entrance so the list reshapes visibly on a filter/page
+      // change — capped so 48 cards don't crawl in (CSS gates it on
+      // prefers-reduced-motion; the delay is inert when the animation is off).
+      const cards = box.querySelectorAll(".uni-card");
+      cards.forEach((el, i) => {
+        el.style.animationDelay = Math.min(i, 7) * 40 + "ms";
+      });
       const emptyClear = document.getElementById("empty-clear");
       if (emptyClear)
         emptyClear.addEventListener("click", () => {
