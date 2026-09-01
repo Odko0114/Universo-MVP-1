@@ -371,12 +371,16 @@
     });
 
   // ---- History-API router -------------------------------------------------
+  // Set once we've pushed at least one in-app entry, so a "back" control knows
+  // there's an entry behind us to return to (vs a deep-link first load).
+  let inAppNav = false;
   function navigate(pathname, replace) {
     if (pathname !== location.pathname) {
       // Before the new entry exists — a replace overwrites this one, so there
       // is nothing about it worth keeping.
       if (!replace) {
         rememberScroll();
+        inAppNav = true;
       }
       history[replace ? "replaceState" : "pushState"]({}, "", pathname);
     }
@@ -407,6 +411,14 @@
       return;
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
     e.preventDefault();
+    // A "back" control (e.g. the profile's "← Back to discover") returns to the
+    // entry we came from — which carries the remembered scroll offset — instead
+    // of pushing a fresh page that starts at the top. Falls back to a normal
+    // navigation when the profile was a deep-link first load (nothing behind us).
+    if (a.hasAttribute("data-back") && inAppNav) {
+      history.back();
+      return;
+    }
     navigate(href);
   });
   window.addEventListener("popstate", render);
@@ -2483,7 +2495,7 @@
     try {
       ({ university: u } = await API.university(id));
     } catch (e) {
-      view.innerHTML = `<a class="back-link" href="/discover">← Back</a>${emptyState({ iconName: "alert", title: "University not found", sub: e.message, ctaHref: "/discover", ctaLabel: "Back to discover" })}`;
+      view.innerHTML = `<a class="back-link" href="/discover" data-back>← Back</a>${emptyState({ iconName: "alert", title: "University not found", sub: e.message, ctaHref: "/discover", ctaLabel: "Back to discover" })}`;
       return;
     }
 
@@ -2589,7 +2601,7 @@
     }[src];
 
     view.innerHTML = `
-      <a class="back-link" href="/discover">← Back to discover</a>
+      <a class="back-link" href="/discover" data-back>← Back to discover</a>
       <div class="profile__cover" id="cover" style="background:${gradient(u.id)}">
         <div class="profile__headline">
           ${logoHtml(u, "logo--profile")}
@@ -3464,12 +3476,17 @@
     };
     const passive = { passive: true };
     // If the student is already scrolling, their input wins — being yanked back
-    // to a remembered offset mid-gesture is worse than not restoring.
-    window.addEventListener("wheel", stop, passive);
+    // to a remembered offset mid-gesture is worse than not restoring. But only
+    // VERTICAL wheel counts: a trackpad swipe-back is horizontal wheel, and
+    // letting it cancel restoration is exactly how Back lands at the top.
+    const onWheel = (e) => {
+      if (Math.abs(e.deltaY) >= Math.abs(e.deltaX)) stop();
+    };
+    window.addEventListener("wheel", onWheel, passive);
     window.addEventListener("touchstart", stop, passive);
     window.addEventListener("keydown", stop);
     const release = () => {
-      window.removeEventListener("wheel", stop, passive);
+      window.removeEventListener("wheel", onWheel, passive);
       window.removeEventListener("touchstart", stop, passive);
       window.removeEventListener("keydown", stop);
     };
