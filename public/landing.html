@@ -1281,6 +1281,108 @@
           gap: 14px;
         }
       }
+
+      /* Scholarship funding mock (Fund feature) */
+      .sch-mock {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .sch-mock__top {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: var(--s-1);
+        font-weight: 600;
+        color: var(--teal-600);
+        letter-spacing: 0.02em;
+      }
+      .sch-mock__top svg {
+        width: 15px;
+        height: 15px;
+        flex: none;
+      }
+      .sch-mock__name {
+        font-family: var(--serif);
+        font-size: var(--s2);
+        line-height: 1.15;
+        color: var(--ink);
+      }
+      .sch-mock__chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .sch-mock__chips span {
+        font-size: 12px;
+        font-weight: 600;
+        padding: 3px 9px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.05);
+        color: var(--ink-soft);
+      }
+      .sch-mock__chips .is-full {
+        background: rgba(16, 122, 90, 0.12);
+        color: #0b7355;
+      }
+      .sch-mock__fund {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+      }
+      .sch-mock__fund > div {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 13px;
+        background: var(--surface);
+        font-size: var(--s-1);
+      }
+      .sch-mock__fund span {
+        color: var(--ink-soft);
+      }
+      .sch-mock__fund b {
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .sch-mock__fund b.ok {
+        color: #0b7355;
+      }
+      .sch-mock__fund b.ok::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #0b7355;
+      }
+      .sch-mock__unis {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding-top: 2px;
+        font-size: var(--s-1);
+        font-weight: 600;
+        color: var(--teal-600);
+      }
+      .sch-mock__unis .dots {
+        display: inline-flex;
+      }
+      .sch-mock__unis .dots i {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        border: 2px solid var(--surface);
+        margin-left: -7px;
+        background: linear-gradient(135deg, var(--teal-500), var(--navy-800));
+      }
+      .sch-mock__unis .dots i:first-child {
+        margin-left: 0;
+      }
     </style>
   </head>
   <body>
@@ -1308,15 +1410,15 @@
         <div class="wrap hero__grid">
           <div>
             <p class="eyebrow hero__tag reveal">
-              The next Facebook — for education
+              For international students
             </p>
             <h1 class="reveal">
-              Find the university that fits <span class="em">you</span>
+              Find where you can study — and <span class="em">how to fund it</span>
             </h1>
             <p class="hero__lede reveal">
-              See the European universities that fit you, compare them honestly,
-              and build a plan to actually get in. Free — no account needed to
-              start.
+              Discover European universities that fit you, find the government
+              scholarships that could pay for them, and build a plan to actually
+              get in. Free — no account needed to start.
             </p>
             <div class="hero__ctas reveal">
               <a class="btn btn--gold btn--lg" href="/account?mode=register"
@@ -1466,38 +1568,26 @@
             </div>
             <div class="step">
               <span class="step__n">2</span>
-              <h3>Compare</h3>
+              <h3>Fund</h3>
               <p>
-                Line up your shortlist side by side — tuition, deadlines,
-                teaching language — and decide with the facts in front of you.
+                See the government scholarships that could pay for it — what
+                each one covers, and the universities you can use it at.
               </p>
               <div class="preview" aria-hidden="true">
-                <table class="pv-tbl">
-                  <thead>
-                    <tr>
-                      <th></th>
-                      <th>Aalto</th>
-                      <th>TUM</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <th>Tuition · non-EU</th>
-                      <td>€15,000</td>
-                      <td>€12,000</td>
-                    </tr>
-                    <tr>
-                      <th>Language</th>
-                      <td>English</td>
-                      <td>Eng · De</td>
-                    </tr>
-                    <tr>
-                      <th>Deadline</th>
-                      <td>January</td>
-                      <td>May</td>
-                    </tr>
-                  </tbody>
-                </table>
+                <div class="pv-row">
+                  <span class="pv-dot"></span>
+                  <div>
+                    <div class="pv-name">Stipendium Hungaricum</div>
+                    <div class="pv-why">Fully funded · Hungary</div>
+                  </div>
+                </div>
+                <div class="pv-row">
+                  <span class="pv-dot"></span>
+                  <div>
+                    <div class="pv-name">Erasmus Mundus</div>
+                    <div class="pv-why">Tuition + stipend · EU-wide</div>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="step">
@@ -1523,6 +1613,88 @@
                   ><span class="pv-plan__pct">40%</span>
                 </div>
                 <div class="pv-bar"><i style="width: 40%"></i></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FEATURE: FUND (the funding pillar) -->
+      <section class="sec">
+        <div class="wrap feat feat--rev">
+          <div class="feat__copy reveal">
+            <p class="eyebrow">Find how to fund it</p>
+            <h2>The scholarship, and where it can take you</h2>
+            <p>
+              For most students, funding decides everything. We connect real
+              government scholarships to the specific universities you can
+              actually use them at — with what each one covers, spelled out
+              plainly and checked against the official source.
+            </p>
+            <div class="feat__list">
+              <div class="feat__li">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  aria-hidden="true"
+                >
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+                What it covers — tuition, stipend, housing — no guessing
+              </div>
+              <div class="feat__li">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  aria-hidden="true"
+                >
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+                The universities it's actually good at — one tap away
+              </div>
+              <div class="feat__li">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  aria-hidden="true"
+                >
+                  <path d="M20 6 9 17l-5-5" />
+                </svg>
+                Every figure links back to the official page — nothing invented
+              </div>
+            </div>
+          </div>
+          <div class="feat__visual reveal">
+            <div class="glass">
+              <div class="sch-mock" aria-hidden="true">
+                <div class="sch-mock__top">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                  Verified · Hungary · Government
+                </div>
+                <div class="sch-mock__name">Stipendium Hungaricum</div>
+                <div class="sch-mock__chips">
+                  <span class="is-full">Fully funded</span>
+                  <span>Bachelor's</span>
+                  <span>Master's</span>
+                  <span>PhD</span>
+                </div>
+                <div class="sch-mock__fund">
+                  <div><span>Tuition</span><b class="ok">Covered</b></div>
+                  <div><span>Monthly stipend</span><b class="ok">Included</b></div>
+                  <div><span>Housing</span><b class="ok">Covered</b></div>
+                </div>
+                <div class="sch-mock__unis">
+                  <span class="dots"><i></i><i></i><i></i></span>
+                  Eligible at universities across Hungary →
+                </div>
               </div>
             </div>
           </div>
