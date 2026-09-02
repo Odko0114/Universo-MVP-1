@@ -30,9 +30,12 @@
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "cobe": "^2.0.1",
     "compression": "^1.8.1",
     "express": "^4.19.2",
-    "jsonwebtoken": "^9.0.2"
+    "gsap": "^3.15.0",
+    "jsonwebtoken": "^9.0.2",
+    "three": "^0.185.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.62.1",

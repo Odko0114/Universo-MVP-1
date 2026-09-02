@@ -264,6 +264,170 @@
         }
       }
 
+      /* ---- Cinematic opening: the world (scroll flight) ---- */
+      .world {
+        position: relative;
+        color: #fff;
+        isolation: isolate;
+        /* Navy (matches the hero) so when the space stage dissolves at the end
+           of the flight, it bleeds seamlessly into the hero below — no hard cut. */
+        background: var(--navy-900);
+      }
+      /* Tall scroll track only when the flight is wired up (JS adds .world--fly).
+         Without it (reduced motion / no WebGL) it's a normal one-screen section. */
+      .world--fly {
+        height: 380vh;
+      }
+      .world:not(.world--fly) {
+        min-height: 100vh;
+        min-height: 100svh;
+      }
+      .world__stage {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        height: 100svh;
+        overflow: hidden;
+        display: flex;
+        background: radial-gradient(
+          120% 90% at 50% 38%,
+          #0e1a36,
+          #070b18 58%,
+          #03040a 100%
+        );
+      }
+      .world__canvas {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+        opacity: 0;
+        transition: opacity 1.6s ease;
+        display: block;
+      }
+      .world__scrim {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        background: linear-gradient(
+          to bottom,
+          rgba(3, 4, 10, 0.5) 0%,
+          transparent 20%,
+          transparent 52%,
+          rgba(3, 4, 10, 0.88) 100%
+        );
+      }
+      .world__content {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        width: 100%;
+        min-height: 100vh;
+        min-height: 100svh;
+        padding: 112px 24px 44px;
+      }
+      .world__brand {
+        margin: 0 0 auto;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        color: rgba(255, 255, 255, 0.92);
+      }
+      .world__mark {
+        width: 34px;
+        height: 34px;
+        color: #fff;
+        filter: drop-shadow(0 0 14px rgba(90, 180, 255, 0.45));
+      }
+      .world__brand span {
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: 0.4em;
+        text-indent: 0.4em;
+      }
+      .world__headline {
+        margin: 0 0 14px;
+        max-width: 17ch;
+        font-family: var(--serif);
+        font-weight: 500;
+        font-size: clamp(1.95rem, 1.2rem + 3.4vw, 3.6rem);
+        line-height: 1.12;
+        letter-spacing: -0.015em;
+        text-wrap: balance;
+        color: #fff;
+      }
+      .world__sub {
+        margin: 0 0 30px;
+        font-size: clamp(0.95rem, 0.9rem + 0.4vw, 1.15rem);
+        color: rgba(255, 255, 255, 0.72);
+      }
+      .world__cue {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.58);
+        text-decoration: none;
+      }
+      .world__cue svg {
+        animation: worldBob 2.2s ease-in-out infinite;
+      }
+      @keyframes worldBob {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(5px);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .world__cue svg {
+          animation: none;
+        }
+      }
+      /* Arrival message — fades in as the camera reaches Europe. */
+      .world__arrival {
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 24px;
+        opacity: 0;
+        pointer-events: none;
+      }
+      .world__eyebrow {
+        margin: 0 0 12px;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.34em;
+        text-indent: 0.34em;
+        color: var(--teal-500);
+      }
+      .world__arrival-h {
+        margin: 0;
+        max-width: 20ch;
+        font-family: var(--serif);
+        font-weight: 500;
+        font-size: clamp(1.8rem, 1.1rem + 3.2vw, 3.4rem);
+        line-height: 1.14;
+        letter-spacing: -0.015em;
+        color: #fff;
+      }
+
       /* ---- Hero ---- */
       .hero {
         position: relative;
@@ -298,6 +462,31 @@
         grid-template-columns: 1fr 1fr;
         gap: 46px;
         align-items: center;
+        position: relative;
+        z-index: 1;
+      }
+      /* Ambient WebGL globe (Cobe) — glows behind the hero content, offset right
+         so it sits around the matcher card without touching the left copy.
+         Fades in once it's drawing; hidden on small screens for speed + calm. */
+      .hero__globe {
+        position: absolute;
+        top: -30px;
+        right: -90px;
+        width: 560px;
+        height: 560px;
+        max-width: 78vw;
+        z-index: 0;
+        opacity: 0;
+        transition: opacity 1.2s ease;
+        pointer-events: none;
+        contain: layout paint;
+      }
+      /* Only truly small phones hide it — it was hidden under 960px before, which
+         swallowed it in narrow previews. */
+      @media (max-width: 520px) {
+        .hero__globe {
+          display: none;
+        }
       }
       .hero__tag {
         color: var(--gold-500);
@@ -1206,6 +1395,11 @@
         opacity: 1;
         transform: none;
       }
+      /* When GSAP drives the reveals it owns opacity/transform outright — kill
+         the CSS transition so the two don't double-ease. */
+      html.gsap .reveal {
+        transition: none;
+      }
       @media (prefers-reduced-motion: reduce) {
         html {
           scroll-behavior: auto;
@@ -1394,8 +1588,8 @@
         </a>
         <nav class="nav__links" aria-label="Primary">
           <a class="link" href="#how">How it works</a>
-          <a class="link" href="#universities">Universities</a>
-          <a class="link" href="/for-universities">For universities</a>
+          <a class="link" href="#universities">Discover</a>
+          <a class="link" href="/for-universities">For institutions</a>
           <a class="nav__signin" href="/account?mode=login">Sign in</a>
           <a class="btn btn--gold" href="/account?mode=register"
             >Get started free</a
@@ -1405,8 +1599,36 @@
     </header>
 
     <main id="top">
+      <!-- CINEMATIC OPENING — THE WORLD (scroll flight to Europe) -->
+      <section class="world" id="world">
+        <div class="world__stage">
+          <canvas class="world__canvas" id="earth" aria-hidden="true"></canvas>
+          <div class="world__scrim" aria-hidden="true"></div>
+          <div class="world__content" data-world-open>
+            <div class="world__brand">
+              <svg class="world__mark" viewBox="0 0 200 200" aria-hidden="true"><g fill="currentColor"><path d="M21.5 38.8 L28.6 42.7 L29.7 44.9 L65 70 L70.1 72.2 L80.6 80.6 L83.8 86.3 L85.3 86.8 L85.3 127.3 L86.1 127.8 L85.3 129.5 L85.7 146.7 L84.9 148 L86.1 148.9 L88.5 158.6 L94.7 164.8 L94.3 167 L92.4 165.2 L93.5 164.8 L92.8 163.9 L88.5 163.4 L80.6 158.6 L77.5 155.1 L29.4 120.3 L21.9 111 L19.2 101.3 L20 99.1 L19.2 88.5 L20.4 81.9 L19.6 67 L18.8 67.8 L20.4 60.8 L19.6 47.1 L20.4 39.6 Z"/><path d="M178.5 38.8 L171.4 42.7 L170.3 44.9 L135 70 L129.9 72.2 L119.4 80.6 L116.2 86.3 L114.7 86.8 L114.7 127.3 L113.9 127.8 L114.7 129.5 L114.3 146.7 L115.1 148 L113.9 148.9 L111.5 158.6 L105.3 164.8 L105.7 167 L107.6 165.2 L106.5 164.8 L107.2 163.9 L111.5 163.4 L119.4 158.6 L122.5 155.1 L170.6 120.3 L178.1 111 L180.8 101.3 L180 99.1 L180.8 88.5 L179.6 81.9 L180.4 67 L181.2 67.8 L179.6 60.8 L180.4 47.1 L179.6 39.6 Z"/></g></svg>
+              <span>UNIVERSO</span>
+            </div>
+            <h1 class="world__headline">
+              Your future shouldn't depend on where you start.
+            </h1>
+            <p class="world__sub">
+              Discover universities. Find opportunities. Build your path.
+            </p>
+            <a class="world__cue" href="#hero" aria-label="Scroll to explore">
+              <span>Scroll to explore</span>
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>
+            </a>
+          </div>
+          <div class="world__arrival" data-world-arrival aria-hidden="true">
+            <p class="world__eyebrow">Europe</p>
+            <h2 class="world__arrival-h">Thousands of possibilities.<br />One place to find them.</h2>
+          </div>
+        </div>
+      </section>
+
       <!-- HERO -->
-      <section class="hero">
+      <section class="hero" id="hero">
         <div class="wrap hero__grid">
           <div>
             <p class="eyebrow hero__tag reveal">
@@ -1500,7 +1722,8 @@
       <section class="cover" id="universities">
         <div class="wrap">
           <p class="cover__label">
-            Covering 2,899 universities across 32 countries — including
+            Covering <span data-count="2899">2,899</span> universities across
+            <span data-count="32">32</span> countries — including
           </p>
           <div class="cover__row">
             <span class="cover__name">University of Copenhagen</span>
@@ -2170,6 +2393,10 @@
       <button class="cookie__btn" id="cookie-ok" type="button">Got it</button>
     </div>
 
+    <script src="/js/vendor/gsap.min.js"></script>
+    <script src="/js/vendor/ScrollTrigger.min.js"></script>
+    <script src="/js/vendor/SplitText.min.js"></script>
+    <script src="/js/vendor/cobe.min.js"></script>
     <script>
       document.documentElement.classList.add("js");
 
@@ -2310,10 +2537,276 @@
       onScroll();
       addEventListener("scroll", onScroll, { passive: true });
 
-      // Reveal
+      // Cinematic 3D Earth (Three.js). Lazy-loaded AFTER first paint so the
+      // 718KB bundle never blocks the page; the deep-space background + text
+      // are already visible from CSS. WebGL failure just leaves the elegant
+      // space scene — no broken state.
+      (function () {
+        const canvas = document.getElementById("earth");
+        if (!canvas) return;
+        const start = () => {
+          const s = document.createElement("script");
+          s.src = "/js/vendor/earth.min.js?v=" + (window.ASSET_V || Date.now());
+          s.async = true;
+          s.onload = () => {
+            try {
+              if (window.UniversoEarth) {
+                window.__earth = window.UniversoEarth(canvas, {});
+                canvas.style.opacity = "1";
+                // Enable the tall scroll-flight track only now that the Earth
+                // can actually render (no dead scroll if WebGL/motion is off).
+                const w = document.querySelector(".world");
+                if (
+                  w &&
+                  !matchMedia("(prefers-reduced-motion: reduce)").matches
+                ) {
+                  w.classList.add("world--fly");
+                  if (window.ScrollTrigger) window.ScrollTrigger.refresh();
+                }
+              }
+            } catch (e) {
+              /* WebGL unavailable — the space scene still stands */
+            }
+          };
+          document.body.appendChild(s);
+        };
+        if (document.readyState === "complete") start();
+        else addEventListener("load", start);
+      })();
+
+      // Ambient WebGL globe (Cobe). Marks the student's origin (Ulaanbaatar)
+      // and real European destinations — Universo's story, literally. Decorative
+      // and self-hosted; skipped on small screens and when it can't run.
+      (function () {
+        const canvas = document.getElementById("globe");
+        if (!canvas || !window.createGlobe) return;
+        if (getComputedStyle(canvas).display === "none") return; // mobile
+        const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const size = 600;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        let phi = 4.2; // start with Europe/Asia facing the viewer
+        let shown = false; // fade the canvas in on the first drawn frame
+        // Ulaanbaatar → European destinations: the markers and the glowing arcs
+        // between them are Universo's story on the globe.
+        const ORIGIN = [47.8864, 106.9057]; // Ulaanbaatar
+        const DESTS = [
+          [60.1699, 24.9384], // Helsinki
+          [59.3293, 18.0686], // Stockholm
+          [55.6761, 12.5683], // Copenhagen
+          [52.3676, 4.9041], // Amsterdam
+          [48.135, 11.582], // Munich
+          [48.8566, 2.3522], // Paris
+          [48.2082, 16.3738], // Vienna
+          [40.4168, -3.7038], // Madrid
+        ];
+        const markers = [{ location: ORIGIN, size: 0.1 }].concat(
+          DESTS.map((d) => ({ location: d, size: 0.045 })),
+        );
+        const arcs = DESTS.map((d) => ({ from: ORIGIN, to: d }));
+        try {
+          // cobe v2: no onRender — drive rotation via globe.update({ phi }).
+          const globe = window.createGlobe(canvas, {
+            devicePixelRatio: dpr,
+            width: size * dpr,
+            height: size * dpr,
+            phi: phi,
+            theta: 0.26,
+            dark: 1,
+            diffuse: 1.15,
+            scale: 1,
+            offset: [0, 0],
+            mapSamples: 16000,
+            mapBrightness: 7,
+            baseColor: [0.36, 0.44, 0.58],
+            markerColor: [0.11, 0.85, 0.75],
+            glowColor: [0.2, 0.46, 0.6],
+            markers: markers,
+            arcs: arcs,
+            arcColor: [0.13, 0.83, 0.75],
+            arcWidth: 0.5,
+            arcHeight: 0.42,
+            // Keep the last drawn frame on screen even when the tab/preview
+            // isn't actively animating (some previews freeze requestAnimationFrame).
+            context: { preserveDrawingBuffer: true },
+          });
+          // Paint a frame immediately and synchronously, so a static globe shows
+          // even where rAF is frozen (e.g. a background preview pane). The rAF
+          // loop below then spins it whenever the tab is actually visible.
+          globe.update({ phi: phi });
+          canvas.style.opacity = "1";
+          shown = true;
+          const spin = () => {
+            globe.update({ phi: phi });
+            if (!reduce) {
+              phi += 0.0032;
+              requestAnimationFrame(spin);
+            }
+          };
+          spin();
+        } catch (e) {
+          /* WebGL unavailable — the hero is still complete without it. */
+        }
+      })();
+
+      // Reveal / motion. Three tiers, most-capable first:
+      //  1. GSAP present + motion allowed → a hero load cascade + staggered
+      //     scroll reveals (the "designed" feel).
+      //  2. GSAP missing (vendored file failed) but IntersectionObserver ok →
+      //     the original CSS-transition reveal, so the page still animates in.
+      //  3. Reduced motion or no JS features → everything shown instantly.
       const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
       const els = document.querySelectorAll(".reveal");
-      if ("IntersectionObserver" in window && !reduce) {
+
+      if (!reduce && window.gsap && window.ScrollTrigger) {
+        document.documentElement.classList.add("gsap");
+        const plugins = [ScrollTrigger];
+        if (window.SplitText) plugins.push(SplitText);
+        gsap.registerPlugin.apply(gsap, plugins);
+
+        const all = gsap.utils.toArray(".reveal");
+        const heroEls = all.filter((el) => el.closest(".hero"));
+        const restEls = all.filter((el) => !el.closest(".hero"));
+
+        // Signature hero moment: the headline assembles word-by-word (editorial,
+        // typography-led — true to Universo's serif identity). The gold
+        // <span class="em"> keeps its colour because we split by words. Falls
+        // back to the block cascade if SplitText isn't available.
+        const h1 = document.querySelector(".hero h1");
+        let words = null;
+        if (window.SplitText && h1) {
+          try {
+            words = new SplitText(h1, { type: "words" }).words;
+            gsap.set(h1, { opacity: 1 });
+            gsap.set(words, { opacity: 0, yPercent: 90, rotateX: -35 });
+          } catch (e) {
+            words = null;
+          }
+        }
+        const blockEls = words ? heroEls.filter((el) => el !== h1) : heroEls;
+
+        // Hero starts lower, slightly shrunk and soft — a clear "focus in".
+        gsap.set(blockEls, { opacity: 0, y: 90, scale: 0.965, filter: "blur(7px)" });
+        gsap.set(restEls, { opacity: 0, y: 64 });
+
+        const tl = gsap.timeline({ delay: 0.18 });
+        tl.to(blockEls, {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          filter: "blur(0px)",
+          duration: 1.1,
+          ease: "power3.out",
+          stagger: 0.16,
+        });
+        if (words)
+          tl.to(
+            words,
+            {
+              opacity: 1,
+              yPercent: 0,
+              rotateX: 0,
+              duration: 0.75,
+              ease: "expo.out",
+              stagger: 0.05,
+            },
+            0.28,
+          );
+
+        // Everything below the fold reveals as it enters, in small batches so
+        // rows of cards arrive together with a clear, staggered rise.
+        ScrollTrigger.batch(restEls, {
+          start: "top 88%",
+          once: true,
+          onEnter: (batch) =>
+            gsap.to(batch, {
+              opacity: 1,
+              y: 0,
+              duration: 0.9,
+              ease: "power3.out",
+              stagger: 0.13,
+              overwrite: true,
+            }),
+        });
+
+        // Number count-ups: the site's real coverage totals tick up when
+        // scrolled into view (scale reads as credibility — and the numbers are
+        // honest, they're Universo's actual totals).
+        gsap.utils.toArray("[data-count]").forEach((el) => {
+          const target = +el.getAttribute("data-count");
+          if (!target) return;
+          const obj = { v: 0 };
+          ScrollTrigger.create({
+            trigger: el,
+            start: "top 92%",
+            once: true,
+            onEnter: () =>
+              gsap.to(obj, {
+                v: target,
+                duration: 1.1,
+                ease: "power2.out",
+                onUpdate: () => {
+                  el.textContent = Math.round(obj.v).toLocaleString("en-US");
+                },
+              }),
+          });
+        });
+
+        // Cinematic scroll flight to Europe. As the opening section scrolls, the
+        // camera flies toward the Earth (flyTo), the opening text lifts away and
+        // the "Europe / thousands of possibilities" message fades in. The Earth
+        // is lazy-loaded, so flyTo is guarded until it exists; the tall scroll
+        // track (.world--fly) is only switched on once the Earth actually loads.
+        const worldSection = document.querySelector(".world");
+        const worldStage = document.querySelector(".world__stage");
+        const openText = document.querySelector("[data-world-open]");
+        const arrivalText = document.querySelector("[data-world-arrival]");
+        if (worldSection) {
+          ScrollTrigger.create({
+            trigger: worldSection,
+            start: "top top",
+            end: "bottom bottom",
+            scrub: 1,
+            onUpdate: (self) => {
+              const p = self.progress;
+              // Flight completes by ~80% so Europe settles, then the arrival
+              // message holds while you keep scrolling before the dissolve.
+              if (window.__earth && window.__earth.flyTo)
+                window.__earth.flyTo(Math.min(1, p / 0.8));
+              // opening text lifts away over the first 40%
+              if (openText) {
+                openText.style.opacity = String(1 - Math.min(1, p / 0.4));
+                openText.style.transform = "translateY(" + -p * 40 + "px)";
+              }
+              // arrival message in by ~62%, then HOLDS all the way to ~90%
+              if (arrivalText)
+                arrivalText.style.opacity = String(
+                  Math.min(1, Math.max(0, (p - 0.5) / 0.12)),
+                );
+              // FUSE: the space scene dissolves only over the last 10%, melting
+              // into the navy hero below — one continuous site, not a hard cut.
+              if (worldStage)
+                worldStage.style.opacity = String(
+                  1 - Math.max(0, (p - 0.9) / 0.1),
+                );
+            },
+          });
+        }
+
+        // Safety: if anything is still hidden shortly after load (e.g. a
+        // ScrollTrigger edge case), reveal it so nothing can get stuck at 0.
+        addEventListener("load", () => {
+          ScrollTrigger.refresh();
+          setTimeout(() => {
+            restEls.forEach((el) => {
+              if (
+                getComputedStyle(el).opacity === "0" &&
+                el.getBoundingClientRect().top < innerHeight
+              )
+                gsap.to(el, { opacity: 1, y: 0, duration: 0.6 });
+            });
+          }, 600);
+        });
+      } else if ("IntersectionObserver" in window && !reduce) {
         const io = new IntersectionObserver(
           (entries) =>
             entries.forEach((e) => {
