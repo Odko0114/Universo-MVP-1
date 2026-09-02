@@ -1,0 +1,102 @@
+[
+  {
+    "university_id": "eter-se0008",
+    "program": null,
+    "scope": "university",
+    "level": "Bachelor's & Master's",
+    "language": "English",
+    "tests": [
+      { "test": "IELTS Academic", "min_score": "6.5", "note": "no section below 5.5" },
+      { "test": "TOEFL iBT", "min_score": "90", "note": "written section 20 (old 0–120 scale)" },
+      { "test": "PTE Academic", "min_score": "62", "note": "writing 61" },
+      { "test": "Cambridge C1 Advanced", "min_score": "180" }
+    ],
+    "alternatives": [
+      "Country-based exemptions apply for prior education taught in English — checked by University Admissions Sweden"
+    ],
+    "conditions": "Swedish universities share one national English requirement (“English 6”), administered centrally by University Admissions Sweden. Some programmes require the higher “English 7”. From 21 Jan 2026 TOEFL iBT uses a new 1–6 scale (total 4.5).",
+    "source_url": "https://www.universityadmissions.se/en/entry-requirements/english-language-requirements/",
+    "source_title": "University Admissions Sweden — English language requirements",
+    "verification": { "status": "verified", "date": "2026-09-02" }
+  },
+  {
+    "university_id": "eter-se0001",
+    "program": null,
+    "scope": "university",
+    "level": "Bachelor's & Master's",
+    "language": "English",
+    "tests": [
+      { "test": "IELTS Academic", "min_score": "6.5", "note": "no section below 5.5" },
+      { "test": "TOEFL iBT", "min_score": "90", "note": "written section 20 (old 0–120 scale)" },
+      { "test": "PTE Academic", "min_score": "62", "note": "writing 61" },
+      { "test": "Cambridge C1 Advanced", "min_score": "180" }
+    ],
+    "alternatives": [
+      "Country-based exemptions apply for prior education taught in English — checked by University Admissions Sweden"
+    ],
+    "conditions": "Swedish universities share one national English requirement (“English 6”), administered centrally by University Admissions Sweden. Some programmes require the higher “English 7”. From 21 Jan 2026 TOEFL iBT uses a new 1–6 scale (total 4.5).",
+    "source_url": "https://www.universityadmissions.se/en/entry-requirements/english-language-requirements/",
+    "source_title": "University Admissions Sweden — English language requirements",
+    "verification": { "status": "verified", "date": "2026-09-02" }
+  },
+  {
+    "university_id": "eter-se0002",
+    "program": null,
+    "scope": "university",
+    "level": "Bachelor's & Master's",
+    "language": "English",
+    "tests": [
+      { "test": "IELTS Academic", "min_score": "6.5", "note": "no section below 5.5" },
+      { "test": "TOEFL iBT", "min_score": "90", "note": "written section 20 (old 0–120 scale)" },
+      { "test": "PTE Academic", "min_score": "62", "note": "writing 61" },
+      { "test": "Cambridge C1 Advanced", "min_score": "180" }
+    ],
+    "alternatives": [
+      "Country-based exemptions apply for prior education taught in English — checked by University Admissions Sweden"
+    ],
+    "conditions": "Swedish universities share one national English requirement (“English 6”), administered centrally by University Admissions Sweden. Some programmes require the higher “English 7”. From 21 Jan 2026 TOEFL iBT uses a new 1–6 scale (total 4.5).",
+    "source_url": "https://www.universityadmissions.se/en/entry-requirements/english-language-requirements/",
+    "source_title": "University Admissions Sweden — English language requirements",
+    "verification": { "status": "verified", "date": "2026-09-02" }
+  },
+  {
+    "university_id": "eter-fi0025",
+    "program": null,
+    "scope": "university",
+    "level": "Master's",
+    "language": "English",
+    "tests": [
+      { "test": "IELTS Academic", "min_score": "6.5", "note": "writing 6.0" },
+      { "test": "TOEFL iBT", "min_score": "92", "note": "writing 22 (old scale); new 1–6 scale total 4.5 from 21 Jan 2026" },
+      { "test": "PTE Academic", "min_score": "68", "note": "writing 61" },
+      { "test": "Cambridge C1 Advanced", "min_score": "Grade A, B or C" }
+    ],
+    "alternatives": [
+      "Prior English-medium degree completed in eligible countries (at least half in English)",
+      "Upper-secondary education completed in English in listed countries"
+    ],
+    "conditions": "Applies to English-taught master's admissions. Bachelor's requirements vary by field — some fields require no separate English proof.",
+    "source_url": "https://www.aalto.fi/en/admission-services/language-requirements-in-masters-admissions",
+    "source_title": "Aalto University — Language requirements in Master's admissions",
+    "verification": { "status": "verified", "date": "2026-09-02" }
+  },
+  {
+    "university_id": "eter-nl0007",
+    "program": null,
+    "scope": "university",
+    "level": "Master's",
+    "language": "English",
+    "tests": [
+      { "test": "IELTS Academic", "min_score": "6.5", "note": "each component at least 6.0" },
+      { "test": "TOEFL iBT", "min_score": "90", "note": "each component at least 20 (old 0–120 scale, used for 2026–2027)" }
+    ],
+    "alternatives": [
+      "No test needed if prior education was completed in the USA, UK, Ireland, Canada, Australia, New Zealand, Singapore, South Africa or Malta",
+      "English-taught International Baccalaureate, or a Dutch VWO diploma / English-taught Dutch research degree"
+    ],
+    "conditions": "General master's requirement — individual programmes may set higher scores; always check the specific programme page. Test results must be under two years old.",
+    "source_url": "https://www.universiteitleiden.nl/en/education/admission-and-application/masters/admission-requirements",
+    "source_title": "Leiden University — Master's admission requirements",
+    "verification": { "status": "verified", "date": "2026-09-02" }
+  }
+]

@@ -35,6 +35,7 @@ const {
   catalog: scholarshipCatalog,
 } = require("./lib/scholarships");
 const curatedScholarships = require("./lib/scholarships-curated");
+const languageReqs = require("./lib/language-requirements");
 const notify = require("./lib/notify");
 const brand = require("./lib/brand");
 const events = require("./lib/events");
@@ -953,6 +954,10 @@ api.get(
         name: s.name,
         country: s.country,
       }));
+    // Verified language requirements (or the honest "not verified" state) —
+    // answers "what test/score do I need?" straight from the university's own
+    // official admissions page. Absent from most records; that's shown honestly.
+    out.language_requirements = languageReqs.viewForUniversity(uni.id);
     res.json({ university: out });
   }),
 );
@@ -2644,7 +2649,10 @@ app.get("/university/:id", (req, res) => {
         // indexable the moment it earns real content (or a university claims it).
         noindex: uni.verified ? false : "follow",
       }),
-      viewHtml: ssr.profileView(withClaim(uni)),
+      viewHtml: ssr.profileView({
+        ...withClaim(uni),
+        language_requirements: languageReqs.viewForUniversity(uni.id),
+      }),
     }),
   );
 });

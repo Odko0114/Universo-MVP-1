@@ -156,7 +156,7 @@ const SHARED_FACTS = [
 const SHARED_SECTIONS = [
   "Programs offered",
   "Fields of study",
-  "Admission requirements",
+  "Entry requirements",
 ];
 
 const fullUni = {

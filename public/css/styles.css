@@ -1510,6 +1510,142 @@ img {
   font-size: var(--text-sm);
 }
 
+/* Entry requirements — one section: verified language leads, the university's
+   broader free-text requirements follow as context. */
+.entry-eyebrow {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-faint);
+  margin-bottom: 8px;
+}
+.entry-text--sep {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.lang-head {
+  font-weight: 700;
+  font-size: var(--text-lg);
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+.lang-head .lang-level {
+  font-weight: 500;
+  color: var(--ink-faint);
+  font-size: var(--text-sm);
+}
+.lang-tests {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.lang-test {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+.lang-test:first-child {
+  border-top: none;
+  padding-top: 2px;
+}
+.lang-test__name {
+  color: var(--ink-soft);
+  font-size: var(--text-md);
+}
+.lang-test__score {
+  font-weight: 700;
+  color: var(--ink);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.lang-test__note {
+  display: block;
+  font-weight: 400;
+  white-space: normal;
+  color: var(--ink-faint);
+  font-size: var(--text-xs);
+  margin-top: 1px;
+}
+.lang-alt {
+  margin-top: 12px;
+  padding: 10px 12px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+}
+.lang-alt__label {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+  margin-bottom: 4px;
+}
+.lang-alt ul {
+  margin: 0;
+  padding-left: 18px;
+}
+.lang-alt li {
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+  margin: 2px 0;
+}
+.lang-cond {
+  margin: 12px 0 0;
+  font-size: var(--text-sm);
+}
+.lang-verified {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--success);
+}
+.lang-verified .icon {
+  flex: none;
+  color: var(--success);
+}
+.lang-source {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--teal-600);
+}
+.lang-flag {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 6px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.lang-flag .icon {
+  flex: none;
+  color: var(--gold-600);
+}
+.lang-progs {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+.lang-progs li {
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+.lang-progs a {
+  color: var(--teal-600);
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+
 .verify-flag {
   display: flex;
   gap: 8px;
@@ -4571,6 +4707,10 @@ a.ov-deadline:hover strong {
 }
 .cmp__note {
   margin: 0 2px 12px;
+}
+.cmp__ok {
+  color: var(--success);
+  font-weight: 700;
 }
 
 /* ---------- "What fits you?" quick-match (anonymous) ----------

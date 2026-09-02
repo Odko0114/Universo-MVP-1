@@ -2078,6 +2078,18 @@
           : "",
     },
     {
+      label: "Language requirement",
+      get: (u) => {
+        const lr = u.language_requirements;
+        if (!lr || lr.state === "none") return "";
+        if (lr.state === "varies") return "Varies by programme";
+        const tests = lr.tests || [];
+        const primary = tests.find((t) => /IELTS/i.test(t.test)) || tests[0];
+        if (!primary) return `Verified <span class="cmp__ok">✓</span>`;
+        return `${esc(primary.test.replace("Academic", "").trim())} ${esc(primary.min_score)} <span class="cmp__ok" title="Verified from the official source">✓</span>`;
+      },
+    },
+    {
       label: "Degree levels",
       get: (u) => esc((u.degree_levels || []).join(", ")),
     },
@@ -2617,6 +2629,63 @@
       </div>`;
     }
 
+    // Entry requirements — ONE section. The verified language requirement (the
+    // part we can stand behind, from the university's own official page) leads;
+    // the university's broader free-text requirements sit under it as context,
+    // still estimate-flagged by the profile banner. When we have no verified
+    // language data we simply omit the language line (option a) rather than
+    // stamping a redundant "not verified" card — the profile banner already
+    // says the rest lives on the official site. Never derive a verified language
+    // requirement from the estimate-flagged acceptance_requirements text.
+    function languageInner(lr) {
+      if (!lr || lr.state === "none") return "";
+      const officialLink = u.website
+        ? `<a class="lang-source" href="${esc(u.website)}" target="_blank" rel="noopener">Check official university source ↗</a>`
+        : "";
+      if (lr.state === "varies")
+        return `<div class="entry-eyebrow">Language</div>
+          <p class="lang-flag">${icon("alert", 16)} Requirements vary by programme</p>
+          <p class="muted" style="margin:0 0 12px">This university doesn’t set one requirement for every programme — check the programme you’re applying to.</p>
+          <ul class="lang-progs">${(lr.programs || [])
+            .map(
+              (p) =>
+                `<li><a href="${esc(p.source_url)}" target="_blank" rel="noopener">${esc(p.program)} ↗</a></li>`,
+            )
+            .join("")}</ul>
+          ${officialLink}`;
+      const tests = (lr.tests || [])
+        .map(
+          (t) =>
+            `<li class="lang-test"><span class="lang-test__name">${esc(t.test)}</span><span class="lang-test__score">${esc(t.min_score)}${t.note ? ` <span class="lang-test__note">${esc(t.note)}</span>` : ""}</span></li>`,
+        )
+        .join("");
+      const alts = (lr.alternatives || []).length
+        ? `<div class="lang-alt"><div class="lang-alt__label">Also accepted / exemptions</div><ul>${lr.alternatives
+            .map((a) => `<li>${esc(a)}</li>`)
+            .join("")}</ul></div>`
+        : "";
+      const varyNote =
+        lr.other_programs > 0
+          ? `<p class="muted" style="margin:8px 0 0;font-size:.82rem">Some programmes set different requirements — confirm on the programme page.</p>`
+          : "";
+      return `<div class="entry-eyebrow">Language</div>
+        <div class="lang-head">${esc(lr.language || "English")}${lr.level ? ` <span class="lang-level">· ${esc(lr.level)}</span>` : ""}</div>
+        <ul class="lang-tests">${tests}</ul>
+        ${alts}
+        ${lr.conditions ? `<p class="lang-cond muted">${esc(lr.conditions)}</p>` : ""}
+        ${varyNote}
+        <div class="lang-verified">${icon("check", 15)} Verified${lr.source_title ? ` from ${esc(lr.source_title)}` : " from the official source"}${lr.verification && lr.verification.date ? ` · ${esc(lr.verification.date)}` : ""}</div>
+        ${lr.source_url ? `<a class="lang-source" href="${esc(lr.source_url)}" target="_blank" rel="noopener">View official requirement ↗</a>` : ""}`;
+    }
+    // "Entry requirements" is the ONE requirements section title (see parity test).
+    function entryRequirementsInner() {
+      const lang = languageInner(u.language_requirements);
+      const text = u.acceptance_requirements
+        ? `<div class="entry-text${lang ? " entry-text--sep" : ""}">${lang ? `<div class="entry-eyebrow">Other requirements</div>` : ""}<p style="margin:0;color:var(--ink-soft)">${esc(u.acceptance_requirements)}</p></div>`
+        : "";
+      return lang + text;
+    }
+
     const banner = {
       curated:
         "Tuition, deadlines and requirements below are <strong>best-effort estimates</strong> — verify on the university’s official page before you rely on them.",
@@ -2686,7 +2755,7 @@
       ${facts.length ? `<div class="info-card"><h3>Key facts</h3><div class="info-grid">${factCards}</div>${(u.estimated_living_cost && u.estimated_living_cost.estimated) || u.language_estimated ? '<p class="muted" style="margin:10px 0 0;font-size:.82rem">~ / “est.” / “typical” = a <strong>country-level estimate</strong>, not a figure for this specific university. Confirm on their official site.</p>' : ""}</div>` : ""}
       ${section("Programs offered", taglist(u.programs_offered, "chip"))}
       ${section("Fields of study", taglist(u.fields_of_study, "chip--gold"))}
-      ${section("Admission requirements", u.acceptance_requirements ? `<p style="margin:0;color:var(--ink-soft)">${esc(u.acceptance_requirements)}</p>` : "")}
+      ${section("Entry requirements", entryRequirementsInner())}
       ${scholarshipsSection(u.scholarships)}
 
       <div class="info-card" style="text-align:center">
