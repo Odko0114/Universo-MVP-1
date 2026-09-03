@@ -306,6 +306,12 @@ const publicStudent = (s) => {
     last_digest_sent,
     ...safe
   } = s;
+  // Belt-and-suspenders over the explicit exclusion above: strip any field
+  // whose name looks like a secret, so a FUTURE *_hash / *_token / *_secret /
+  // *_expires / password field can never leak just because someone forgot to
+  // add it to the destructure. (No legitimate client field matches this.)
+  for (const k of Object.keys(safe))
+    if (/hash|token|secret|password|expires/i.test(k)) delete safe[k];
   return {
     ...safe,
     // Resolved against defaults so the client always sees every category.
@@ -2688,7 +2694,7 @@ app.get("/unsubscribe", (req, res) => {
 
   if (!student.notifications || typeof student.notifications !== "object")
     student.notifications = {};
-  const cat = req.query.cat;
+  const cat = typeof req.query.cat === "string" ? req.query.cat : "";
   const targets = notify.NOTIFICATION_CATEGORIES.includes(cat)
     ? [cat]
     : notify.NOTIFICATION_CATEGORIES;
@@ -2920,6 +2926,21 @@ if (require.main === module) {
   }
   process.on("SIGTERM", () => shutdown("SIGTERM"));
   process.on("SIGINT", () => shutdown("SIGINT"));
+
+  // Last-resort safety net so a stray async error never silently kills the
+  // process. An unhandled rejection is usually a slipped fire-and-forget
+  // .catch — log it and keep serving. A truly uncaught exception may leave
+  // state undefined, so log and shut down cleanly (the platform restarts us).
+  process.on("unhandledRejection", (reason) => {
+    log.captureError(
+      reason instanceof Error ? reason : new Error(String(reason)),
+      { where: "unhandledRejection" },
+    );
+  });
+  process.on("uncaughtException", (err) => {
+    log.captureError(err, { where: "uncaughtException" });
+    shutdown("uncaughtException");
+  });
 }
 
 module.exports = app; // exported for tests
