@@ -3384,6 +3384,22 @@
           <button class="btn btn--primary" id="logout" style="flex:1">Log out</button>
         </div>
         <hr class="divider" />
+        <h3 style="font-size:.95rem;margin:0 0 8px">Appearance</h3>
+        <div class="theme-seg" role="radiogroup" aria-label="Colour theme">
+          <button class="theme-seg__opt" data-theme-set="light" type="button" role="radio">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"/></svg>
+            Light
+          </button>
+          <button class="theme-seg__opt" data-theme-set="dark" type="button" role="radio">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.2 6.2 0 0 0 10.5 10.5z"/></svg>
+            Dark
+          </button>
+          <button class="theme-seg__opt" data-theme-set="system" type="button" role="radio">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/></svg>
+            System
+          </button>
+        </div>
+        <hr class="divider" />
         <h3 style="font-size:.95rem;margin:0 0 8px">Email notifications</h3>
         ${
           u.email_verification_required
@@ -3465,6 +3481,23 @@
           cb.checked = !cb.checked; // revert on failure
           toast(e.message, true);
         }
+      });
+    });
+
+    // Appearance — reflect the saved choice, apply instantly on click.
+    const syncThemeSeg = () => {
+      const cur = Theme.pref();
+      view.querySelectorAll("[data-theme-set]").forEach((b) => {
+        const on = b.dataset.themeSet === cur;
+        b.classList.toggle("is-active", on);
+        b.setAttribute("aria-checked", on ? "true" : "false");
+      });
+    };
+    syncThemeSeg();
+    view.querySelectorAll("[data-theme-set]").forEach((b) => {
+      b.addEventListener("click", () => {
+        Theme.set(b.dataset.themeSet);
+        syncThemeSeg();
       });
     });
 
@@ -4187,7 +4220,64 @@
     });
   }
 
+  // ---- Theme (light / dark / system) --------------------------------------
+  // The no-flash <head> script already stamped data-theme for first paint; this
+  // owns the live behaviour: persistence, applying a choice, and following the
+  // OS when the preference is "system". Only these two functions touch the DOM
+  // attribute, so there's one source of truth.
+  const Theme = {
+    KEY: "universo-theme",
+    pref() {
+      try {
+        return localStorage.getItem(this.KEY) || "system";
+      } catch {
+        return "system";
+      }
+    },
+    resolved(pref) {
+      const p = pref || this.pref();
+      if (p === "light" || p === "dark") return p;
+      return window.matchMedia &&
+        matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
+    },
+    apply(pref, animate) {
+      const r = this.resolved(pref);
+      const root = document.documentElement;
+      if (animate) {
+        root.classList.add("theme-anim");
+        clearTimeout(this._t);
+        this._t = setTimeout(() => root.classList.remove("theme-anim"), 260);
+      }
+      root.setAttribute("data-theme", r);
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute("content", r === "dark" ? "#0e1420" : "#0b1f3a");
+    },
+    set(pref) {
+      try {
+        localStorage.setItem(this.KEY, pref);
+      } catch {
+        /* private mode — theme still applies for this session */
+      }
+      this.apply(pref, true);
+    },
+    init() {
+      this.apply(this.pref(), false);
+      if (window.matchMedia) {
+        const mq = matchMedia("(prefers-color-scheme: dark)");
+        const onChange = () => {
+          if (this.pref() === "system") this.apply("system", true);
+        };
+        mq.addEventListener
+          ? mq.addEventListener("change", onChange)
+          : mq.addListener(onChange);
+      }
+    },
+  };
+
   async function boot() {
+    Theme.init();
     // A valid session cookie authenticates us; otherwise we're anonymous.
     try {
       const { student } = await API.me();

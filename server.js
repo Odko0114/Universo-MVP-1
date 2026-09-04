@@ -2464,11 +2464,22 @@ const PUBLIC_DIR = path.join(__dirname, "public");
 // change never sits behind a stale cached asset (the logo-cache confusion).
 const ASSET_V =
   (process.env.RENDER_GIT_COMMIT || "").slice(0, 8) || String(Date.now());
+// No-flash theme init: runs synchronously in <head> before the stylesheet
+// paints, so the correct theme is on <html data-theme> from the very first
+// frame. Resolves an explicit 'light'/'dark' choice, or 'system'/none via the
+// OS preference. Inert on pages whose CSS doesn't read [data-theme] (landing).
+const THEME_INIT =
+  '<script>(function(){try{var p=localStorage.getItem("universo-theme");' +
+  'var d=p==="dark"||((p===null||p==="system")&&window.matchMedia&&' +
+  'matchMedia("(prefers-color-scheme: dark)").matches);' +
+  'document.documentElement.setAttribute("data-theme",d?"dark":"light");}' +
+  "catch(e){}})();</script>";
 const withBrand = (html) =>
   html
     .split("<!--BRAND_MARK-->")
     .join(brand.markSvgInline())
-    .replace(/(\/css\/styles\.css|\/js\/app\.js)(?![?\w])/g, `$1?v=${ASSET_V}`);
+    .replace(/(\/css\/styles\.css|\/js\/app\.js)(?![?\w])/g, `$1?v=${ASSET_V}`)
+    .replace("</head>", THEME_INIT + "</head>");
 const readPage = (file) =>
   withBrand(fs.readFileSync(path.join(PUBLIC_DIR, file), "utf8"));
 
@@ -2644,17 +2655,24 @@ app.get("/university/:id", (req, res) => {
   const loc = [uni.city, uni.country].filter(Boolean).join(", ");
   res.send(
     ssr.injectSSR(SHELL, {
-      metaHtml: ssr.metaTags({
-        title: `${uni.name}${loc ? " — " + loc : ""} | Universo`,
-        description:
-          uni.short_description ||
-          `${uni.name} — discover programs, facts and how to apply.`,
-        canonical: `${appOrigin(req)}/university/${uni.id}`,
-        // Unverified = register-only boilerplate. noindex,FOLLOW: keep it out of
-        // the index without orphaning the links on it. A profile becomes
-        // indexable the moment it earns real content (or a university claims it).
-        noindex: uni.verified ? false : "follow",
-      }),
+      metaHtml:
+        ssr.metaTags({
+          title: `${uni.name}${loc ? " — " + loc : ""} | Universo`,
+          description:
+            uni.short_description ||
+            `${uni.name} — discover programs, facts and how to apply.`,
+          canonical: `${appOrigin(req)}/university/${uni.id}`,
+          // Unverified = register-only boilerplate. noindex,FOLLOW: keep it out of
+          // the index without orphaning the links on it. A profile becomes
+          // indexable the moment it earns real content (or a university claims it).
+          noindex: uni.verified ? false : "follow",
+        }) +
+        // Structured data only on indexed (verified) pages — no point marking up
+        // a page told not to index, and it keeps thin records out of rich results.
+        (uni.verified
+          ? "\n  " +
+            ssr.structuredData(uni, `${appOrigin(req)}/university/${uni.id}`)
+          : ""),
       viewHtml: ssr.profileView({
         ...withClaim(uni),
         language_requirements: languageReqs.viewForUniversity(uni.id),
