@@ -68,10 +68,13 @@ function makeHiddenPrompter() {
 }
 
 async function run() {
-  const [email, passwordArg] = process.argv.slice(2);
+  const args = process.argv.slice(2);
+  const marketing = args.includes("--marketing");
+  const [email, passwordArg] = args.filter((a) => !a.startsWith("--"));
   if (!email) {
     console.error(
-      "Usage: node scripts/create-admin.js <email>   (you will be prompted for the password)",
+      "Usage: node scripts/create-admin.js <email> [--marketing]\n" +
+        "  --marketing = a Marketing-OS-only account (no analytics/leads/provisioning).",
     );
     process.exit(1);
   }
@@ -94,10 +97,18 @@ async function run() {
 
   store.init("admins", []);
   try {
-    const normalized = await adminAuth.createAdmin(email, password);
-    console.log(`[create-admin] Admin account ready: ${normalized}`);
+    const normalized = await adminAuth.createAdmin(
+      email,
+      password,
+      marketing ? "marketing" : "admin",
+    );
     console.log(
-      "[create-admin] Log in at /admin with this email and password.",
+      `[create-admin] ${marketing ? "Marketing" : "Admin"} account ready: ${normalized}`,
+    );
+    console.log(
+      marketing
+        ? "[create-admin] Log in at /admin/marketing with this email and password."
+        : "[create-admin] Log in at /admin with this email and password.",
     );
   } catch (e) {
     console.error("[create-admin] FAILED:", e.message);

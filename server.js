@@ -73,6 +73,7 @@ store.init("photos", {}); // { id: { photo_url|null, attribution, cached_at } }
   }
 }
 store.init("pilot_leads", []); // university contact/pilot/claim leads (/for-universities form)
+store.init("marketing", { brain: {}, ideas: [] }); // Marketing OS state (founder + marketer)
 store.init("uni_accounts", []); // partner logins, each bound to one university_id
 store.init("claims", {}); // { universityId: { account_id, claimed_at } } — kept
 // separate from the universities file because that
@@ -2437,25 +2438,99 @@ adminApi.get("/subscribers.csv", (_req, res) => {
     );
 });
 
+api.use("/admin", adminApi);
+
 // ---- Marketing OS ---------------------------------------------------------
-// Internal content command center (founder + marketer). All of its live state
-// — brand brain edits, idea board, performance log — is one JSON blob in the
-// store, admin-gated like everything else under /admin. Seed defaults + the
-// template/hook library live in the page itself (version-controlled).
-adminApi.get("/marketing", (_req, res) => {
-  res.json(store.read("marketing") || {});
-});
-adminApi.put("/marketing", (req, res) => {
-  const b = req.body;
-  if (!b || typeof b !== "object" || Array.isArray(b))
-    return res.status(400).json({ error: "Invalid payload." });
-  if (JSON.stringify(b).length > 2_000_000)
-    return res.status(413).json({ error: "Too large." });
-  store.write("marketing", b);
+// Content command center for the founder + marketer. Gated by requireMarketing
+// (admin OR a marketing-only account) so a marketing hire never gets analytics/
+// leads/provisioning. Writes are GRANULAR (per idea / per brain field) so two
+// people editing at once never overwrite each other's whole blob.
+const mkt = express.Router();
+mkt.use(adminAuth.requireMarketing);
+const readMkt = () => {
+  const m = store.read("marketing") || {};
+  if (!m.brain || typeof m.brain !== "object") m.brain = {};
+  if (!Array.isArray(m.ideas)) m.ideas = [];
+  return m;
+};
+const str = (v, n) => (typeof v === "string" ? v.slice(0, n) : "");
+mkt.get("/me", (req, res) => res.json({ email: req.admin.email }));
+mkt.get("/data", (_req, res) => res.json(readMkt()));
+mkt.patch("/brain", (req, res) => {
+  const b = req.body || {};
+  const m = readMkt();
+  for (const k of Object.keys(b)) if (typeof b[k] === "string") m.brain[k] = b[k].slice(0, 4000);
+  store.write("marketing", m);
   res.json({ ok: true });
 });
-
-api.use("/admin", adminApi);
+mkt.post("/idea", (req, res) => {
+  const b = req.body || {};
+  if (!str(b.title, 300).trim()) return res.status(400).json({ error: "Title required." });
+  const m = readMkt();
+  if (m.ideas.length >= 1000) return res.status(413).json({ error: "Too many ideas." });
+  const idea = {
+    id: "m" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    title: str(b.title, 300).trim(),
+    formula: str(b.formula, 40),
+    status: ["idea", "drafting", "posted"].includes(b.status) ? b.status : "idea",
+    draft: "",
+    createdAt: Date.now(),
+  };
+  m.ideas.unshift(idea);
+  store.write("marketing", m);
+  res.json({ idea });
+});
+mkt.patch("/idea/:id", (req, res) => {
+  const b = req.body || {};
+  const m = readMkt();
+  const idea = m.ideas.find((i) => i.id === req.params.id);
+  if (!idea) return res.status(404).json({ error: "Not found." });
+  if (b.title !== undefined) idea.title = str(b.title, 300);
+  if (b.status !== undefined && ["idea", "drafting", "posted"].includes(b.status)) idea.status = b.status;
+  if (b.formula !== undefined) idea.formula = str(b.formula, 40);
+  if (b.draft !== undefined) idea.draft = str(b.draft, 8000);
+  store.write("marketing", m);
+  res.json({ idea });
+});
+mkt.delete("/idea/:id", (req, res) => {
+  const m = readMkt();
+  m.ideas = m.ideas.filter((i) => i.id !== req.params.id);
+  store.write("marketing", m);
+  res.json({ ok: true });
+});
+// Auto-ideas: real content seeds mined from Universo's own data — the thing no
+// generic tool can do. Curated scholarships, top countries + fields, verified
+// universities, and the FAQs.
+mkt.get("/ideas-feed", (_req, res) => {
+  const seeds = [];
+  try {
+    const sch = curatedScholarships.allCurated();
+    sch.slice(0, 10).forEach((s) => {
+      seeds.push({ cat: "Scholarship", text: `${s.name} (${s.country})${s.tagline ? " — " + s.tagline : ""}` });
+      seeds.push({ cat: "Scholarship", text: `Who actually qualifies for ${s.name}?` });
+    });
+  } catch {}
+  const byCountry = {}, byField = {};
+  for (const u of UNIVERSITIES) {
+    if (u.country) byCountry[u.country] = (byCountry[u.country] || 0) + 1;
+    (u.fields_of_study || []).forEach((f) => (byField[f] = (byField[f] || 0) + 1));
+  }
+  Object.entries(byCountry).sort((a, b) => b[1] - a[1]).slice(0, 6)
+    .forEach(([c, n]) => seeds.push({ cat: "Country", text: `Studying in ${c}: ${n.toLocaleString("en-US")} universities to explore` }));
+  Object.entries(byField).sort((a, b) => b[1] - a[1]).slice(0, 6)
+    .forEach(([f]) => seeds.push({ cat: "Field", text: `Best European universities for ${f}` }));
+  UNIVERSITIES.filter((u) => u.data_verified).slice(0, 5)
+    .forEach((u) => seeds.push({ cat: "University", text: `Spotlight: ${u.name}${u.city ? " in " + u.city : ""}` }));
+  [
+    "Is studying in Europe really free? What Universo shows vs the myth",
+    "How students miss scholarships they actually qualify for",
+    "\"Is my degree eligible?\" — how to actually check",
+    "The hidden costs of studying abroad nobody warns you about",
+    "How Universo is different from just Googling universities",
+  ].forEach((t) => seeds.push({ cat: "FAQ", text: t }));
+  res.json({ seeds });
+});
+api.use("/marketing", mkt);
 
 app.use("/api", api);
 app.use("/api", (_req, res) => res.status(404).json({ error: "Not found." }));

@@ -8,235 +8,110 @@
     <link rel="icon" href="/favicon.svg?v=3" />
     <style>
       :root {
-        --bg: #f5f7fb;
-        --surface: #ffffff;
-        --surface-2: #eef1f6;
-        --ink: #10233f;
-        --soft: #45566e;
-        --faint: #6b7688;
-        --line: #e1e6ee;
-        --navy: #0b1f3a;
-        --teal: #0d9488;
-        --teal-bg: #e6f7f4;
-        --gold: #e9b949;
-        --danger: #d64550;
-        --ok: #1f9d6b;
-        --radius: 14px;
+        --bg: #f5f7fb; --surface: #ffffff; --surface-2: #eef1f6;
+        --ink: #10233f; --soft: #45566e; --faint: #6b7688; --line: #e1e6ee;
+        --navy: #0b1f3a; --teal: #0d9488; --teal-bg: #e6f7f4; --gold: #e9b949;
+        --danger: #d64550; --radius: 14px;
         --sans: "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       }
       :root[data-theme="dark"] {
-        --bg: #1c1b1a;
-        --surface: #292826;
-        --surface-2: #201e1c;
-        --ink: #eeede9;
-        --soft: #bebbb4;
-        --faint: #949089;
-        --line: rgba(255, 255, 255, 0.11);
-        --navy: #242322;
-        --teal: #46cdb6;
-        --teal-bg: rgba(70, 205, 182, 0.12);
-        --gold: #f2be5b;
-        --danger: #ec6f79;
-        --ok: #6fd6a1;
-        color-scheme: dark;
+        --bg: #1c1b1a; --surface: #292826; --surface-2: #201e1c;
+        --ink: #eeede9; --soft: #bebbb4; --faint: #949089; --line: rgba(255,255,255,0.11);
+        --navy: #242322; --teal: #46cdb6; --teal-bg: rgba(70,205,182,0.12); --gold: #f2be5b;
+        --danger: #ec6f79; color-scheme: dark;
       }
       * { box-sizing: border-box; }
-      body {
-        margin: 0;
-        font-family: var(--sans);
-        background: var(--bg);
-        color: var(--ink);
-        line-height: 1.5;
-        -webkit-font-smoothing: antialiased;
-      }
+      body { margin: 0; font-family: var(--sans); background: var(--bg); color: var(--ink); line-height: 1.5; -webkit-font-smoothing: antialiased; }
       a { color: var(--teal); }
       button { font-family: inherit; }
-      /* ---- Header / nav ---- */
-      header {
-        background: var(--navy);
-        color: #fff;
-        padding: 14px 18px;
-        position: sticky;
-        top: 0;
-        z-index: 20;
-      }
-      .head-in {
-        max-width: 1080px;
-        margin: 0 auto;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        flex-wrap: wrap;
-      }
-      .brand { display: flex; align-items: center; gap: 9px; }
+      header { background: var(--navy); color: #fff; padding: 14px 18px; position: sticky; top: 0; z-index: 20; }
+      .head-in { max-width: 900px; margin: 0 auto; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+      .brand { display: flex; align-items: center; gap: 9px; text-decoration: none; color: #fff; }
       .brand svg { width: 26px; height: 26px; color: #fff; }
       .brand b { font-weight: 800; font-style: italic; letter-spacing: -0.01em; }
-      .brand span { color: var(--gold); font-size: 0.72rem; font-weight: 700; }
+      .brand small { color: var(--gold); font-size: 0.72rem; font-weight: 700; }
       .save-state { margin-left: auto; font-size: 0.8rem; color: #cdd7e6; }
       .save-state.saving { color: var(--gold); }
       .save-state.saved { color: #7fe0cf; }
-      .tabs {
-        max-width: 1080px;
-        margin: 10px auto 0;
-        display: flex;
-        gap: 6px;
-        overflow-x: auto;
-        padding-bottom: 2px;
-      }
-      .tabs button {
-        border: 0;
-        background: rgba(255, 255, 255, 0.08);
-        color: #dfe6f2;
-        padding: 8px 14px;
-        border-radius: 999px;
-        font-weight: 700;
-        font-size: 0.85rem;
-        white-space: nowrap;
-        cursor: pointer;
-        min-height: 40px;
-      }
+      .save-state.error { color: #ffb0b0; }
+      .tabs { max-width: 900px; margin: 10px auto 0; display: flex; gap: 6px; overflow-x: auto; }
+      .tabs button { border: 0; background: rgba(255,255,255,0.08); color: #dfe6f2; padding: 8px 16px; border-radius: 999px; font-weight: 700; font-size: 0.85rem; white-space: nowrap; cursor: pointer; min-height: 40px; }
       .tabs button.on { background: var(--gold); color: var(--navy); }
-      /* ---- Layout ---- */
-      main { max-width: 1080px; margin: 0 auto; padding: 18px; }
-      .panel { display: none; }
-      .panel.on { display: block; }
-      h1 { font-size: 1.35rem; margin: 4px 0 4px; }
-      h2 { font-size: 1.05rem; margin: 22px 0 10px; }
+      main { max-width: 900px; margin: 0 auto; padding: 18px; }
+      .panel { display: none; } .panel.on { display: block; }
+      h1 { font-size: 1.35rem; margin: 4px 0; }
+      h2 { font-size: 1.02rem; margin: 20px 0 10px; }
       .sub { color: var(--soft); font-size: 0.9rem; margin: 0 0 14px; }
-      .card {
-        background: var(--surface);
-        border: 1px solid var(--line);
-        border-radius: var(--radius);
-        padding: 16px;
-        margin-bottom: 14px;
-      }
-      label { display: block; font-size: 0.78rem; font-weight: 700; color: var(--soft); text-transform: uppercase; letter-spacing: 0.03em; margin: 0 0 5px; }
-      input, select, textarea {
-        width: 100%;
-        font-family: inherit;
-        font-size: 0.95rem;
-        padding: 10px 12px;
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        background: var(--surface);
-        color: var(--ink);
-        min-height: 44px;
-      }
+      .card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; margin-bottom: 14px; }
+      label { display: block; font-size: 0.76rem; font-weight: 700; color: var(--soft); text-transform: uppercase; letter-spacing: 0.03em; margin: 0 0 5px; }
+      input, select, textarea { width: 100%; font-family: inherit; font-size: 0.95rem; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); min-height: 44px; }
       textarea { resize: vertical; min-height: 80px; }
-      .row { display: flex; gap: 10px; flex-wrap: wrap; }
-      .row > * { flex: 1; min-width: 140px; }
+      .row { display: flex; gap: 10px; flex-wrap: wrap; } .row > * { flex: 1; min-width: 140px; }
       .field { margin-bottom: 12px; }
-      .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        border: 0;
-        border-radius: 10px;
-        padding: 11px 16px;
-        min-height: 44px;
-        font-weight: 700;
-        font-size: 0.9rem;
-        cursor: pointer;
-        background: var(--teal);
-        color: #fff;
-      }
+      .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 0; border-radius: 10px; padding: 11px 16px; min-height: 44px; font-weight: 700; font-size: 0.9rem; cursor: pointer; background: var(--teal); color: #fff; }
       .btn.alt { background: var(--surface-2); color: var(--ink); border: 1px solid var(--line); }
       .btn.gold { background: var(--gold); color: var(--navy); }
       .btn.sm { padding: 7px 11px; min-height: 36px; font-size: 0.82rem; }
-      .btn.danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
       .muted { color: var(--faint); font-size: 0.85rem; }
       .pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; background: var(--surface-2); color: var(--soft); }
-      .pill.me { background: var(--teal-bg); color: var(--teal); }
-      .pill.mkt { background: #f3e7c6; color: #7a5b00; }
-      :root[data-theme="dark"] .pill.mkt { background: rgba(242,190,91,0.16); color: var(--gold); }
-      /* ---- Board ---- */
-      .board { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
-      .col { background: var(--surface-2); border-radius: var(--radius); padding: 10px; }
-      .col h3 { margin: 4px 6px 10px; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--soft); }
-      .idea {
-        background: var(--surface);
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        padding: 10px 11px;
-        margin-bottom: 8px;
-      }
-      .idea b { font-size: 0.9rem; display: block; }
-      .idea .meta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 7px; }
-      .idea select { min-height: 34px; padding: 5px 8px; font-size: 0.8rem; }
-      /* ---- Output blocks (repurposer) ---- */
-      .out { margin-top: 14px; }
+      .pill.teal { background: var(--teal-bg); color: var(--teal); }
+      .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+      .chip-btn { border: 1px solid var(--line); background: var(--surface); color: var(--soft); border-radius: 999px; padding: 8px 12px; font-size: 0.82rem; cursor: pointer; min-height: 40px; }
+      .chip-btn.on { border-color: var(--teal); color: var(--teal); font-weight: 700; }
+      .chip-btn.used { color: var(--faint); text-decoration: line-through; }
       .out-block { border: 1px solid var(--line); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
-      .out-head { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: var(--surface-2); }
+      .out-head { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: var(--surface-2); flex-wrap: wrap; }
       .out-head b { font-size: 0.9rem; }
       .out-head .btn { margin-left: auto; }
-      .out pre { margin: 0; padding: 12px; white-space: pre-wrap; word-wrap: break-word; font-family: inherit; font-size: 0.88rem; color: var(--ink); background: var(--surface); }
-      .tag { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 800; color: #fff; padding: 2px 7px; border-radius: 5px; }
-      .tag.prompt { background: var(--teal); }
-      .tag.draft { background: var(--gold); color: var(--navy); }
-      /* ---- Visuals ---- */
-      #cardPreview { width: 100%; max-width: 360px; border-radius: 10px; border: 1px solid var(--line); display: block; }
-      table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-      th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); }
-      th { color: var(--soft); font-size: 0.72rem; text-transform: uppercase; }
-      .chips { display: flex; gap: 6px; flex-wrap: wrap; }
-      .chip-btn { border: 1px solid var(--line); background: var(--surface); color: var(--soft); border-radius: 999px; padding: 6px 11px; font-size: 0.8rem; cursor: pointer; min-height: 36px; }
-      .chip-btn.used { background: var(--surface-2); color: var(--faint); text-decoration: line-through; }
-      .chip-btn.fresh { border-color: var(--teal); color: var(--teal); font-weight: 700; }
-      /* ---- Gate ---- */
-      #gate { max-width: 380px; margin: 12vh auto; padding: 26px; }
-      /* ---- Mobile ---- */
-      @media (max-width: 560px) {
-        main { padding: 14px; }
-        .out-head { flex-wrap: wrap; }
-        .out-head .btn { margin-left: 0; }
-      }
+      .out-block pre { margin: 0; padding: 12px; white-space: pre-wrap; word-wrap: break-word; font-family: inherit; font-size: 0.88rem; color: var(--ink); background: var(--surface); }
+      .tag { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 800; color: #fff; padding: 2px 7px; border-radius: 5px; }
+      .tag.prompt { background: var(--teal); } .tag.draft { background: var(--gold); color: var(--navy); }
+      .seed { display: block; width: 100%; text-align: left; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 10px; padding: 9px 11px; margin-bottom: 7px; cursor: pointer; font-size: 0.88rem; }
+      .seed:hover { border-color: var(--teal); }
+      .seed .pill { margin-right: 7px; }
+      .idea-item { border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 10px; background: var(--surface); }
+      .idea-item .top { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+      .idea-item b { flex: 1; min-width: 160px; }
+      .idea-item select { flex: 0 0 auto; width: auto; min-height: 40px; padding: 6px 10px; }
+      #gate { max-width: 380px; margin: 12vh auto; }
+      @media (max-width: 560px) { main { padding: 14px; } .out-head .btn { margin-left: 0; } }
     </style>
   </head>
   <body>
     <header>
       <div class="head-in">
-        <a class="brand" href="/admin">
-          <!--BRAND_MARK-->
-          <span style="display:flex;flex-direction:column;line-height:1"><b>Universo</b><span>MARKETING OS</span></span>
-        </a>
-        <div class="save-state" id="saveState">—</div>
+        <a class="brand" href="/admin"><!--BRAND_MARK--><span style="display:flex;flex-direction:column;line-height:1"><b>Universo</b><small>MARKETING OS</small></span></a>
+        <div class="save-state" id="saveState"></div>
       </div>
       <nav class="tabs" id="tabs" hidden>
-        <button data-tab="today" class="on">Today</button>
+        <button data-tab="create" class="on">Create</button>
         <button data-tab="ideas">Ideas</button>
-        <button data-tab="create">Create</button>
-        <button data-tab="visuals">Visuals</button>
         <button data-tab="library">Library</button>
-        <button data-tab="perf">Performance</button>
         <button data-tab="brain">Brand Brain</button>
       </nav>
     </header>
 
     <main>
-      <!-- LOGIN GATE -->
       <div class="card" id="gate">
         <h1>Marketing OS</h1>
-        <p class="sub">Sign in with your Universo admin account.</p>
+        <p class="sub">Sign in with your Universo account.</p>
         <div class="field"><label>Email</label><input id="g-email" type="email" autocomplete="username" /></div>
         <div class="field"><label>Password</label><input id="g-pass" type="password" autocomplete="current-password" /></div>
         <div id="g-err" class="muted" style="color:var(--danger);margin-bottom:10px" hidden></div>
         <button class="btn" id="g-btn" style="width:100%">Sign in</button>
       </div>
-
       <div id="app" hidden></div>
     </main>
 
     <script>
-      // ================= SEED CONTENT (version-controlled library) =================
+      // ===== Library (version-controlled) =====
       const BRAND_SEED = {
         mission: "Where you're born shouldn't determine how you begin. Universo helps future students discover European universities and the scholarships that can fund them — free, honest, no invented data.",
         product: "Discover 2,899 universities across 32 European countries (from the EU's official register, ETER), 300 hand-verified in depth. Match to what fits you, see real government scholarships you can actually use, compare side by side, and build a free Dream Plan to save, plan and track applications & deadlines. Free forever — funded by universities, not students.",
         audience: "Future/international students (esp. from Mongolia and other non-EU countries) who want to study in Europe — plus their parents. Mostly on phones, high intent, anxious about cost, eligibility and the process.",
         pains: "• Don't know where they can actually afford to study\n• Scholarships are scattered and confusing\n• Fear of hidden costs\n• Overwhelmed by requirements and deadlines\n• Agents overcharge\n• Language-requirement confusion\n• \"Is my degree even eligible?\"",
         tone: "Honest, warm, clear, encouraging. Plain language, no hype, no jargon. \"Same Start. Equal Chance.\" Never overstate traction; every number traceable to a source.",
-        donot: "Never invent tuition, eligibility, deadlines or scholarship figures. Never overstate how many people use it. No neon/AI-hype styling. Don't sound like a generic AI or a pushy agent.",
-        terms: "Dream Plan · shortlist · Discover · Scholarships · \"Same Start. Equal Chance.\" · say \"future students\" (not \"international students\")",
+        donot: "Never invent tuition, eligibility, deadlines or scholarship figures. Never overstate how many people use it. Don't sound like a generic AI or a pushy agent.",
         facts: "2,899 universities · 32 European countries · 300 hand-verified profiles · sourced from the EU register (ETER) · free forever",
         faqs: "• Is it free? Yes — funded by universities, not students.\n• Is the data accurate? Every uni is from the EU register; 300 are hand-verified.\n• Do I need an account? No to browse; an account lets you save & plan.\n• How is it different from Googling? It matches unis to you, tells you why, and puts real tuition/deadlines/language side by side.\n• Which countries? 32 across Europe."
       };
@@ -251,25 +126,9 @@
         { id: "scholarship", name: "Scholarship Spotlight", steps: ["Hook", "The scholarship", "What it covers", "Who it's for", "How Universo helps you use it", "CTA"] }
       ];
       const HOOKS = [
-        "Most students think {X}. Here's what actually happens.",
-        "You can study in {country} for €0. Here's how.",
-        "The scholarship nobody tells you about.",
-        "I checked 2,899 universities so you don't have to.",
-        "Applying abroad? Avoid this €{X} mistake.",
-        "POV: you just found out {country} has free tuition.",
-        "3 scholarships for {country} students closing soon.",
-        "Your dream university might be cheaper than you think.",
-        "Nobody explains this about studying abroad.",
-        "Stop paying an agent €{X}. Do this instead.",
-        "Studying in Europe isn't just for rich kids. Proof:",
-        "Save this before you apply anywhere."
+        "Most students think {X}. Here's what actually happens.", "You can study in {country} for €0. Here's how.", "The scholarship nobody tells you about.", "I checked 2,899 universities so you don't have to.", "Applying abroad? Avoid this €{X} mistake.", "POV: you just found out {country} has free tuition.", "3 scholarships for {country} students closing soon.", "Your dream university might be cheaper than you think.", "Nobody explains this about studying abroad.", "Stop paying an agent €{X}. Do this instead.", "Studying in Europe isn't just for rich kids. Proof:", "Save this before you apply anywhere."
       ];
-      const CTAS = {
-        Discover: "Find your matches free on Universo — link in bio.",
-        Save: "Save your shortlist so you never lose it.",
-        "Sign up": "Build your free Dream Plan in 20 seconds.",
-        Scholarship: "See which scholarships you can actually use — free."
-      };
+      const CTAS = { Discover: "Find your matches free on Universo — link in bio.", Save: "Save your shortlist so you never lose it.", "Sign up": "Build your free Dream Plan in 20 seconds.", Scholarship: "See which scholarships you can actually use — free." };
       const ANGLES = ["Tuition cost", "Hidden costs", "Scholarships", "Budgeting", "Application mistakes", "Country comparison", "A student's story", "Myth-busting", "Deadlines & timeline", "Eligibility", "Language requirements", "Parents' perspective"];
       const PLATFORMS = {
         reel: { name: "Reel / TikTok script", rule: "15–45s spoken script. Ruthless 2-second hook. One idea only. Suggest on-screen text beats. End on the CTA. ~90–150 words." },
@@ -277,154 +136,90 @@
         linkedin: { name: "LinkedIn post", rule: "Founder/professional voice. A story or insight, not a brochure. No hashtag spam. ~120–200 words." },
         reddit: { name: "Reddit post", rule: "Genuine and value-first — no marketing tone. Help first, mention Universo subtly at most once, and end with a question to spark replies." },
         x: { name: "X / Twitter", rule: "One punchy hook, ≤280 characters. Optionally note a 3-tweet thread outline." },
-        story: { name: "Story", rule: "One bold line + an interactive idea (poll/question sticker) + a swipe/link CTA." },
+        story: { name: "Story", rule: "One bold line + an interactive idea (poll/question sticker) + a link CTA." },
         carousel: { name: "Carousel", rule: "5–7 slides. Slide 1 = hook. Middle slides = one point each (short). Last slide = CTA. Give slide-by-slide text." },
         email: { name: "Email / newsletter", rule: "A subject line + a short scannable body + exactly one CTA." }
       };
-      const OWNERS = ["Marketer", "Founder"];
-      const STATUSES = ["Inbox", "Drafting", "Review", "Approved", "Scheduled", "Published"];
 
-      // ================= STATE + PERSISTENCE =================
-      let DATA = { brain: {}, ideas: [], perf: [] };
-      let saveTimer = null;
+      // ===== State =====
+      let DATA = { brain: {}, ideas: [] };
+      let FEED = null;
       const $ = (id) => document.getElementById(id);
       const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-      const uid = () => "m" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
       const brain = (k) => (DATA.brain && DATA.brain[k] != null && DATA.brain[k] !== "") ? DATA.brain[k] : BRAND_SEED[k];
-
-      function setSave(state) {
-        const el = $("saveState");
-        el.className = "save-state " + state;
-        el.textContent = state === "saving" ? "Saving…" : state === "saved" ? "All changes saved" : state === "error" ? "Save failed — retrying" : "";
-      }
-      function scheduleSave() {
-        setSave("saving");
-        clearTimeout(saveTimer);
-        saveTimer = setTimeout(save, 700);
-      }
-      async function save() {
+      let inflight = 0;
+      function setSave(s) { $("saveState").className = "save-state " + s; $("saveState").textContent = s === "saving" ? "Saving…" : s === "saved" ? "Saved ✓" : s === "error" ? "Save failed" : ""; }
+      async function api(method, path, body) {
+        inflight++; setSave("saving");
         try {
-          const r = await fetch("/api/admin/marketing", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(DATA) });
-          setSave(r.ok ? "saved" : "error");
-          if (!r.ok) setTimeout(save, 3000);
-        } catch { setSave("error"); setTimeout(save, 3000); }
-      }
-      async function load() {
-        const r = await fetch("/api/admin/marketing");
-        const d = await r.json();
-        DATA = { brain: d.brain || {}, ideas: Array.isArray(d.ideas) ? d.ideas : [], perf: Array.isArray(d.perf) ? d.perf : [] };
+          const r = await fetch("/api/marketing" + path, { method, headers: body ? { "Content-Type": "application/json" } : {}, body: body ? JSON.stringify(body) : undefined });
+          inflight--; setSave(r.ok ? (inflight ? "saving" : "saved") : "error");
+          return r.ok ? r.json().catch(() => ({})) : null;
+        } catch { inflight--; setSave("error"); return null; }
       }
 
-      // ================= AUTH =================
-      async function checkAuth() {
-        try { const r = await fetch("/api/admin/me"); return r.ok; } catch { return false; }
-      }
-      async function boot() {
-        if (await checkAuth()) { await start(); return; }
-        $("gate").style.display = "block";
-      }
+      // ===== Auth =====
+      async function checkAuth() { try { const r = await fetch("/api/marketing/me"); return r.ok; } catch { return false; } }
+      async function boot() { if (await checkAuth()) return start(); $("gate").style.display = "block"; }
       $("g-btn").addEventListener("click", async () => {
         $("g-err").hidden = true;
         try {
           const r = await fetch("/api/admin/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: $("g-email").value, password: $("g-pass").value }) });
           if (!r.ok) { const j = await r.json().catch(() => ({})); $("g-err").textContent = j.error || "Sign in failed."; $("g-err").hidden = false; return; }
-          await start();
+          start();
         } catch { $("g-err").textContent = "Network error."; $("g-err").hidden = false; }
       });
       $("g-pass").addEventListener("keydown", (e) => { if (e.key === "Enter") $("g-btn").click(); });
 
+      let TAB = "create";
       async function start() {
-        $("gate").style.display = "none";
-        $("tabs").hidden = false;
-        $("app").hidden = false;
+        $("gate").style.display = "none"; $("tabs").hidden = false; $("app").hidden = false;
+        const d = await (await fetch("/api/marketing/data")).json().catch(() => ({}));
+        DATA = { brain: d.brain || {}, ideas: Array.isArray(d.ideas) ? d.ideas : [] };
         setSave("saved");
-        await load();
-        buildTabs();
-        renderAll();
+        $("tabs").querySelectorAll("button").forEach((b) => b.onclick = () => { TAB = b.dataset.tab; $("tabs").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); render(); });
+        render();
       }
-
-      // ================= TABS =================
-      let TAB = "today";
-      function buildTabs() {
-        $("tabs").querySelectorAll("button").forEach((b) => {
-          b.onclick = () => { TAB = b.dataset.tab; $("tabs").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); showTab(); };
-        });
-      }
-      function showTab() {
+      function render() {
+        $("app").innerHTML = [panelCreate(), panelIdeas(), panelLibrary(), panelBrain()].join("");
         document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("on", p.id === "tab-" + TAB));
-      }
-      function renderAll() {
-        $("app").innerHTML = [panelToday(), panelIdeas(), panelCreate(), panelVisuals(), panelLibrary(), panelPerf(), panelBrain()].join("");
-        showTab();
-        wireCreate(); wireIdeas(); wireVisuals(); wirePerf(); wireBrain(); wireToday();
+        wireCreate(); wireIdeas(); wireLibrary(); wireBrain();
       }
 
-      // ================= TODAY =================
-      function panelToday() {
-        const byStatus = (s) => DATA.ideas.filter((i) => (i.status || "Inbox") === s);
-        const need = { "Needs a draft": byStatus("Drafting"), "Waiting for founder approval": byStatus("Review"), "Ready to schedule": byStatus("Approved"), "New ideas to triage": byStatus("Inbox") };
-        let cards = Object.entries(need).map(([label, list]) => list.length ? `<div class="card"><b>${label}</b> <span class="pill">${list.length}</span><div style="margin-top:8px">${list.map((i) => `<div style="padding:5px 0;border-bottom:1px solid var(--line)"><b>${esc(i.title)}</b> <span class="pill ${i.owner === "Founder" ? "me" : "mkt"}">${esc(i.owner || "Marketer")}</span></div>`).join("")}</div></div>` : "").join("");
-        if (!cards) cards = `<div class="card muted">Nothing queued yet. Add ideas in the <b>Ideas</b> tab, then they'll show up here by what needs doing next.</div>`;
-        return `<section class="panel" id="tab-today"><h1>Today</h1><p class="sub">What needs to happen next — so nobody has to ask "what should we make today?"</p>${cards}
-          <div class="card"><b>Quick add an idea</b><div class="row" style="margin-top:8px"><input id="today-idea" placeholder="One line — e.g. Why Mongolian students overpay agents" /><button class="btn" id="today-add" style="flex:0 0 auto">Add to Inbox</button></div></div></section>`;
-      }
-      function wireToday() {
-        const add = $("today-add"); if (!add) return;
-        add.onclick = () => { const v = $("today-idea").value.trim(); if (!v) return; DATA.ideas.unshift({ id: uid(), title: v, status: "Inbox", owner: "Marketer", createdAt: Date.now() }); $("today-idea").value = ""; scheduleSave(); renderAll(); };
-      }
-
-      // ================= IDEAS BOARD =================
-      function panelIdeas() {
-        const cols = STATUSES.map((s) => {
-          const list = DATA.ideas.filter((i) => (i.status || "Inbox") === s);
-          return `<div class="col"><h3>${s} <span class="pill">${list.length}</span></h3>${list.map(ideaCard).join("") || '<div class="muted" style="padding:6px">—</div>'}</div>`;
-        }).join("");
-        return `<section class="panel" id="tab-ideas"><h1>Ideas</h1><p class="sub">Your content pipeline. Move a card by changing its status; tag who owns it.</p>
-          <div class="card"><div class="row"><input id="idea-title" placeholder="New idea (one line)" /><select id="idea-owner" style="flex:0 0 130px">${OWNERS.map((o) => `<option>${o}</option>`).join("")}</select><button class="btn" id="idea-add" style="flex:0 0 auto">Add</button></div></div>
-          <div class="board">${cols}</div></section>`;
-      }
-      function ideaCard(i) {
-        return `<div class="idea" data-id="${i.id}"><b>${esc(i.title)}</b><div class="meta"><span class="pill ${i.owner === "Founder" ? "me" : "mkt"}">${esc(i.owner || "Marketer")}</span>${i.formula ? `<span class="pill">${esc((FORMULAS.find((f) => f.id === i.formula) || {}).name || "")}</span>` : ""}</div>
-          <div class="meta"><select data-act="status">${STATUSES.map((s) => `<option${(i.status || "Inbox") === s ? " selected" : ""}>${s}</option>`).join("")}</select><button class="chip-btn" data-act="create" title="Create content">✍️</button><button class="chip-btn" data-act="del" title="Delete">🗑</button></div></div>`;
-      }
-      function wireIdeas() {
-        const add = $("idea-add"); if (add) add.onclick = () => { const v = $("idea-title").value.trim(); if (!v) return; DATA.ideas.unshift({ id: uid(), title: v, status: "Inbox", owner: $("idea-owner").value, createdAt: Date.now() }); $("idea-title").value = ""; scheduleSave(); renderAll(); };
-        document.querySelectorAll("#tab-ideas .idea").forEach((el) => {
-          const id = el.dataset.id; const idea = DATA.ideas.find((i) => i.id === id); if (!idea) return;
-          el.querySelector('[data-act="status"]').onchange = (e) => { idea.status = e.target.value; scheduleSave(); renderAll(); };
-          el.querySelector('[data-act="del"]').onclick = () => { if (confirm("Delete this idea?")) { DATA.ideas = DATA.ideas.filter((i) => i.id !== id); scheduleSave(); renderAll(); } };
-          el.querySelector('[data-act="create"]').onclick = () => { $("c-idea").value = idea.title; TAB = "create"; $("tabs").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x.dataset.tab === "create")); showTab(); window.scrollTo(0, 0); };
-        });
-      }
-
-      // ================= CREATE (Repurposer / Prompt Engine) =================
+      // ===== CREATE =====
       function panelCreate() {
         return `<section class="panel" id="tab-create"><h1>Create</h1><p class="sub">One idea → a ready-to-post draft <b>and</b> a brand-aware prompt for any free AI (ChatGPT, Gemini, Claude, or local Ollama). Nothing is sent anywhere — you paste it yourself.</p>
           <div class="card">
-            <div class="field"><label>The idea (one line)</label><input id="c-idea" placeholder="e.g. Why international students miss scholarships they qualify for" /></div>
+            <div class="field"><label>The idea (one line)</label><input id="c-idea" placeholder="e.g. Why students miss scholarships they qualify for" /></div>
+            <div class="field"><button class="btn alt sm" id="c-feed">💡 Need an idea? Pull from Universo's data</button><div id="c-feed-list" style="margin-top:10px"></div></div>
             <div class="row">
               <div class="field"><label>Formula</label><select id="c-formula">${FORMULAS.map((f) => `<option value="${f.id}">${f.name}</option>`).join("")}</select></div>
               <div class="field"><label>Goal / CTA</label><select id="c-cta">${Object.keys(CTAS).map((k) => `<option>${k}</option>`).join("")}</select></div>
             </div>
-            <div class="field"><label>Platforms</label><div class="chips" id="c-plats">${Object.entries(PLATFORMS).map(([k, p], idx) => `<button type="button" class="chip-btn${idx < 3 ? " fresh" : ""}" data-plat="${k}" aria-pressed="${idx < 3}">${p.name}</button>`).join("")}</div></div>
-            <div class="row" style="margin-top:6px"><button class="btn gold" id="c-go" style="flex:0 0 auto">Generate content package</button><button class="btn alt" id="c-save" style="flex:0 0 auto">Save idea to board</button></div>
+            <div class="field"><label>Platforms</label><div class="chips" id="c-plats">${Object.entries(PLATFORMS).map(([k, p], i) => `<button type="button" class="chip-btn${i < 3 ? " on" : ""}" data-plat="${k}" aria-pressed="${i < 3}">${p.name}</button>`).join("")}</div></div>
+            <div class="row" style="margin-top:6px"><button class="btn gold" id="c-go" style="flex:0 0 auto">Generate content package</button><button class="btn alt" id="c-save" style="flex:0 0 auto">Save to Ideas</button></div>
           </div>
-          <div id="c-out" class="out"></div></section>`;
+          <div id="c-out"></div></section>`;
       }
       function wireCreate() {
         const plats = document.querySelectorAll("#c-plats .chip-btn");
-        plats.forEach((b) => b.onclick = () => { const on = b.getAttribute("aria-pressed") !== "true"; b.setAttribute("aria-pressed", on); b.classList.toggle("fresh", on); });
-        const go = $("c-go"); if (!go) return;
-        go.onclick = () => {
+        plats.forEach((b) => b.onclick = () => { const on = b.getAttribute("aria-pressed") !== "true"; b.setAttribute("aria-pressed", on); b.classList.toggle("on", on); });
+        const feedBtn = $("c-feed");
+        if (feedBtn) feedBtn.onclick = async () => {
+          if (!FEED) { feedBtn.textContent = "Loading real ideas…"; const r = await fetch("/api/marketing/ideas-feed"); FEED = (await r.json().catch(() => ({}))).seeds || []; feedBtn.textContent = "💡 Need an idea? Pull from Universo's data"; }
+          $("c-feed-list").innerHTML = FEED.map((s) => `<button type="button" class="seed" data-seed="${esc(s.text)}"><span class="pill teal">${esc(s.cat)}</span>${esc(s.text)}</button>`).join("");
+          document.querySelectorAll("#c-feed-list .seed").forEach((b) => b.onclick = () => { $("c-idea").value = b.dataset.seed; $("c-feed-list").innerHTML = ""; $("c-idea").scrollIntoView({ block: "center" }); });
+        };
+        $("c-go").onclick = () => {
           const idea = $("c-idea").value.trim(); if (!idea) { alert("Type the idea first."); return; }
           const formula = FORMULAS.find((f) => f.id === $("c-formula").value);
           const cta = CTAS[$("c-cta").value];
           const chosen = [...plats].filter((b) => b.getAttribute("aria-pressed") === "true").map((b) => b.dataset.plat);
           if (!chosen.length) { alert("Pick at least one platform."); return; }
           $("c-out").innerHTML = chosen.map((p) => outputBlock(p, idea, formula, cta)).join("");
-          wireCopy();
+          document.querySelectorAll("[data-copy]").forEach((b) => b.onclick = async () => { try { await navigator.clipboard.writeText($(b.dataset.copy).textContent); const t = b.textContent; b.textContent = "Copied ✓"; setTimeout(() => b.textContent = t, 1200); } catch { alert("Copy failed — select the text manually."); } });
         };
-        $("c-save").onclick = () => { const v = $("c-idea").value.trim(); if (!v) return; DATA.ideas.unshift({ id: uid(), title: v, status: "Drafting", owner: "Marketer", formula: $("c-formula").value, createdAt: Date.now() }); scheduleSave(); alert("Saved to the Ideas board (Drafting)."); };
+        $("c-save").onclick = async () => { const v = $("c-idea").value.trim(); if (!v) return; const r = await api("POST", "/idea", { title: v, formula: $("c-formula").value, status: "drafting" }); if (r && r.idea) { DATA.ideas.unshift(r.idea); alert("Saved to the Ideas tab (Drafting)."); } };
       }
       function brandBlock() {
         return `You are writing for Universo, a student platform. Mission: ${brain("mission")}
@@ -433,11 +228,10 @@ Audience: ${brain("audience")}
 Their pains:\n${brain("pains")}
 Tone: ${brain("tone")}
 Hard rules — never break these: ${brain("donot")}
-Useful facts (only state what's here, never invent numbers): ${brain("facts")}`;
+Approved facts (only state what's here, never invent numbers): ${brain("facts")}`;
       }
-      function buildPrompt(platKey, idea, formula, cta) {
-        const p = PLATFORMS[platKey];
-        const usedAngles = [...new Set(DATA.ideas.map((i) => i.angle).filter(Boolean))];
+      function buildPrompt(pk, idea, formula, cta) {
+        const p = PLATFORMS[pk];
         return `${brandBlock()}
 
 TASK: Write a ${p.name} about this idea:
@@ -449,116 +243,68 @@ ${formula.steps.map((s, i) => `${i + 1}. ${s}`).join("\n")}
 Platform rules: ${p.rule}
 End with this call to action (rephrase in Universo's voice): "${cta}"
 
-Style: sound like a real, warm human who's on the student's side — not a brand or an AI. No clichés, no "in today's fast-paced world", no emoji spam. Be specific and useful.${usedAngles.length ? `\nAvoid repeating these angles we've already used: ${usedAngles.join(", ")}.` : ""}
+Style: sound like a real, warm human on the student's side — not a brand or an AI. No clichés, no "in today's fast-paced world", no emoji spam. Be specific and useful.
 
 Output ONLY the finished ${p.name}, ready to post.`;
       }
-      function buildSkeleton(platKey, idea, formula, cta) {
-        const p = PLATFORMS[platKey];
-        return `[${p.name}] — draft skeleton for: ${idea}\n\n` + formula.steps.map((s) => `• ${s}:\n   …`).join("\n") + `\n• CTA: ${cta}\n\n(Platform note: ${p.rule})`;
+      function buildSkeleton(pk, idea, formula, cta) {
+        const p = PLATFORMS[pk];
+        return `[${p.name}] — skeleton for: ${idea}\n\n` + formula.steps.map((s) => `• ${s}:\n   …`).join("\n") + `\n• CTA: ${cta}\n\n(Platform note: ${p.rule})`;
       }
-      function outputBlock(platKey, idea, formula, cta) {
-        const p = PLATFORMS[platKey];
-        const prompt = buildPrompt(platKey, idea, formula, cta);
-        const skel = buildSkeleton(platKey, idea, formula, cta);
-        const pid = "p_" + platKey, sid = "s_" + platKey;
+      function outputBlock(pk, idea, formula, cta) {
+        const p = PLATFORMS[pk], pid = "p_" + pk, sid = "s_" + pk;
         return `<div class="out-block"><div class="out-head"><b>${p.name}</b></div>
-          <div class="out-head" style="background:var(--surface)"><span class="tag prompt">Prompt for free AI</span><button class="btn sm" data-copy="${pid}">Copy prompt</button></div><pre id="${pid}">${esc(prompt)}</pre>
-          <div class="out-head" style="background:var(--surface)"><span class="tag draft">Manual skeleton</span><button class="btn sm alt" data-copy="${sid}">Copy skeleton</button></div><pre id="${sid}">${esc(skel)}</pre></div>`;
-      }
-      function wireCopy() {
-        document.querySelectorAll("[data-copy]").forEach((b) => b.onclick = async () => { try { await navigator.clipboard.writeText($(b.dataset.copy).textContent); const t = b.textContent; b.textContent = "Copied ✓"; setTimeout(() => b.textContent = t, 1200); } catch { alert("Copy failed — select the text manually."); } });
+          <div class="out-head" style="background:var(--surface)"><span class="tag prompt">Prompt for free AI</span><button class="btn sm" data-copy="${pid}">Copy prompt</button></div><pre id="${pid}">${esc(buildPrompt(pk, idea, formula, cta))}</pre>
+          <div class="out-head" style="background:var(--surface)"><span class="tag draft">Manual skeleton</span><button class="btn sm alt" data-copy="${sid}">Copy skeleton</button></div><pre id="${sid}">${esc(buildSkeleton(pk, idea, formula, cta))}</pre></div>`;
       }
 
-      // ================= VISUALS (canvas → PNG) =================
-      const CARD_SIZES = { square: [1080, 1080], portrait: [1080, 1350], story: [1080, 1920] };
-      function panelVisuals() {
-        return `<section class="panel" id="tab-visuals"><h1>Visuals</h1><p class="sub">Type text → a branded card → download a PNG. On-brand, instant, free.</p>
-          <div class="card">
-            <div class="row"><div class="field"><label>Type</label><select id="v-type"><option value="quote">Quote / statement</option><option value="stat">Stat card</option><option value="uni">University spotlight</option></select></div>
-            <div class="field"><label>Size</label><select id="v-size"><option value="square">Square 1080</option><option value="portrait">Portrait 1080×1350</option><option value="story">Story 1080×1920</option></select></div>
-            <div class="field"><label>Theme</label><select id="v-look"><option value="navy">Navy</option><option value="teal">Teal</option><option value="gold">Gold</option></select></div></div>
-            <div class="field"><label>Big text</label><textarea id="v-main" rows="3">Where you're born shouldn't determine how you begin.</textarea></div>
-            <div class="field"><label>Small text (label / source / handle)</label><input id="v-sub" value="Universo · Same Start. Equal Chance." /></div>
-            <div class="row"><button class="btn" id="v-render" style="flex:0 0 auto">Preview</button><button class="btn gold" id="v-dl" style="flex:0 0 auto">Download PNG</button></div>
-          </div>
-          <canvas id="cardPreview" width="1080" height="1080"></canvas></section>`;
+      // ===== IDEAS =====
+      function panelIdeas() {
+        const list = DATA.ideas;
+        return `<section class="panel" id="tab-ideas"><h1>Ideas</h1><p class="sub">Saved ideas and finished drafts. Status: idea → drafting → posted. Paste the AI's final output into "Final draft" so nothing gets lost.</p>
+          <div class="card"><div class="row"><input id="i-title" placeholder="New idea (one line)" /><button class="btn" id="i-add" style="flex:0 0 auto">Add</button></div></div>
+          ${list.length ? list.map(ideaItem).join("") : '<div class="card muted">No saved ideas yet. Add one above, or save one from the Create tab.</div>'}</section>`;
       }
-      function drawCard() {
-        const c = $("cardPreview"); const ctx = c.getContext("2d");
-        const [w, h] = CARD_SIZES[$("v-size").value]; c.width = w; c.height = h;
-        const look = $("v-look").value;
-        const bg = look === "teal" ? "#0d9488" : look === "gold" ? "#e9b949" : "#0b1f3a";
-        const fg = look === "gold" ? "#0b1f3a" : "#ffffff";
-        const accent = look === "gold" ? "#0b1f3a" : "#e9b949";
-        ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
-        // subtle corner accent bar
-        ctx.fillStyle = accent; ctx.fillRect(90, 120, 90, 8);
-        const pad = 90;
-        const type = $("v-type").value;
-        let main = $("v-main").value, sub = $("v-sub").value;
-        ctx.fillStyle = fg;
-        ctx.textBaseline = "top";
-        if (type === "stat") { ctx.font = "800 190px " + getComputedStyle(document.body).fontFamily; }
-        else { ctx.font = "800 " + (main.length > 90 ? 62 : main.length > 45 ? 78 : 96) + "px " + getComputedStyle(document.body).fontFamily; }
-        wrapText(ctx, main, pad, 200, w - pad * 2, type === "stat" ? 200 : 110);
-        ctx.font = "600 34px " + getComputedStyle(document.body).fontFamily;
-        ctx.fillStyle = look === "gold" ? "rgba(11,31,58,0.75)" : "rgba(255,255,255,0.82)";
-        ctx.fillText(sub, pad, h - 130);
-        // wordmark
-        ctx.fillStyle = accent; ctx.font = "800 italic 40px " + getComputedStyle(document.body).fontFamily;
-        ctx.fillText("Universo", pad, h - 190);
+      function ideaItem(i) {
+        const fname = (FORMULAS.find((f) => f.id === i.formula) || {}).name;
+        return `<div class="idea-item" data-id="${i.id}"><div class="top"><b>${esc(i.title)}</b>
+          <select data-act="status">${["idea", "drafting", "posted"].map((s) => `<option${(i.status || "idea") === s ? " selected" : ""}>${s}</option>`).join("")}</select>
+          <button class="chip-btn" data-act="del" title="Delete">🗑</button></div>
+          ${fname ? `<div style="margin-top:6px"><span class="pill">${esc(fname)}</span></div>` : ""}
+          <div style="margin-top:8px"><label>Final draft (paste the AI's output here)</label><textarea data-act="draft" rows="2" placeholder="…">${esc(i.draft || "")}</textarea></div></div>`;
       }
-      function wrapText(ctx, text, x, y, maxW, lh) {
-        const words = String(text).split(/\s+/); let line = "", yy = y;
-        for (const wd of words) { const t = line ? line + " " + wd : wd; if (ctx.measureText(t).width > maxW && line) { ctx.fillText(line, x, yy); line = wd; yy += lh; } else line = t; }
-        if (line) ctx.fillText(line, x, yy);
-      }
-      function wireVisuals() {
-        if (!$("v-render")) return;
-        $("v-render").onclick = drawCard;
-        $("v-dl").onclick = () => { drawCard(); $("cardPreview").toBlob((b) => { const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "universo-card.png"; a.click(); URL.revokeObjectURL(a.href); }); };
-        drawCard();
+      function wireIdeas() {
+        const add = $("i-add");
+        if (add) add.onclick = async () => { const v = $("i-title").value.trim(); if (!v) return; const r = await api("POST", "/idea", { title: v }); if (r && r.idea) { DATA.ideas.unshift(r.idea); $("i-title").value = ""; render(); } };
+        document.querySelectorAll("#tab-ideas .idea-item").forEach((el) => {
+          const id = el.dataset.id, idea = DATA.ideas.find((x) => x.id === id); if (!idea) return;
+          el.querySelector('[data-act="status"]').onchange = (e) => { idea.status = e.target.value; api("PATCH", "/idea/" + id, { status: e.target.value }); };
+          el.querySelector('[data-act="del"]').onclick = async () => { if (!confirm("Delete this idea?")) return; await api("DELETE", "/idea/" + id); DATA.ideas = DATA.ideas.filter((x) => x.id !== id); render(); };
+          let t; el.querySelector('[data-act="draft"]').oninput = (e) => { idea.draft = e.target.value; clearTimeout(t); t = setTimeout(() => api("PATCH", "/idea/" + id, { draft: e.target.value }), 600); };
+        });
       }
 
-      // ================= LIBRARY =================
+      // ===== LIBRARY =====
       function panelLibrary() {
-        return `<section class="panel" id="tab-library"><h1>Library</h1><p class="sub">Reusable building blocks + the anti-repetition angle picker.</p>
-          <div class="card"><h2 style="margin-top:0">Angle picker (anti-repetition)</h2><p class="muted">For a topic, pick a fresh angle. Grey = you've used it. Tap to mark used/unused.</p><div class="chips" id="lib-angles">${ANGLES.map((a) => `<button class="chip-btn" data-angle="${esc(a)}">${esc(a)}</button>`).join("")}</div></div>
+        return `<section class="panel" id="tab-library"><h1>Library</h1><p class="sub">Reusable building blocks + the anti-repetition angle picker (tap to grey out angles you've used on a topic).</p>
+          <div class="card"><h2 style="margin-top:0">Angle picker</h2><div class="chips" id="lib-angles">${ANGLES.map((a) => `<button class="chip-btn" data-angle>${esc(a)}</button>`).join("")}</div></div>
           <div class="card"><h2 style="margin-top:0">Hook bank</h2>${HOOKS.map((h) => `<div style="padding:6px 0;border-bottom:1px solid var(--line)"><button class="btn sm alt" data-hook="${esc(h)}" style="margin-right:8px">Copy</button>${esc(h)}</div>`).join("")}</div>
           <div class="card"><h2 style="margin-top:0">Formulas</h2>${FORMULAS.map((f) => `<div style="padding:8px 0;border-bottom:1px solid var(--line)"><b>${f.name}</b><div class="muted">${f.steps.join(" → ")}</div></div>`).join("")}</div>
           <div class="card"><h2 style="margin-top:0">CTAs</h2>${Object.entries(CTAS).map(([k, v]) => `<div style="padding:6px 0"><span class="pill">${k}</span> ${esc(v)}</div>`).join("")}</div></section>`;
       }
-
-      // ================= PERFORMANCE =================
-      function panelPerf() {
-        const rows = DATA.perf.slice().sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-        const top = rows.slice().sort((a, b) => (b.views || 0) - (a.views || 0))[0];
-        return `<section class="panel" id="tab-perf"><h1>Performance</h1><p class="sub">Log what you posted → learn what works → make more of it.</p>
-          ${top ? `<div class="card"><b>🏆 Best so far:</b> "${esc(top.title)}" (${top.views || 0} views on ${esc(top.platform || "")}). <button class="btn sm gold" id="perf-more">Make 5 more like this →</button></div>` : ""}
-          <div class="card"><b>Log a post</b>
-            <div class="row" style="margin-top:8px"><input id="pf-title" placeholder="Title / topic" /><input id="pf-plat" placeholder="Platform" style="flex:0 0 120px" /><input id="pf-date" type="date" style="flex:0 0 150px" /></div>
-            <div class="row" style="margin-top:8px"><input id="pf-views" type="number" placeholder="Views" /><input id="pf-likes" type="number" placeholder="Likes" /><input id="pf-saves" type="number" placeholder="Saves" /><input id="pf-clicks" type="number" placeholder="Clicks" /><button class="btn" id="pf-add" style="flex:0 0 auto">Add</button></div>
-          </div>
-          <div class="card" style="overflow-x:auto"><table><thead><tr><th>Date</th><th>Title</th><th>Platform</th><th>Views</th><th>Likes</th><th>Saves</th><th>Clicks</th><th></th></tr></thead><tbody>${rows.map((r) => `<tr data-id="${r.id}"><td>${esc(r.date || "")}</td><td>${esc(r.title || "")}</td><td>${esc(r.platform || "")}</td><td>${r.views || 0}</td><td>${r.likes || 0}</td><td>${r.saves || 0}</td><td>${r.clicks || 0}</td><td><button class="chip-btn" data-del>🗑</button></td></tr>`).join("") || '<tr><td colspan="8" class="muted">No posts logged yet.</td></tr>'}</tbody></table></div></section>`;
-      }
-      function wirePerf() {
-        const add = $("pf-add"); if (!add) return;
-        add.onclick = () => { const t = $("pf-title").value.trim(); if (!t) return; DATA.perf.push({ id: uid(), title: t, platform: $("pf-plat").value, date: $("pf-date").value, views: +$("pf-views").value || 0, likes: +$("pf-likes").value || 0, saves: +$("pf-saves").value || 0, clicks: +$("pf-clicks").value || 0 }); scheduleSave(); renderAll(); TAB = "perf"; showTab(); };
-        document.querySelectorAll("#tab-perf tr[data-id]").forEach((tr) => { const b = tr.querySelector("[data-del]"); if (b) b.onclick = () => { DATA.perf = DATA.perf.filter((r) => r.id !== tr.dataset.id); scheduleSave(); renderAll(); TAB = "perf"; showTab(); }; });
-        const more = $("perf-more"); if (more) more.onclick = () => { const top = DATA.perf.slice().sort((a, b) => (b.views || 0) - (a.views || 0))[0]; $("c-idea") && ($("c-idea").value = "5 fresh takes on: " + top.title); TAB = "create"; $("tabs").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x.dataset.tab === "create")); showTab(); window.scrollTo(0, 0); };
-      }
-
-      // ================= BRAND BRAIN =================
-      const BRAIN_FIELDS = [["mission", "Mission"], ["product", "What Universo is"], ["audience", "Audience"], ["pains", "Student pains"], ["tone", "Tone of voice"], ["donot", "Hard rules (never do)"], ["terms", "Terminology"], ["facts", "Approved facts / numbers"], ["faqs", "FAQs"]];
-      function panelBrain() {
-        return `<section class="panel" id="tab-brain"><h1>Brand Brain</h1><p class="sub">Universo's messaging — written once, injected into every prompt automatically so you never re-explain the product. Edit to refine; blank = use the seeded default.</p>
-          ${BRAIN_FIELDS.map(([k, label]) => `<div class="card"><label>${label}</label><textarea data-brain="${k}" rows="${k === "product" || k === "pains" || k === "faqs" ? 5 : 3}">${esc(brain(k))}</textarea></div>`).join("")}</section>`;
-      }
-      function wireBrain() {
-        document.querySelectorAll("[data-brain]").forEach((t) => t.oninput = () => { DATA.brain[t.dataset.brain] = t.value; scheduleSave(); });
+      function wireLibrary() {
         document.querySelectorAll("#tab-library [data-angle]").forEach((b) => b.onclick = () => b.classList.toggle("used"));
         document.querySelectorAll("#tab-library [data-hook]").forEach((b) => b.onclick = async () => { try { await navigator.clipboard.writeText(b.dataset.hook); const x = b.textContent; b.textContent = "Copied"; setTimeout(() => b.textContent = x, 1000); } catch {} });
+      }
+
+      // ===== BRAND BRAIN =====
+      const BRAIN_FIELDS = [["mission", "Mission"], ["product", "What Universo is"], ["audience", "Audience"], ["pains", "Student pains"], ["tone", "Tone of voice"], ["donot", "Hard rules (never do)"], ["facts", "Approved facts / numbers"], ["faqs", "FAQs"]];
+      function panelBrain() {
+        return `<section class="panel" id="tab-brain"><h1>Brand Brain</h1><p class="sub">Universo's messaging — written once, injected into every prompt so you never re-explain the product. Edit to refine; blank = the seeded default.</p>
+          ${BRAIN_FIELDS.map(([k, l]) => `<div class="card"><label>${l}</label><textarea data-brain="${k}" rows="${["product", "pains", "faqs"].includes(k) ? 5 : 3}">${esc(brain(k))}</textarea></div>`).join("")}</section>`;
+      }
+      function wireBrain() {
+        document.querySelectorAll("[data-brain]").forEach((t) => { let tm; t.oninput = () => { DATA.brain[t.dataset.brain] = t.value; clearTimeout(tm); tm = setTimeout(() => api("PATCH", "/brain", { [t.dataset.brain]: t.value }), 600); }; });
       }
 
       boot();
