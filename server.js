@@ -35,6 +35,7 @@ const {
   catalog: scholarshipCatalog,
 } = require("./lib/scholarships");
 const curatedScholarships = require("./lib/scholarships-curated");
+const trends = require("./lib/trends");
 const languageReqs = require("./lib/language-requirements");
 const notify = require("./lib/notify");
 const brand = require("./lib/brand");
@@ -2465,6 +2466,7 @@ mkt.patch("/brain", (req, res) => {
 });
 const MKT_STATUS = ["idea", "drafting", "review", "posted"];
 const MKT_OWNER = ["Marketer", "Founder"];
+const MKT_PRIORITY = ["low", "med", "high"];
 const okDue = (d) => d === "" || (typeof d === "string" && DATE_RE.test(d));
 mkt.post("/idea", (req, res) => {
   const b = req.body || {};
@@ -2478,7 +2480,10 @@ mkt.post("/idea", (req, res) => {
     formula: str(b.formula, 40),
     status: MKT_STATUS.includes(b.status) ? b.status : "idea",
     owner: MKT_OWNER.includes(b.owner) ? b.owner : "Marketer",
+    priority: MKT_PRIORITY.includes(b.priority) ? b.priority : "med",
     due: okDue(b.due) ? b.due || "" : "",
+    source: str(b.source, 400),
+    rationale: str(b.rationale, 600),
     draft: "",
     createdAt: Date.now(),
   };
@@ -2495,11 +2500,23 @@ mkt.patch("/idea/:id", (req, res) => {
   if (b.title !== undefined) idea.title = str(b.title, 300);
   if (b.status !== undefined && MKT_STATUS.includes(b.status)) idea.status = b.status;
   if (b.owner !== undefined && MKT_OWNER.includes(b.owner)) idea.owner = b.owner;
+  if (b.priority !== undefined && MKT_PRIORITY.includes(b.priority)) idea.priority = b.priority;
   if (b.due !== undefined) idea.due = b.due || "";
   if (b.formula !== undefined) idea.formula = str(b.formula, 40);
   if (b.draft !== undefined) idea.draft = str(b.draft, 8000);
   store.write("marketing", m);
   res.json({ idea });
+});
+// Trend Radar: this week's real education headlines (Google News RSS, cached),
+// plus manual research links. €0, no keys. Never throws — falls back to cache
+// or empty + the research links.
+mkt.get("/radar", (_req, res) => {
+  trends
+    .getRadar()
+    .then((r) =>
+      res.json({ updatedAt: r.at, fromCache: r.fromCache, items: r.items, errors: r.errors, research: trends.RESEARCH_LINKS }),
+    )
+    .catch(() => res.json({ updatedAt: 0, items: [], errors: [], research: trends.RESEARCH_LINKS }));
 });
 mkt.delete("/idea/:id", (req, res) => {
   const m = readMkt();

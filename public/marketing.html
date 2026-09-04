@@ -62,6 +62,29 @@
       .plan-row:last-child { border-bottom: 0; }
       .pr-title { flex: 1; min-width: 150px; font-weight: 600; font-size: 0.92rem; }
       .plan-row .btn { margin-left: auto; }
+      /* Radar / intelligence */
+      .radar-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+      .radar-top h1 { margin: 4px 0; }
+      .mode-toggle { margin-left: auto; display: flex; gap: 4px; background: var(--surface-2); padding: 3px; border-radius: 999px; }
+      .mode-toggle .chip-btn { border: 0; min-height: 34px; padding: 6px 12px; }
+      .mode-toggle .chip-btn.on { background: var(--teal); color: #fff; }
+      .action { display: block; width: 100%; text-align: left; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 10px; padding: 11px 13px; margin-bottom: 8px; cursor: pointer; font-size: 0.92rem; font-weight: 600; }
+      .action:hover { border-color: var(--teal); }
+      .warn { background: rgba(233,185,73,0.12); border-color: rgba(233,185,73,0.4); }
+      .opp { border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 12px; background: var(--surface); }
+      .opp-head { display: flex; gap: 8px; margin-bottom: 8px; }
+      .opp-angle { font-weight: 800; font-size: 1.02rem; margin-bottom: 6px; }
+      .opp-why { font-size: 0.88rem; color: var(--soft); margin-bottom: 8px; }
+      .opp-meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.85rem; color: var(--soft); margin-bottom: 6px; }
+      .opp-hooks { font-size: 0.86rem; margin-bottom: 6px; } .opp-hooks ul { margin: 4px 0 0; padding-left: 18px; } .opp-hooks li { margin: 2px 0; }
+      .opp-src { font-size: 0.82rem; color: var(--faint); margin-bottom: 10px; }
+      .opp-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+      .opp-prompt { margin: 10px 0 0; padding: 11px; white-space: pre-wrap; word-wrap: break-word; font-size: 0.82rem; background: var(--surface-2); border-radius: 8px; }
+      .head-item { padding: 8px 0; border-bottom: 1px solid var(--line); }
+      .head-item:last-child { border-bottom: 0; }
+      .head-title { display: inline-block; font-weight: 600; font-size: 0.9rem; }
+      .head-meta { font-size: 0.78rem; color: var(--faint); margin-top: 3px; }
+      .link-mini { border: 0; background: none; color: var(--teal); font: inherit; font-size: 0.78rem; font-weight: 700; cursor: pointer; padding: 0; }
       .chips { display: flex; gap: 6px; flex-wrap: wrap; }
       .chip-btn { border: 1px solid var(--line); background: var(--surface); color: var(--soft); border-radius: 999px; padding: 8px 12px; font-size: 0.82rem; cursor: pointer; min-height: 40px; }
       .chip-btn.on { border-color: var(--teal); color: var(--teal); font-weight: 700; }
@@ -81,7 +104,7 @@
       .idea-item b { flex: 1; min-width: 160px; }
       .idea-item select { flex: 0 0 auto; width: auto; min-height: 40px; padding: 6px 10px; }
       #gate { max-width: 380px; margin: 12vh auto; }
-      @media (max-width: 560px) { main { padding: 14px; } .out-head .btn { margin-left: 0; } }
+      @media (max-width: 560px) { main { padding: 14px; } .out-head .btn { margin-left: 0; } .btn.sm, .chip-btn { min-height: 40px; } .opp-actions .btn { flex: 1; } }
     </style>
   </head>
   <body>
@@ -91,7 +114,8 @@
         <div class="save-state" id="saveState"></div>
       </div>
       <nav class="tabs" id="tabs" hidden>
-        <button data-tab="plan" class="on">Plan</button>
+        <button data-tab="radar" class="on">🔥 What's Happening</button>
+        <button data-tab="plan">Plan</button>
         <button data-tab="create">Create</button>
         <button data-tab="ideas">Ideas</button>
         <button data-tab="library">Library</button>
@@ -179,7 +203,9 @@
       });
       $("g-pass").addEventListener("keydown", (e) => { if (e.key === "Enter") $("g-btn").click(); });
 
-      let TAB = "plan";
+      let TAB = "radar";
+      let RADAR = null; // { items, research, updatedAt } — this week's news, fetched once
+      function mode() { try { return localStorage.getItem("mkt-mode") || "Marketer"; } catch { return "Marketer"; } }
       async function start() {
         $("gate").style.display = "none"; $("tabs").hidden = false; $("app").hidden = false;
         const d = await (await fetch("/api/marketing/data")).json().catch(() => ({}));
@@ -187,11 +213,147 @@
         setSave("saved");
         $("tabs").querySelectorAll("button").forEach((b) => b.onclick = () => { TAB = b.dataset.tab; $("tabs").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); render(); });
         render();
+        loadRadar();
+      }
+      async function loadRadar() {
+        try { RADAR = await (await fetch("/api/marketing/radar")).json(); } catch { RADAR = { items: [], research: [] }; }
+        if (TAB === "radar") render();
       }
       function render() {
-        $("app").innerHTML = [panelPlan(), panelCreate(), panelIdeas(), panelLibrary(), panelBrain()].join("");
+        $("app").innerHTML = [panelRadar(), panelPlan(), panelCreate(), panelIdeas(), panelLibrary(), panelBrain()].join("");
         document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("on", p.id === "tab-" + TAB));
-        wirePlan(); wireCreate(); wireIdeas(); wireLibrary(); wireBrain();
+        wireRadar(); wirePlan(); wireCreate(); wireIdeas(); wireLibrary(); wireBrain();
+      }
+
+      // ===== RADAR / INTELLIGENCE =====
+      // How each topic becomes a Universo content play (deterministic + brand-aware,
+      // €0 — no AI needed to interpret; the optional prompt uses free AI).
+      const TOPIC_PLAY = {
+        Scholarships: { angle: "The scholarship most students miss — and how to find yours", platform: "reel", format: "Reel / carousel", formula: "scholarship", cta: "Scholarship", urgency: "This week", why: "Scholarship news is moving this week and funding is the #1 thing your audience is anxious about." },
+        Cost: { angle: "What studying abroad actually costs — and how to cut it", platform: "reel", format: "Reel", formula: "pain", cta: "Discover", urgency: "This week", why: "Cost is in the news and it's the biggest fear for future students — be the honest source." },
+        Visa: { angle: "Student-visa changes: what future students need to know", platform: "carousel", format: "Carousel / LinkedIn", formula: "advice", cta: "Sign up", urgency: "This week", why: "Visa/immigration news shifts fast and students panic — win trust by being calm and clear." },
+        Applications: { angle: "Application deadlines are closer than you think — a simple plan", platform: "reel", format: "Reel / story", formula: "advice", cta: "Sign up", urgency: "This week", why: "Deadline season — high urgency and high search intent right now." },
+        Erasmus: { angle: "Erasmus, explained for non-EU students", platform: "carousel", format: "Carousel", formula: "discovery", cta: "Scholarship", urgency: "Evergreen", why: "Erasmus gets attention but is widely misunderstood — a clear explainer earns saves." },
+        Rankings: { angle: "Rankings ≠ the right fit. Here's what actually matters", platform: "linkedin", format: "LinkedIn / Reel", formula: "myth", cta: "Discover", urgency: "Evergreen", why: "Rankings get clicks but mislead students — a strong Universo contrarian angle." },
+        "Study abroad": { angle: "Studying in Europe isn't just for rich kids — proof", platform: "reel", format: "Reel", formula: "myth", cta: "Discover", urgency: "This week", why: "Broad study-abroad conversation this week — join it with a myth-bust." },
+      };
+      function topicOf(t) { t = (t || "").toLowerCase();
+        if (/scholarship|grant|bursary|stipend|funded|funding/.test(t)) return "Scholarships";
+        if (/visa|immigration|permit/.test(t)) return "Visa";
+        if (/tuition|fee|cost|afford|expensive|price|financ/.test(t)) return "Cost";
+        if (/deadline|application|admission|apply|requirement/.test(t)) return "Applications";
+        if (/erasmus|exchange/.test(t)) return "Erasmus";
+        if (/ranking|best universit|top universit/.test(t)) return "Rankings";
+        return "Study abroad"; }
+      function firstSentence(s) { return String(s || "").split(/(?<=[.!?])\s/)[0]; }
+      function opportunityFor(item) {
+        const topic = item.topic || topicOf(item.title);
+        const play = TOPIC_PLAY[topic] || TOPIC_PLAY["Study abroad"];
+        const hooks = [
+          `Nobody tells international students this about ${topic.toLowerCase()}.`,
+          `${item.title} — here's what it actually means for you.`,
+          `${play.angle} 👇`,
+        ];
+        return { topic, trend: item.title, source: item.source, link: item.link, why: play.why,
+          audience: firstSentence(brain("audience")), angle: play.angle, format: play.format,
+          platform: play.platform, formula: play.formula, cta: play.cta, urgency: play.urgency, hooks };
+      }
+      function oppCard(o, key) {
+        const urg = o.urgency === "This week" ? '<span class="pill soon">🔥 This week</span>' : '<span class="pill">Evergreen</span>';
+        return `<div class="opp" data-key="${key}">
+          <div class="opp-head"><span class="pill teal">${esc(o.topic)}</span>${urg}</div>
+          <div class="opp-angle">${esc(o.angle)}</div>
+          <div class="opp-why"><b>Why now:</b> ${esc(o.why)}</div>
+          <div class="opp-meta"><span><b>Audience:</b> ${esc(o.audience)}</span><span><b>Format:</b> ${esc(o.format)}</span></div>
+          <div class="opp-hooks"><b>Hooks:</b><ul>${o.hooks.map((h) => `<li>${esc(h)}</li>`).join("")}</ul></div>
+          ${o.trend ? `<div class="opp-src"><b>Source:</b> ${o.link ? `<a href="${esc(o.link)}" target="_blank" rel="noopener">${esc(o.trend)} ↗</a>` : esc(o.trend)}${o.source ? " · " + esc(o.source) : ""}</div>` : ""}
+          <div class="opp-actions"><button class="btn sm gold" data-opp-add="${key}">＋ Add to Ideas</button><button class="btn sm" data-opp-create="${key}">Create now →</button><button class="btn sm alt" data-opp-prompt="${key}">Copy AI prompt</button></div>
+          <pre class="opp-prompt" id="opp-pre-${key}" hidden></pre></div>`;
+      }
+      let OPPS = []; // current opportunity objects, indexed by key
+      function fatigueWarning() {
+        const recent = DATA.ideas.filter((i) => i.status !== "posted").slice(0, 12);
+        const counts = {}; recent.forEach((i) => { const tp = topicOf(i.title); counts[tp] = (counts[tp] || 0) + 1; });
+        const over = Object.entries(counts).find(([, n]) => n >= 4);
+        if (!over) return "";
+        const used = new Set(recent.map((i) => topicOf(i.title)));
+        const fresh = ANGLES.find((a) => !used.has(topicOf(a))) || "a student story";
+        return `<div class="card warn">⚠️ <b>Repetition check:</b> you have ${over[1]} active ideas about <b>${esc(over[0])}</b>. Try a fresh angle — e.g. <b>${esc(fresh)}</b> — so the feed doesn't feel samey.</div>`;
+      }
+      function todaysActions() {
+        const acts = [];
+        const review = DATA.ideas.filter((i) => i.status === "review");
+        const today = new Date().toISOString().slice(0, 10);
+        const dueNow = DATA.ideas.filter((i) => i.due && i.due <= today && i.status !== "posted");
+        const drafting = DATA.ideas.filter((i) => i.status === "drafting");
+        const m = mode();
+        if (review.length) acts.push({ w: 100, t: `👀 Approve ${review.length} post${review.length > 1 ? "s" : ""} waiting for sign-off`, go: "plan" });
+        if (dueNow.length) acts.push({ w: 95, t: `📅 ${esc(dueNow[0].title)} is due — ${dueNow[0].due < today ? "overdue" : "today"}`, go: "plan" });
+        if (m === "Marketer" && drafting.length) acts.push({ w: 80, t: `✍️ Finish the draft: ${esc(drafting[0].title)}`, go: "ideas" });
+        if (RADAR && RADAR.items && RADAR.items.length) {
+          const top = RADAR.items[0];
+          acts.push({ w: 70, t: `💡 Turn this week's story into a Reel: "${esc(top.title.slice(0, 46))}…"`, go: "radar" });
+          acts.push({ w: 55, t: `🔎 Research the "${esc(top.topic)}" conversation trending now`, go: "radar" });
+        }
+        if (m === "Founder") acts.push({ w: 60, t: "🧭 Pick this week's theme from What's Happening", go: "radar" });
+        if (!acts.length) acts.push({ w: 1, t: "✨ Open What's Happening and turn a trend into your next post", go: "radar" });
+        return acts.sort((a, b) => b.w - a.w).slice(0, 6);
+      }
+      function panelRadar() {
+        const items = (RADAR && RADAR.items) || [];
+        const research = (RADAR && RADAR.research) || [];
+        const byTopic = {}; items.forEach((i) => (byTopic[i.topic] = byTopic[i.topic] || []).push(i));
+        const acts = todaysActions();
+        const loading = !RADAR;
+        return `<section class="panel" id="tab-radar"><div class="radar-top"><h1>What's happening this week</h1>
+          <div class="mode-toggle"><button class="chip-btn${mode() === "Marketer" ? " on" : ""}" data-mode="Marketer">Marketer</button><button class="chip-btn${mode() === "Founder" ? " on" : ""}" data-mode="Founder">Founder</button></div></div>
+          <p class="sub">Real education headlines from this week (Google News), turned into Universo content opportunities. €0 — nothing paid.</p>
+
+          <div class="card"><h2 style="margin-top:0">🎯 Today's best actions</h2>${acts.map((a) => `<button class="action" data-go="${a.go}">${a.t}</button>`).join("")}</div>
+          ${fatigueWarning()}
+
+          <div class="card"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0">✨ Content opportunities</h2><button class="btn sm gold" id="r-find" style="margin-left:auto">Find opportunities</button></div><div id="r-opps" style="margin-top:12px"></div></div>
+
+          <h2>🔥 This week's headlines ${loading ? '<span class="pill">loading…</span>' : `<span class="pill">${items.length}</span>`}</h2>
+          ${loading ? `<div class="card muted">Fetching this week's education news…</div>` : items.length ? Object.entries(byTopic).map(([tp, list]) => `<div class="card"><h3 style="margin:0 0 8px">${esc(tp)} <span class="pill">${list.length}</span></h3>${list.map((it) => `<div class="head-item"><a href="${esc(it.link)}" target="_blank" rel="noopener" class="head-title">${esc(it.title)} ↗</a><div class="head-meta">${esc(it.source || "")}${it.source ? " · " : ""}<button class="link-mini" data-turn='${esc(JSON.stringify({ title: it.title, source: it.source, link: it.link, topic: it.topic }))}'>Turn into content →</button></div></div>`).join("")}</div>`).join("") : `<div class="card muted">Couldn't reach the news feed right now — use the research links below, then add findings as ideas.</div>`}
+
+          <div class="card"><h2 style="margin-top:0">🔎 Research (manual)</h2><p class="muted">Sources without a free API — open, skim, and add anything good as an idea.</p><div class="chips">${research.map((r) => `<a class="chip-btn" href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.label)} ↗</a>`).join("")}</div></div></section>`;
+      }
+      function renderOpps(list) {
+        OPPS = list; $("r-opps").innerHTML = list.map((o, i) => oppCard(o, i)).join("") || '<div class="muted">No opportunities yet — headlines below, or click "Find opportunities".</div>';
+        wireOppButtons();
+      }
+      function wireOppButtons() {
+        document.querySelectorAll("[data-opp-add]").forEach((b) => b.onclick = async () => {
+          const o = OPPS[+b.dataset.oppAdd]; if (!o) return;
+          const r = await api("POST", "/idea", { title: o.angle, formula: o.formula, source: (o.trend || "") + (o.link ? " — " + o.link : ""), rationale: o.why, priority: o.urgency === "This week" ? "high" : "med" });
+          if (r && r.idea) { DATA.ideas.unshift(r.idea); const t = b.textContent; b.textContent = "Added ✓"; setTimeout(() => b.textContent = t, 1400); }
+        });
+        document.querySelectorAll("[data-opp-create]").forEach((b) => b.onclick = () => {
+          const o = OPPS[+b.dataset.oppCreate]; if (!o) return;
+          TAB = "create"; $("tabs").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x.dataset.tab === "create")); render();
+          setTimeout(() => { const el = $("c-idea"); if (el) { el.value = o.angle; const fs = $("c-formula"); if (fs) fs.value = o.formula; el.scrollIntoView({ block: "center" }); } }, 60);
+        });
+        document.querySelectorAll("[data-opp-prompt]").forEach((b) => b.onclick = async () => {
+          const o = OPPS[+b.dataset.oppPrompt]; if (!o) return;
+          const pre = $("opp-pre-" + b.dataset.oppPrompt); const formula = FORMULAS.find((f) => f.id === o.formula) || FORMULAS[0];
+          pre.textContent = buildPrompt(o.platform, o.angle, formula, CTAS[o.cta] || CTAS.Discover); pre.hidden = false;
+          try { await navigator.clipboard.writeText(pre.textContent); const t = b.textContent; b.textContent = "Copied ✓"; setTimeout(() => b.textContent = t, 1400); } catch {}
+        });
+      }
+      function wireRadar() {
+        if (!$("tab-radar")) return;
+        document.querySelectorAll("#tab-radar [data-go]").forEach((b) => b.onclick = () => { TAB = b.dataset.go; $("tabs").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x.dataset.tab === TAB)); render(); window.scrollTo(0, 0); });
+        document.querySelectorAll("#tab-radar [data-mode]").forEach((b) => b.onclick = () => { try { localStorage.setItem("mkt-mode", b.dataset.mode); } catch {} render(); });
+        document.querySelectorAll("#tab-radar [data-turn]").forEach((b) => b.onclick = () => { const it = JSON.parse(b.dataset.turn); renderOpps([opportunityFor(it)]); document.getElementById("r-opps").scrollIntoView({ block: "center" }); });
+        const find = $("r-find");
+        if (find) find.onclick = () => {
+          const items = (RADAR && RADAR.items) || [];
+          const seen = new Set(), picks = [];
+          for (const it of items) { if (!seen.has(it.topic)) { seen.add(it.topic); picks.push(opportunityFor(it)); } if (picks.length >= 5) break; }
+          if (!picks.length) Object.keys(TOPIC_PLAY).slice(0, 4).forEach((tp) => picks.push(opportunityFor({ title: "", topic: tp })));
+          renderOpps(picks);
+        };
       }
 
       // ===== PLAN (two-person coordination) =====

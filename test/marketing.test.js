@@ -8,6 +8,7 @@ const { test, before, after } = require("node:test");
 const assert = require("node:assert/strict");
 const app = require("../server");
 const adminAuth = require("../lib/admin-auth");
+const trends = require("../lib/trends");
 
 let server, base;
 let jar = {};
@@ -144,4 +145,52 @@ test("a full admin reaches BOTH the Marketing OS and the admin dashboard", async
   assert.equal(await loginAs(ADM.email, ADM.pw), 200);
   assert.equal((await req("GET", "/api/marketing/me")).status, 200);
   assert.equal((await req("GET", "/api/admin/stats")).status, 200);
+});
+
+test("ideas carry source/rationale/priority; invalid priority falls back to med", async () => {
+  assert.equal(await loginAs(MKT.email, MKT.pw), 200);
+  const created = await req("POST", "/api/marketing/idea", {
+    title: "Opportunity idea",
+    source: "Headline — Publisher",
+    rationale: "Trending this week",
+    priority: "high",
+  });
+  assert.equal(created.json.idea.source, "Headline — Publisher");
+  assert.equal(created.json.idea.rationale, "Trending this week");
+  assert.equal(created.json.idea.priority, "high");
+  const bad = await req("POST", "/api/marketing/idea", { title: "x", priority: "URGENT!!" });
+  assert.equal(bad.json.idea.priority, "med"); // unknown priority is not trusted
+  // PATCH accepts a valid priority, ignores an invalid one
+  const id = created.json.idea.id;
+  await req("PATCH", "/api/marketing/idea/" + id, { priority: "low" });
+  await req("PATCH", "/api/marketing/idea/" + id, { priority: "bogus" });
+  const data = await req("GET", "/api/marketing/data");
+  assert.equal(data.json.ideas.find((i) => i.id === id).priority, "low");
+});
+
+test("the radar endpoint requires authentication", async () => {
+  jar = {};
+  assert.equal((await req("GET", "/api/marketing/radar")).status, 401);
+});
+
+test("trends.parseRss extracts real headlines and topic-tags them", () => {
+  const xml = `<rss><channel>
+    <item><title>New DAAD scholarship opens for international students - Study Times</title><link>https://example.com/a</link><pubDate>Mon, 01 Jan 2027</pubDate></item>
+    <item><title>UK tightens student visa rules</title><link>https://example.com/b</link><source url="x">BBC</source></item>
+  </channel></rss>`;
+  const items = trends.parseRss(xml);
+  assert.equal(items.length, 2);
+  assert.equal(items[0].title, "New DAAD scholarship opens for international students");
+  assert.equal(items[0].source, "Study Times"); // split from "Headline - Publisher"
+  assert.equal(items[0].topic, "Scholarships");
+  assert.equal(items[1].source, "BBC");
+  assert.equal(items[1].topic, "Visa");
+});
+
+test("trends.topicOf maps keywords to Universo topics", () => {
+  assert.equal(trends.topicOf("full scholarship for students"), "Scholarships");
+  assert.equal(trends.topicOf("student visa changes"), "Visa");
+  assert.equal(trends.topicOf("rising tuition fees"), "Cost");
+  assert.equal(trends.topicOf("application deadline approaching"), "Applications");
+  assert.equal(trends.topicOf("a nice day in europe"), "Study abroad");
 });
