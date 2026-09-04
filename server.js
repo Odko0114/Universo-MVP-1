@@ -2463,16 +2463,22 @@ mkt.patch("/brain", (req, res) => {
   store.write("marketing", m);
   res.json({ ok: true });
 });
+const MKT_STATUS = ["idea", "drafting", "review", "posted"];
+const MKT_OWNER = ["Marketer", "Founder"];
+const okDue = (d) => d === "" || (typeof d === "string" && DATE_RE.test(d));
 mkt.post("/idea", (req, res) => {
   const b = req.body || {};
   if (!str(b.title, 300).trim()) return res.status(400).json({ error: "Title required." });
+  if (b.due !== undefined && !okDue(b.due)) return res.status(400).json({ error: "Due must be YYYY-MM-DD." });
   const m = readMkt();
   if (m.ideas.length >= 1000) return res.status(413).json({ error: "Too many ideas." });
   const idea = {
     id: "m" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     title: str(b.title, 300).trim(),
     formula: str(b.formula, 40),
-    status: ["idea", "drafting", "posted"].includes(b.status) ? b.status : "idea",
+    status: MKT_STATUS.includes(b.status) ? b.status : "idea",
+    owner: MKT_OWNER.includes(b.owner) ? b.owner : "Marketer",
+    due: okDue(b.due) ? b.due || "" : "",
     draft: "",
     createdAt: Date.now(),
   };
@@ -2482,11 +2488,14 @@ mkt.post("/idea", (req, res) => {
 });
 mkt.patch("/idea/:id", (req, res) => {
   const b = req.body || {};
+  if (b.due !== undefined && !okDue(b.due)) return res.status(400).json({ error: "Due must be YYYY-MM-DD." });
   const m = readMkt();
   const idea = m.ideas.find((i) => i.id === req.params.id);
   if (!idea) return res.status(404).json({ error: "Not found." });
   if (b.title !== undefined) idea.title = str(b.title, 300);
-  if (b.status !== undefined && ["idea", "drafting", "posted"].includes(b.status)) idea.status = b.status;
+  if (b.status !== undefined && MKT_STATUS.includes(b.status)) idea.status = b.status;
+  if (b.owner !== undefined && MKT_OWNER.includes(b.owner)) idea.owner = b.owner;
+  if (b.due !== undefined) idea.due = b.due || "";
   if (b.formula !== undefined) idea.formula = str(b.formula, 40);
   if (b.draft !== undefined) idea.draft = str(b.draft, 8000);
   store.write("marketing", m);

@@ -55,6 +55,13 @@
       .muted { color: var(--faint); font-size: 0.85rem; }
       .pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; background: var(--surface-2); color: var(--soft); }
       .pill.teal { background: var(--teal-bg); color: var(--teal); }
+      .pill.overdue { background: rgba(214,69,80,0.15); color: var(--danger); }
+      .pill.soon { background: rgba(233,185,73,0.18); color: #916609; }
+      :root[data-theme="dark"] .pill.soon { color: var(--gold); }
+      .plan-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 9px 0; border-bottom: 1px solid var(--line); }
+      .plan-row:last-child { border-bottom: 0; }
+      .pr-title { flex: 1; min-width: 150px; font-weight: 600; font-size: 0.92rem; }
+      .plan-row .btn { margin-left: auto; }
       .chips { display: flex; gap: 6px; flex-wrap: wrap; }
       .chip-btn { border: 1px solid var(--line); background: var(--surface); color: var(--soft); border-radius: 999px; padding: 8px 12px; font-size: 0.82rem; cursor: pointer; min-height: 40px; }
       .chip-btn.on { border-color: var(--teal); color: var(--teal); font-weight: 700; }
@@ -84,7 +91,8 @@
         <div class="save-state" id="saveState"></div>
       </div>
       <nav class="tabs" id="tabs" hidden>
-        <button data-tab="create" class="on">Create</button>
+        <button data-tab="plan" class="on">Plan</button>
+        <button data-tab="create">Create</button>
         <button data-tab="ideas">Ideas</button>
         <button data-tab="library">Library</button>
         <button data-tab="brain">Brand Brain</button>
@@ -171,7 +179,7 @@
       });
       $("g-pass").addEventListener("keydown", (e) => { if (e.key === "Enter") $("g-btn").click(); });
 
-      let TAB = "create";
+      let TAB = "plan";
       async function start() {
         $("gate").style.display = "none"; $("tabs").hidden = false; $("app").hidden = false;
         const d = await (await fetch("/api/marketing/data")).json().catch(() => ({}));
@@ -181,9 +189,48 @@
         render();
       }
       function render() {
-        $("app").innerHTML = [panelCreate(), panelIdeas(), panelLibrary(), panelBrain()].join("");
+        $("app").innerHTML = [panelPlan(), panelCreate(), panelIdeas(), panelLibrary(), panelBrain()].join("");
         document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("on", p.id === "tab-" + TAB));
-        wireCreate(); wireIdeas(); wireLibrary(); wireBrain();
+        wirePlan(); wireCreate(); wireIdeas(); wireLibrary(); wireBrain();
+      }
+
+      // ===== PLAN (two-person coordination) =====
+      const OWNERS = ["Marketer", "Founder"];
+      const STATUSES = ["idea", "drafting", "review", "posted"];
+      function fmtDue(d) {
+        if (!d) return "";
+        const today = new Date().toISOString().slice(0, 10);
+        const days = Math.round((new Date(d) - new Date(today)) / 864e5);
+        const label = d < today ? "overdue" : days === 0 ? "today" : days === 1 ? "tomorrow" : "in " + days + "d";
+        return `<span class="pill${d < today ? " overdue" : days <= 2 ? " soon" : ""}">${label} · ${esc(d)}</span>`;
+      }
+      function planRow(i, approve) {
+        const fname = (FORMULAS.find((f) => f.id === i.formula) || {}).name;
+        return `<div class="plan-row"><span class="pr-title">${esc(i.title)}</span>
+          <span class="pill ${i.owner === "Founder" ? "teal" : ""}">${esc(i.owner || "Marketer")}</span>
+          ${fname ? `<span class="pill">${esc(fname)}</span>` : ""}${fmtDue(i.due)}
+          ${approve ? `<button class="btn sm gold" data-approve="${i.id}">Approve →</button>` : ""}</div>`;
+      }
+      function panelPlan() {
+        const today = new Date().toISOString().slice(0, 10);
+        const in7 = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10);
+        const active = DATA.ideas.filter((i) => i.status !== "posted");
+        const thisWeek = active.filter((i) => i.due && i.due <= in7).sort((a, b) => a.due.localeCompare(b.due));
+        const review = DATA.ideas.filter((i) => i.status === "review");
+        const drafting = DATA.ideas.filter((i) => i.status === "drafting");
+        const mine = { Founder: active.filter((i) => i.owner === "Founder").length, Marketer: active.filter((i) => (i.owner || "Marketer") === "Marketer").length };
+        const sec = (title, list, empty, approve) => `<div class="card"><h2 style="margin-top:0">${title} <span class="pill">${list.length}</span></h2>${list.length ? list.map((i) => planRow(i, approve)).join("") : `<div class="muted">${empty}</div>`}</div>`;
+        return `<section class="panel" id="tab-plan"><h1>Plan</h1><p class="sub">At-a-glance: what's due, what needs your sign-off, who owns what — so nobody asks "what should we do today?"</p>
+          <div class="card" style="display:flex;gap:18px;flex-wrap:wrap"><div><b style="font-size:1.4rem">${active.length}</b><div class="muted">active items</div></div><div><b style="font-size:1.4rem">${mine.Marketer}</b><div class="muted">Marketer owns</div></div><div><b style="font-size:1.4rem">${mine.Founder}</b><div class="muted">Founder owns</div></div></div>
+          ${sec("📅 Due this week", thisWeek, "Nothing scheduled — set a due date on an idea in the Ideas tab.")}
+          ${sec("👀 Waiting for founder sign-off", review, "Nothing waiting on approval.", true)}
+          ${sec("✍️ In progress", drafting, "Nothing being drafted right now.")}</section>`;
+      }
+      function wirePlan() {
+        document.querySelectorAll("#tab-plan [data-approve]").forEach((b) => b.onclick = async () => {
+          const id = b.dataset.approve, idea = DATA.ideas.find((x) => x.id === id); if (!idea) return;
+          idea.status = "posted"; await api("PATCH", "/idea/" + id, { status: "posted" }); render();
+        });
       }
 
       // ===== CREATE =====
@@ -262,23 +309,28 @@ Output ONLY the finished ${p.name}, ready to post.`;
       function panelIdeas() {
         const list = DATA.ideas;
         return `<section class="panel" id="tab-ideas"><h1>Ideas</h1><p class="sub">Saved ideas and finished drafts. Status: idea → drafting → posted. Paste the AI's final output into "Final draft" so nothing gets lost.</p>
-          <div class="card"><div class="row"><input id="i-title" placeholder="New idea (one line)" /><button class="btn" id="i-add" style="flex:0 0 auto">Add</button></div></div>
+          <div class="card"><div class="row"><input id="i-title" placeholder="New idea (one line)" /><select id="i-owner" style="flex:0 0 120px">${OWNERS.map((o) => `<option>${o}</option>`).join("")}</select><button class="btn" id="i-add" style="flex:0 0 auto">Add</button></div></div>
           ${list.length ? list.map(ideaItem).join("") : '<div class="card muted">No saved ideas yet. Add one above, or save one from the Create tab.</div>'}</section>`;
       }
       function ideaItem(i) {
         const fname = (FORMULAS.find((f) => f.id === i.formula) || {}).name;
         return `<div class="idea-item" data-id="${i.id}"><div class="top"><b>${esc(i.title)}</b>
-          <select data-act="status">${["idea", "drafting", "posted"].map((s) => `<option${(i.status || "idea") === s ? " selected" : ""}>${s}</option>`).join("")}</select>
+          <select data-act="status" title="Status">${STATUSES.map((s) => `<option${(i.status || "idea") === s ? " selected" : ""}>${s}</option>`).join("")}</select>
           <button class="chip-btn" data-act="del" title="Delete">🗑</button></div>
-          ${fname ? `<div style="margin-top:6px"><span class="pill">${esc(fname)}</span></div>` : ""}
+          <div class="top" style="margin-top:8px">
+            <select data-act="owner" title="Owner" style="flex:0 0 auto">${OWNERS.map((o) => `<option${(i.owner || "Marketer") === o ? " selected" : ""}>${o}</option>`).join("")}</select>
+            <label style="flex:0 0 auto;margin:0;display:flex;align-items:center;gap:6px;text-transform:none;font-size:.8rem;color:var(--soft)">Due <input type="date" data-act="due" value="${esc(i.due || "")}" style="min-height:40px;width:auto" /></label>
+            ${fname ? `<span class="pill">${esc(fname)}</span>` : ""}</div>
           <div style="margin-top:8px"><label>Final draft (paste the AI's output here)</label><textarea data-act="draft" rows="2" placeholder="…">${esc(i.draft || "")}</textarea></div></div>`;
       }
       function wireIdeas() {
         const add = $("i-add");
-        if (add) add.onclick = async () => { const v = $("i-title").value.trim(); if (!v) return; const r = await api("POST", "/idea", { title: v }); if (r && r.idea) { DATA.ideas.unshift(r.idea); $("i-title").value = ""; render(); } };
+        if (add) add.onclick = async () => { const v = $("i-title").value.trim(); if (!v) return; const r = await api("POST", "/idea", { title: v, owner: $("i-owner").value }); if (r && r.idea) { DATA.ideas.unshift(r.idea); $("i-title").value = ""; render(); } };
         document.querySelectorAll("#tab-ideas .idea-item").forEach((el) => {
           const id = el.dataset.id, idea = DATA.ideas.find((x) => x.id === id); if (!idea) return;
           el.querySelector('[data-act="status"]').onchange = (e) => { idea.status = e.target.value; api("PATCH", "/idea/" + id, { status: e.target.value }); };
+          el.querySelector('[data-act="owner"]').onchange = (e) => { idea.owner = e.target.value; api("PATCH", "/idea/" + id, { owner: e.target.value }); };
+          el.querySelector('[data-act="due"]').onchange = (e) => { idea.due = e.target.value; api("PATCH", "/idea/" + id, { due: e.target.value }); };
           el.querySelector('[data-act="del"]').onclick = async () => { if (!confirm("Delete this idea?")) return; await api("DELETE", "/idea/" + id); DATA.ideas = DATA.ideas.filter((x) => x.id !== id); render(); };
           let t; el.querySelector('[data-act="draft"]').oninput = (e) => { idea.draft = e.target.value; clearTimeout(t); t = setTimeout(() => api("PATCH", "/idea/" + id, { draft: e.target.value }), 600); };
         });
