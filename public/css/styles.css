@@ -111,36 +111,40 @@
   /* Warm-neutral GRAPHITE — charcoal, not blue. Surfaces step up by luminance
      (bg → surface → elevated), distinguishable without heavy borders. Never
      pure black; never an "AI blue" dashboard. */
-  --bg: #1e1c1a; /* app base — lifted warm charcoal (not so heavy) */
-  --surface: #2a2724; /* cards — clearly separated from the base */
-  --surface-elevated: #34302b; /* modals, popovers, raised cards */
-  --surface-muted: #171512; /* recessed wells, inputs — reads sunken */
-  --input-bg: #171512;
+  /* Crisp, near-neutral graphite with clearly STEPPED elevation (FB-style):
+     base → card is a clear lift, card → elevated is a real jump, so menus,
+     modals and hovers visibly pop. Cleaner (low warm bias) so it reads crisp,
+     not dull. */
+  --bg: #1c1b1a; /* app base */
+  --surface: #292826; /* cards — clearly above the base */
+  --surface-elevated: #3a3834; /* menus, modals, hover — a real step up */
+  --surface-muted: #151413; /* recessed wells, inputs */
+  --input-bg: #151413;
 
-  --ink: #f0efeb; /* primary — bright warm off-white */
-  --ink-soft: #bcb9b1; /* secondary — clearly readable */
-  --ink-faint: #9a968d; /* tertiary — comfortably ≥4.5:1 on --bg */
+  --ink: #eeede9; /* primary — bright, crisp off-white */
+  --ink-soft: #bebbb4; /* secondary — clearly readable */
+  --ink-faint: #949089; /* tertiary — ≥4.5:1 on --bg */
 
-  --line: rgba(255, 255, 255, 0.11); /* clearer card/input edges */
-  --border-muted: rgba(255, 255, 255, 0.06);
-  --ring: rgba(230, 184, 105, 0.6); /* warm, highly visible focus ring */
-  --scrollbar: #423e39;
+  --line: rgba(255, 255, 255, 0.13); /* crisp, visible edges (not a grid) */
+  --border-muted: rgba(255, 255, 255, 0.07);
+  --ring: rgba(230, 184, 105, 0.65);
+  --scrollbar: #4a453f;
 
   /* Accents MUTED for dark — recognisable, restrained, never neon. Gold leads
      (warm CTA); teal is the quieter interactive accent (links, save). */
-  --teal-500: #5cb6a6; /* muted teal fill/accent */
-  --teal-600: #6ec6b6; /* link/accent TEXT + hover — readable on dark surfaces */
-  --teal-050: rgba(110, 198, 182, 0.12);
-  --gold-500: #e6b45f;
-  --gold-600: #e8bd6e;
+  --teal-500: #62bcac; /* muted teal fill/accent */
+  --teal-600: #78d0c0; /* link/accent TEXT + hover — brighter, clearly "live" */
+  --teal-050: rgba(120, 208, 192, 0.13);
+  --gold-500: #ecba64; /* CTA gold — bright enough to lead */
+  --gold-600: #efc274;
 
   /* Brand navy surfaces (dark cards, banners, footer) become warm graphite in
      dark — this is what removes the blue everywhere. White text on them stays
      readable. Light mode keeps its navy. */
-  --navy-900: #262320;
-  --navy-800: #2c2925;
-  --navy-700: #37332d;
-  --navy-050: rgba(255, 255, 255, 0.06);
+  --navy-900: #292826;
+  --navy-800: #2f2e2b;
+  --navy-700: #3a3834;
+  --navy-050: rgba(255, 255, 255, 0.07);
   --danger: #e8737d;
   --success: #6bbf93; /* muted, meaningful green */
 
@@ -173,8 +177,13 @@
 /* Dark header = graphite nav layer, not the navy of light mode (no blue bar
    over a warm-graphite app). Neutralise the faintly-blue nav link colour. */
 :root[data-theme="dark"] .topbar {
-  background: #232120;
+  background: #242322;
   border-bottom: 1px solid var(--line);
+}
+/* Interactive cards/rows lighten on hover — the "highlighted", alive feel. */
+:root[data-theme="dark"] .uni-card:hover {
+  background: var(--surface-elevated);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 :root[data-theme="dark"] .topnav a {
   color: var(--ink-soft);
