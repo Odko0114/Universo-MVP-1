@@ -198,8 +198,10 @@
    in the normal AND hover state (premium, not neon). */
 :root[data-theme="dark"] .btn--primary,
 :root[data-theme="dark"] .btn--primary:hover,
-:root[data-theme="dark"] .uni-card__tier--verified {
-  color: #12211e; /* dark text on the muted-light teal fill */
+:root[data-theme="dark"] .uni-card__tier--verified,
+:root[data-theme="dark"] .niche-btn.is-active,
+:root[data-theme="dark"] .scope-row .niche-btn.is-active {
+  color: #12211e; /* dark text on the vibrant teal fill — readable, not white-on-teal */
 }
 /* Mute the neon match-score badges on dark; warm the neutral slate. */
 :root[data-theme="dark"] .fit--strong .uni-card__fit-score {
@@ -211,6 +213,13 @@
 /* Photo-overlay badge → warm dark, not navy. */
 :root[data-theme="dark"] .uni-card__badge {
   background: rgba(20, 19, 17, 0.72);
+}
+/* "Verify on official page" hint → warning tokens in dark (was a light cream
+   box). Light mode keeps its exact cream styling above. */
+:root[data-theme="dark"] .verify-flag {
+  background: var(--warning-bg);
+  border-color: var(--warning-fg);
+  color: var(--warning-fg);
 }
 /* Decorative blob (for-universities hero) → warm, not blue. */
 :root[data-theme="dark"] .lp-blob--3 {
@@ -3467,7 +3476,10 @@ a.ov-deadline:hover strong {
   display: grid;
   place-items: center;
   background: #fff;
-  color: var(--ink);
+  /* The chip is always white (logos need a light ground), so the initials
+     fallback must stay dark in BOTH themes — not var(--ink), which flips to
+     near-white in dark and made initials invisible on the white chip. */
+  color: #10233f;
   font-weight: 800;
   overflow: hidden;
   border: 1px solid var(--line);

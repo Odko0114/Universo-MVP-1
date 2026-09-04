@@ -280,6 +280,29 @@
         font-size: 0.8rem;
         cursor: pointer;
       }
+
+      /* ---- Dark theme (follows the app-wide preference via the injected
+         no-flash <head> script) ---- */
+      :root[data-theme="dark"] {
+        --navy: #201e1c;
+        --navy2: #262320;
+        --teal: #33c2ab;
+        --teal2: #46cdb6;
+        --gold: #f2be5b;
+        --line: rgba(255, 255, 255, 0.11);
+        --ink: #eeede9;
+        --faint: #9a968d;
+        --danger: #ec6f79;
+        color-scheme: dark;
+      }
+      :root[data-theme="dark"] body {
+        background: #1c1b1a;
+      }
+      :root[data-theme="dark"] .panel,
+      :root[data-theme="dark"] .stat,
+      :root[data-theme="dark"] .gate {
+        background: #292826;
+      }
     </style>
     <link rel="stylesheet" href="/css/fonts.css" />
   </head>

@@ -354,6 +354,44 @@
         margin-top: 14px;
         text-align: center;
       }
+
+      /* ---- Dark theme ----------------------------------------------------
+         Admin follows the app-wide theme: the no-flash <head> script (injected
+         on every served page) stamps <html data-theme> from the same saved
+         preference, so choosing Dark in the app carries here. Graphite palette
+         matching the main app; only the token values + hardcoded surfaces flip. */
+      :root[data-theme="dark"] {
+        --navy: #201e1c; /* header → graphite, not blue */
+        --navy2: #262320;
+        --teal: #33c2ab;
+        --teal2: #46cdb6;
+        --gold: #f2be5b;
+        --line: rgba(255, 255, 255, 0.11);
+        --ink: #eeede9;
+        --faint: #9a968d;
+        --danger: #ec6f79;
+        color-scheme: dark;
+      }
+      :root[data-theme="dark"] body {
+        background: #1c1b1a;
+      }
+      :root[data-theme="dark"] .stat,
+      :root[data-theme="dark"] .panel,
+      :root[data-theme="dark"] table,
+      :root[data-theme="dark"] .win,
+      :root[data-theme="dark"] #login-gate {
+        background: #292826;
+      }
+      :root[data-theme="dark"] th,
+      :root[data-theme="dark"] .tabs button,
+      :root[data-theme="dark"] .funnel-track,
+      :root[data-theme="dark"] .device-track {
+        background: #151413;
+      }
+      :root[data-theme="dark"] #login-error {
+        background: rgba(236, 111, 121, 0.16);
+        color: #f0a7ab;
+      }
     </style>
     <link rel="stylesheet" href="/css/fonts.css" />
   </head>
