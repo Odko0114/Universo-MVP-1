@@ -2437,6 +2437,24 @@ adminApi.get("/subscribers.csv", (_req, res) => {
     );
 });
 
+// ---- Marketing OS ---------------------------------------------------------
+// Internal content command center (founder + marketer). All of its live state
+// — brand brain edits, idea board, performance log — is one JSON blob in the
+// store, admin-gated like everything else under /admin. Seed defaults + the
+// template/hook library live in the page itself (version-controlled).
+adminApi.get("/marketing", (_req, res) => {
+  res.json(store.read("marketing") || {});
+});
+adminApi.put("/marketing", (req, res) => {
+  const b = req.body;
+  if (!b || typeof b !== "object" || Array.isArray(b))
+    return res.status(400).json({ error: "Invalid payload." });
+  if (JSON.stringify(b).length > 2_000_000)
+    return res.status(413).json({ error: "Too large." });
+  store.write("marketing", b);
+  res.json({ ok: true });
+});
+
 api.use("/admin", adminApi);
 
 app.use("/api", api);
@@ -2486,6 +2504,7 @@ const readPage = (file) =>
 const SHELL = readPage("index.html");
 const LANDING = readPage("landing.html");
 const ADMIN_PAGE = readPage("admin.html");
+const MARKETING_PAGE = readPage("marketing.html");
 const PARTNERS_PAGE = readPage("partners.html");
 const PARTNERS_DEMO_PAGE = readPage("partners-demo.html");
 const sendHtml = (res, html) =>
@@ -2527,6 +2546,7 @@ app.use(
 );
 
 app.get("/admin", (_req, res) => sendHtml(res, ADMIN_PAGE));
+app.get("/admin/marketing", (_req, res) => sendHtml(res, MARKETING_PAGE));
 
 // Partner dashboard — one shared static page for every university account;
 // which university's data it shows is decided by the session server-side.

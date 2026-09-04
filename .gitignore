@@ -13,6 +13,7 @@ data/pilot_leads.json
 data/claims.json
 data/uni_accounts.json
 data/events.jsonl
+data/marketing.json
 data/cache/
 
 # NOTE: data/seed/eter-universities.json is the cached ETER import — keep it in
