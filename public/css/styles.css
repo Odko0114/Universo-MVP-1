@@ -32,7 +32,8 @@
   --input-bg: #ffffff;
   --border-muted: #eef1f6;
   --ring: rgba(20, 184, 166, 0.45); /* teal focus ring */
-  --on-brand: #ffffff; /* text sitting on navy/teal/gold fills */
+  --on-brand: #ffffff; /* text on navy/teal fills (both themes) */
+  --on-gold: #10233f; /* text on GOLD fills — stays dark in both themes */
   --scrollbar: #cdd7e6;
   /* Status tints (badges, pills, callouts): background + readable foreground */
   --danger-bg: #fdecee;
@@ -107,42 +108,102 @@
    elevated) with depth from luminance, not a colour inversion.
    =========================================================================== */
 :root[data-theme="dark"] {
-  --bg: #0e1420; /* deepest app surface — blue-charcoal, never pure black */
-  --surface: #161d2b; /* cards */
-  --surface-elevated: #1f2836; /* modals, popovers, raised cards */
-  --surface-muted: #10161f; /* recessed wells, inputs, skeletons */
-  --input-bg: #10161f;
+  /* Warm-neutral GRAPHITE — charcoal, not blue. Surfaces step up by luminance
+     (bg → surface → elevated), distinguishable without heavy borders. Never
+     pure black; never an "AI blue" dashboard. */
+  --bg: #1a1917; /* deepest app surface — warm charcoal */
+  --surface: #232120; /* cards — graphite */
+  --surface-elevated: #2c2a27; /* modals, popovers, raised cards */
+  --surface-muted: #141311; /* recessed wells, inputs, skeletons */
+  --input-bg: #141311;
 
-  --ink: #e8edf5; /* primary text — soft white, not #fff */
-  --ink-soft: #aab6c8; /* secondary */
-  --ink-faint: #8a97ac; /* muted — stays ≥4.5:1 on --bg */
+  --ink: #ecebe7; /* primary — warm off-white, not #fff */
+  --ink-soft: #b2afa8; /* secondary — clearly readable muted gray */
+  --ink-faint: #918e86; /* tertiary — still ≥4.5:1 on --bg */
 
-  --line: rgba(255, 255, 255, 0.09); /* extremely subtle borders */
-  --border-muted: rgba(255, 255, 255, 0.05);
-  --ring: rgba(45, 212, 191, 0.55);
-  --scrollbar: #2a3446;
+  --line: rgba(255, 255, 255, 0.08); /* subtle, not a grid */
+  --border-muted: rgba(255, 255, 255, 0.045);
+  --ring: rgba(230, 184, 105, 0.6); /* warm, highly visible focus ring */
+  --scrollbar: #3a3733;
 
-  /* Brand accents kept recognisable; lift the "600" shades so they don't muddy
-     on dark, and make the teal wash a translucent tint. */
-  --teal-600: #2dd4bf;
-  --gold-600: #f0c869;
-  --teal-050: rgba(45, 212, 191, 0.14);
+  /* Accents MUTED for dark — recognisable, restrained, never neon. Gold leads
+     (warm CTA); teal is the quieter interactive accent (links, save). */
+  --teal-500: #5cb6a6; /* muted teal fill/accent */
+  --teal-600: #6ec6b6; /* link/accent TEXT + hover — readable on dark surfaces */
+  --teal-050: rgba(110, 198, 182, 0.12);
+  --gold-500: #e6b45f;
+  --gold-600: #e8bd6e;
 
-  /* Depth via soft dark shadows, not big light-mode shadows. */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
+  /* Brand navy surfaces (dark cards, banners, footer) become warm graphite in
+     dark — this is what removes the blue everywhere. White text on them stays
+     readable. Light mode keeps its navy. */
+  --navy-900: #201e1c;
+  --navy-800: #262320;
+  --navy-700: #302d29;
+  --navy-050: rgba(255, 255, 255, 0.05);
+  --danger: #e8737d;
+  --success: #6bbf93; /* muted, meaningful green */
 
-  /* Status tints on dark: low-alpha fills + lighter foregrounds. */
-  --danger-bg: rgba(214, 69, 80, 0.16);
-  --danger-fg: #f6a5ab;
-  --success-bg: rgba(31, 157, 107, 0.16);
-  --success-fg: #5fd39e;
-  --warning-bg: rgba(233, 185, 73, 0.16);
-  --warning-fg: #f0c869;
-  --info-bg: rgba(93, 149, 224, 0.16);
-  --info-fg: #9dc0ef;
+  /* Depth from soft dark shadows. */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 10px 28px rgba(0, 0, 0, 0.5);
+
+  /* Status tints: muted fills + readable, non-neon foregrounds. Info is
+     neutralised (no AI blue) — it carries meaning by icon + label, not hue. */
+  --danger-bg: rgba(232, 115, 125, 0.15);
+  --danger-fg: #eaa1a5;
+  --success-bg: rgba(107, 191, 147, 0.15);
+  --success-fg: #7cc79e;
+  --warning-bg: rgba(230, 184, 105, 0.15);
+  --warning-fg: #e6c072;
+  --info-bg: rgba(255, 255, 255, 0.06);
+  --info-fg: #b4b0a8;
 
   color-scheme: dark; /* native form controls, scrollbars follow */
+}
+
+/* Dark-only: neutralise DECORATIVE teal chips so green reads as MEANING, not
+   decoration. Light mode keeps its teal chips; interactive teal (links,
+   buttons) and semantic chips (--gold/--deadline/--rank) are untouched. */
+:root[data-theme="dark"] .chip {
+  background: var(--surface-muted);
+  color: var(--ink-soft);
+}
+
+/* Dark header = graphite nav layer, not the navy of light mode (no blue bar
+   over a warm-graphite app). Neutralise the faintly-blue nav link colour. */
+:root[data-theme="dark"] .topbar {
+  background: #201e1c;
+  border-bottom: 1px solid var(--line);
+}
+:root[data-theme="dark"] .topnav a {
+  color: var(--ink-soft);
+}
+:root[data-theme="dark"] .topnav a:hover {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.06);
+}
+/* Muted teal button fills are lightish on dark — dark text keeps them legible
+   in the normal AND hover state (premium, not neon). */
+:root[data-theme="dark"] .btn--primary,
+:root[data-theme="dark"] .btn--primary:hover,
+:root[data-theme="dark"] .uni-card__tier--verified {
+  color: #12211e; /* dark text on the muted-light teal fill */
+}
+/* Mute the neon match-score badges on dark; warm the neutral slate. */
+:root[data-theme="dark"] .fit--strong .uni-card__fit-score {
+  background: #2f9e63;
+}
+:root[data-theme="dark"] .fit--partial .uni-card__fit-score {
+  background: #6f6b63;
+}
+/* Photo-overlay badge → warm dark, not navy. */
+:root[data-theme="dark"] .uni-card__badge {
+  background: rgba(20, 19, 17, 0.72);
+}
+/* Decorative blob (for-universities hero) → warm, not blue. */
+:root[data-theme="dark"] .lp-blob--3 {
+  background: #5a534a;
 }
 
 /* Brief colour transition only while toggling (app.js adds .theme-anim to
@@ -304,7 +365,7 @@ img {
   background: rgba(255, 255, 255, 0.08);
 }
 .topnav a.is-active {
-  color: var(--ink);
+  color: var(--on-gold);
   background: var(--gold-500);
 }
 
@@ -1460,7 +1521,7 @@ img {
 }
 .btn--gold {
   background: var(--gold-500);
-  color: var(--ink);
+  color: var(--on-gold);
 }
 .btn--gold:hover {
   background: var(--gold-600);
@@ -1487,7 +1548,7 @@ img {
 }
 .btn--saved {
   background: var(--gold-500);
-  color: var(--ink);
+  color: var(--on-gold);
 }
 
 /* ---------- Profile page ---------- */
@@ -3943,7 +4004,7 @@ a.ov-deadline:hover strong {
   top: 10px;
   left: 10px;
   background: var(--gold-500);
-  color: var(--ink);
+  color: var(--on-gold);
   font-size: var(--text-2xs);
   font-weight: 800;
   letter-spacing: 0.02em;
@@ -3952,7 +4013,7 @@ a.ov-deadline:hover strong {
 }
 .uni-card__tier--verified {
   background: var(--teal-500);
-  color: #fff;
+  color: var(--on-brand);
 }
 .uni-card__desc {
   display: -webkit-box;
@@ -4947,4 +5008,45 @@ a.ov-deadline:hover strong {
 .theme-seg__opt:focus-visible {
   outline: 2px solid var(--ring);
   outline-offset: 2px;
+}
+
+/* ---- Header theme toggle (visible on every page, desktop + mobile) ------ */
+.topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+  cursor: pointer;
+  transition:
+    background var(--dur-1) var(--ease-out),
+    border-color var(--dur-1) var(--ease-out);
+}
+.theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--gold-500);
+  outline-offset: 2px;
+}
+/* Show the icon for the theme you'd switch TO: moon in light, sun in dark. */
+.theme-toggle__sun {
+  display: none;
+}
+:root[data-theme="dark"] .theme-toggle__moon {
+  display: none;
+}
+:root[data-theme="dark"] .theme-toggle__sun {
+  display: block;
 }

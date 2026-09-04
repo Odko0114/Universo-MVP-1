@@ -4252,7 +4252,7 @@
       }
       root.setAttribute("data-theme", r);
       const meta = document.querySelector('meta[name="theme-color"]');
-      if (meta) meta.setAttribute("content", r === "dark" ? "#0e1420" : "#0b1f3a");
+      if (meta) meta.setAttribute("content", r === "dark" ? "#1a1917" : "#0b1f3a");
     },
     set(pref) {
       try {
@@ -4262,12 +4262,36 @@
       }
       this.apply(pref, true);
     },
+    toggle() {
+      // Header button: an explicit light⇄dark flip from whatever is showing.
+      this.set(this.resolved() === "dark" ? "light" : "dark");
+    },
+    _syncBtn() {
+      const btn = document.getElementById("theme-toggle");
+      if (btn)
+        btn.setAttribute(
+          "aria-label",
+          this.resolved() === "dark"
+            ? "Switch to light mode"
+            : "Switch to dark mode",
+        );
+    },
     init() {
       this.apply(this.pref(), false);
+      this._syncBtn();
+      const btn = document.getElementById("theme-toggle");
+      if (btn)
+        btn.addEventListener("click", () => {
+          this.toggle();
+          this._syncBtn();
+        });
       if (window.matchMedia) {
         const mq = matchMedia("(prefers-color-scheme: dark)");
         const onChange = () => {
-          if (this.pref() === "system") this.apply("system", true);
+          if (this.pref() === "system") {
+            this.apply("system", true);
+            this._syncBtn();
+          }
         };
         mq.addEventListener
           ? mq.addEventListener("change", onChange)
