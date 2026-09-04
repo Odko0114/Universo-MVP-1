@@ -111,20 +111,20 @@
   /* Warm-neutral GRAPHITE — charcoal, not blue. Surfaces step up by luminance
      (bg → surface → elevated), distinguishable without heavy borders. Never
      pure black; never an "AI blue" dashboard. */
-  --bg: #1a1917; /* deepest app surface — warm charcoal */
-  --surface: #232120; /* cards — graphite */
-  --surface-elevated: #2c2a27; /* modals, popovers, raised cards */
-  --surface-muted: #141311; /* recessed wells, inputs, skeletons */
-  --input-bg: #141311;
+  --bg: #1e1c1a; /* app base — lifted warm charcoal (not so heavy) */
+  --surface: #2a2724; /* cards — clearly separated from the base */
+  --surface-elevated: #34302b; /* modals, popovers, raised cards */
+  --surface-muted: #171512; /* recessed wells, inputs — reads sunken */
+  --input-bg: #171512;
 
-  --ink: #ecebe7; /* primary — warm off-white, not #fff */
-  --ink-soft: #b2afa8; /* secondary — clearly readable muted gray */
-  --ink-faint: #918e86; /* tertiary — still ≥4.5:1 on --bg */
+  --ink: #f0efeb; /* primary — bright warm off-white */
+  --ink-soft: #bcb9b1; /* secondary — clearly readable */
+  --ink-faint: #9a968d; /* tertiary — comfortably ≥4.5:1 on --bg */
 
-  --line: rgba(255, 255, 255, 0.08); /* subtle, not a grid */
-  --border-muted: rgba(255, 255, 255, 0.045);
+  --line: rgba(255, 255, 255, 0.11); /* clearer card/input edges */
+  --border-muted: rgba(255, 255, 255, 0.06);
   --ring: rgba(230, 184, 105, 0.6); /* warm, highly visible focus ring */
-  --scrollbar: #3a3733;
+  --scrollbar: #423e39;
 
   /* Accents MUTED for dark — recognisable, restrained, never neon. Gold leads
      (warm CTA); teal is the quieter interactive accent (links, save). */
@@ -137,10 +137,10 @@
   /* Brand navy surfaces (dark cards, banners, footer) become warm graphite in
      dark — this is what removes the blue everywhere. White text on them stays
      readable. Light mode keeps its navy. */
-  --navy-900: #201e1c;
-  --navy-800: #262320;
-  --navy-700: #302d29;
-  --navy-050: rgba(255, 255, 255, 0.05);
+  --navy-900: #262320;
+  --navy-800: #2c2925;
+  --navy-700: #37332d;
+  --navy-050: rgba(255, 255, 255, 0.06);
   --danger: #e8737d;
   --success: #6bbf93; /* muted, meaningful green */
 
@@ -173,7 +173,7 @@
 /* Dark header = graphite nav layer, not the navy of light mode (no blue bar
    over a warm-graphite app). Neutralise the faintly-blue nav link colour. */
 :root[data-theme="dark"] .topbar {
-  background: #201e1c;
+  background: #232120;
   border-bottom: 1px solid var(--line);
 }
 :root[data-theme="dark"] .topnav a {
