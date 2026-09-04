@@ -132,11 +132,11 @@
 
   /* Accents MUTED for dark — recognisable, restrained, never neon. Gold leads
      (warm CTA); teal is the quieter interactive accent (links, save). */
-  --teal-500: #62bcac; /* muted teal fill/accent */
-  --teal-600: #78d0c0; /* link/accent TEXT + hover — brighter, clearly "live" */
-  --teal-050: rgba(120, 208, 192, 0.13);
-  --gold-500: #ecba64; /* CTA gold — bright enough to lead */
-  --gold-600: #efc274;
+  --teal-500: #33c2ab; /* teal fill — rich, saturated, not neon */
+  --teal-600: #46cdb6; /* link/accent TEXT — clearly live, readable */
+  --teal-050: rgba(51, 194, 171, 0.15);
+  --gold-500: #f2be5b; /* CTA gold — the warm, human hero accent */
+  --gold-600: #f6c96e;
 
   /* Brand navy surfaces (dark cards, banners, footer) become warm graphite in
      dark — this is what removes the blue everywhere. White text on them stays
@@ -145,23 +145,25 @@
   --navy-800: #2f2e2b;
   --navy-700: #3a3834;
   --navy-050: rgba(255, 255, 255, 0.07);
-  --danger: #e8737d;
-  --success: #6bbf93; /* muted, meaningful green */
+  --danger: #ec6f79;
+  --success: #4fc98a; /* meaningful green — vibrant enough to read as success */
 
-  /* Depth from soft dark shadows. */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
-  --shadow-md: 0 10px 28px rgba(0, 0, 0, 0.5);
+  /* Elevation that reads on dark: a faint top highlight (lit from above) plus a
+     real drop shadow, so cards feel raised and lit, not flat rectangles. */
+  --shadow-sm: inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 1px 2px rgba(0, 0, 0, 0.5), 0 3px 8px rgba(0, 0, 0, 0.34);
+  --shadow-md: inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 14px 34px rgba(0, 0, 0, 0.55);
 
-  /* Status tints: muted fills + readable, non-neon foregrounds. Info is
-     neutralised (no AI blue) — it carries meaning by icon + label, not hue. */
-  --danger-bg: rgba(232, 115, 125, 0.15);
-  --danger-fg: #eaa1a5;
-  --success-bg: rgba(107, 191, 147, 0.15);
-  --success-fg: #7cc79e;
-  --warning-bg: rgba(230, 184, 105, 0.15);
-  --warning-fg: #e6c072;
+  /* Status tints: meaningful, readable foregrounds (not washed out). */
+  --danger-bg: rgba(236, 111, 121, 0.16);
+  --danger-fg: #f0a7ab;
+  --success-bg: rgba(79, 201, 138, 0.16);
+  --success-fg: #6fd6a1;
+  --warning-bg: rgba(242, 190, 91, 0.15);
+  --warning-fg: #efc673;
   --info-bg: rgba(255, 255, 255, 0.06);
-  --info-fg: #b4b0a8;
+  --info-fg: #b8b4ac;
 
   color-scheme: dark; /* native form controls, scrollbars follow */
 }
@@ -213,6 +215,47 @@
 /* Decorative blob (for-universities hero) → warm, not blue. */
 :root[data-theme="dark"] .lp-blob--3 {
   background: #5a534a;
+}
+
+/* Atmosphere — a faint fixed light source at the top so the app reads as a lit
+   space, not a flat black slab. Sits behind content, shows in the breathing
+   room around cards. Very subtle: no glow, no wash. */
+:root[data-theme="dark"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    100% 46% at 50% 0%,
+    rgba(255, 255, 255, 0.035),
+    transparent 58%
+  );
+}
+/* Cards feel alive: they rise and brighten on hover (merges with the base
+   hover rule above). Interaction = the interface is responsive. */
+:root[data-theme="dark"] .uni-card {
+  transition:
+    background var(--dur-1) var(--ease-out),
+    border-color var(--dur-1) var(--ease-out),
+    transform var(--dur-1) var(--ease-out),
+    box-shadow var(--dur-1) var(--ease-out);
+}
+:root[data-theme="dark"] .uni-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 12px 28px rgba(0, 0, 0, 0.5);
+}
+/* Mobile tab bar reacts to touch/hover. */
+:root[data-theme="dark"] .tabbar__item:hover {
+  color: var(--ink-soft);
+  background: rgba(255, 255, 255, 0.04);
+}
+/* Header toggle a touch more present so it's easy to find. */
+:root[data-theme="dark"] .theme-toggle {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
 }
 
 /* Brief colour transition only while toggling (app.js adds .theme-anim to
