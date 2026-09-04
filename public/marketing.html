@@ -85,6 +85,12 @@
       .head-title { display: inline-block; font-weight: 600; font-size: 0.9rem; }
       .head-meta { font-size: 0.78rem; color: var(--faint); margin-top: 3px; }
       .link-mini { border: 0; background: none; color: var(--teal); font: inherit; font-size: 0.78rem; font-weight: 700; cursor: pointer; padding: 0; }
+      .cal-row { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+      .cal-row:last-child { border-bottom: 0; }
+      .cal-day { flex: 0 0 78px; font-size: 0.86rem; }
+      .cal-body { flex: 1; min-width: 0; }
+      .cal-theme { font-size: 0.82rem; color: var(--soft); font-weight: 600; }
+      .cal-ideas { margin-top: 5px; display: flex; flex-wrap: wrap; gap: 5px; }
       .chips { display: flex; gap: 6px; flex-wrap: wrap; }
       .chip-btn { border: 1px solid var(--line); background: var(--surface); color: var(--soft); border-radius: 999px; padding: 8px 12px; font-size: 0.82rem; cursor: pointer; min-height: 40px; }
       .chip-btn.on { border-color: var(--teal); color: var(--teal); font-weight: 700; }
@@ -116,6 +122,7 @@
       <nav class="tabs" id="tabs" hidden>
         <button data-tab="radar" class="on">🔥 What's Happening</button>
         <button data-tab="plan">Plan</button>
+        <button data-tab="calendar">Calendar</button>
         <button data-tab="create">Create</button>
         <button data-tab="ideas">Ideas</button>
         <button data-tab="library">Library</button>
@@ -220,9 +227,9 @@
         if (TAB === "radar") render();
       }
       function render() {
-        $("app").innerHTML = [panelRadar(), panelPlan(), panelCreate(), panelIdeas(), panelLibrary(), panelBrain()].join("");
+        $("app").innerHTML = [panelRadar(), panelPlan(), panelCalendar(), panelCreate(), panelIdeas(), panelLibrary(), panelBrain()].join("");
         document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("on", p.id === "tab-" + TAB));
-        wireRadar(); wirePlan(); wireCreate(); wireIdeas(); wireLibrary(); wireBrain();
+        wireRadar(); wirePlan(); wireCalendar(); wireCreate(); wireIdeas(); wireLibrary(); wireBrain();
       }
 
       // ===== RADAR / INTELLIGENCE =====
@@ -237,6 +244,38 @@
         Rankings: { angle: "Rankings ≠ the right fit. Here's what actually matters", platform: "linkedin", format: "LinkedIn / Reel", formula: "myth", cta: "Discover", urgency: "Evergreen", why: "Rankings get clicks but mislead students — a strong Universo contrarian angle." },
         "Study abroad": { angle: "Studying in Europe isn't just for rich kids — proof", platform: "reel", format: "Reel", formula: "myth", cta: "Discover", urgency: "This week", why: "Broad study-abroad conversation this week — join it with a myth-bust." },
       };
+      // Creative content pillars — ANY kind of video, not filtered to university
+      // topics. These give the suggestions breadth (relatable, motivational, POV,
+      // lifestyle, career, behind-the-scenes, reaction, trend formats, wholesome)
+      // so the feed is an average of everything, still in Universo's voice.
+      const CREATIVE_PILLARS = [
+        { topic: "Relatable", angle: "Day in the life of an international student in Europe", platform: "reel", format: "Reel / vlog", formula: "discovery", cta: "Discover", why: "Day-in-the-life content travels far and humanises the brand." },
+        { topic: "Motivation", angle: "Where you're born shouldn't decide where you study — proof", platform: "reel", format: "Reel", formula: "founder", cta: "Sign up", why: "The mission as emotional, shareable motivation." },
+        { topic: "POV", angle: "POV: you just found out you can study abroad for (almost) free", platform: "reel", format: "Reel / trend audio", formula: "myth", cta: "Discover", why: "POV format is high-reach and fits the 'it's possible' message." },
+        { topic: "Lifestyle", angle: "5 student-budget hacks for living in Europe", platform: "carousel", format: "Carousel", formula: "list", cta: "Discover", why: "Practical lifestyle content earns saves and shares." },
+        { topic: "Career", angle: "What a degree in [field] actually gets you", platform: "linkedin", format: "LinkedIn / Reel", formula: "advice", cta: "Discover", why: "Career outcomes are what students and parents really care about." },
+        { topic: "Behind the scenes", angle: "Why we built Universo (and what's broken about studying abroad)", platform: "linkedin", format: "LinkedIn / founder", formula: "founder", cta: "Sign up", why: "Founder BTS builds trust; works on LinkedIn and Reels." },
+        { topic: "Reaction", angle: "Reacting to the worst study-abroad advice online", platform: "reel", format: "Reel / reaction", formula: "myth", cta: "Discover", why: "Reaction/duet format is native to TikTok and quick to make." },
+        { topic: "Trend format", angle: "Green flags 🟢 red flags 🚩 when picking a university", platform: "reel", format: "Reel / carousel", formula: "list", cta: "Discover", why: "Green/red-flag format is trending and endlessly reusable." },
+        { topic: "Wholesome", angle: "A student who thought they couldn't afford it — and did", platform: "story", format: "Story / Reel", formula: "discovery", cta: "Sign up", why: "Honest, real social proof converts (real examples only — never invent)." },
+        { topic: "Educational", angle: "How to shortlist universities without 40 browser tabs", platform: "reel", format: "Reel", formula: "advice", cta: "Discover", why: "Show the product solving a universal, boring pain." },
+        { topic: "Hot take", angle: "University rankings are lying to you", platform: "reel", format: "Reel / opinion", formula: "myth", cta: "Discover", why: "A confident contrarian take that sparks comments." },
+        { topic: "Series", angle: "\"Scholarship of the week\" — a repeatable weekly slot", platform: "carousel", format: "Carousel series", formula: "scholarship", cta: "Scholarship", why: "A recurring series fills the calendar and builds a habit with viewers." },
+      ];
+      function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+      function pillarOpp(p) {
+        return { topic: p.topic, trend: "", source: "", link: "", why: p.why, audience: firstSentence(brain("audience")), angle: p.angle, format: p.format, platform: p.platform, formula: p.formula, cta: p.cta, urgency: p.urgency || "Evergreen", hooks: p.hooks || [`${p.angle} 👇`, `Nobody's making this — but your audience wants it.`, "Save this for later."] };
+      }
+      function oppFilter() { try { return localStorage.getItem("mkt-oppfilter") || "all"; } catch { return "all"; } }
+      function mixOpportunities() {
+        const f = oppFilter();
+        const news = [];
+        if (f !== "creative" && RADAR && RADAR.items) { const seen = new Set(); for (const it of RADAR.items) { if (!seen.has(it.topic)) { seen.add(it.topic); news.push(opportunityFor(it)); } if (news.length >= 4) break; } }
+        const creative = f === "news" ? [] : shuffle(CREATIVE_PILLARS.slice()).slice(0, f === "creative" ? 6 : 4).map(pillarOpp);
+        const a = f === "news" ? news : creative, b = f === "news" ? creative : news, out = [];
+        for (let i = 0; i < Math.max(a.length, b.length); i++) { if (a[i]) out.push(a[i]); if (b[i]) out.push(b[i]); }
+        return out.slice(0, 8);
+      }
       function topicOf(t) { t = (t || "").toLowerCase();
         if (/scholarship|grant|bursary|stipend|funded|funding/.test(t)) return "Scholarships";
         if (/visa|immigration|permit/.test(t)) return "Visa";
@@ -312,7 +351,10 @@
           <div class="card"><h2 style="margin-top:0">🎯 Today's best actions</h2>${acts.map((a) => `<button class="action" data-go="${a.go}">${a.t}</button>`).join("")}</div>
           ${fatigueWarning()}
 
-          <div class="card"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0">✨ Content opportunities</h2><button class="btn sm gold" id="r-find" style="margin-left:auto">Find opportunities</button></div><div id="r-opps" style="margin-top:12px"></div></div>
+          <div class="card"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0">✨ Content opportunities</h2><button class="btn sm gold" id="r-find" style="margin-left:auto">✨ Find opportunities</button></div>
+            <div class="chips" id="opp-filter" style="margin-top:10px"><button class="chip-btn${oppFilter() === "all" ? " on" : ""}" data-oppfilter="all">All content</button><button class="chip-btn${oppFilter() === "news" ? " on" : ""}" data-oppfilter="news">🎓 News-driven</button><button class="chip-btn${oppFilter() === "creative" ? " on" : ""}" data-oppfilter="creative">🎬 Creative</button></div>
+            <p class="muted" style="margin:8px 0 0">No filter by default — a balanced mix of this week's news and creative video formats (any topic).</p>
+            <div id="r-opps" style="margin-top:12px"></div></div>
 
           <h2>🔥 This week's headlines ${loading ? '<span class="pill">loading…</span>' : `<span class="pill">${items.length}</span>`}</h2>
           ${loading ? `<div class="card muted">Fetching this week's education news…</div>` : items.length ? Object.entries(byTopic).map(([tp, list]) => `<div class="card"><h3 style="margin:0 0 8px">${esc(tp)} <span class="pill">${list.length}</span></h3>${list.map((it) => `<div class="head-item"><a href="${esc(it.link)}" target="_blank" rel="noopener" class="head-title">${esc(it.title)} ↗</a><div class="head-meta">${esc(it.source || "")}${it.source ? " · " : ""}<button class="link-mini" data-turn='${esc(JSON.stringify({ title: it.title, source: it.source, link: it.link, topic: it.topic }))}'>Turn into content →</button></div></div>`).join("")}</div>`).join("") : `<div class="card muted">Couldn't reach the news feed right now — use the research links below, then add findings as ideas.</div>`}
@@ -347,13 +389,8 @@
         document.querySelectorAll("#tab-radar [data-mode]").forEach((b) => b.onclick = () => { try { localStorage.setItem("mkt-mode", b.dataset.mode); } catch {} render(); });
         document.querySelectorAll("#tab-radar [data-turn]").forEach((b) => b.onclick = () => { const it = JSON.parse(b.dataset.turn); renderOpps([opportunityFor(it)]); document.getElementById("r-opps").scrollIntoView({ block: "center" }); });
         const find = $("r-find");
-        if (find) find.onclick = () => {
-          const items = (RADAR && RADAR.items) || [];
-          const seen = new Set(), picks = [];
-          for (const it of items) { if (!seen.has(it.topic)) { seen.add(it.topic); picks.push(opportunityFor(it)); } if (picks.length >= 5) break; }
-          if (!picks.length) Object.keys(TOPIC_PLAY).slice(0, 4).forEach((tp) => picks.push(opportunityFor({ title: "", topic: tp })));
-          renderOpps(picks);
-        };
+        if (find) find.onclick = () => renderOpps(mixOpportunities());
+        document.querySelectorAll("#opp-filter [data-oppfilter]").forEach((b) => b.onclick = () => { try { localStorage.setItem("mkt-oppfilter", b.dataset.oppfilter); } catch {} document.querySelectorAll("#opp-filter .chip-btn").forEach((x) => x.classList.toggle("on", x === b)); renderOpps(mixOpportunities()); });
       }
 
       // ===== PLAN (two-person coordination) =====
@@ -395,12 +432,37 @@
         });
       }
 
+      // ===== CALENDAR =====
+      const CADENCE = { 1: "Educational / student problem", 2: "Trend — this week's news", 3: "Product / Universo value", 4: "Student story / relatable", 5: "Opinion / hot take", 6: "Community / repurpose", 0: "Plan & rest" };
+      const WD = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      function panelCalendar() {
+        const start = new Date(); start.setHours(0, 0, 0, 0);
+        const days = []; for (let i = 0; i < 14; i++) { const d = new Date(start); d.setDate(start.getDate() + i); days.push(d); }
+        const iso = (d) => d.toISOString().slice(0, 10);
+        const row = (d) => {
+          const list = DATA.ideas.filter((x) => x.due === iso(d) && x.status !== "posted");
+          const ideas = list.length ? list.map((x) => `<span class="pill ${x.owner === "Founder" ? "teal" : ""}">${esc(x.title.slice(0, 34))}</span>`).join(" ") : `<button class="link-mini" data-cal-add="${iso(d)}">＋ schedule an idea</button>`;
+          return `<div class="cal-row"><div class="cal-day"><b>${WD[d.getDay()]}</b> ${iso(d).slice(5)}</div><div class="cal-body"><div class="cal-theme">${CADENCE[d.getDay()]}</div><div class="cal-ideas">${ideas}</div></div></div>`;
+        };
+        const wk = (a, b, label) => `<div class="card"><h2 style="margin-top:0">${label}</h2>${days.slice(a, b).map(row).join("")}</div>`;
+        return `<section class="panel" id="tab-calendar"><h1>Content calendar</h1><p class="sub">A simple two-week schedule with a suggested weekly rhythm. Set a due date on any idea (Ideas tab, or "＋" below) and it lands here.</p>
+          ${wk(0, 7, "This week")}${wk(7, 14, "Next week")}
+          <div class="card muted">The themes are a starting rhythm, not a rule — mix in whatever <b>What's Happening</b> surfaces.</div></section>`;
+      }
+      function wireCalendar() {
+        document.querySelectorAll("#tab-calendar [data-cal-add]").forEach((b) => b.onclick = async () => {
+          const due = b.dataset.calAdd; const title = prompt("Idea to schedule for " + due + ":"); if (!title) return;
+          const r = await api("POST", "/idea", { title: title.trim(), due, status: "drafting" });
+          if (r && r.idea) { DATA.ideas.unshift(r.idea); render(); }
+        });
+      }
+
       // ===== CREATE =====
       function panelCreate() {
         return `<section class="panel" id="tab-create"><h1>Create</h1><p class="sub">One idea → a ready-to-post draft <b>and</b> a brand-aware prompt for any free AI (ChatGPT, Gemini, Claude, or local Ollama). Nothing is sent anywhere — you paste it yourself.</p>
           <div class="card">
             <div class="field"><label>The idea (one line)</label><input id="c-idea" placeholder="e.g. Why students miss scholarships they qualify for" /></div>
-            <div class="field"><button class="btn alt sm" id="c-feed">💡 Need an idea? Pull from Universo's data</button><div id="c-feed-list" style="margin-top:10px"></div></div>
+            <div class="field"><button class="btn alt sm" id="c-feed">💡 Need an idea? (your data + creative mix)</button><div id="c-feed-list" style="margin-top:10px"></div></div>
             <div class="row">
               <div class="field"><label>Formula</label><select id="c-formula">${FORMULAS.map((f) => `<option value="${f.id}">${f.name}</option>`).join("")}</select></div>
               <div class="field"><label>Goal / CTA</label><select id="c-cta">${Object.keys(CTAS).map((k) => `<option>${k}</option>`).join("")}</select></div>
@@ -415,8 +477,10 @@
         plats.forEach((b) => b.onclick = () => { const on = b.getAttribute("aria-pressed") !== "true"; b.setAttribute("aria-pressed", on); b.classList.toggle("on", on); });
         const feedBtn = $("c-feed");
         if (feedBtn) feedBtn.onclick = async () => {
-          if (!FEED) { feedBtn.textContent = "Loading real ideas…"; const r = await fetch("/api/marketing/ideas-feed"); FEED = (await r.json().catch(() => ({}))).seeds || []; feedBtn.textContent = "💡 Need an idea? Pull from Universo's data"; }
-          $("c-feed-list").innerHTML = FEED.map((s) => `<button type="button" class="seed" data-seed="${esc(s.text)}"><span class="pill teal">${esc(s.cat)}</span>${esc(s.text)}</button>`).join("");
+          if (!FEED) { feedBtn.textContent = "Loading ideas…"; const r = await fetch("/api/marketing/ideas-feed"); FEED = (await r.json().catch(() => ({}))).seeds || []; feedBtn.textContent = "💡 Need an idea? (your data + creative mix)"; }
+          const creativeSeeds = CREATIVE_PILLARS.map((p) => ({ cat: p.topic, text: p.angle }));
+          const combined = shuffle([...(FEED || []), ...creativeSeeds]).slice(0, 30);
+          $("c-feed-list").innerHTML = combined.map((s) => `<button type="button" class="seed" data-seed="${esc(s.text)}"><span class="pill teal">${esc(s.cat)}</span>${esc(s.text)}</button>`).join("");
           document.querySelectorAll("#c-feed-list .seed").forEach((b) => b.onclick = () => { $("c-idea").value = b.dataset.seed; $("c-feed-list").innerHTML = ""; $("c-idea").scrollIntoView({ block: "center" }); });
         };
         $("c-go").onclick = () => {
@@ -501,6 +565,7 @@ Output ONLY the finished ${p.name}, ready to post.`;
       // ===== LIBRARY =====
       function panelLibrary() {
         return `<section class="panel" id="tab-library"><h1>Library</h1><p class="sub">Reusable building blocks + the anti-repetition angle picker (tap to grey out angles you've used on a topic).</p>
+          <div class="card"><h2 style="margin-top:0">🎬 Content formats — any kind of video</h2><p class="muted">Not just university topics — relatable, motivation, POV, lifestyle, career, reaction, trend formats. Tap "Use" to start one in Create.</p>${CREATIVE_PILLARS.map((p, i) => `<div class="head-item"><b>${esc(p.angle)}</b> <span class="pill">${esc(p.topic)}</span><div class="head-meta">${esc(p.format)} · <button class="link-mini" data-pillar="${i}">Use →</button></div></div>`).join("")}</div>
           <div class="card"><h2 style="margin-top:0">Angle picker</h2><div class="chips" id="lib-angles">${ANGLES.map((a) => `<button class="chip-btn" data-angle>${esc(a)}</button>`).join("")}</div></div>
           <div class="card"><h2 style="margin-top:0">Hook bank</h2>${HOOKS.map((h) => `<div style="padding:6px 0;border-bottom:1px solid var(--line)"><button class="btn sm alt" data-hook="${esc(h)}" style="margin-right:8px">Copy</button>${esc(h)}</div>`).join("")}</div>
           <div class="card"><h2 style="margin-top:0">Formulas</h2>${FORMULAS.map((f) => `<div style="padding:8px 0;border-bottom:1px solid var(--line)"><b>${f.name}</b><div class="muted">${f.steps.join(" → ")}</div></div>`).join("")}</div>
@@ -509,6 +574,11 @@ Output ONLY the finished ${p.name}, ready to post.`;
       function wireLibrary() {
         document.querySelectorAll("#tab-library [data-angle]").forEach((b) => b.onclick = () => b.classList.toggle("used"));
         document.querySelectorAll("#tab-library [data-hook]").forEach((b) => b.onclick = async () => { try { await navigator.clipboard.writeText(b.dataset.hook); const x = b.textContent; b.textContent = "Copied"; setTimeout(() => b.textContent = x, 1000); } catch {} });
+        document.querySelectorAll("#tab-library [data-pillar]").forEach((b) => b.onclick = () => {
+          const p = CREATIVE_PILLARS[+b.dataset.pillar]; if (!p) return;
+          TAB = "create"; $("tabs").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x.dataset.tab === "create")); render();
+          setTimeout(() => { const el = $("c-idea"); if (el) { el.value = p.angle; const fs = $("c-formula"); if (fs) fs.value = p.formula; el.scrollIntoView({ block: "center" }); } }, 60);
+        });
       }
 
       // ===== BRAND BRAIN =====
