@@ -203,12 +203,15 @@
 :root[data-theme="dark"] .scope-row .niche-btn.is-active {
   color: #12211e; /* dark text on the vibrant teal fill — readable, not white-on-teal */
 }
-/* Mute the neon match-score badges on dark; warm the neutral slate. */
+/* Match-score badges on dark: deep enough that the white number clears AA. */
 :root[data-theme="dark"] .fit--strong .uni-card__fit-score {
-  background: #2f9e63;
+  background: #23814f; /* white "100" now ~5:1 (was 3.4 on #2f9e63) */
+}
+:root[data-theme="dark"] .fit--good .uni-card__fit-score {
+  background: #a77c13;
 }
 :root[data-theme="dark"] .fit--partial .uni-card__fit-score {
-  background: #6f6b63;
+  background: #6a665e;
 }
 /* Photo-overlay badge → warm dark, not navy. */
 :root[data-theme="dark"] .uni-card__badge {
@@ -5113,4 +5116,26 @@ a.ov-deadline:hover strong {
 }
 :root[data-theme="dark"] .theme-toggle__sun {
   display: block;
+}
+
+/* ---- Mobile touch targets --------------------------------------------------
+   On phones, tappable CONTROLS reach ~44px so they're comfortable to hit.
+   Desktop density is unchanged; inline text links inside content are left
+   alone (their line spacing already gives a usable target). */
+@media (max-width: 560px) {
+  .btn {
+    min-height: 44px;
+  }
+  .theme-toggle {
+    width: 44px;
+    height: 44px;
+  }
+  .niche-btn,
+  .pager__btn {
+    min-height: 44px;
+  }
+  .doc-check {
+    width: 40px;
+    height: 40px;
+  }
 }
