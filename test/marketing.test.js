@@ -194,3 +194,27 @@ test("trends.topicOf maps keywords to Universo topics", () => {
   assert.equal(trends.topicOf("application deadline approaching"), "Applications");
   assert.equal(trends.topicOf("a nice day in europe"), "Study abroad");
 });
+
+test("trends.parseTrends reads Google Trends items (any topic) with traffic", () => {
+  const xml = `<rss><channel>
+    <item><title>Champions League</title><link>https://trends.google.com/x</link><ht:approx_traffic>2,000,000+</ht:approx_traffic></item>
+    <item><title>new iphone</title></item>
+  </channel></rss>`;
+  const t = trends.parseTrends(xml);
+  assert.equal(t.length, 2);
+  assert.equal(t[0].title, "Champions League");
+  assert.equal(t[0].kind, "trend");
+  assert.match(t[0].source, /2,000,000\+ searches/); // traffic surfaced
+});
+
+test("trends.parseReddit reads top posts, keeps upvotes, drops NSFW", () => {
+  const json = { data: { children: [
+    { data: { title: "Wholesome moment", permalink: "/r/aww/1", subreddit: "aww", ups: 54000, over_18: false } },
+    { data: { title: "NSFW thing", permalink: "/r/x/2", subreddit: "x", ups: 9, over_18: true } },
+  ] } };
+  const r = trends.parseReddit(json);
+  assert.equal(r.length, 1); // NSFW filtered out
+  assert.equal(r[0].kind, "reddit");
+  assert.match(r[0].source, /54,000 upvotes/);
+  assert.equal(r[0].link, "https://www.reddit.com/r/aww/1");
+});

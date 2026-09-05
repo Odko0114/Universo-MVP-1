@@ -91,6 +91,15 @@
       .cal-body { flex: 1; min-width: 0; }
       .cal-theme { font-size: 0.82rem; color: var(--soft); font-weight: 600; }
       .cal-ideas { margin-top: 5px; display: flex; flex-wrap: wrap; gap: 5px; }
+      .modal { position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,0.55); display: flex; align-items: flex-start; justify-content: center; padding: 20px; overflow-y: auto; }
+      .modal-in { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; max-width: 620px; width: 100%; padding: 22px; position: relative; margin: auto; }
+      .modal-x { position: absolute; top: 12px; right: 14px; border: 0; background: var(--surface-2); color: var(--ink); width: 34px; height: 34px; border-radius: 999px; font-size: 1.2rem; cursor: pointer; }
+      .prod-sec { border-top: 1px solid var(--line); padding: 12px 0; }
+      .prod-h { font-size: 0.76rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; color: var(--soft); margin-bottom: 6px; }
+      .prod-shots { margin: 4px 0; padding-left: 20px; } .prod-shots li { margin: 3px 0; }
+      #prod-cap { margin: 0; padding: 10px; white-space: pre-wrap; font-size: 0.86rem; background: var(--surface-2); border-radius: 8px; }
+      .prod-check { display: flex; align-items: center; gap: 8px; text-transform: none; font-size: 0.9rem; color: var(--ink); font-weight: 500; margin: 4px 0; }
+      .prod-check input { width: auto; min-height: auto; }
       .chips { display: flex; gap: 6px; flex-wrap: wrap; }
       .chip-btn { border: 1px solid var(--line); background: var(--surface); color: var(--soft); border-radius: 999px; padding: 8px 12px; font-size: 0.82rem; cursor: pointer; min-height: 40px; }
       .chip-btn.on { border-color: var(--teal); color: var(--teal); font-weight: 700; }
@@ -141,6 +150,8 @@
       </div>
       <div id="app" hidden></div>
     </main>
+
+    <div id="produce-modal" class="modal" hidden><div class="modal-in"><button class="modal-x" id="produce-close" aria-label="Close">×</button><div id="produce-body"></div></div></div>
 
     <script>
       // ===== Library (version-controlled) =====
@@ -219,6 +230,11 @@
         DATA = { brain: d.brain || {}, ideas: Array.isArray(d.ideas) ? d.ideas : [] };
         setSave("saved");
         $("tabs").querySelectorAll("button").forEach((b) => b.onclick = () => { TAB = b.dataset.tab; $("tabs").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); render(); });
+        // Produce modal close (wired once — the modal is static, not re-rendered).
+        const closeProduce = () => { $("produce-modal").hidden = true; };
+        $("produce-close").onclick = closeProduce;
+        $("produce-modal").onclick = (e) => { if (e.target.id === "produce-modal") closeProduce(); };
+        document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeProduce(); });
         render();
         loadRadar();
       }
@@ -269,10 +285,16 @@
       function oppFilter() { try { return localStorage.getItem("mkt-oppfilter") || "all"; } catch { return "all"; } }
       function mixOpportunities() {
         const f = oppFilter();
-        const news = [];
-        if (f !== "creative" && RADAR && RADAR.items) { const seen = new Set(); for (const it of RADAR.items) { if (!seen.has(it.topic)) { seen.add(it.topic); news.push(opportunityFor(it)); } if (news.length >= 4) break; } }
+        const live = [];
+        if (f !== "creative" && RADAR && RADAR.items) {
+          const news = RADAR.items.filter((i) => i.kind === "news");
+          const trend = RADAR.items.filter((i) => i.kind === "trend" || i.kind === "reddit");
+          const seen = new Set();
+          for (const it of news) { if (!seen.has(it.topic)) { seen.add(it.topic); live.push(opportunityFor(it)); } if (live.length >= 3) break; }
+          shuffle(trend.slice()).slice(0, 2).forEach((it) => live.push(opportunityFor(it))); // trending, any topic
+        }
         const creative = f === "news" ? [] : shuffle(CREATIVE_PILLARS.slice()).slice(0, f === "creative" ? 6 : 4).map(pillarOpp);
-        const a = f === "news" ? news : creative, b = f === "news" ? creative : news, out = [];
+        const a = f === "news" ? live : creative, b = f === "news" ? creative : live, out = [];
         for (let i = 0; i < Math.max(a.length, b.length); i++) { if (a[i]) out.push(a[i]); if (b[i]) out.push(b[i]); }
         return out.slice(0, 8);
       }
@@ -286,6 +308,15 @@
         return "Study abroad"; }
       function firstSentence(s) { return String(s || "").split(/(?<=[.!?])\s/)[0]; }
       function opportunityFor(item) {
+        // A general trending topic (any subject) → an honest "trend-jack": ride
+        // it ONLY if a real student angle exists. The marketer judges.
+        if (item.kind === "trend" || item.kind === "reddit") {
+          return { topic: "Trending", trend: item.title, source: item.source, link: item.link,
+            why: "Trending right now — jump on it only if you can add a genuine student / study-abroad angle. Skip if it's a stretch.",
+            audience: firstSentence(brain("audience")),
+            angle: `A Universo angle on "${item.title}"`, format: "Reel / trend audio", platform: "reel", formula: "myth", cta: "Discover", urgency: "This week",
+            hooks: [`Everyone's talking about ${item.title} — here's the student angle nobody's covering.`, `Using the "${item.title}" trend to explain studying abroad.`, `${item.title}, but make it about your future.`] };
+        }
         const topic = item.topic || topicOf(item.title);
         const play = TOPIC_PLAY[topic] || TOPIC_PLAY["Study abroad"];
         const hooks = [
@@ -306,7 +337,7 @@
           <div class="opp-meta"><span><b>Audience:</b> ${esc(o.audience)}</span><span><b>Format:</b> ${esc(o.format)}</span></div>
           <div class="opp-hooks"><b>Hooks:</b><ul>${o.hooks.map((h) => `<li>${esc(h)}</li>`).join("")}</ul></div>
           ${o.trend ? `<div class="opp-src"><b>Source:</b> ${o.link ? `<a href="${esc(o.link)}" target="_blank" rel="noopener">${esc(o.trend)} ↗</a>` : esc(o.trend)}${o.source ? " · " + esc(o.source) : ""}</div>` : ""}
-          <div class="opp-actions"><button class="btn sm gold" data-opp-add="${key}">＋ Add to Ideas</button><button class="btn sm" data-opp-create="${key}">Create now →</button><button class="btn sm alt" data-opp-prompt="${key}">Copy AI prompt</button></div>
+          <div class="opp-actions"><button class="btn sm gold" data-opp-produce="${key}">🎬 Produce</button><button class="btn sm" data-opp-add="${key}">＋ Add to Ideas</button><button class="btn sm alt" data-opp-create="${key}">Create now →</button><button class="btn sm alt" data-opp-prompt="${key}">Copy prompt</button></div>
           <pre class="opp-prompt" id="opp-pre-${key}" hidden></pre></div>`;
       }
       let OPPS = []; // current opportunity objects, indexed by key
@@ -341,12 +372,14 @@
       function panelRadar() {
         const items = (RADAR && RADAR.items) || [];
         const research = (RADAR && RADAR.research) || [];
-        const byTopic = {}; items.forEach((i) => (byTopic[i.topic] = byTopic[i.topic] || []).push(i));
+        const KIND_LABEL = { trend: "🔥 Trending now — any topic", reddit: "👽 Reddit — trending", news: "🎓 Education & scholarship news" };
+        const byKind = {}; items.forEach((i) => (byKind[i.kind || "news"] = byKind[i.kind || "news"] || []).push(i));
+        const kindOrder = ["trend", "reddit", "news"].filter((k) => byKind[k]);
         const acts = todaysActions();
         const loading = !RADAR;
         return `<section class="panel" id="tab-radar"><div class="radar-top"><h1>What's happening this week</h1>
           <div class="mode-toggle"><button class="chip-btn${mode() === "Marketer" ? " on" : ""}" data-mode="Marketer">Marketer</button><button class="chip-btn${mode() === "Founder" ? " on" : ""}" data-mode="Founder">Founder</button></div></div>
-          <p class="sub">Real education headlines from this week (Google News), turned into Universo content opportunities. €0 — nothing paid.</p>
+          <p class="sub">What's trending this week — any topic (Google Trends + Reddit) and education news — turned into Universo content you can shoot today. Open TikTok/YouTube/IG below to see the actual top videos. €0 — nothing paid.</p>
 
           <div class="card"><h2 style="margin-top:0">🎯 Today's best actions</h2>${acts.map((a) => `<button class="action" data-go="${a.go}">${a.t}</button>`).join("")}</div>
           ${fatigueWarning()}
@@ -356,8 +389,8 @@
             <p class="muted" style="margin:8px 0 0">No filter by default — a balanced mix of this week's news and creative video formats (any topic).</p>
             <div id="r-opps" style="margin-top:12px"></div></div>
 
-          <h2>🔥 This week's headlines ${loading ? '<span class="pill">loading…</span>' : `<span class="pill">${items.length}</span>`}</h2>
-          ${loading ? `<div class="card muted">Fetching this week's education news…</div>` : items.length ? Object.entries(byTopic).map(([tp, list]) => `<div class="card"><h3 style="margin:0 0 8px">${esc(tp)} <span class="pill">${list.length}</span></h3>${list.map((it) => `<div class="head-item"><a href="${esc(it.link)}" target="_blank" rel="noopener" class="head-title">${esc(it.title)} ↗</a><div class="head-meta">${esc(it.source || "")}${it.source ? " · " : ""}<button class="link-mini" data-turn='${esc(JSON.stringify({ title: it.title, source: it.source, link: it.link, topic: it.topic }))}'>Turn into content →</button></div></div>`).join("")}</div>`).join("") : `<div class="card muted">Couldn't reach the news feed right now — use the research links below, then add findings as ideas.</div>`}
+          <h2>🌍 Trending & in the news ${loading ? '<span class="pill">loading…</span>' : `<span class="pill">${items.length}</span>`}</h2>
+          ${loading ? `<div class="card muted">Fetching what's trending this week…</div>` : items.length ? kindOrder.map((k) => `<div class="card"><h3 style="margin:0 0 8px">${KIND_LABEL[k]} <span class="pill">${byKind[k].length}</span></h3>${byKind[k].map((it) => `<div class="head-item"><a href="${esc(it.link)}" target="_blank" rel="noopener" class="head-title">${esc(it.title)} ↗</a><div class="head-meta">${esc(it.source || "")}${it.source ? " · " : ""}<button class="link-mini" data-turn='${esc(JSON.stringify({ title: it.title, source: it.source, link: it.link, topic: it.topic, kind: it.kind }))}'>Turn into content →</button></div></div>`).join("")}</div>`).join("") : `<div class="card muted">Couldn't reach the feeds right now — use the research links below, then add findings as ideas.</div>`}
 
           <div class="card"><h2 style="margin-top:0">🔎 Research (manual)</h2><p class="muted">Sources without a free API — open, skim, and add anything good as an idea.</p><div class="chips">${research.map((r) => `<a class="chip-btn" href="${esc(r.url)}" target="_blank" rel="noopener">${esc(r.label)} ↗</a>`).join("")}</div></div></section>`;
       }
@@ -366,6 +399,7 @@
         wireOppButtons();
       }
       function wireOppButtons() {
+        document.querySelectorAll("[data-opp-produce]").forEach((b) => b.onclick = () => { const o = OPPS[+b.dataset.oppProduce]; if (o) openProduce(o); });
         document.querySelectorAll("[data-opp-add]").forEach((b) => b.onclick = async () => {
           const o = OPPS[+b.dataset.oppAdd]; if (!o) return;
           const r = await api("POST", "/idea", { title: o.angle, formula: o.formula, source: (o.trend || "") + (o.link ? " — " + o.link : ""), rationale: o.why, priority: o.urgency === "This week" ? "high" : "med" });
@@ -391,6 +425,44 @@
         const find = $("r-find");
         if (find) find.onclick = () => renderOpps(mixOpportunities());
         document.querySelectorAll("#opp-filter [data-oppfilter]").forEach((b) => b.onclick = () => { try { localStorage.setItem("mkt-oppfilter", b.dataset.oppfilter); } catch {} document.querySelectorAll("#opp-filter .chip-btn").forEach((x) => x.classList.toggle("on", x === b)); renderOpps(mixOpportunities()); });
+      }
+
+      // ===== PRODUCE (content production accelerator) =====
+      const HASHTAGS = {
+        Scholarships: "#scholarships #studyabroad #internationalstudents #fullyfunded #studyineurope",
+        Cost: "#studyabroad #studentbudget #tuition #studyineurope #studentlife",
+        Visa: "#studentvisa #studyabroad #internationalstudents #immigration",
+        Applications: "#universityapplication #studyabroad #admissions #studentlife",
+        Erasmus: "#erasmus #studyineurope #exchangestudent #studyabroad",
+        Rankings: "#university #studyabroad #studentlife #education",
+        Trending: "#studyabroad #studentlife #fyp #foryou",
+        "Study abroad": "#studyabroad #studyineurope #internationalstudents #studentlife #fyp",
+      };
+      const hashtagsFor = (t) => HASHTAGS[t] || HASHTAGS["Study abroad"];
+      function ideaToOpp(i) {
+        const topic = topicOf(i.title); const play = TOPIC_PLAY[topic] || {};
+        return { angle: i.title, formula: i.formula || play.formula || "pain", platform: play.platform || "reel", topic, cta: play.cta || "Discover", urgency: i.priority === "high" ? "This week" : "Evergreen", why: i.rationale || "", trend: i.source || "", link: "", hooks: null };
+      }
+      async function copyTxt(t, btn) { try { await navigator.clipboard.writeText(t); const x = btn.textContent; btn.textContent = "Copied ✓"; setTimeout(() => (btn.textContent = x), 1400); } catch { alert("Copy failed — select the text manually."); } }
+      function openProduce(o) {
+        const formula = FORMULAS.find((f) => f.id === o.formula) || FORMULAS[0];
+        const plat = PLATFORMS[o.platform] || PLATFORMS.reel;
+        const hooks = o.hooks || [o.angle, "Save this before you decide.", "Here's what nobody tells you."];
+        const cta = CTAS[o.cta] || CTAS.Discover;
+        const caption = `${hooks[0]}\n\n${o.angle}. ${cta}\n\n${hashtagsFor(o.topic)}`;
+        const brief = `PRODUCE — ${o.angle}\nFormat: ${plat.name}\n\nHOOK (first 2s):\n${hooks[0]}\nalts: ${hooks.slice(1).join(" / ")}\n\nSCRIPT / SHOT LIST:\n${formula.steps.map((s, i) => `${i + 1}. ${s} — [film this]`).join("\n")}\n\nON-SCREEN TEXT: surface the key phrase from each beat.\n\nCAPTION:\n${caption}\n\nCTA: ${cta}\n\nCHECKLIST:\n[ ] Film  [ ] Captions/subtitles  [ ] On-screen text  [ ] Post/schedule  [ ] Mark posted`;
+        $("produce-body").innerHTML = `<h2 style="margin:0 0 4px">🎬 Produce — go from idea to shoot-ready</h2><div class="opp-angle">${esc(o.angle)}</div><div class="muted" style="margin-bottom:6px">${esc(plat.name)}</div>
+          <div class="prod-sec"><div class="prod-h">Hook (first 2 seconds)</div><div><b>${esc(hooks[0])}</b></div><div class="muted">alts: ${hooks.slice(1).map(esc).join(" · ")}</div></div>
+          <div class="prod-sec"><div class="prod-h">Script / shot list</div><ol class="prod-shots">${formula.steps.map((s) => `<li>${esc(s)} <span class="muted">— film this</span></li>`).join("")}</ol></div>
+          <div class="prod-sec"><div class="prod-h">Caption <button class="link-mini" id="prod-copycap">Copy</button></div><pre id="prod-cap">${esc(caption)}</pre></div>
+          <div class="prod-sec"><div class="prod-h">Hashtags</div><div>${esc(hashtagsFor(o.topic))}</div></div>
+          <div class="prod-sec"><div class="prod-h">Production checklist</div>${["Film", "Captions / subtitles", "On-screen text", "Post / schedule", "Mark posted in Ideas"].map((c) => `<label class="prod-check"><input type="checkbox"> ${c}</label>`).join("")}</div>
+          <div class="opp-actions" style="margin-top:14px"><button class="btn sm gold" id="prod-copybrief">Copy full brief</button><button class="btn sm" id="prod-copyprompt">Copy AI prompt (polished copy)</button><button class="btn sm alt" id="prod-add">＋ Add to Ideas</button></div>`;
+        $("produce-modal").hidden = false;
+        $("prod-copybrief").onclick = () => copyTxt(brief, $("prod-copybrief"));
+        $("prod-copycap").onclick = () => copyTxt(caption, $("prod-copycap"));
+        $("prod-copyprompt").onclick = () => copyTxt(buildPrompt(o.platform || "reel", o.angle, formula, cta), $("prod-copyprompt"));
+        $("prod-add").onclick = async () => { const r = await api("POST", "/idea", { title: o.angle, formula: o.formula, source: (o.trend || "") + (o.link ? " — " + o.link : ""), rationale: o.why, priority: o.urgency === "This week" ? "high" : "med", status: "drafting" }); if (r && r.idea) { DATA.ideas.unshift(r.idea); $("prod-add").textContent = "Added ✓"; } };
       }
 
       // ===== PLAN (two-person coordination) =====
@@ -542,6 +614,7 @@ Output ONLY the finished ${p.name}, ready to post.`;
         const fname = (FORMULAS.find((f) => f.id === i.formula) || {}).name;
         return `<div class="idea-item" data-id="${i.id}"><div class="top"><b>${esc(i.title)}</b>
           <select data-act="status" title="Status">${STATUSES.map((s) => `<option${(i.status || "idea") === s ? " selected" : ""}>${s}</option>`).join("")}</select>
+          <button class="chip-btn" data-act="produce" title="Produce (shoot-ready brief)">🎬</button>
           <button class="chip-btn" data-act="del" title="Delete">🗑</button></div>
           <div class="top" style="margin-top:8px">
             <select data-act="owner" title="Owner" style="flex:0 0 auto">${OWNERS.map((o) => `<option${(i.owner || "Marketer") === o ? " selected" : ""}>${o}</option>`).join("")}</select>
@@ -557,6 +630,7 @@ Output ONLY the finished ${p.name}, ready to post.`;
           el.querySelector('[data-act="status"]').onchange = (e) => { idea.status = e.target.value; api("PATCH", "/idea/" + id, { status: e.target.value }); };
           el.querySelector('[data-act="owner"]').onchange = (e) => { idea.owner = e.target.value; api("PATCH", "/idea/" + id, { owner: e.target.value }); };
           el.querySelector('[data-act="due"]').onchange = (e) => { idea.due = e.target.value; api("PATCH", "/idea/" + id, { due: e.target.value }); };
+          el.querySelector('[data-act="produce"]').onclick = () => openProduce(ideaToOpp(idea));
           el.querySelector('[data-act="del"]').onclick = async () => { if (!confirm("Delete this idea?")) return; await api("DELETE", "/idea/" + id); DATA.ideas = DATA.ideas.filter((x) => x.id !== id); render(); };
           let t; el.querySelector('[data-act="draft"]').oninput = (e) => { idea.draft = e.target.value; clearTimeout(t); t = setTimeout(() => api("PATCH", "/idea/" + id, { draft: e.target.value }), 600); };
         });
