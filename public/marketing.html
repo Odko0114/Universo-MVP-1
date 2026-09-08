@@ -441,6 +441,16 @@
         if (/ranking|best universit|top universit/.test(t)) return "Rankings";
         return "Study abroad"; }
       function firstSentence(s) { return String(s || "").split(/(?<=[.!?])\s/)[0]; }
+      // A Brand-Brain one-liner for the script's "How Universo helps" line, so the
+      // deterministic script reflects the brand voice (not just the AI prompt).
+      function brandHelp() { return firstSentence(brain("product")); }
+      // Cold-start topic from Brand Brain (a student pain) when there's no
+      // performance data yet — so recommendations aren't empty for a new account.
+      function brandColdStart() {
+        const pains = String(brain("pains") || "").split(/\n/).map((s) => s.replace(/^[•\-\s]+/, "").trim()).filter(Boolean);
+        const pool = pains.length ? pains : [firstSentence(brain("audience"))].filter(Boolean);
+        return pool.length ? { formula: "problem_solution", topic: pool[Math.floor(Math.random() * pool.length)] } : null;
+      }
       function opportunityFor(item) {
         // A general trending topic (any subject) → an honest "trend-jack": ride
         // it ONLY if a real student angle exists. The marketer judges.
@@ -612,7 +622,7 @@
         PROD_SCRIPT = "";
         const el = $("prod-datascript"); if (!el) return;
         let data = null;
-        try { const q = new URLSearchParams({ topic: o.topic || "", formula: o.formula || "", angle: o.angle || "", platform: o.platform || "" }); data = await (await fetch("/api/marketing/script?" + q)).json(); } catch {}
+        try { const q = new URLSearchParams({ topic: o.topic || "", formula: o.formula || "", angle: o.angle || "", platform: o.platform || "", cta: CTAS[o.cta] || "", help: brandHelp() }); data = await (await fetch("/api/marketing/script?" + q)).json(); } catch {}
         if (!$("prod-datascript")) return; // modal closed while loading
         if (!data || !Array.isArray(data.beats)) { el.innerHTML = `<div class="prod-h">Ready script — from Universo's real data</div><div class="muted">Real-data script unavailable right now.</div>`; return; }
         PROD_SCRIPT = scriptToText(data);
@@ -694,7 +704,14 @@
               if (nb.platform) { const chip = [...document.querySelectorAll("#c-plats .chip-btn")].find((b) => b.dataset.plat === nb.platform || ((PLAT_EDIT[b.dataset.plat] || {}).label === nb.platform)); if (chip) { chip.setAttribute("aria-pressed", "true"); chip.classList.add("on"); } }
             };
           } else {
-            rc.innerHTML = `<div class="card muted" style="padding:12px 14px">No performance history yet — personalised recommendations appear once you rate a couple of posted ideas.${trend ? ` <span>📈 Trending now: <b style="color:var(--ink)">${esc(trend.title)}</b></span>` : ""}</div>`;
+            // Cold start: no performance data yet → suggest from Brand Brain (a student pain).
+            const cold = brandColdStart();
+            if (cold) {
+              rc.innerHTML = `<div class="card" style="padding:12px 14px;border-color:var(--teal)">💡 <b>Start here</b> (from your Brand Brain): a <b>Problem → Solution</b> about <b>${esc(cold.topic)}</b> <span class="muted">— no performance data yet, so this is based on your Brand Brain, not results.</span> <button class="link-mini" id="c-apply-cold">Use it →</button>${trendLine}</div>`;
+              $("c-apply-cold").onclick = () => { $("c-formula").value = "problem_solution"; updateFormulaDesc(); const t = $("c-idea"); if (t && !t.value.trim()) t.value = cold.topic; };
+            } else {
+              rc.innerHTML = `<div class="card muted" style="padding:12px 14px">No performance history yet — personalised recommendations appear once you rate a couple of posted ideas.${trend ? ` <span>📈 Trending now: <b style="color:var(--ink)">${esc(trend.title)}</b></span>` : ""}</div>`;
+            }
           }
         }
         const feedBtn = $("c-feed");
@@ -713,7 +730,7 @@
           if (!chosen.length) { alert("Pick at least one platform."); return; }
           $("c-out").innerHTML = `<div class="card muted">Building from your real data…</div>`;
           let scriptData = null;
-          try { const q = new URLSearchParams({ topic: topicOf(idea), angle: idea, formula: formula.id }); scriptData = await (await fetch("/api/marketing/script?" + q)).json(); } catch {}
+          try { const q = new URLSearchParams({ topic: topicOf(idea), angle: idea, formula: formula.id, cta: goalById(goals[0]).cta, help: brandHelp() }); scriptData = await (await fetch("/api/marketing/script?" + q)).json(); } catch {}
           $("c-out").innerHTML = chosen.map((p) => outputBlock(p, idea, formula, goals, scriptData)).join("");
           document.querySelectorAll("#c-out [data-copy]").forEach((b) => b.onclick = async () => { try { await navigator.clipboard.writeText($(b.dataset.copy).textContent); const t = b.textContent; b.textContent = "Copied ✓"; setTimeout(() => b.textContent = t, 1200); } catch { alert("Copy failed — select the text manually."); } });
         };

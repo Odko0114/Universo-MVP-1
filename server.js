@@ -2622,6 +2622,7 @@ mkt.get("/script", (req, res) => {
     const out = scriptgen.composeScript(
       { topic: str(req.query.topic, 40), formula: str(req.query.formula, 40), angle: str(req.query.angle, 300), platform: str(req.query.platform, 20) },
       { universities: UNIVERSITIES, scholarships: curatedScholarships.allCurated() },
+      { cta: str(req.query.cta, 200), help: str(req.query.help, 240) }, // Brand Brain + goal steer voice/CTA
     );
     res.json(out);
   } catch {
