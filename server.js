@@ -35,6 +35,7 @@ const {
   catalog: scholarshipCatalog,
 } = require("./lib/scholarships");
 const curatedScholarships = require("./lib/scholarships-curated");
+const scriptgen = require("./lib/scriptgen");
 const trends = require("./lib/trends");
 const languageReqs = require("./lib/language-requirements");
 const notify = require("./lib/notify");
@@ -2467,7 +2468,36 @@ mkt.patch("/brain", (req, res) => {
 const MKT_STATUS = ["idea", "drafting", "review", "posted"];
 const MKT_OWNER = ["Marketer", "Founder"];
 const MKT_PRIORITY = ["low", "med", "high"];
+const MKT_PLATFORMS = ["TikTok", "Instagram", "YouTube", "LinkedIn", "Reddit", "Facebook", "Other"];
+const MKT_RATINGS = ["Great", "Good", "Average", "Poor"];
 const okDue = (d) => d === "" || (typeof d === "string" && DATE_RE.test(d));
+// Manual performance records, one per platform a post went out on. Every field
+// is hand-entered by the marketer — nothing here is auto-collected (no free API
+// gives per-video stats honestly), so metrics are lenient: a non-number becomes
+// "" rather than a lie. A bad date coerces to "" too (the form enforces it).
+const mktNum = (v) => {
+  if (v === "" || v === null || v === undefined) return "";
+  const n = Math.floor(Number(v));
+  return Number.isFinite(n) && n >= 0 ? Math.min(n, 1e12) : "";
+};
+const sanitizeResults = (arr) => {
+  if (!Array.isArray(arr)) return null;
+  return arr.slice(0, 20).map((r) => {
+    r = r || {};
+    return {
+      platform: MKT_PLATFORMS.includes(r.platform) ? r.platform : "Other",
+      date: okDue(r.date) ? r.date || "" : "",
+      url: str(r.url, 500),
+      rating: MKT_RATINGS.includes(r.rating) ? r.rating : "",
+      note: str(r.note, 1000),
+      views: mktNum(r.views),
+      likes: mktNum(r.likes),
+      comments: mktNum(r.comments),
+      shares: mktNum(r.shares),
+      saves: mktNum(r.saves),
+    };
+  });
+};
 mkt.post("/idea", (req, res) => {
   const b = req.body || {};
   if (!str(b.title, 300).trim()) return res.status(400).json({ error: "Title required." });
@@ -2485,6 +2515,7 @@ mkt.post("/idea", (req, res) => {
     source: str(b.source, 400),
     rationale: str(b.rationale, 600),
     draft: "",
+    results: [],
     createdAt: Date.now(),
   };
   m.ideas.unshift(idea);
@@ -2504,6 +2535,12 @@ mkt.patch("/idea/:id", (req, res) => {
   if (b.due !== undefined) idea.due = b.due || "";
   if (b.formula !== undefined) idea.formula = str(b.formula, 40);
   if (b.draft !== undefined) idea.draft = str(b.draft, 8000);
+  if (b.results !== undefined) {
+    const r = sanitizeResults(b.results);
+    if (!r) return res.status(400).json({ error: "results must be an array." });
+    idea.results = r;
+    if (r.length && idea.status !== "posted") idea.status = "posted"; // recording results IS posting
+  }
   store.write("marketing", m);
   res.json({ idea });
 });
@@ -2555,6 +2592,20 @@ mkt.get("/ideas-feed", (_req, res) => {
     "How Universo is different from just Googling universities",
   ].forEach((t) => seeds.push({ cat: "FAQ", text: t }));
   res.json({ seeds });
+});
+// Ready-made script composed deterministically from real data (no AI) — a
+// verified scholarship / hand-verified university / live counts, chosen by the
+// opportunity's topic, with the source links returned for verification.
+mkt.get("/script", (req, res) => {
+  try {
+    const out = scriptgen.composeScript(
+      { topic: str(req.query.topic, 40), formula: str(req.query.formula, 40), angle: str(req.query.angle, 300), platform: str(req.query.platform, 20) },
+      { universities: UNIVERSITIES, scholarships: curatedScholarships.allCurated() },
+    );
+    res.json(out);
+  } catch {
+    res.status(500).json({ error: "Could not build a script." });
+  }
 });
 api.use("/marketing", mkt);
 

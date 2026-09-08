@@ -111,6 +111,49 @@ test("idea CRUD: create (with owner), patch status/owner/due/draft, delete", asy
   assert.equal((await req("PATCH", "/api/marketing/idea/" + id, { status: "idea" })).status, 404);
 });
 
+test("performance results: record, sanitize, persist, edit, auto-post", async () => {
+  const created = await req("POST", "/api/marketing/idea", { title: "Perf idea" });
+  const id = created.json.idea.id;
+  assert.deepEqual(created.json.idea.results, []); // new ideas start with an empty history
+
+  // record two platforms; a bogus rating/platform/metric is coerced, not trusted
+  const rec = await req("PATCH", "/api/marketing/idea/" + id, {
+    results: [
+      { platform: "TikTok", date: "2026-09-08", rating: "Great", note: "hi", views: "1240", likes: 84 },
+      { platform: "Nope", date: "bad", rating: "Amazing", views: "-5", saves: "abc" },
+    ],
+  });
+  assert.equal(rec.status, 200);
+  const r = rec.json.idea.results;
+  assert.equal(r.length, 2);
+  assert.equal(r[0].views, 1240); // numeric string → number
+  assert.equal(r[0].rating, "Great");
+  assert.equal(r[1].platform, "Other"); // unknown platform coerced
+  assert.equal(r[1].date, ""); // bad date coerced to empty
+  assert.equal(r[1].rating, ""); // unknown rating dropped
+  assert.equal(r[1].views, ""); // negative → empty, never a fake number
+  assert.equal(r[1].saves, ""); // non-numeric → empty
+  assert.equal(rec.json.idea.status, "posted"); // recording results auto-posts
+
+  // survives a fresh read (persistence)
+  const after = await req("GET", "/api/marketing/data");
+  assert.equal(after.json.ideas.find((i) => i.id === id).results[0].likes, 84);
+
+  // edit later: same content, updated rating; original title untouched
+  const edited = await req("PATCH", "/api/marketing/idea/" + id, {
+    title: undefined,
+    results: [{ platform: "TikTok", date: "2026-09-08", rating: "Good" }],
+  });
+  assert.equal(edited.json.idea.results.length, 1);
+  assert.equal(edited.json.idea.results[0].rating, "Good");
+  assert.equal(edited.json.idea.title, "Perf idea");
+
+  // a non-array results payload is rejected
+  assert.equal((await req("PATCH", "/api/marketing/idea/" + id, { results: "x" })).status, 400);
+
+  await req("DELETE", "/api/marketing/idea/" + id);
+});
+
 test("two independent adds both persist (granular writes, no whole-blob overwrite)", async () => {
   const a = await req("POST", "/api/marketing/idea", { title: "Persist A" });
   const b = await req("POST", "/api/marketing/idea", { title: "Persist B" });
@@ -133,6 +176,21 @@ test("ideas-feed returns real content seeds mined from Universo's data", async (
   assert.ok(Array.isArray(feed.json.seeds));
   assert.ok(feed.json.seeds.length > 10);
   assert.ok(feed.json.seeds.some((s) => s.cat === "Scholarship"));
+});
+
+test("script endpoint composes a ready script from real data with sources", async () => {
+  assert.equal(await loginAs(MKT.email, MKT.pw), 200);
+  const sch = await req("GET", "/api/marketing/script?topic=Scholarships&angle=funding");
+  assert.equal(sch.status, 200);
+  assert.ok(Array.isArray(sch.json.beats) && sch.json.beats.length >= 2, "has beats");
+  assert.ok(sch.json.beats.every((b) => b.cue && b.line), "every beat is filled, not a label");
+  assert.ok(Array.isArray(sch.json.sources), "returns sources to verify");
+  assert.ok(sch.json.dataLabel, "labels where the data came from");
+  // an unknown/creative topic still returns a real script (overview fallback)
+  const ov = await req("GET", "/api/marketing/script?topic=Relatable&angle=day%20in%20the%20life");
+  assert.equal(ov.status, 200);
+  assert.equal(ov.json.kind, "overview");
+  assert.ok(/universities/.test(ov.json.beats[0].line), "overview counts come from the dataset");
 });
 
 test("a marketing account is BLOCKED (403) from full-admin routes", async () => {

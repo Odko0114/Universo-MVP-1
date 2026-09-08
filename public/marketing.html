@@ -118,6 +118,28 @@
       .idea-item .top { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
       .idea-item b { flex: 1; min-width: 160px; }
       .idea-item select { flex: 0 0 auto; width: auto; min-height: 40px; padding: 6px 10px; }
+      /* Content performance feedback loop */
+      .res-row { border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin-bottom: 10px; background: var(--surface); }
+      .res-row .row { margin-bottom: 8px; }
+      .res-row .field { margin-bottom: 8px; }
+      .res-remove { border: 0; background: none; color: var(--danger); font: inherit; font-weight: 700; cursor: pointer; padding: 4px; }
+      .res-metrics { display: flex; gap: 8px; flex-wrap: wrap; }
+      .res-metrics .field { flex: 1; min-width: 84px; margin: 0; }
+      .res-metrics label { font-size: 0.68rem; }
+      .res-metrics input { min-height: 40px; padding: 8px 10px; }
+      .res-note-tiny { font-size: 0.78rem; color: var(--faint); margin: 2px 0 12px; }
+      .posted-box { margin-top: 10px; padding: 11px 13px; border-radius: 10px; background: var(--teal-bg); border: 1px solid var(--line); }
+      .posted-box + .posted-box { margin-top: 6px; }
+      .posted-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.9rem; }
+      .posted-head b { flex: 0 0 auto; min-width: 0; }
+      .posted-note { font-size: 0.86rem; color: var(--soft); margin: 5px 0 0; }
+      .posted-metrics { font-size: 0.82rem; color: var(--soft); margin-top: 5px; }
+      .posted-metrics .mtag { color: var(--faint); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; }
+      .rating { font-weight: 800; }
+      .rating.Great { color: var(--teal); } .rating.Good { color: var(--teal); } .rating.Average { color: var(--soft); } .rating.Poor { color: var(--danger); }
+      .perf-grid { display: flex; gap: 16px; flex-wrap: wrap; }
+      .perf-grid > div { min-width: 70px; } .perf-grid b { font-size: 1.35rem; display: block; }
+      .work-list { margin: 6px 0 0; padding-left: 18px; } .work-list li { margin: 3px 0; font-size: 0.9rem; }
       #gate { max-width: 380px; margin: 12vh auto; }
       @media (max-width: 560px) { main { padding: 14px; } .out-head .btn { margin-left: 0; } .btn.sm, .chip-btn { min-height: 40px; } .opp-actions .btn { flex: 1; } }
     </style>
@@ -152,6 +174,7 @@
     </main>
 
     <div id="produce-modal" class="modal" hidden><div class="modal-in"><button class="modal-x" id="produce-close" aria-label="Close">×</button><div id="produce-body"></div></div></div>
+    <div id="results-modal" class="modal" hidden><div class="modal-in"><button class="modal-x" id="results-close" aria-label="Close">×</button><div id="results-body"></div></div></div>
 
     <script>
       // ===== Library (version-controlled) =====
@@ -180,6 +203,42 @@
       ];
       const CTAS = { Discover: "Find your matches free on Universo — link in bio.", Save: "Save your shortlist so you never lose it.", "Sign up": "Build your free Dream Plan in 20 seconds.", Scholarship: "See which scholarships you can actually use — free." };
       const ANGLES = ["Tuition cost", "Hidden costs", "Scholarships", "Budgeting", "Application mistakes", "Country comparison", "A student's story", "Myth-busting", "Deadlines & timeline", "Eligibility", "Language requirements", "Parents' perspective"];
+      // Hook PATTERNS (reusable structures, not fill-in example hooks) — the
+      // structure is ethos-neutral; the honesty rule is that you only ever fill
+      // them with real, sourced facts. Never invent a number to fit a pattern.
+      const HOOK_FORMULAS = [
+        { name: "Observation + stat + contrast", pattern: "I've been watching {trend}. {A real, sourced number}. Most people think {X} — but actually {Y}. Here's what to do.", eg: "Studying in Europe keeps trending. 32 countries, many with €0 tuition. Most think it's only for rich kids — it isn't. Here's how to find yours." },
+        { name: "Personal limitation → result", pattern: "I couldn't {thing}. But {timeframe} I {a surprising, true result}.", eg: "I thought I couldn't afford to study abroad. Last month I found 3 scholarships I actually qualify for." },
+        { name: "Social proof (real numbers only)", pattern: "I {looked at / talked to} {a real number} {group}. {An honest, surprising finding}.", eg: "We checked 2,899 European universities. Hundreds cost far less than students expect." },
+        { name: "Contrarian challenge", pattern: "Everyone says {common advice}. That's surface-level. What actually matters is {the real point}.", eg: "Everyone says 'pick the highest-ranked university.' That's surface-level. What matters is fit, cost, and whether you'll get in." },
+        { name: "Simple declarative", pattern: "{One bold, true statement that frames the whole piece}.", eg: "Where you're born shouldn't decide where you study." },
+        { name: "Harsh truth", pattern: "Harsh truth: {an uncomfortable but honest reality}.", eg: "Harsh truth: most students never check if they qualify for scholarships they'd actually get." },
+      ];
+      // Content principles — the honesty-aligned "non-negotiables" worth keeping
+      // in front of a 2-person team before they write anything.
+      const CONTENT_PRINCIPLES = [
+        "Decide the angle first: who is this for, and what's the one takeaway?",
+        "Start from something real — a fact, a scholarship, a student's situation — not a generic template.",
+        "One post = one clear idea. Don't cram three.",
+        "Be specific: a real number or place beats an adjective — and never invent one to fit.",
+        "Fit the format to the platform, not the platform to a script.",
+        "No engagement bait (“comment YES!”). End on a genuine question instead.",
+      ];
+      // Free tools to actually film/edit the reel. Just links — nothing here
+      // generates the video for you (honest: the OS never fakes generation).
+      // Free tiers, no card needed to start.
+      const VIDEO_TOOLS = [
+        { name: "CapCut", url: "https://www.capcut.com/", note: "free editor · auto-captions" },
+        { name: "Canva", url: "https://www.canva.com/create/video-editor/", note: "reel templates · free tier" },
+        { name: "Clipchamp", url: "https://clipchamp.com/", note: "Microsoft · free editor" },
+        { name: "CapCut Templates", url: "https://www.capcut.com/templates", note: "trend templates to fill in" },
+      ];
+      // Copy craft — universal, honesty-safe writing guidance.
+      const COPY_CRAFT = {
+        story: "Context → specific details (real names, places, numbers) → the point. Specifics make it memorable; vague makes it forgettable.",
+        closers: ["What did I miss?", "What do you think?", "Which country are you aiming for?", "Save this for when you apply."],
+        avoid: ["“I'm excited to share…”", "“In today's world…”", "“As a…”", "“I hope this finds you well”", "Generic questions that aren't genuinely surprising"],
+      };
       const PLATFORMS = {
         reel: { name: "Reel / TikTok script", rule: "15–45s spoken script. Ruthless 2-second hook. One idea only. Suggest on-screen text beats. End on the CTA. ~90–150 words." },
         ig: { name: "Instagram caption", rule: "Strong first line (the hook), then value in short lines with breaks, then CTA. 3–5 relevant hashtags. ~50–120 words." },
@@ -234,7 +293,10 @@
         const closeProduce = () => { $("produce-modal").hidden = true; };
         $("produce-close").onclick = closeProduce;
         $("produce-modal").onclick = (e) => { if (e.target.id === "produce-modal") closeProduce(); };
-        document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeProduce(); });
+        const closeResults = () => { $("results-modal").hidden = true; };
+        $("results-close").onclick = closeResults;
+        $("results-modal").onclick = (e) => { if (e.target.id === "results-modal") closeResults(); };
+        document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeProduce(); closeResults(); } });
         render();
         loadRadar();
       }
@@ -453,16 +515,44 @@
         const brief = `PRODUCE — ${o.angle}\nFormat: ${plat.name}\n\nHOOK (first 2s):\n${hooks[0]}\nalts: ${hooks.slice(1).join(" / ")}\n\nSCRIPT / SHOT LIST:\n${formula.steps.map((s, i) => `${i + 1}. ${s} — [film this]`).join("\n")}\n\nON-SCREEN TEXT: surface the key phrase from each beat.\n\nCAPTION:\n${caption}\n\nCTA: ${cta}\n\nCHECKLIST:\n[ ] Film  [ ] Captions/subtitles  [ ] On-screen text  [ ] Post/schedule  [ ] Mark posted`;
         $("produce-body").innerHTML = `<h2 style="margin:0 0 4px">🎬 Produce — go from idea to shoot-ready</h2><div class="opp-angle">${esc(o.angle)}</div><div class="muted" style="margin-bottom:6px">${esc(plat.name)}</div>
           <div class="prod-sec"><div class="prod-h">Hook (first 2 seconds)</div><div><b>${esc(hooks[0])}</b></div><div class="muted">alts: ${hooks.slice(1).map(esc).join(" · ")}</div></div>
-          <div class="prod-sec"><div class="prod-h">Script / shot list</div><ol class="prod-shots">${formula.steps.map((s) => `<li>${esc(s)} <span class="muted">— film this</span></li>`).join("")}</ol></div>
+          <div class="prod-sec" id="prod-datascript"><div class="prod-h">Ready script — from Universo's real data</div><div class="muted">Loading real data…</div></div>
+          <div class="prod-sec"><div class="prod-h">Shot-list structure (${esc(formula.name)})</div><ol class="prod-shots">${formula.steps.map((s) => `<li>${esc(s)} <span class="muted">— film this</span></li>`).join("")}</ol></div>
           <div class="prod-sec"><div class="prod-h">Caption <button class="link-mini" id="prod-copycap">Copy</button></div><pre id="prod-cap">${esc(caption)}</pre></div>
           <div class="prod-sec"><div class="prod-h">Hashtags</div><div>${esc(hashtagsFor(o.topic))}</div></div>
+          <div class="prod-sec"><div class="prod-h">Make it — free tools</div><div class="chips">${VIDEO_TOOLS.map((t) => `<a class="chip-btn" href="${esc(t.url)}" target="_blank" rel="noopener">${esc(t.name)} ↗</a>`).join("")}</div><div class="muted" style="margin-top:6px">Free tiers, no card needed to start. These are where you film/edit — nothing here makes the video for you.</div></div>
           <div class="prod-sec"><div class="prod-h">Production checklist</div>${["Film", "Captions / subtitles", "On-screen text", "Post / schedule", "Mark posted in Ideas"].map((c) => `<label class="prod-check"><input type="checkbox"> ${c}</label>`).join("")}</div>
           <div class="opp-actions" style="margin-top:14px"><button class="btn sm gold" id="prod-copybrief">Copy full brief</button><button class="btn sm" id="prod-copyprompt">Copy AI prompt (polished copy)</button><button class="btn sm alt" id="prod-add">＋ Add to Ideas</button></div>`;
         $("produce-modal").hidden = false;
         $("prod-copybrief").onclick = () => copyTxt(brief, $("prod-copybrief"));
         $("prod-copycap").onclick = () => copyTxt(caption, $("prod-copycap"));
         $("prod-copyprompt").onclick = () => copyTxt(buildPrompt(o.platform || "reel", o.angle, formula, cta), $("prod-copyprompt"));
-        $("prod-add").onclick = async () => { const r = await api("POST", "/idea", { title: o.angle, formula: o.formula, source: (o.trend || "") + (o.link ? " — " + o.link : ""), rationale: o.why, priority: o.urgency === "This week" ? "high" : "med", status: "drafting" }); if (r && r.idea) { DATA.ideas.unshift(r.idea); $("prod-add").textContent = "Added ✓"; } };
+        $("prod-add").onclick = async () => { const r = await api("POST", "/idea", { title: o.angle, formula: o.formula, source: (o.trend || "") + (o.link ? " — " + o.link : ""), rationale: o.why, priority: o.urgency === "This week" ? "high" : "med", status: "drafting", draft: PROD_SCRIPT }); if (r && r.idea) { DATA.ideas.unshift(r.idea); $("prod-add").textContent = "Added ✓"; } };
+        loadDataScript(o);
+      }
+      // Fetch and render the deterministic real-data script into the Produce modal.
+      let PROD_SCRIPT = "";
+      function scriptToText(data) {
+        const lines = data.beats.map((b) => `[${b.cue}] ${b.line}`).join("\n");
+        const src = (data.sources && data.sources.length) ? "\n\nSOURCES (verify before posting):\n" + data.sources.map((s) => "- " + s).join("\n") : "";
+        return `${data.headline || ""}\n\n${lines}\n\nCTA: ${data.cta || ""}${src}`;
+      }
+      async function loadDataScript(o) {
+        PROD_SCRIPT = "";
+        const el = $("prod-datascript"); if (!el) return;
+        let data = null;
+        try { const q = new URLSearchParams({ topic: o.topic || "", formula: o.formula || "", angle: o.angle || "", platform: o.platform || "" }); data = await (await fetch("/api/marketing/script?" + q)).json(); } catch {}
+        if (!$("prod-datascript")) return; // modal closed while loading
+        if (!data || !Array.isArray(data.beats)) { el.innerHTML = `<div class="prod-h">Ready script — from Universo's real data</div><div class="muted">Real-data script unavailable right now.</div>`; return; }
+        PROD_SCRIPT = scriptToText(data);
+        const srcHtml = (data.sources && data.sources.length)
+          ? `<div class="muted" style="margin-top:6px"><b>Sources (verify before posting):</b> ${data.sources.map((s) => /^https?:\/\//.test(s) ? `<a href="${esc(s)}" target="_blank" rel="noopener">${esc(s.replace(/^https?:\/\//, "").slice(0, 38))} ↗</a>` : esc(s)).join(" · ")}</div>` : "";
+        el.innerHTML = `<div class="prod-h">Ready script — from Universo's real data <span class="pill teal">${esc(data.dataLabel || "real data")}</span></div>
+          <ol class="prod-shots">${data.beats.map((b) => `<li><b>${esc(b.cue)}:</b> ${esc(b.line)}</li>`).join("")}</ol>
+          <div style="margin-top:4px"><b>CTA:</b> ${esc(data.cta || "")}</div>
+          ${srcHtml}
+          <div class="muted" style="margin-top:4px">${esc(data.note || "")}</div>
+          <button class="btn sm gold" id="prod-copyscript" style="margin-top:10px">Copy script</button>`;
+        $("prod-copyscript").onclick = () => copyTxt(PROD_SCRIPT, $("prod-copyscript"));
       }
 
       // ===== PLAN (two-person coordination) =====
@@ -500,7 +590,7 @@
       function wirePlan() {
         document.querySelectorAll("#tab-plan [data-approve]").forEach((b) => b.onclick = async () => {
           const id = b.dataset.approve, idea = DATA.ideas.find((x) => x.id === id); if (!idea) return;
-          idea.status = "posted"; await api("PATCH", "/idea/" + id, { status: "posted" }); render();
+          idea.status = "posted"; await api("PATCH", "/idea/" + id, { status: "posted" }); render(); openResults(idea);
         });
       }
 
@@ -603,34 +693,144 @@ Output ONLY the finished ${p.name}, ready to post.`;
           <div class="out-head" style="background:var(--surface)"><span class="tag draft">Manual skeleton</span><button class="btn sm alt" data-copy="${sid}">Copy skeleton</button></div><pre id="${sid}">${esc(buildSkeleton(pk, idea, formula, cta))}</pre></div>`;
       }
 
+      // ===== RESULTS / PERFORMANCE (manual feedback loop) =====
+      // Every value here is hand-entered by the marketer. No free API gives
+      // honest per-video stats, so nothing is auto-collected — the tool never
+      // pretends a number came from anywhere but the person typing it.
+      const RESULT_PLATFORMS = ["TikTok", "Instagram", "YouTube", "LinkedIn", "Reddit", "Facebook", "Other"];
+      const RATINGS = ["Great", "Good", "Average", "Poor"];
+      const RATING_SCORE = { Great: 3, Good: 2, Average: 1, Poor: 0 };
+      const METRICS = [["views", "Views"], ["likes", "Likes"], ["comments", "Comments"], ["shares", "Shares"], ["saves", "Saves"]];
+      const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const today = () => new Date().toISOString().slice(0, 10);
+      const num = (n) => Number(n).toLocaleString("en-US");
+      function fmtShort(d) { if (!d) return ""; const p = d.split("-"); return p.length === 3 ? MONTHS[(+p[1]) - 1] + " " + (+p[2]) : d; }
+
+      function resultRow(r, idx) {
+        r = r || {};
+        return `<div class="res-row" data-res="${idx}">
+          <div class="row">
+            <div class="field" style="flex:1;min-width:130px"><label>Platform *</label><select data-r="platform" aria-label="Platform">${RESULT_PLATFORMS.map((p) => `<option${r.platform === p ? " selected" : ""}>${p}</option>`).join("")}</select></div>
+            <div class="field" style="flex:0 0 150px"><label>Posted date *</label><input type="date" data-r="date" aria-label="Posted date" value="${esc(r.date || today())}" /></div>
+            <button type="button" class="res-remove" data-res-remove="${idx}" aria-label="Remove this platform">Remove</button>
+          </div>
+          <div class="field"><label>Post URL (optional)</label><input data-r="url" value="${esc(r.url || "")}" placeholder="https://…" /></div>
+          <div class="row">
+            <div class="field" style="flex:0 0 150px"><label>Performance</label><select data-r="rating" aria-label="Performance rating"><option value="">—</option>${RATINGS.map((x) => `<option${r.rating === x ? " selected" : ""}>${x}</option>`).join("")}</select></div>
+            <div class="field" style="flex:1;min-width:160px"><label>Note (optional)</label><input data-r="note" value="${esc(r.note || "")}" placeholder="e.g. Lots of scholarship questions" /></div>
+          </div>
+          <label style="margin-bottom:4px">Manual metrics (optional — you type these in yourself)</label>
+          <div class="res-metrics">${METRICS.map(([k, l]) => `<div class="field"><label>${l}</label><input type="number" min="0" inputmode="numeric" data-r="${k}" aria-label="${l}" value="${r[k] === 0 || r[k] ? esc(r[k]) : ""}" /></div>`).join("")}</div>
+        </div>`;
+      }
+      function collectResults() {
+        return [...document.querySelectorAll("#results-body .res-row")].map((row) => {
+          const g = (k) => { const el = row.querySelector(`[data-r="${k}"]`); return el ? el.value.trim() : ""; };
+          const n = (k) => { const v = g(k); return v === "" ? "" : Math.max(0, Math.floor(Number(v)) || 0); };
+          return { platform: g("platform"), date: g("date"), url: g("url"), rating: g("rating"), note: g("note"), views: n("views"), likes: n("likes"), comments: n("comments"), shares: n("shares"), saves: n("saves") };
+        });
+      }
+      function renderResultsForm(list) {
+        $("results-body").innerHTML = `<h2 style="margin:0 0 4px">✓ Record results</h2>
+          <p class="res-note-tiny">Where did this go and how did it do? Metrics are whatever you type in by hand — Universo never auto-collects them.</p>
+          <div id="res-rows">${list.map(resultRow).join("")}</div>
+          <button type="button" class="btn alt sm" id="res-add">＋ Add another platform</button>
+          <div class="opp-actions" style="margin-top:16px"><button type="button" class="btn gold" id="res-save">Save results</button></div>
+          <div id="res-err" class="res-note-tiny" style="color:var(--danger)" hidden></div>`;
+        $("res-add").onclick = () => { const cur = collectResults(); cur.push({ platform: "TikTok", date: today() }); renderResultsForm(cur); };
+        document.querySelectorAll("#results-body [data-res-remove]").forEach((b) => b.onclick = () => { const cur = collectResults(); cur.splice(+b.dataset.resRemove, 1); renderResultsForm(cur.length ? cur : [{ platform: "TikTok", date: today() }]); });
+        $("res-save").onclick = saveResults;
+      }
+      let RESULTS_IDEA = null;
+      function openResults(idea) {
+        RESULTS_IDEA = idea;
+        const list = (idea.results && idea.results.length) ? idea.results.map((r) => ({ ...r })) : [{ platform: "TikTok", date: today() }];
+        renderResultsForm(list);
+        $("results-modal").hidden = false;
+      }
+      async function saveResults() {
+        const idea = RESULTS_IDEA; if (!idea) return;
+        const list = collectResults();
+        if (list.some((r) => !r.platform || !r.date)) { const e = $("res-err"); e.textContent = "Each platform needs a platform and a posted date."; e.hidden = false; return; }
+        const r = await api("PATCH", "/idea/" + idea.id, { results: list });
+        if (r && r.idea) { idea.results = r.idea.results; idea.status = r.idea.status; $("results-modal").hidden = true; render(); }
+      }
+      function metricsLine(r) {
+        const parts = METRICS.filter(([k]) => r[k] !== "" && r[k] != null).map(([k, l]) => `${num(r[k])} ${l.toLowerCase()}`);
+        return parts.length ? `<div class="posted-metrics"><span class="mtag">Manually entered</span> ${parts.join(" · ")}</div>` : "";
+      }
+      function postedSummary(i) {
+        if (!i.results || !i.results.length) return "";
+        return i.results.map((r) => `<div class="posted-box">
+          <div class="posted-head">✓ Posted · <b>${esc(r.platform)}</b> · ${esc(fmtShort(r.date))}${r.rating ? ` · <span class="rating ${esc(r.rating)}">${esc(r.rating)}</span>` : ""}${r.url ? ` · <a href="${esc(r.url)}" target="_blank" rel="noopener">View post ↗</a>` : ""}</div>
+          ${r.note ? `<div class="posted-note">${esc(r.note)}</div>` : ""}${metricsLine(r)}</div>`).join("");
+      }
+      function perfSection() {
+        const posted = DATA.ideas.filter((i) => i.results && i.results.length);
+        if (!posted.length) return "";
+        const entries = [];
+        posted.forEach((i) => i.results.forEach((r) => entries.push({ i, r })));
+        const tally = { Great: 0, Good: 0, Average: 0, Poor: 0 };
+        entries.forEach(({ r }) => { if (tally[r.rating] != null) tally[r.rating]++; });
+        const byPlat = {};
+        entries.forEach(({ r }) => { if (r.rating) (byPlat[r.platform] = byPlat[r.platform] || []).push(RATING_SCORE[r.rating]); });
+        let best = null;
+        Object.entries(byPlat).forEach(([p, arr]) => { const avg = arr.reduce((a, b) => a + b, 0) / arr.length; if (!best || avg > best.avg || (avg === best.avg && arr.length > best.n)) best = { p, avg, n: arr.length }; });
+        const winners = entries.filter(({ r }) => r.rating === "Great" || r.rating === "Good").sort((a, b) => (b.r.date || "").localeCompare(a.r.date || "")).slice(0, 5);
+        const byFormula = {};
+        winners.forEach(({ i }) => { const f = (FORMULAS.find((x) => x.id === i.formula) || {}).name; if (f) byFormula[f] = (byFormula[f] || 0) + 1; });
+        const topFormulas = Object.entries(byFormula).sort((a, b) => b[1] - a[1]).slice(0, 3);
+        const summary = `<div class="card"><h2 style="margin-top:0">📊 Performance</h2>
+          <div class="perf-grid"><div><b>${posted.length}</b><span class="muted">posted &amp; recorded</span></div>
+            <div><b class="rating Great">${tally.Great}</b><span class="muted">Great</span></div>
+            <div><b class="rating Good">${tally.Good}</b><span class="muted">Good</span></div>
+            <div><b>${tally.Average}</b><span class="muted">Average</span></div>
+            <div><b class="rating Poor">${tally.Poor}</b><span class="muted">Poor</span></div></div>
+          ${best ? `<p class="muted" style="margin:12px 0 0">Best-performing platform so far: <b style="color:var(--ink)">${esc(best.p)}</b> (${best.n} rated).</p>` : ""}</div>`;
+        const learn = `<div class="card"><h2 style="margin-top:0">💡 What seems to be working</h2>
+          <p class="muted" style="margin-top:0">Based only on what you've recorded — no AI, no scraping.</p>
+          <ul class="work-list">
+            ${best ? `<li><b>${esc(best.p)}</b> is your strongest platform right now.</li>` : ""}
+            ${topFormulas.length ? `<li>Formats landing well: ${topFormulas.map(([f, n]) => `${esc(f)} (${n})`).join(", ")}.</li>` : ""}
+            ${winners.length ? "<li>Recent hits:</li>" : "<li>No Great/Good posts recorded yet — rate a few to spot patterns.</li>"}
+          </ul>
+          ${winners.length ? `<ul class="work-list">${winners.map(({ i, r }) => `<li>${esc(i.title)} — <span class="rating ${esc(r.rating)}">${esc(r.rating)}</span> on ${esc(r.platform)}</li>`).join("")}</ul>` : ""}</div>`;
+        return summary + learn;
+      }
+
       // ===== IDEAS =====
       function panelIdeas() {
         const list = DATA.ideas;
-        return `<section class="panel" id="tab-ideas"><h1>Ideas</h1><p class="sub">Saved ideas and finished drafts. Status: idea → drafting → posted. Paste the AI's final output into "Final draft" so nothing gets lost.</p>
+        return `<section class="panel" id="tab-ideas"><h1>Ideas</h1><p class="sub">Saved ideas and finished drafts. Status: idea → drafting → review → posted. Once posted, record where it went and how it did so the list becomes a history of what works.</p>
           <div class="card"><div class="row"><input id="i-title" placeholder="New idea (one line)" /><select id="i-owner" style="flex:0 0 120px">${OWNERS.map((o) => `<option>${o}</option>`).join("")}</select><button class="btn" id="i-add" style="flex:0 0 auto">Add</button></div></div>
+          ${perfSection()}
           ${list.length ? list.map(ideaItem).join("") : '<div class="card muted">No saved ideas yet. Add one above, or save one from the Create tab.</div>'}</section>`;
       }
       function ideaItem(i) {
         const fname = (FORMULAS.find((f) => f.id === i.formula) || {}).name;
+        const hasResults = i.results && i.results.length;
         return `<div class="idea-item" data-id="${i.id}"><div class="top"><b>${esc(i.title)}</b>
           <select data-act="status" title="Status">${STATUSES.map((s) => `<option${(i.status || "idea") === s ? " selected" : ""}>${s}</option>`).join("")}</select>
           <button class="chip-btn" data-act="produce" title="Produce (shoot-ready brief)">🎬</button>
+          <button class="chip-btn" data-act="results" title="${hasResults ? "Edit results" : "Record results"}">📊 ${hasResults ? "Edit results" : "Record results"}</button>
           <button class="chip-btn" data-act="del" title="Delete">🗑</button></div>
           <div class="top" style="margin-top:8px">
             <select data-act="owner" title="Owner" style="flex:0 0 auto">${OWNERS.map((o) => `<option${(i.owner || "Marketer") === o ? " selected" : ""}>${o}</option>`).join("")}</select>
             <label style="flex:0 0 auto;margin:0;display:flex;align-items:center;gap:6px;text-transform:none;font-size:.8rem;color:var(--soft)">Due <input type="date" data-act="due" value="${esc(i.due || "")}" style="min-height:40px;width:auto" /></label>
             ${fname ? `<span class="pill">${esc(fname)}</span>` : ""}</div>
-          <div style="margin-top:8px"><label>Final draft (paste the AI's output here)</label><textarea data-act="draft" rows="2" placeholder="…">${esc(i.draft || "")}</textarea></div></div>`;
+          <div style="margin-top:8px"><label>Final draft (paste the AI's output here)</label><textarea data-act="draft" rows="2" placeholder="…">${esc(i.draft || "")}</textarea></div>
+          ${postedSummary(i)}</div>`;
       }
       function wireIdeas() {
         const add = $("i-add");
         if (add) add.onclick = async () => { const v = $("i-title").value.trim(); if (!v) return; const r = await api("POST", "/idea", { title: v, owner: $("i-owner").value }); if (r && r.idea) { DATA.ideas.unshift(r.idea); $("i-title").value = ""; render(); } };
         document.querySelectorAll("#tab-ideas .idea-item").forEach((el) => {
           const id = el.dataset.id, idea = DATA.ideas.find((x) => x.id === id); if (!idea) return;
-          el.querySelector('[data-act="status"]').onchange = (e) => { idea.status = e.target.value; api("PATCH", "/idea/" + id, { status: e.target.value }); };
+          el.querySelector('[data-act="status"]').onchange = (e) => { idea.status = e.target.value; api("PATCH", "/idea/" + id, { status: e.target.value }); if (e.target.value === "posted") openResults(idea); };
           el.querySelector('[data-act="owner"]').onchange = (e) => { idea.owner = e.target.value; api("PATCH", "/idea/" + id, { owner: e.target.value }); };
           el.querySelector('[data-act="due"]').onchange = (e) => { idea.due = e.target.value; api("PATCH", "/idea/" + id, { due: e.target.value }); };
           el.querySelector('[data-act="produce"]').onclick = () => openProduce(ideaToOpp(idea));
+          el.querySelector('[data-act="results"]').onclick = () => openResults(idea);
           el.querySelector('[data-act="del"]').onclick = async () => { if (!confirm("Delete this idea?")) return; await api("DELETE", "/idea/" + id); DATA.ideas = DATA.ideas.filter((x) => x.id !== id); render(); };
           let t; el.querySelector('[data-act="draft"]').oninput = (e) => { idea.draft = e.target.value; clearTimeout(t); t = setTimeout(() => api("PATCH", "/idea/" + id, { draft: e.target.value }), 600); };
         });
@@ -639,10 +839,16 @@ Output ONLY the finished ${p.name}, ready to post.`;
       // ===== LIBRARY =====
       function panelLibrary() {
         return `<section class="panel" id="tab-library"><h1>Library</h1><p class="sub">Reusable building blocks + the anti-repetition angle picker (tap to grey out angles you've used on a topic).</p>
+          <div class="card"><h2 style="margin-top:0">Content principles</h2><p class="muted" style="margin-top:0">Keep these in view before writing anything.</p><ul class="work-list">${CONTENT_PRINCIPLES.map((p) => `<li>${esc(p)}</li>`).join("")}</ul></div>
           <div class="card"><h2 style="margin-top:0">🎬 Content formats — any kind of video</h2><p class="muted">Not just university topics — relatable, motivation, POV, lifestyle, career, reaction, trend formats. Tap "Use" to start one in Create.</p>${CREATIVE_PILLARS.map((p, i) => `<div class="head-item"><b>${esc(p.angle)}</b> <span class="pill">${esc(p.topic)}</span><div class="head-meta">${esc(p.format)} · <button class="link-mini" data-pillar="${i}">Use →</button></div></div>`).join("")}</div>
           <div class="card"><h2 style="margin-top:0">Angle picker</h2><div class="chips" id="lib-angles">${ANGLES.map((a) => `<button class="chip-btn" data-angle>${esc(a)}</button>`).join("")}</div></div>
           <div class="card"><h2 style="margin-top:0">Hook bank</h2>${HOOKS.map((h) => `<div style="padding:6px 0;border-bottom:1px solid var(--line)"><button class="btn sm alt" data-hook="${esc(h)}" style="margin-right:8px">Copy</button>${esc(h)}</div>`).join("")}</div>
+          <div class="card"><h2 style="margin-top:0">Hook formulas</h2><p class="muted" style="margin-top:0">Reusable structures — the pattern is just the skeleton. Fill it only with real, sourced facts; never invent a number to fit it.</p>${HOOK_FORMULAS.map((f) => `<div class="head-item"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>${esc(f.name)}</b><button class="btn sm alt" data-hook="${esc(f.pattern)}">Copy pattern</button></div><div class="muted" style="margin-top:4px">${esc(f.pattern)}</div><div style="margin-top:4px;font-size:.86rem"><span class="pill teal">example</span> ${esc(f.eg)}</div></div>`).join("")}</div>
           <div class="card"><h2 style="margin-top:0">Formulas</h2>${FORMULAS.map((f) => `<div style="padding:8px 0;border-bottom:1px solid var(--line)"><b>${f.name}</b><div class="muted">${f.steps.join(" → ")}</div></div>`).join("")}</div>
+          <div class="card"><h2 style="margin-top:0">Writing craft</h2>
+            <div class="head-item"><b>Tell it as a story</b><div class="muted" style="margin-top:4px">${esc(COPY_CRAFT.story)}</div></div>
+            <div class="head-item"><b>End on a real question, not “like &amp; share”</b><div class="chips" style="margin-top:6px">${COPY_CRAFT.closers.map((c) => `<button class="btn sm alt" data-hook="${esc(c)}">${esc(c)}</button>`).join("")}</div></div>
+            <div class="head-item"><b>Openers to avoid</b><div class="muted" style="margin-top:4px">${COPY_CRAFT.avoid.map(esc).join(" · ")}</div></div></div>
           <div class="card"><h2 style="margin-top:0">CTAs</h2>${Object.entries(CTAS).map(([k, v]) => `<div style="padding:6px 0"><span class="pill">${k}</span> ${esc(v)}</div>`).join("")}</div></section>`;
       }
       function wireLibrary() {
