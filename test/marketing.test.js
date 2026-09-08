@@ -182,6 +182,21 @@ test("idea persists goal, topic and platforms (deduped); patch updates them", as
   await req("DELETE", "/api/marketing/idea/" + legacy.json.idea.id);
 });
 
+test("editing checklist persists (booleans, capped); bad payload rejected", async () => {
+  const created = await req("POST", "/api/marketing/idea", { title: "Edit idea" });
+  const id = created.json.idea.id;
+  assert.deepEqual(created.json.idea.editing, {}); // starts empty
+  const patched = await req("PATCH", "/api/marketing/idea/" + id, { editing: { hook: true, captions: "yes", music: 0 } });
+  assert.equal(patched.status, 200);
+  assert.equal(patched.json.idea.editing.hook, true);
+  assert.equal(patched.json.idea.editing.captions, true); // coerced to boolean
+  assert.equal(patched.json.idea.editing.music, false);
+  const after = await req("GET", "/api/marketing/data");
+  assert.equal(after.json.ideas.find((i) => i.id === id).editing.hook, true); // persisted
+  assert.equal((await req("PATCH", "/api/marketing/idea/" + id, { editing: [1, 2] })).status, 400); // array rejected
+  await req("DELETE", "/api/marketing/idea/" + id);
+});
+
 test("insights endpoint returns engine output driven by recorded results", async () => {
   assert.equal(await loginAs(MKT.email, MKT.pw), 200);
   // an idea with a clear winning combo: Story about a distinct topic, two Greats on TikTok

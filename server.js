@@ -2489,6 +2489,14 @@ const sanitizePlatforms = (arr) => {
   const seen = new Set();
   return arr.map((p) => str(p, 20)).filter((p) => p && !seen.has(p) && seen.add(p)).slice(0, 12);
 };
+// Editing checklist: a small map of task-key -> done. The client owns the task
+// list; the server just guards shape (string keys, boolean values, capped).
+const sanitizeEditing = (obj) => {
+  if (!obj || typeof obj !== "object" || Array.isArray(obj)) return null;
+  const out = {};
+  for (const k of Object.keys(obj).slice(0, 30)) out[str(k, 40)] = !!obj[k];
+  return out;
+};
 const sanitizeResults = (arr) => {
   if (!Array.isArray(arr)) return null;
   return arr.slice(0, 20).map((r) => {
@@ -2528,6 +2536,7 @@ mkt.post("/idea", (req, res) => {
     platforms: sanitizePlatforms(b.platforms) || [],
     draft: "",
     results: [],
+    editing: {},
     createdAt: Date.now(),
   };
   m.ideas.unshift(idea);
@@ -2549,6 +2558,7 @@ mkt.patch("/idea/:id", (req, res) => {
   if (b.goal !== undefined) idea.goal = str(b.goal, 40);
   if (b.topic !== undefined) idea.topic = str(b.topic, 60);
   if (b.platforms !== undefined) { const p = sanitizePlatforms(b.platforms); if (!p) return res.status(400).json({ error: "platforms must be an array." }); idea.platforms = p; }
+  if (b.editing !== undefined) { const e = sanitizeEditing(b.editing); if (!e) return res.status(400).json({ error: "editing must be an object." }); idea.editing = e; }
   if (b.draft !== undefined) idea.draft = str(b.draft, 8000);
   if (b.results !== undefined) {
     const r = sanitizeResults(b.results);

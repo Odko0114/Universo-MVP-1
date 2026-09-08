@@ -171,6 +171,7 @@
 
     <div id="produce-modal" class="modal" hidden><div class="modal-in"><button class="modal-x" id="produce-close" aria-label="Close">×</button><div id="produce-body"></div></div></div>
     <div id="results-modal" class="modal" hidden><div class="modal-in"><button class="modal-x" id="results-close" aria-label="Close">×</button><div id="results-body"></div></div></div>
+    <div id="editing-modal" class="modal" hidden><div class="modal-in"><button class="modal-x" id="editing-close" aria-label="Close">×</button><div id="editing-body"></div></div></div>
 
     <script>
       // ===== Library (version-controlled) =====
@@ -348,7 +349,10 @@
         const closeResults = () => { $("results-modal").hidden = true; };
         $("results-close").onclick = closeResults;
         $("results-modal").onclick = (e) => { if (e.target.id === "results-modal") closeResults(); };
-        document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeProduce(); closeResults(); } });
+        const closeEditing = () => { $("editing-modal").hidden = true; render(); }; // re-render so card progress updates
+        $("editing-close").onclick = closeEditing;
+        $("editing-modal").onclick = (e) => { if (e.target.id === "editing-modal") closeEditing(); };
+        document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeProduce(); closeResults(); if (!$("editing-modal").hidden) closeEditing(); } });
         render();
         loadRadar();
       }
@@ -765,6 +769,41 @@
       function captionFor(formula, idea, goal, topic) {
         return `${hookText(formula.id, idea)}\n\n${goal.desc}. ${goal.cta}\n\n${hashtagsFor(topic)}`;
       }
+      // ===== EDITING STEP (persisted checklist per card) =====
+      const EDIT_TASKS = [
+        ["hook", "Strong hook in the first 2 seconds"],
+        ["deadair", "Cut dead air and filler"],
+        ["broll", "Add B-roll / visuals where explaining"],
+        ["ontext", "On-screen text for the key points"],
+        ["captions", "Burned-in captions, key words highlighted"],
+        ["music", "Music at low volume (only if it helps)"],
+        ["transition", "Transitions that fit (don't over-edit)"],
+        ["cta", "Ending matches the goal (CTA / question)"],
+        ["review", "Watch it back once before posting"],
+      ];
+      const editProgress = (i) => EDIT_TASKS.filter(([k]) => i.editing && i.editing[k]).length;
+      function openEditing(idea) {
+        const ep = editingPlan(idea.formula || "howto", idea.goal || "help", (idea.platforms && idea.platforms[0]) || "reel");
+        const g = GOALS.find((x) => x.id === idea.goal);
+        const guide = [
+          ["Style", ep.style], ["Opening", ep.opening], ["Pacing", ep.pacing],
+          ["Visuals", ep.visuals], ["Transitions", ep.transitions.join(", ")],
+          ["Captions", ep.captions], ["Sound", ep.sound],
+          ["Ending", g ? `${g.label} — "${g.cta}"` : ep.ending],
+        ];
+        idea.editing = idea.editing || {};
+        $("editing-body").innerHTML = `<h2 style="margin:0 0 4px">✂️ Editing — ${esc(idea.title)}</h2>
+          <p class="res-note-tiny">Recommended for a <b>${esc((getFormula(idea.formula) || {}).name || "post")}</b>${g ? ` aiming to <b>${esc(g.label)}</b>` : ""}. Tick items as you edit — it's saved on the card.</p>
+          <div class="prod-sec">${guide.map(([k, v]) => `<div style="margin:4px 0"><b>${esc(k)}:</b> ${esc(v)}</div>`).join("")}</div>
+          <div class="prod-sec"><div class="prod-h">Checklist</div>${EDIT_TASKS.map(([k, l]) => `<label class="prod-check"><input type="checkbox" data-edit="${k}"${idea.editing[k] ? " checked" : ""}> ${esc(l)}</label>`).join("")}</div>
+          <div class="opp-actions" style="margin-top:12px"><button class="btn sm gold" id="edit-done">Done</button></div>`;
+        document.querySelectorAll("#editing-body [data-edit]").forEach((cb) => cb.onchange = () => {
+          idea.editing[cb.dataset.edit] = cb.checked;
+          api("PATCH", "/idea/" + idea.id, { editing: idea.editing });
+        });
+        $("edit-done").onclick = () => { $("editing-modal").hidden = true; render(); };
+        $("editing-modal").hidden = false;
+      }
       function brandBlock() {
         return `You are writing for Universo, a student platform. Mission: ${brain("mission")}
 What Universo is: ${brain("product")}
@@ -1011,6 +1050,7 @@ ${hashtagsFor(topic)}${src}`;
         return `<div class="idea-item" data-id="${i.id}"><div class="top"><b>${esc(i.title)}</b>
           <select data-act="status" title="Status">${STATUSES.map((s) => `<option${(i.status || "idea") === s ? " selected" : ""}>${s}</option>`).join("")}</select>
           <button class="chip-btn" data-act="produce" title="Produce (shoot-ready brief)">🎬</button>
+          <button class="chip-btn" data-act="edit" title="Editing checklist">✂️ Edit${editProgress(i) ? ` ${editProgress(i)}/${EDIT_TASKS.length}` : ""}</button>
           <button class="chip-btn" data-act="results" title="${hasResults ? "Publish / results" : "Mark published"}">${hasResults ? "📊 Results" : "📢 Mark published"}</button>
           <button class="chip-btn" data-act="del" title="Delete">🗑</button></div>
           <div class="top" style="margin-top:8px">
@@ -1029,6 +1069,7 @@ ${hashtagsFor(topic)}${src}`;
           el.querySelector('[data-act="owner"]').onchange = (e) => { idea.owner = e.target.value; api("PATCH", "/idea/" + id, { owner: e.target.value }); };
           el.querySelector('[data-act="due"]').onchange = (e) => { idea.due = e.target.value; api("PATCH", "/idea/" + id, { due: e.target.value }); };
           el.querySelector('[data-act="produce"]').onclick = () => openProduce(ideaToOpp(idea));
+          el.querySelector('[data-act="edit"]').onclick = () => openEditing(idea);
           el.querySelector('[data-act="results"]').onclick = () => openResults(idea);
           el.querySelectorAll('[data-act="measure"]').forEach((b) => b.onclick = () => openResults(idea));
           el.querySelector('[data-act="del"]').onclick = async () => { if (!confirm("Delete this idea?")) return; await api("DELETE", "/idea/" + id); DATA.ideas = DATA.ideas.filter((x) => x.id !== id); await loadInsights(); render(); };
