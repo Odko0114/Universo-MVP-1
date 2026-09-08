@@ -58,10 +58,6 @@
       .pill.overdue { background: rgba(214,69,80,0.15); color: var(--danger); }
       .pill.soon { background: rgba(233,185,73,0.18); color: #916609; }
       :root[data-theme="dark"] .pill.soon { color: var(--gold); }
-      .plan-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 9px 0; border-bottom: 1px solid var(--line); }
-      .plan-row:last-child { border-bottom: 0; }
-      .pr-title { flex: 1; min-width: 150px; font-weight: 600; font-size: 0.92rem; }
-      .plan-row .btn { margin-left: auto; }
       /* Radar / intelligence */
       .radar-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
       .radar-top h1 { margin: 4px 0; }
@@ -153,10 +149,9 @@
       </div>
       <nav class="tabs" id="tabs" hidden>
         <button data-tab="radar" class="on">🔥 What's Happening</button>
-        <button data-tab="plan">Plan</button>
         <button data-tab="calendar">Calendar</button>
         <button data-tab="create">Create</button>
-        <button data-tab="ideas">Ideas</button>
+        <button data-tab="ideas">Board</button>
         <button data-tab="library">Library</button>
         <button data-tab="brain">Brand Brain</button>
       </nav>
@@ -382,9 +377,9 @@
         return parts.join(" ");
       }
       function render() {
-        $("app").innerHTML = [panelRadar(), panelPlan(), panelCalendar(), panelCreate(), panelIdeas(), panelLibrary(), panelBrain()].join("");
+        $("app").innerHTML = [panelRadar(), panelCalendar(), panelCreate(), panelIdeas(), panelLibrary(), panelBrain()].join("");
         document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("on", p.id === "tab-" + TAB));
-        wireRadar(); wirePlan(); wireCalendar(); wireCreate(); wireIdeas(); wireLibrary(); wireBrain();
+        wireRadar(); wireCalendar(); wireCreate(); wireIdeas(); wireLibrary(); wireBrain();
       }
 
       // ===== RADAR / INTELLIGENCE =====
@@ -496,8 +491,8 @@
         const dueNow = DATA.ideas.filter((i) => i.due && i.due <= today && i.status !== "posted");
         const drafting = DATA.ideas.filter((i) => i.status === "drafting");
         const m = mode();
-        if (review.length) acts.push({ w: 100, t: `👀 Approve ${review.length} post${review.length > 1 ? "s" : ""} waiting for sign-off`, go: "plan" });
-        if (dueNow.length) acts.push({ w: 95, t: `📅 ${esc(dueNow[0].title)} is due — ${dueNow[0].due < today ? "overdue" : "today"}`, go: "plan" });
+        if (review.length) acts.push({ w: 100, t: `👀 Approve ${review.length} post${review.length > 1 ? "s" : ""} waiting for sign-off`, go: "ideas" });
+        if (dueNow.length) acts.push({ w: 95, t: `📅 ${esc(dueNow[0].title)} is due — ${dueNow[0].due < today ? "overdue" : "today"}`, go: "ideas" });
         if (m === "Marketer" && drafting.length) acts.push({ w: 80, t: `✍️ Finish the draft: ${esc(drafting[0].title)}`, go: "ideas" });
         if (RADAR && RADAR.items && RADAR.items.length) {
           const top = RADAR.items[0];
@@ -632,44 +627,9 @@
         $("prod-copyscript").onclick = () => copyTxt(PROD_SCRIPT, $("prod-copyscript"));
       }
 
-      // ===== PLAN (two-person coordination) =====
+      // Shared idea constants (used by the Board cards). Plan was folded into the Board.
       const OWNERS = ["Marketer", "Founder"];
       const STATUSES = ["idea", "drafting", "review", "posted"];
-      function fmtDue(d) {
-        if (!d) return "";
-        const today = new Date().toISOString().slice(0, 10);
-        const days = Math.round((new Date(d) - new Date(today)) / 864e5);
-        const label = d < today ? "overdue" : days === 0 ? "today" : days === 1 ? "tomorrow" : "in " + days + "d";
-        return `<span class="pill${d < today ? " overdue" : days <= 2 ? " soon" : ""}">${label} · ${esc(d)}</span>`;
-      }
-      function planRow(i, approve) {
-        const fname = (i.formula ? getFormula(i.formula) : {}).name;
-        return `<div class="plan-row"><span class="pr-title">${esc(i.title)}</span>
-          <span class="pill ${i.owner === "Founder" ? "teal" : ""}">${esc(i.owner || "Marketer")}</span>
-          ${fname ? `<span class="pill">${esc(fname)}</span>` : ""}${fmtDue(i.due)}
-          ${approve ? `<button class="btn sm gold" data-approve="${i.id}">Approve →</button>` : ""}</div>`;
-      }
-      function panelPlan() {
-        const today = new Date().toISOString().slice(0, 10);
-        const in7 = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10);
-        const active = DATA.ideas.filter((i) => i.status !== "posted");
-        const thisWeek = active.filter((i) => i.due && i.due <= in7).sort((a, b) => a.due.localeCompare(b.due));
-        const review = DATA.ideas.filter((i) => i.status === "review");
-        const drafting = DATA.ideas.filter((i) => i.status === "drafting");
-        const mine = { Founder: active.filter((i) => i.owner === "Founder").length, Marketer: active.filter((i) => (i.owner || "Marketer") === "Marketer").length };
-        const sec = (title, list, empty, approve) => `<div class="card"><h2 style="margin-top:0">${title} <span class="pill">${list.length}</span></h2>${list.length ? list.map((i) => planRow(i, approve)).join("") : `<div class="muted">${empty}</div>`}</div>`;
-        return `<section class="panel" id="tab-plan"><h1>Plan</h1><p class="sub">At-a-glance: what's due, what needs your sign-off, who owns what — so nobody asks "what should we do today?"</p>
-          <div class="card" style="display:flex;gap:18px;flex-wrap:wrap"><div><b style="font-size:1.4rem">${active.length}</b><div class="muted">active items</div></div><div><b style="font-size:1.4rem">${mine.Marketer}</b><div class="muted">Marketer owns</div></div><div><b style="font-size:1.4rem">${mine.Founder}</b><div class="muted">Founder owns</div></div></div>
-          ${sec("📅 Due this week", thisWeek, "Nothing scheduled — set a due date on an idea in the Ideas tab.")}
-          ${sec("👀 Waiting for founder sign-off", review, "Nothing waiting on approval.", true)}
-          ${sec("✍️ In progress", drafting, "Nothing being drafted right now.")}</section>`;
-      }
-      function wirePlan() {
-        document.querySelectorAll("#tab-plan [data-approve]").forEach((b) => b.onclick = async () => {
-          const id = b.dataset.approve, idea = DATA.ideas.find((x) => x.id === id); if (!idea) return;
-          idea.status = "posted"; await api("PATCH", "/idea/" + id, { status: "posted" }); render(); openResults(idea);
-        });
-      }
 
       // ===== CALENDAR =====
       const CADENCE = { 1: "Educational / student problem", 2: "Trend — this week's news", 3: "Product / Universo value", 4: "Student story / relatable", 5: "Opinion / hot take", 6: "Community / repurpose", 0: "Plan & rest" };
@@ -977,13 +937,45 @@ ${hashtagsFor(topic)}${src}`;
         return summary + learn;
       }
 
-      // ===== IDEAS =====
+      // ===== CONTENT BOARD (the pipeline; absorbed the old Ideas + Plan tabs) =====
+      // 5 lanes derived from the existing status enum + results presence — no
+      // schema change: Published = posted with no results yet; Measured = posted
+      // with at least one recorded result.
+      const LANES = [
+        { key: "idea", label: "💡 Idea", match: (i) => (i.status || "idea") === "idea" },
+        { key: "drafting", label: "✍️ Drafting", match: (i) => i.status === "drafting" },
+        { key: "review", label: "✅ Ready", match: (i) => i.status === "review" },
+        { key: "published", label: "📢 Published", match: (i) => i.status === "posted" && !(i.results && i.results.length) },
+        { key: "measured", label: "📊 Measured", match: (i) => i.status === "posted" && i.results && i.results.length },
+      ];
+      const BOARD_EMPTY = '<div class="card muted">No content yet. Add an idea above, or save one from Create.</div>';
+      function boardFilter() {
+        const q = (($("b-search") || {}).value || "").toLowerCase().trim();
+        const goal = ($("b-goal") || {}).value || "";
+        const plat = ($("b-plat") || {}).value || "";
+        return DATA.ideas.filter((i) =>
+          (!q || (i.title + " " + (i.topic || "")).toLowerCase().includes(q)) &&
+          (!goal || i.goal === goal) &&
+          (!plat || (i.platforms || []).includes(plat)));
+      }
+      function boardLanes() {
+        const filtered = boardFilter();
+        if (!filtered.length) return '<div class="card muted">Nothing matches those filters.</div>';
+        return LANES.map((l) => {
+          const items = filtered.filter(l.match);
+          return `<div class="card"><h2 style="margin-top:0">${l.label} <span class="pill">${items.length}</span></h2>${items.length ? items.map(ideaItem).join("") : `<div class="muted">—</div>`}</div>`;
+        }).join("");
+      }
       function panelIdeas() {
-        const list = DATA.ideas;
-        return `<section class="panel" id="tab-ideas"><h1>Ideas</h1><p class="sub">Saved ideas and finished drafts. Status: idea → drafting → review → posted. Once posted, record where it went and how it did so the list becomes a history of what works.</p>
+        return `<section class="panel" id="tab-ideas"><h1>Content Board</h1><p class="sub">Your whole pipeline in one place: Idea → Drafting → Ready → Published → Measured. Change a card's status to move it along; record results to measure it.</p>
           <div class="card"><div class="row"><input id="i-title" placeholder="New idea (one line)" /><select id="i-owner" style="flex:0 0 120px">${OWNERS.map((o) => `<option>${o}</option>`).join("")}</select><button class="btn" id="i-add" style="flex:0 0 auto">Add</button></div></div>
           ${perfSection()}
-          ${list.length ? list.map(ideaItem).join("") : '<div class="card muted">No saved ideas yet. Add one above, or save one from the Create tab.</div>'}</section>`;
+          <div class="card"><div class="row">
+            <input id="b-search" placeholder="🔎 Search title or topic…" />
+            <select id="b-goal" style="flex:0 0 auto"><option value="">All goals</option>${GOALS.map((g) => `<option value="${g.id}">${esc(g.label)}</option>`).join("")}</select>
+            <select id="b-plat" style="flex:0 0 auto"><option value="">All platforms</option>${Object.entries(PLATFORMS).map(([k, p]) => `<option value="${k}">${esc((PLAT_EDIT[k] && PLAT_EDIT[k].label) || p.name)}</option>`).join("")}</select>
+          </div></div>
+          <div id="b-lanes">${DATA.ideas.length ? boardLanes() : BOARD_EMPTY}</div></section>`;
       }
       function ideaItem(i) {
         const fname = (i.formula ? getFormula(i.formula) : {}).name;
@@ -1006,12 +998,12 @@ ${hashtagsFor(topic)}${src}`;
           <div style="margin-top:8px"><label>Final draft (paste the AI's output here)</label><textarea data-act="draft" rows="2" placeholder="…">${esc(i.draft || "")}</textarea></div>
           ${postedSummary(i)}</div>`;
       }
-      function wireIdeas() {
-        const add = $("i-add");
-        if (add) add.onclick = async () => { const v = $("i-title").value.trim(); if (!v) return; const r = await api("POST", "/idea", { title: v, owner: $("i-owner").value }); if (r && r.idea) { DATA.ideas.unshift(r.idea); $("i-title").value = ""; render(); } };
+      // Per-card handlers. `rerender` re-lays the lanes (so a status change moves
+      // the card to its new lane) without a full render that would clear filters.
+      function wireCards(rerender) {
         document.querySelectorAll("#tab-ideas .idea-item").forEach((el) => {
           const id = el.dataset.id, idea = DATA.ideas.find((x) => x.id === id); if (!idea) return;
-          el.querySelector('[data-act="status"]').onchange = (e) => { idea.status = e.target.value; api("PATCH", "/idea/" + id, { status: e.target.value }); if (e.target.value === "posted") openResults(idea); };
+          el.querySelector('[data-act="status"]').onchange = async (e) => { idea.status = e.target.value; await api("PATCH", "/idea/" + id, { status: e.target.value }); rerender(); if (e.target.value === "posted") openResults(idea); };
           el.querySelector('[data-act="owner"]').onchange = (e) => { idea.owner = e.target.value; api("PATCH", "/idea/" + id, { owner: e.target.value }); };
           el.querySelector('[data-act="due"]').onchange = (e) => { idea.due = e.target.value; api("PATCH", "/idea/" + id, { due: e.target.value }); };
           el.querySelector('[data-act="produce"]').onclick = () => openProduce(ideaToOpp(idea));
@@ -1019,6 +1011,13 @@ ${hashtagsFor(topic)}${src}`;
           el.querySelector('[data-act="del"]').onclick = async () => { if (!confirm("Delete this idea?")) return; await api("DELETE", "/idea/" + id); DATA.ideas = DATA.ideas.filter((x) => x.id !== id); await loadInsights(); render(); };
           let t; el.querySelector('[data-act="draft"]').oninput = (e) => { idea.draft = e.target.value; clearTimeout(t); t = setTimeout(() => api("PATCH", "/idea/" + id, { draft: e.target.value }), 600); };
         });
+      }
+      function wireIdeas() {
+        const add = $("i-add");
+        if (add) add.onclick = async () => { const v = $("i-title").value.trim(); if (!v) return; const r = await api("POST", "/idea", { title: v, owner: $("i-owner").value }); if (r && r.idea) { DATA.ideas.unshift(r.idea); $("i-title").value = ""; render(); } };
+        const rerender = () => { const el = $("b-lanes"); if (!el) return; el.innerHTML = DATA.ideas.length ? boardLanes() : BOARD_EMPTY; wireCards(rerender); };
+        ["b-search", "b-goal", "b-plat"].forEach((cid) => { const e = $(cid); if (e) { e.oninput = rerender; e.onchange = rerender; } });
+        wireCards(rerender);
       }
 
       // ===== LIBRARY =====
