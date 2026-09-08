@@ -182,6 +182,23 @@ test("idea persists goal, topic and platforms (deduped); patch updates them", as
   await req("DELETE", "/api/marketing/idea/" + legacy.json.idea.id);
 });
 
+test("insights endpoint returns engine output driven by recorded results", async () => {
+  assert.equal(await loginAs(MKT.email, MKT.pw), 200);
+  // an idea with a clear winning combo: Story about a distinct topic, two Greats on TikTok
+  const win = await req("POST", "/api/marketing/idea", { title: "Insight win", formula: "story", topic: "InsightTopic", goal: "signups" });
+  await req("PATCH", "/api/marketing/idea/" + win.json.idea.id, { results: [{ platform: "TikTok", date: "2026-09-01", rating: "Great" }, { platform: "TikTok", date: "2026-09-02", rating: "Great" }] });
+
+  const ins = await req("GET", "/api/marketing/insights");
+  assert.equal(ins.status, 200);
+  assert.ok(ins.json.dims && Array.isArray(ins.json.dims.formula), "returns dimension breakdowns");
+  assert.ok(["low", "medium", "high"].includes(ins.json.confidence), "reports confidence");
+  assert.ok(ins.json.nextBest, "recommends what to create next once there are rated posts");
+  // the winning combo should surface story+InsightTopic somewhere in the ranked combos
+  assert.ok(ins.json.combos.formulaTopic.some((c) => c.formula === "story" && c.topic === "InsightTopic" && c.n === 2), "joins results to idea dimensions");
+
+  await req("DELETE", "/api/marketing/idea/" + win.json.idea.id);
+});
+
 test("two independent adds both persist (granular writes, no whole-blob overwrite)", async () => {
   const a = await req("POST", "/api/marketing/idea", { title: "Persist A" });
   const b = await req("POST", "/api/marketing/idea", { title: "Persist B" });

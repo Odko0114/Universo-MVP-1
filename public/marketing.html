@@ -344,6 +344,7 @@
         const d = await (await fetch("/api/marketing/data")).json().catch(() => ({}));
         DATA = { brain: d.brain || {}, ideas: Array.isArray(d.ideas) ? d.ideas : [] };
         setSave("saved");
+        await loadInsights();
         $("tabs").querySelectorAll("button").forEach((b) => b.onclick = () => { TAB = b.dataset.tab; $("tabs").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); render(); });
         // Produce modal close (wired once — the modal is static, not re-rendered).
         const closeProduce = () => { $("produce-modal").hidden = true; };
@@ -359,6 +360,26 @@
       async function loadRadar() {
         try { RADAR = await (await fetch("/api/marketing/radar")).json(); } catch { RADAR = { items: [], research: [] }; }
         if (TAB === "radar") render();
+      }
+      // Recommendation engine v2 — server computes it from recorded results.
+      let INSIGHTS = null;
+      async function loadInsights() { try { INSIGHTS = await (await fetch("/api/marketing/insights")).json(); } catch { INSIGHTS = null; } }
+      // key -> human label per dimension
+      function dimLabel(dim, key) {
+        if (!key) return "";
+        if (dim === "formula") return getFormula(key).name;
+        if (dim === "platform") return (PLAT_EDIT[key] && PLAT_EDIT[key].label) || key;
+        if (dim === "goal") { const g = GOALS.find((x) => x.id === key); return g ? g.label : key; }
+        return key; // topic is already a label
+      }
+      const avgWord = (a) => a >= 2.5 ? "Great" : a >= 1.5 ? "Good" : a >= 0.5 ? "Average" : "Poor";
+      // "Story about Scholarships on TikTok" from a combo/nextBest row
+      function comboPhrase(c) {
+        const parts = [];
+        if (c.formula) parts.push(dimLabel("formula", c.formula));
+        if (c.topic) parts.push("about " + dimLabel("topic", c.topic));
+        if (c.platform) parts.push("on " + dimLabel("platform", c.platform));
+        return parts.join(" ");
       }
       function render() {
         $("app").innerHTML = [panelRadar(), panelPlan(), panelCalendar(), panelCreate(), panelIdeas(), panelLibrary(), panelBrain()].join("");
@@ -691,20 +712,6 @@
           <div class="row" style="margin-top:2px"><button class="btn gold" id="c-go" style="flex:0 0 auto">Generate brief</button><button class="btn alt" id="c-save" style="flex:0 0 auto">Save idea to Ideas</button></div>
           <div id="c-out" style="margin-top:14px"></div></section>`;
       }
-      // Personalisation from the performance feedback loop — best-rated formula & platform.
-      function recommend() {
-        const entries = [];
-        DATA.ideas.forEach((i) => (i.results || []).forEach((r) => { if (r.rating) entries.push({ i, r }); }));
-        if (!entries.length) return null;
-        const bestBy = (keyFn) => {
-          const m = {};
-          entries.forEach(({ i, r }) => { const k = keyFn(i, r); if (k) (m[k] = m[k] || []).push(RATING_SCORE[r.rating]); });
-          let best = null;
-          Object.entries(m).forEach(([k, arr]) => { const avg = arr.reduce((a, b) => a + b, 0) / arr.length; if (!best || avg > best.avg || (avg === best.avg && arr.length > best.n)) best = { k, avg, n: arr.length }; });
-          return best;
-        };
-        return { formula: bestBy((i) => i.formula), platform: bestBy((_i, r) => r.platform) };
-      }
       function selectedGoals() { return [...document.querySelectorAll("#c-goals .chip-btn")].filter((b) => b.getAttribute("aria-pressed") === "true").map((b) => b.dataset.goal); }
       function updateFormulaDesc() { const d = $("c-formula-desc"); if (d) d.textContent = getFormula($("c-formula").value).desc; }
       function wireCreate() {
@@ -713,21 +720,21 @@
         plats.forEach((b) => b.onclick = () => toggle(b));
         document.querySelectorAll("#c-goals .chip-btn").forEach((b) => b.onclick = () => toggle(b));
         const fsel = $("c-formula"); if (fsel) { fsel.onchange = updateFormulaDesc; updateFormulaDesc(); }
-        // recommendation banner (feedback loop + this week's trend)
+        // recommendation banner — engine v2 "create next" + this week's trend
         const rc = $("c-reco");
         if (rc) {
-          const reco = recommend();
+          const ins = INSIGHTS;
           const trend = (RADAR && RADAR.items || []).find((x) => x.kind === "trend" || x.kind === "news");
           const trendLine = trend ? `<div class="muted" style="margin-top:6px">📈 Trending now you could ride: <b>${esc(trend.title)}</b></div>` : "";
-          if (reco && (reco.formula || reco.platform)) {
-            const f = reco.formula ? getFormula(reco.formula.k) : null;
-            const bits = [];
-            if (f) bits.push(`formula <b>${esc(f.name)}</b>`);
-            if (reco.platform) bits.push(`platform <b>${esc((PLAT_EDIT[reco.platform.k] && PLAT_EDIT[reco.platform.k].label) || reco.platform.k)}</b>`);
-            rc.innerHTML = `<div class="card" style="padding:12px 14px;border-color:var(--teal)">💡 <b>Recommended:</b> ${bits.join(" · ")} <span class="muted">— performed well in your past posts.</span>${f ? ` <button class="link-mini" id="c-apply-reco">Use formula →</button>` : ""}${trendLine}</div>`;
-            if ($("c-apply-reco") && f) $("c-apply-reco").onclick = () => { $("c-formula").value = f.id; updateFormulaDesc(); };
+          if (ins && ins.nextBest) {
+            const nb = ins.nextBest;
+            rc.innerHTML = `<div class="card" style="padding:12px 14px;border-color:var(--teal)">💡 <b>Create next:</b> a <b>${esc(comboPhrase(nb))}</b> <span class="muted">— ${avgWord(nb.avg)} across ${nb.n} rated post${nb.n > 1 ? "s" : ""}${ins.confidence === "low" ? ", early signal" : ""}.</span> <button class="link-mini" id="c-apply-reco">Use it →</button>${trendLine}</div>`;
+            $("c-apply-reco").onclick = () => {
+              if (nb.formula) { $("c-formula").value = getFormula(nb.formula).id; updateFormulaDesc(); }
+              if (nb.platform) { const chip = [...document.querySelectorAll("#c-plats .chip-btn")].find((b) => b.dataset.plat === nb.platform || ((PLAT_EDIT[b.dataset.plat] || {}).label === nb.platform)); if (chip) { chip.setAttribute("aria-pressed", "true"); chip.classList.add("on"); } }
+            };
           } else {
-            rc.innerHTML = `<div class="card muted" style="padding:12px 14px">No performance history yet — personalised recommendations appear once you log results on posted ideas.${trend ? ` <span>📈 Trending now: <b style="color:var(--ink)">${esc(trend.title)}</b></span>` : ""}</div>`;
+            rc.innerHTML = `<div class="card muted" style="padding:12px 14px">No performance history yet — personalised recommendations appear once you rate a couple of posted ideas.${trend ? ` <span>📈 Trending now: <b style="color:var(--ink)">${esc(trend.title)}</b></span>` : ""}</div>`;
           }
         }
         const feedBtn = $("c-feed");
@@ -924,7 +931,7 @@ ${hashtagsFor(topic)}${src}`;
         const list = collectResults();
         if (list.some((r) => !r.platform || !r.date)) { const e = $("res-err"); e.textContent = "Each platform needs a platform and a posted date."; e.hidden = false; return; }
         const r = await api("PATCH", "/idea/" + idea.id, { results: list });
-        if (r && r.idea) { idea.results = r.idea.results; idea.status = r.idea.status; $("results-modal").hidden = true; render(); }
+        if (r && r.idea) { idea.results = r.idea.results; idea.status = r.idea.status; $("results-modal").hidden = true; await loadInsights(); render(); }
       }
       function metricsLine(r) {
         const parts = METRICS.filter(([k]) => r[k] !== "" && r[k] != null).map(([k, l]) => `${num(r[k])} ${l.toLowerCase()}`);
@@ -948,9 +955,6 @@ ${hashtagsFor(topic)}${src}`;
         let best = null;
         Object.entries(byPlat).forEach(([p, arr]) => { const avg = arr.reduce((a, b) => a + b, 0) / arr.length; if (!best || avg > best.avg || (avg === best.avg && arr.length > best.n)) best = { p, avg, n: arr.length }; });
         const winners = entries.filter(({ r }) => r.rating === "Great" || r.rating === "Good").sort((a, b) => (b.r.date || "").localeCompare(a.r.date || "")).slice(0, 5);
-        const byFormula = {};
-        winners.forEach(({ i }) => { const f = (FORMULAS.find((x) => x.id === i.formula) || {}).name; if (f) byFormula[f] = (byFormula[f] || 0) + 1; });
-        const topFormulas = Object.entries(byFormula).sort((a, b) => b[1] - a[1]).slice(0, 3);
         const summary = `<div class="card"><h2 style="margin-top:0">📊 Performance</h2>
           <div class="perf-grid"><div><b>${posted.length}</b><span class="muted">posted &amp; recorded</span></div>
             <div><b class="rating Great">${tally.Great}</b><span class="muted">Great</span></div>
@@ -958,14 +962,18 @@ ${hashtagsFor(topic)}${src}`;
             <div><b>${tally.Average}</b><span class="muted">Average</span></div>
             <div><b class="rating Poor">${tally.Poor}</b><span class="muted">Poor</span></div></div>
           ${best ? `<p class="muted" style="margin:12px 0 0">Best-performing platform so far: <b style="color:var(--ink)">${esc(best.p)}</b> (${best.n} rated).</p>` : ""}</div>`;
-        const learn = `<div class="card"><h2 style="margin-top:0">💡 What seems to be working</h2>
-          <p class="muted" style="margin-top:0">Based only on what you've recorded — no AI, no scraping.</p>
-          <ul class="work-list">
-            ${best ? `<li><b>${esc(best.p)}</b> is your strongest platform right now.</li>` : ""}
-            ${topFormulas.length ? `<li>Formats landing well: ${topFormulas.map(([f, n]) => `${esc(f)} (${n})`).join(", ")}.</li>` : ""}
-            ${winners.length ? "<li>Recent hits:</li>" : "<li>No Great/Good posts recorded yet — rate a few to spot patterns.</li>"}
-          </ul>
-          ${winners.length ? `<ul class="work-list">${winners.map(({ i, r }) => `<li>${esc(i.title)} — <span class="rating ${esc(r.rating)}">${esc(r.rating)}</span> on ${esc(r.platform)}</li>`).join("")}</ul>` : ""}</div>`;
+        // "What's working" is now driven by the recommendation engine (goal × formula × topic × platform).
+        const ins = INSIGHTS || {};
+        const dims = ins.dims || {};
+        const topLine = (dim, arr) => (arr && arr[0]) ? `<li>Best ${dim}: <b>${esc(dimLabel(dim, arr[0].key))}</b> <span class="muted">(${avgWord(arr[0].avg)}, ${arr[0].n} post${arr[0].n > 1 ? "s" : ""})</span></li>` : "";
+        const nb = ins.nextBest;
+        const avoidHtml = (ins.avoid || []).map((a) => `<li>Reconsider <b>${esc(dimLabel(a.dim, a.key))}</b> <span class="muted">— ${avgWord(a.avg)} across ${a.n} posts</span></li>`).join("");
+        const learn = `<div class="card"><h2 style="margin-top:0">💡 What's working</h2>
+          <p class="muted" style="margin-top:0">From your ratings only — no AI, no scraping.${ins.confidence === "low" ? " Early signal — rate a few more to firm this up." : ""}</p>
+          <ul class="work-list">${topLine("formula", dims.formula)}${topLine("platform", dims.platform)}${topLine("topic", dims.topic)}${topLine("goal", dims.goal)}</ul>
+          ${nb ? `<p style="margin:10px 0 4px">🎯 <b>Create next:</b> a <b>${esc(comboPhrase(nb))}</b> <span class="muted">(${avgWord(nb.avg)}, ${nb.n} posts)</span></p>` : ""}
+          ${avoidHtml ? `<p class="muted" style="margin:10px 0 4px">Watch out:</p><ul class="work-list">${avoidHtml}</ul>` : ""}
+          ${winners.length ? `<p class="muted" style="margin:10px 0 4px">Recent hits:</p><ul class="work-list">${winners.map(({ i, r }) => `<li>${esc(i.title)} — <span class="rating ${esc(r.rating)}">${esc(r.rating)}</span> on ${esc(r.platform)}</li>`).join("")}</ul>` : `<p class="muted">No Great/Good posts recorded yet — rate a few to spot patterns.</p>`}</div>`;
         return summary + learn;
       }
 
@@ -1008,7 +1016,7 @@ ${hashtagsFor(topic)}${src}`;
           el.querySelector('[data-act="due"]').onchange = (e) => { idea.due = e.target.value; api("PATCH", "/idea/" + id, { due: e.target.value }); };
           el.querySelector('[data-act="produce"]').onclick = () => openProduce(ideaToOpp(idea));
           el.querySelector('[data-act="results"]').onclick = () => openResults(idea);
-          el.querySelector('[data-act="del"]').onclick = async () => { if (!confirm("Delete this idea?")) return; await api("DELETE", "/idea/" + id); DATA.ideas = DATA.ideas.filter((x) => x.id !== id); render(); };
+          el.querySelector('[data-act="del"]').onclick = async () => { if (!confirm("Delete this idea?")) return; await api("DELETE", "/idea/" + id); DATA.ideas = DATA.ideas.filter((x) => x.id !== id); await loadInsights(); render(); };
           let t; el.querySelector('[data-act="draft"]').oninput = (e) => { idea.draft = e.target.value; clearTimeout(t); t = setTimeout(() => api("PATCH", "/idea/" + id, { draft: e.target.value }), 600); };
         });
       }

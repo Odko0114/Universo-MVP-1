@@ -36,6 +36,7 @@ const {
 } = require("./lib/scholarships");
 const curatedScholarships = require("./lib/scholarships-curated");
 const scriptgen = require("./lib/scriptgen");
+const recommend = require("./lib/recommend");
 const trends = require("./lib/trends");
 const languageReqs = require("./lib/language-requirements");
 const notify = require("./lib/notify");
@@ -2606,6 +2607,12 @@ mkt.get("/ideas-feed", (_req, res) => {
     "How Universo is different from just Googling universities",
   ].forEach((t) => seeds.push({ cat: "FAQ", text: t }));
   res.json({ seeds });
+});
+// Recommendation engine v2 — plain-language guidance derived only from recorded
+// results (goal x formula x topic x platform). Never invents; gated by support.
+mkt.get("/insights", (_req, res) => {
+  try { res.json(recommend.analyze(readMkt().ideas)); }
+  catch { res.status(500).json({ error: "Could not compute insights." }); }
 });
 // Ready-made script composed deterministically from real data (no AI) — a
 // verified scholarship / hand-verified university / live counts, chosen by the
