@@ -2480,6 +2480,14 @@ const mktNum = (v) => {
   const n = Math.floor(Number(v));
   return Number.isFinite(n) && n >= 0 ? Math.min(n, 1e12) : "";
 };
+// Platform ids the content targets (planned), deduped and length-capped. The
+// client owns the canonical list; the server just guards shape, so we don't
+// duplicate the platform enum across files.
+const sanitizePlatforms = (arr) => {
+  if (!Array.isArray(arr)) return null;
+  const seen = new Set();
+  return arr.map((p) => str(p, 20)).filter((p) => p && !seen.has(p) && seen.add(p)).slice(0, 12);
+};
 const sanitizeResults = (arr) => {
   if (!Array.isArray(arr)) return null;
   return arr.slice(0, 20).map((r) => {
@@ -2514,6 +2522,9 @@ mkt.post("/idea", (req, res) => {
     due: okDue(b.due) ? b.due || "" : "",
     source: str(b.source, 400),
     rationale: str(b.rationale, 600),
+    goal: str(b.goal, 40),
+    topic: str(b.topic, 60),
+    platforms: sanitizePlatforms(b.platforms) || [],
     draft: "",
     results: [],
     createdAt: Date.now(),
@@ -2534,6 +2545,9 @@ mkt.patch("/idea/:id", (req, res) => {
   if (b.priority !== undefined && MKT_PRIORITY.includes(b.priority)) idea.priority = b.priority;
   if (b.due !== undefined) idea.due = b.due || "";
   if (b.formula !== undefined) idea.formula = str(b.formula, 40);
+  if (b.goal !== undefined) idea.goal = str(b.goal, 40);
+  if (b.topic !== undefined) idea.topic = str(b.topic, 60);
+  if (b.platforms !== undefined) { const p = sanitizePlatforms(b.platforms); if (!p) return res.status(400).json({ error: "platforms must be an array." }); idea.platforms = p; }
   if (b.draft !== undefined) idea.draft = str(b.draft, 8000);
   if (b.results !== undefined) {
     const r = sanitizeResults(b.results);

@@ -582,7 +582,7 @@
         $("prod-copybrief").onclick = () => copyTxt(brief, $("prod-copybrief"));
         $("prod-copycap").onclick = () => copyTxt(caption, $("prod-copycap"));
         $("prod-copyprompt").onclick = () => copyTxt(buildPrompt(o.platform || "reel", o.angle, formula, cta), $("prod-copyprompt"));
-        $("prod-add").onclick = async () => { const r = await api("POST", "/idea", { title: o.angle, formula: o.formula, source: (o.trend || "") + (o.link ? " — " + o.link : ""), rationale: o.why, priority: o.urgency === "This week" ? "high" : "med", status: "drafting", draft: PROD_SCRIPT }); if (r && r.idea) { DATA.ideas.unshift(r.idea); $("prod-add").textContent = "Added ✓"; } };
+        $("prod-add").onclick = async () => { const r = await api("POST", "/idea", { title: o.angle, formula: o.formula, source: (o.trend || "") + (o.link ? " — " + o.link : ""), rationale: o.why, priority: o.urgency === "This week" ? "high" : "med", topic: o.topic || "", platforms: o.platform ? [o.platform] : [], status: "drafting", draft: PROD_SCRIPT }); if (r && r.idea) { DATA.ideas.unshift(r.idea); $("prod-add").textContent = "Added ✓"; } };
         loadDataScript(o);
       }
       // Fetch and render the deterministic real-data script into the Produce modal.
@@ -750,7 +750,13 @@
           $("c-out").innerHTML = chosen.map((p) => outputBlock(p, idea, formula, goals, scriptData)).join("");
           document.querySelectorAll("#c-out [data-copy]").forEach((b) => b.onclick = async () => { try { await navigator.clipboard.writeText($(b.dataset.copy).textContent); const t = b.textContent; b.textContent = "Copied ✓"; setTimeout(() => b.textContent = t, 1200); } catch { alert("Copy failed — select the text manually."); } });
         };
-        $("c-save").onclick = async () => { const v = $("c-idea").value.trim(); if (!v) return; const r = await api("POST", "/idea", { title: v, formula: $("c-formula").value, status: "drafting" }); if (r && r.idea) { DATA.ideas.unshift(r.idea); alert("Saved to the Ideas tab (Drafting)."); } };
+        $("c-save").onclick = async () => {
+          const v = $("c-idea").value.trim(); if (!v) return;
+          const goals = selectedGoals();
+          const platforms = [...plats].filter((b) => b.getAttribute("aria-pressed") === "true").map((b) => b.dataset.plat);
+          const r = await api("POST", "/idea", { title: v, formula: $("c-formula").value, goal: goals[0] || "", platforms, topic: topicOf(v), status: "drafting" });
+          if (r && r.idea) { DATA.ideas.unshift(r.idea); alert("Saved to the Ideas tab (Drafting) with its goal, platforms and topic."); }
+        };
       }
       // ===== EDITING PLANNER (deterministic — style/hook/pacing/transitions/etc from formula+goal+platform) =====
       function editingPlan(fid, gid, pk) {
@@ -974,6 +980,12 @@ ${hashtagsFor(topic)}${src}`;
       function ideaItem(i) {
         const fname = (i.formula ? getFormula(i.formula) : {}).name;
         const hasResults = i.results && i.results.length;
+        const gLabel = i.goal ? (GOALS.find((g) => g.id === i.goal) || {}).label : "";
+        const tags = [
+          i.topic ? `<span class="pill">${esc(i.topic)}</span>` : "",
+          gLabel ? `<span class="pill teal">🎯 ${esc(gLabel)}</span>` : "",
+          ...(i.platforms || []).map((p) => `<span class="pill">${esc((PLAT_EDIT[p] && PLAT_EDIT[p].label) || p)}</span>`),
+        ].join("");
         return `<div class="idea-item" data-id="${i.id}"><div class="top"><b>${esc(i.title)}</b>
           <select data-act="status" title="Status">${STATUSES.map((s) => `<option${(i.status || "idea") === s ? " selected" : ""}>${s}</option>`).join("")}</select>
           <button class="chip-btn" data-act="produce" title="Produce (shoot-ready brief)">🎬</button>
@@ -982,7 +994,7 @@ ${hashtagsFor(topic)}${src}`;
           <div class="top" style="margin-top:8px">
             <select data-act="owner" title="Owner" style="flex:0 0 auto">${OWNERS.map((o) => `<option${(i.owner || "Marketer") === o ? " selected" : ""}>${o}</option>`).join("")}</select>
             <label style="flex:0 0 auto;margin:0;display:flex;align-items:center;gap:6px;text-transform:none;font-size:.8rem;color:var(--soft)">Due <input type="date" data-act="due" value="${esc(i.due || "")}" style="min-height:40px;width:auto" /></label>
-            ${fname ? `<span class="pill">${esc(fname)}</span>` : ""}</div>
+            ${fname ? `<span class="pill">${esc(fname)}</span>` : ""}${tags}</div>
           <div style="margin-top:8px"><label>Final draft (paste the AI's output here)</label><textarea data-act="draft" rows="2" placeholder="…">${esc(i.draft || "")}</textarea></div>
           ${postedSummary(i)}</div>`;
       }

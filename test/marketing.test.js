@@ -154,6 +154,34 @@ test("performance results: record, sanitize, persist, edit, auto-post", async ()
   await req("DELETE", "/api/marketing/idea/" + id);
 });
 
+test("idea persists goal, topic and platforms (deduped); patch updates them", async () => {
+  const created = await req("POST", "/api/marketing/idea", { title: "Goal idea", goal: "signups", topic: "Scholarships", platforms: ["reel", "linkedin", "reel"] });
+  const id = created.json.idea.id;
+  assert.equal(created.json.idea.goal, "signups");
+  assert.equal(created.json.idea.topic, "Scholarships");
+  assert.deepEqual(created.json.idea.platforms, ["reel", "linkedin"]); // deduped, order kept
+
+  // a fresh read confirms persistence
+  const data = await req("GET", "/api/marketing/data");
+  const got = data.json.ideas.find((i) => i.id === id);
+  assert.equal(got.goal, "signups");
+  assert.deepEqual(got.platforms, ["reel", "linkedin"]);
+
+  // patch updates goal + platforms; a non-array platforms is rejected
+  const patched = await req("PATCH", "/api/marketing/idea/" + id, { goal: "trust", platforms: ["ig"] });
+  assert.equal(patched.json.idea.goal, "trust");
+  assert.deepEqual(patched.json.idea.platforms, ["ig"]);
+  assert.equal((await req("PATCH", "/api/marketing/idea/" + id, { platforms: "nope" })).status, 400);
+
+  // legacy ideas without these fields still work (created without them)
+  const legacy = await req("POST", "/api/marketing/idea", { title: "Legacy" });
+  assert.deepEqual(legacy.json.idea.platforms, []);
+  assert.equal(legacy.json.idea.goal, "");
+
+  await req("DELETE", "/api/marketing/idea/" + id);
+  await req("DELETE", "/api/marketing/idea/" + legacy.json.idea.id);
+});
+
 test("two independent adds both persist (granular writes, no whole-blob overwrite)", async () => {
   const a = await req("POST", "/api/marketing/idea", { title: "Persist A" });
   const b = await req("POST", "/api/marketing/idea", { title: "Persist B" });
