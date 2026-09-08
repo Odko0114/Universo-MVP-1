@@ -92,6 +92,7 @@
       .cal-theme { font-size: 0.82rem; color: var(--soft); font-weight: 600; }
       .cal-ideas { margin-top: 5px; display: flex; flex-wrap: wrap; gap: 5px; }
       .modal { position: fixed; inset: 0; z-index: 60; background: rgba(0,0,0,0.55); display: flex; align-items: flex-start; justify-content: center; padding: 20px; overflow-y: auto; }
+      .modal[hidden] { display: none; } /* the class's display:flex overrides the UA [hidden] rule, so hide it explicitly */
       .modal-in { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; max-width: 620px; width: 100%; padding: 22px; position: relative; margin: auto; }
       .modal-x { position: absolute; top: 12px; right: 14px; border: 0; background: var(--surface-2); color: var(--ink); width: 34px; height: 34px; border-radius: 999px; font-size: 1.2rem; cursor: pointer; }
       .prod-sec { border-top: 1px solid var(--line); padding: 12px 0; }
@@ -186,18 +187,42 @@
         tone: "Honest, warm, clear, encouraging. Plain language, no hype, no jargon. \"Same Start. Equal Chance.\" Never overstate traction; every number traceable to a source.",
         donot: "Never invent tuition, eligibility, deadlines or scholarship figures. Never overstate how many people use it. Don't sound like a generic AI or a pushy agent.",
         facts: "2,899 universities · 32 European countries · 300 hand-verified profiles · sourced from the EU register (ETER) · free forever",
-        faqs: "• Is it free? Yes — funded by universities, not students.\n• Is the data accurate? Every uni is from the EU register; 300 are hand-verified.\n• Do I need an account? No to browse; an account lets you save & plan.\n• How is it different from Googling? It matches unis to you, tells you why, and puts real tuition/deadlines/language side by side.\n• Which countries? 32 across Europe."
+        faqs: "• Is it free? Yes — funded by universities, not students.\n• Is the data accurate? Every uni is from the EU register; 300 are hand-verified.\n• Do I need an account? No to browse; an account lets you save & plan.\n• How is it different from Googling? It matches unis to you, tells you why, and puts real tuition/deadlines/language side by side.\n• Which countries? 32 across Europe.",
+        // Goals & positioning. Qualitative seeds only — NEVER seed invented traction/users/revenue.
+        goal_audience: "Grow a trusted international-student following; build a genuine community; earn saves/comments/shares by being useful, not clickbait; build credibility through sourced, honest information.",
+        biz_goals: "Attract universities and generate qualified university leads; build partnerships; show real product progress; attract mission-aligned investors; communicate the market opportunity and milestones honestly.",
+        inv_problem: "Where you're born still shapes access to higher education. Discovering European universities and the scholarships that fund them is scattered, confusing, often in the wrong language, and gate-kept by paid agents.",
+        inv_why: "Many capable students never apply because the information is fragmented, hidden behind cost/misinformation, or hard to trust.",
+        inv_diff: "Free, honest, no invented data: matches students to fit, surfaces real government scholarships, sourced from the EU register (ETER). Funded by universities, not students.",
+        inv_model: "Free for students; universities pay to reach students who genuinely fit.",
+        inv_vision: "Same Start. Equal Chance. — the trusted front door to studying in Europe for every student, wherever they're born.",
+        traction: "", // real, verifiable only — leave blank until there's something true to say
+        milestones: "",
+        inv_market: "",
+        inv_want: "",
       };
       const FORMULAS = [
-        { id: "pain", name: "Student Pain Point", steps: ["Hook (name the pain)", "The problem in their words", "Why it happens", "The better way", "How Universo helps", "CTA"] },
-        { id: "discovery", name: "University Discovery", steps: ["Hook", "The university", "One surprising fact", "Why a student should care", "CTA"] },
-        { id: "advice", name: "Application Advice", steps: ["The problem", "The common mistake", "The better approach", "A concrete example", "CTA"] },
-        { id: "founder", name: "Founder Story", steps: ["An observation", "A short personal story", "The lesson", "Connect to Universo", "CTA"] },
-        { id: "feature", name: "Product Feature", steps: ["The problem", "Life before", "Universo", "Life after", "CTA"] },
-        { id: "myth", name: "Myth vs Fact", steps: ["The myth", "Why people believe it", "The fact (with source)", "What to do instead", "CTA"] },
-        { id: "list", name: "Listicle", steps: ["Hook (number + promise)", "Point 1", "Point 2", "Point 3", "The best one", "CTA"] },
-        { id: "scholarship", name: "Scholarship Spotlight", steps: ["Hook", "The scholarship", "What it covers", "Who it's for", "How Universo helps you use it", "CTA"] }
+        { id: "howto", name: "How-To", desc: "Teach someone how to do something", steps: ["Hook (the promise)", "Why it matters", "Step 1", "Step 2", "Step 3", "CTA"] },
+        { id: "list", name: "List", desc: "Give 3–7 useful points", steps: ["Hook (number + promise)", "Point 1", "Point 2", "Point 3", "The best one", "CTA"] },
+        { id: "problem_solution", name: "Problem → Solution", desc: "Show a problem and solve it", steps: ["The problem", "Why it happens", "The solution", "How Universo helps", "CTA"] },
+        { id: "myth_fact", name: "Myth vs Fact", desc: "Correct a common misunderstanding", steps: ["The myth", "Why people believe it", "The fact (with source)", "What to do instead", "CTA"] },
+        { id: "before_after", name: "Before → After", desc: "Show a change or transformation", steps: ["The before", "The turning point", "The after", "How to get there", "CTA"] },
+        { id: "story", name: "Story", desc: "Tell a short real story", steps: ["Set the scene", "What happened", "The turning point", "The lesson", "CTA"] },
+        { id: "pov", name: "POV", desc: "Put the viewer inside a situation", steps: ["Set the POV", "The moment", "The realization", "CTA"] },
+        { id: "question", name: "Question", desc: "Start with a question the audience cares about", steps: ["Open with the question", "Why it matters", "The answer", "CTA"] },
+        { id: "hottake", name: "Hot Take", desc: "Challenge a common opinion", steps: ["The bold claim", "Why everyone's wrong", "The real point", "CTA"] },
+        { id: "mistake", name: "Mistake", desc: "Show a mistake and how to avoid it", steps: ["The mistake", "Why it hurts", "The fix", "CTA"] },
+        { id: "proof", name: "Proof / Results", desc: "Show real evidence or results", steps: ["The claim", "The evidence", "What it means for you", "CTA"] },
+        { id: "comparison", name: "Comparison", desc: "Compare two choices", steps: ["Option A", "Option B", "The honest trade-off", "Which fits whom", "CTA"] },
+        { id: "reaction", name: "Reaction / Commentary", desc: "React to relevant news or trends", steps: ["The news / trend", "Your take", "Why students should care", "CTA"] },
+        { id: "bts", name: "Behind the Scenes", desc: "Show how something works", steps: ["What you're showing", "How it works", "Why it matters", "CTA"] },
+        { id: "student_story", name: "Student Story", desc: "A relatable student experience", steps: ["Meet the student", "Their struggle", "What changed", "How Universo helped", "CTA"] },
+        { id: "founder_story", name: "Founder Story", desc: "The people/building journey behind Universo", steps: ["The observation", "The personal why", "What we're building", "The mission", "CTA"] },
+        { id: "creative", name: "Creative / Experimental", desc: "Unusual concepts, visual storytelling, humor", steps: ["The concept", "The twist", "The pay-off", "CTA"] },
       ];
+      // Old formula ids still referenced by opportunity cards / Produce — map to the new set.
+      const FORMULA_ALIAS = { pain: "problem_solution", discovery: "student_story", advice: "howto", founder: "founder_story", feature: "problem_solution", myth: "myth_fact", scholarship: "proof" };
+      const getFormula = (id) => FORMULAS.find((f) => f.id === id) || FORMULAS.find((f) => f.id === FORMULA_ALIAS[id]) || FORMULAS[0];
       const HOOKS = [
         "Most students think {X}. Here's what actually happens.", "You can study in {country} for €0. Here's how.", "The scholarship nobody tells you about.", "I checked 2,899 universities so you don't have to.", "Applying abroad? Avoid this €{X} mistake.", "POV: you just found out {country} has free tuition.", "3 scholarships for {country} students closing soon.", "Your dream university might be cheaper than you think.", "Nobody explains this about studying abroad.", "Stop paying an agent €{X}. Do this instead.", "Studying in Europe isn't just for rich kids. Proof:", "Save this before you apply anywhere."
       ];
@@ -242,6 +267,7 @@
       const PLATFORMS = {
         reel: { name: "Reel / TikTok script", rule: "15–45s spoken script. Ruthless 2-second hook. One idea only. Suggest on-screen text beats. End on the CTA. ~90–150 words." },
         ig: { name: "Instagram caption", rule: "Strong first line (the hook), then value in short lines with breaks, then CTA. 3–5 relevant hashtags. ~50–120 words." },
+        shorts: { name: "YouTube Shorts", rule: "Clear story or value in under 60s. Strong opening + a clear title idea. Front-load the payoff." },
         linkedin: { name: "LinkedIn post", rule: "Founder/professional voice. A story or insight, not a brochure. No hashtag spam. ~120–200 words." },
         reddit: { name: "Reddit post", rule: "Genuine and value-first — no marketing tone. Help first, mention Universo subtly at most once, and end with a question to spark replies." },
         x: { name: "X / Twitter", rule: "One punchy hook, ≤280 characters. Optionally note a 3-tweet thread outline." },
@@ -249,6 +275,36 @@
         carousel: { name: "Carousel", rule: "5–7 slides. Slide 1 = hook. Middle slides = one point each (short). Last slide = CTA. Give slide-by-slide text." },
         email: { name: "Email / newsletter", rule: "A subject line + a short scannable body + exactly one CTA." }
       };
+      // Per-platform execution notes — the SAME idea, adapted per platform (not copy-pasted).
+      const PLAT_EDIT = {
+        reel: { label: "TikTok", hook: "Ruthless 2s hook, conversational/native feel", pace: "Fast — change visual every 2–3s", frame: "Vertical 9:16, captions always on" },
+        ig: { label: "Instagram", hook: "Strong visual opening", pace: "Medium — clean cuts", frame: "Share/save-friendly framing, clean captions" },
+        shorts: { label: "YouTube Shorts", hook: "Strong opening + a clear title idea", pace: "Clear value, no filler — front-load the payoff", frame: "Vertical, one takeaway" },
+        linkedin: { label: "LinkedIn", hook: "Insight-first, professional", pace: "Slower — let the point land", frame: "Less gimmicky editing; business/investor angle when relevant" },
+        reddit: { label: "Reddit", hook: "Discussion-first, useful context", pace: "Mostly text/value — minimal editing", frame: "No promo tone; end on a genuine question" },
+        x: { label: "X / Twitter", hook: "One punchy line", pace: "N/A — text", frame: "≤280 chars or a short thread" },
+        story: { label: "Story", hook: "One bold line", pace: "Snappy", frame: "Poll/question sticker + link" },
+        carousel: { label: "Carousel", hook: "Slide 1 = hook", pace: "One point per slide", frame: "Readable big text, last slide = CTA" },
+        email: { label: "Email", hook: "Subject line = the hook", pace: "Scannable", frame: "One CTA only" },
+      };
+      // 14 plain-language goals. Multi-select allowed; the first chosen is the PRIMARY (drives the CTA).
+      const GOALS = [
+        { id: "followers", label: "Get followers", desc: "Grow Universo's audience", cta: "Follow for more like this." },
+        { id: "awareness", label: "Build awareness", desc: "Get more people to know Universo", cta: "This is Universo — free for students." },
+        { id: "educate", label: "Educate", desc: "Teach something useful", cta: "Save this so you don't forget it." },
+        { id: "help", label: "Help students", desc: "Solve a real student problem", cta: "Find your matches free on Universo — link in bio." },
+        { id: "engagement", label: "Get engagement", desc: "Encourage comments, shares, saves", cta: "Comment your dream country 👇" },
+        { id: "traffic", label: "Drive traffic", desc: "Send people to Universo", cta: "Try it free — link in bio." },
+        { id: "signups", label: "Get sign-ups", desc: "Encourage people to join/use Universo", cta: "Build your free Dream Plan in 20 seconds." },
+        { id: "trust", label: "Build trust", desc: "Show expertise, credibility, proof", cta: "Every number here is sourced — check it yourself." },
+        { id: "universities", label: "Attract universities", desc: "Get universities interested", cta: "Universities: reach students who fit — see how." },
+        { id: "investors", label: "Attract investors", desc: "Show the problem, opportunity, vision", cta: "Building the front door to European study. Let's talk." },
+        { id: "talent", label: "Recruit talent", desc: "Make people want to join Universo", cta: "We're building this — want in?" },
+        { id: "feature", label: "Promote a feature", desc: "Explain something Universo offers", cta: "Try it free on Universo." },
+        { id: "leads", label: "Generate leads", desc: "Create institutional interest", cta: "Interested? Get in touch." },
+        { id: "test", label: "Test an idea", desc: "Experiment and learn what lands", cta: "Tell us what you think 👇" },
+      ];
+      const goalById = (id) => GOALS.find((g) => g.id === id) || GOALS[0];
 
       // ===== State =====
       let DATA = { brain: {}, ideas: [] };
@@ -474,7 +530,7 @@
         });
         document.querySelectorAll("[data-opp-prompt]").forEach((b) => b.onclick = async () => {
           const o = OPPS[+b.dataset.oppPrompt]; if (!o) return;
-          const pre = $("opp-pre-" + b.dataset.oppPrompt); const formula = FORMULAS.find((f) => f.id === o.formula) || FORMULAS[0];
+          const pre = $("opp-pre-" + b.dataset.oppPrompt); const formula = getFormula(o.formula);
           pre.textContent = buildPrompt(o.platform, o.angle, formula, CTAS[o.cta] || CTAS.Discover); pre.hidden = false;
           try { await navigator.clipboard.writeText(pre.textContent); const t = b.textContent; b.textContent = "Copied ✓"; setTimeout(() => b.textContent = t, 1400); } catch {}
         });
@@ -507,7 +563,7 @@
       }
       async function copyTxt(t, btn) { try { await navigator.clipboard.writeText(t); const x = btn.textContent; btn.textContent = "Copied ✓"; setTimeout(() => (btn.textContent = x), 1400); } catch { alert("Copy failed — select the text manually."); } }
       function openProduce(o) {
-        const formula = FORMULAS.find((f) => f.id === o.formula) || FORMULAS[0];
+        const formula = getFormula(o.formula);
         const plat = PLATFORMS[o.platform] || PLATFORMS.reel;
         const hooks = o.hooks || [o.angle, "Save this before you decide.", "Here's what nobody tells you."];
         const cta = CTAS[o.cta] || CTAS.Discover;
@@ -566,7 +622,7 @@
         return `<span class="pill${d < today ? " overdue" : days <= 2 ? " soon" : ""}">${label} · ${esc(d)}</span>`;
       }
       function planRow(i, approve) {
-        const fname = (FORMULAS.find((f) => f.id === i.formula) || {}).name;
+        const fname = (i.formula ? getFormula(i.formula) : {}).name;
         return `<div class="plan-row"><span class="pr-title">${esc(i.title)}</span>
           <span class="pill ${i.owner === "Founder" ? "teal" : ""}">${esc(i.owner || "Marketer")}</span>
           ${fname ? `<span class="pill">${esc(fname)}</span>` : ""}${fmtDue(i.due)}
@@ -621,22 +677,59 @@
 
       // ===== CREATE =====
       function panelCreate() {
-        return `<section class="panel" id="tab-create"><h1>Create</h1><p class="sub">One idea → a ready-to-post draft <b>and</b> a brand-aware prompt for any free AI (ChatGPT, Gemini, Claude, or local Ollama). Nothing is sent anywhere — you paste it yourself.</p>
-          <div class="card">
-            <div class="field"><label>The idea (one line)</label><input id="c-idea" placeholder="e.g. Why students miss scholarships they qualify for" /></div>
-            <div class="field"><button class="btn alt sm" id="c-feed">💡 Need an idea? (your data + creative mix)</button><div id="c-feed-list" style="margin-top:10px"></div></div>
-            <div class="row">
-              <div class="field"><label>Formula</label><select id="c-formula">${FORMULAS.map((f) => `<option value="${f.id}">${f.name}</option>`).join("")}</select></div>
-              <div class="field"><label>Goal / CTA</label><select id="c-cta">${Object.keys(CTAS).map((k) => `<option>${k}</option>`).join("")}</select></div>
-            </div>
-            <div class="field"><label>Platforms</label><div class="chips" id="c-plats">${Object.entries(PLATFORMS).map(([k, p], i) => `<button type="button" class="chip-btn${i < 3 ? " on" : ""}" data-plat="${k}" aria-pressed="${i < 3}">${p.name}</button>`).join("")}</div></div>
-            <div class="row" style="margin-top:6px"><button class="btn gold" id="c-go" style="flex:0 0 auto">Generate content package</button><button class="btn alt" id="c-save" style="flex:0 0 auto">Save to Ideas</button></div>
-          </div>
-          <div id="c-out"></div></section>`;
+        return `<section class="panel" id="tab-create"><h1>Create</h1><p class="sub">Answer four things — <b>what</b>, <b>why</b>, <b>how</b>, <b>where</b> — and get a practical, ready-to-shoot brief per platform, built from your real data. Nothing is sent anywhere.</p>
+          <div id="c-reco"></div>
+          <div class="card"><label>1 · WHAT — the idea (one line)</label>
+            <div class="field"><input id="c-idea" placeholder="e.g. Why students miss scholarships they qualify for" /></div>
+            <div class="field"><button class="btn alt sm" id="c-feed">💡 Need an idea? (your data + creative mix)</button><div id="c-feed-list" style="margin-top:10px"></div></div></div>
+          <div class="card"><label>2 · WHY — goal(s) <span style="text-transform:none;font-weight:400;color:var(--faint)">· first pick = primary (drives the CTA)</span></label>
+            <div class="chips" id="c-goals">${GOALS.map((g) => `<button type="button" class="chip-btn${g.id === "help" ? " on" : ""}" data-goal="${g.id}" aria-pressed="${g.id === "help"}" title="${esc(g.desc)}">${esc(g.label)}</button>`).join("")}</div></div>
+          <div class="card"><label>3 · HOW — formula</label>
+            <div class="field"><select id="c-formula">${FORMULAS.map((f) => `<option value="${f.id}">${esc(f.name)}</option>`).join("")}</select><div class="muted" id="c-formula-desc" style="margin-top:6px"></div></div></div>
+          <div class="card"><label>4 · WHERE — platforms</label>
+            <div class="chips" id="c-plats">${Object.entries(PLATFORMS).map(([k, p], i) => `<button type="button" class="chip-btn${i < 3 ? " on" : ""}" data-plat="${k}" aria-pressed="${i < 3}">${esc((PLAT_EDIT[k] && PLAT_EDIT[k].label) || p.name)}</button>`).join("")}</div></div>
+          <div class="row" style="margin-top:2px"><button class="btn gold" id="c-go" style="flex:0 0 auto">Generate brief</button><button class="btn alt" id="c-save" style="flex:0 0 auto">Save idea to Ideas</button></div>
+          <div id="c-out" style="margin-top:14px"></div></section>`;
       }
+      // Personalisation from the performance feedback loop — best-rated formula & platform.
+      function recommend() {
+        const entries = [];
+        DATA.ideas.forEach((i) => (i.results || []).forEach((r) => { if (r.rating) entries.push({ i, r }); }));
+        if (!entries.length) return null;
+        const bestBy = (keyFn) => {
+          const m = {};
+          entries.forEach(({ i, r }) => { const k = keyFn(i, r); if (k) (m[k] = m[k] || []).push(RATING_SCORE[r.rating]); });
+          let best = null;
+          Object.entries(m).forEach(([k, arr]) => { const avg = arr.reduce((a, b) => a + b, 0) / arr.length; if (!best || avg > best.avg || (avg === best.avg && arr.length > best.n)) best = { k, avg, n: arr.length }; });
+          return best;
+        };
+        return { formula: bestBy((i) => i.formula), platform: bestBy((_i, r) => r.platform) };
+      }
+      function selectedGoals() { return [...document.querySelectorAll("#c-goals .chip-btn")].filter((b) => b.getAttribute("aria-pressed") === "true").map((b) => b.dataset.goal); }
+      function updateFormulaDesc() { const d = $("c-formula-desc"); if (d) d.textContent = getFormula($("c-formula").value).desc; }
       function wireCreate() {
+        const toggle = (b) => { const on = b.getAttribute("aria-pressed") !== "true"; b.setAttribute("aria-pressed", on); b.classList.toggle("on", on); };
         const plats = document.querySelectorAll("#c-plats .chip-btn");
-        plats.forEach((b) => b.onclick = () => { const on = b.getAttribute("aria-pressed") !== "true"; b.setAttribute("aria-pressed", on); b.classList.toggle("on", on); });
+        plats.forEach((b) => b.onclick = () => toggle(b));
+        document.querySelectorAll("#c-goals .chip-btn").forEach((b) => b.onclick = () => toggle(b));
+        const fsel = $("c-formula"); if (fsel) { fsel.onchange = updateFormulaDesc; updateFormulaDesc(); }
+        // recommendation banner (feedback loop + this week's trend)
+        const rc = $("c-reco");
+        if (rc) {
+          const reco = recommend();
+          const trend = (RADAR && RADAR.items || []).find((x) => x.kind === "trend" || x.kind === "news");
+          const trendLine = trend ? `<div class="muted" style="margin-top:6px">📈 Trending now you could ride: <b>${esc(trend.title)}</b></div>` : "";
+          if (reco && (reco.formula || reco.platform)) {
+            const f = reco.formula ? getFormula(reco.formula.k) : null;
+            const bits = [];
+            if (f) bits.push(`formula <b>${esc(f.name)}</b>`);
+            if (reco.platform) bits.push(`platform <b>${esc((PLAT_EDIT[reco.platform.k] && PLAT_EDIT[reco.platform.k].label) || reco.platform.k)}</b>`);
+            rc.innerHTML = `<div class="card" style="padding:12px 14px;border-color:var(--teal)">💡 <b>Recommended:</b> ${bits.join(" · ")} <span class="muted">— performed well in your past posts.</span>${f ? ` <button class="link-mini" id="c-apply-reco">Use formula →</button>` : ""}${trendLine}</div>`;
+            if ($("c-apply-reco") && f) $("c-apply-reco").onclick = () => { $("c-formula").value = f.id; updateFormulaDesc(); };
+          } else {
+            rc.innerHTML = `<div class="card muted" style="padding:12px 14px">No performance history yet — personalised recommendations appear once you log results on posted ideas.${trend ? ` <span>📈 Trending now: <b style="color:var(--ink)">${esc(trend.title)}</b></span>` : ""}</div>`;
+          }
+        }
         const feedBtn = $("c-feed");
         if (feedBtn) feedBtn.onclick = async () => {
           if (!FEED) { feedBtn.textContent = "Loading ideas…"; const r = await fetch("/api/marketing/ideas-feed"); FEED = (await r.json().catch(() => ({}))).seeds || []; feedBtn.textContent = "💡 Need an idea? (your data + creative mix)"; }
@@ -645,16 +738,42 @@
           $("c-feed-list").innerHTML = combined.map((s) => `<button type="button" class="seed" data-seed="${esc(s.text)}"><span class="pill teal">${esc(s.cat)}</span>${esc(s.text)}</button>`).join("");
           document.querySelectorAll("#c-feed-list .seed").forEach((b) => b.onclick = () => { $("c-idea").value = b.dataset.seed; $("c-feed-list").innerHTML = ""; $("c-idea").scrollIntoView({ block: "center" }); });
         };
-        $("c-go").onclick = () => {
+        $("c-go").onclick = async () => {
           const idea = $("c-idea").value.trim(); if (!idea) { alert("Type the idea first."); return; }
-          const formula = FORMULAS.find((f) => f.id === $("c-formula").value);
-          const cta = CTAS[$("c-cta").value];
+          const formula = getFormula($("c-formula").value);
+          const goals = selectedGoals(); if (!goals.length) { alert("Pick at least one goal."); return; }
           const chosen = [...plats].filter((b) => b.getAttribute("aria-pressed") === "true").map((b) => b.dataset.plat);
           if (!chosen.length) { alert("Pick at least one platform."); return; }
-          $("c-out").innerHTML = chosen.map((p) => outputBlock(p, idea, formula, cta)).join("");
-          document.querySelectorAll("[data-copy]").forEach((b) => b.onclick = async () => { try { await navigator.clipboard.writeText($(b.dataset.copy).textContent); const t = b.textContent; b.textContent = "Copied ✓"; setTimeout(() => b.textContent = t, 1200); } catch { alert("Copy failed — select the text manually."); } });
+          $("c-out").innerHTML = `<div class="card muted">Building from your real data…</div>`;
+          let scriptData = null;
+          try { const q = new URLSearchParams({ topic: topicOf(idea), angle: idea, formula: formula.id }); scriptData = await (await fetch("/api/marketing/script?" + q)).json(); } catch {}
+          $("c-out").innerHTML = chosen.map((p) => outputBlock(p, idea, formula, goals, scriptData)).join("");
+          document.querySelectorAll("#c-out [data-copy]").forEach((b) => b.onclick = async () => { try { await navigator.clipboard.writeText($(b.dataset.copy).textContent); const t = b.textContent; b.textContent = "Copied ✓"; setTimeout(() => b.textContent = t, 1200); } catch { alert("Copy failed — select the text manually."); } });
         };
         $("c-save").onclick = async () => { const v = $("c-idea").value.trim(); if (!v) return; const r = await api("POST", "/idea", { title: v, formula: $("c-formula").value, status: "drafting" }); if (r && r.idea) { DATA.ideas.unshift(r.idea); alert("Saved to the Ideas tab (Drafting)."); } };
+      }
+      // ===== EDITING PLANNER (deterministic — style/hook/pacing/transitions/etc from formula+goal+platform) =====
+      function editingPlan(fid, gid, pk) {
+        const style = { howto: "Clean / educational", list: "Fast-paced", problem_solution: "Clean / conversational", myth_fact: "Fast-paced", before_after: "Storytelling", story: "Storytelling", pov: "UGC-style", question: "Conversational", hottake: "Fast-paced / bold", mistake: "Conversational", proof: "Clean / professional", comparison: "Clean", reaction: "Conversational / meme", bts: "Documentary", student_story: "UGC-style / storytelling", founder_story: "Documentary / cinematic", creative: "Creative / experimental" }[fid] || "Clean";
+        const opening = { howto: "Big text hook (the promise)", list: "Number + promise on screen", problem_solution: "Talking-head naming the problem", myth_fact: "Strong statement / pattern interrupt", before_after: "Before/after split in first 2s", story: "Start mid-story", pov: "POV text on screen", question: "Question on screen", hottake: "Strong statement", mistake: 'Pattern interrupt ("Stop doing this")', proof: "Start with the result", comparison: "Two options on screen", reaction: "Show the trend/news first", bts: "Visual surprise", student_story: "Immediate talking-head hook", founder_story: "Personal talking-head hook", creative: "Visual surprise" }[fid] || "Immediate talking-head hook";
+        const trans = { list: ["Jump cut", "Zoom transition"], howto: ["Hard cut", "Zoom in"], myth_fact: ["Hard cut", "Whip transition"], before_after: ["Match cut", "Speed ramp"], story: ["Hard cut"], pov: ["Jump cut"], question: ["Hard cut"], hottake: ["Hard cut", "Whip transition"], mistake: ["Hard cut"], proof: ["Hard cut", "Zoom in"], comparison: ["Match cut"], reaction: ["Jump cut"], bts: ["Hard cut", "Speed ramp"], student_story: ["Hard cut"], founder_story: ["Match cut"], creative: ["Whip transition", "Speed ramp", "Zoom transition"] }[fid] || ["Hard cut"];
+        const visuals = { howto: "Screen recording + text pop-ups per step", list: "Text pop-ups per point + a progress indicator", problem_solution: "B-roll of the problem, then the solution on screen", myth_fact: "Highlight the myth vs the fact with text", before_after: "Before/after comparison / split screen", story: "B-roll matching each story beat", pov: "Handheld B-roll, minimal text", question: "Big-text question, then answer pop-ups", hottake: "Bold text, minimal B-roll", mistake: "Show the mistake, then the fix", proof: "Show the real evidence on screen (source visible)", comparison: "Side-by-side comparison", reaction: "Clip/screenshot of the trend + your reaction", bts: "B-roll of the actual work/screens", student_story: "B-roll of study/application visuals", founder_story: "Founder on camera + product B-roll", creative: "Whatever serves the concept — simple motion graphics welcome" }[fid] || "B-roll where the speaker explains something visual";
+        const endByGoal = { followers: "Follow CTA", awareness: "Awareness line (open-ended)", educate: "Save CTA", help: "Visit Universo CTA", engagement: "Comment CTA", traffic: "Visit Universo CTA", signups: "Sign-up CTA", trust: "Proof / open-ended", universities: "Business CTA (universities)", investors: "Investor / business CTA", talent: "Join-us CTA", feature: "Visit Universo CTA", leads: "Business CTA", test: "Open-ended question" };
+        const g = goalById(gid);
+        return {
+          style, opening, transitions: trans.slice(0, 3),
+          pacing: "Cut dead air and filler; keep information moving; change the visual every few seconds where it helps — but don't over-edit.",
+          visuals,
+          captions: "Burned-in, readable captions; highlight key words; keep them in the lower third, clear of important visuals.",
+          sound: "Low-volume background music that fits the mood; a sound effect only where it adds punch; clear voice; a beat of silence before the key line. Skip music if it fights the message.",
+          ending: `${endByGoal[gid] || "Follow CTA"} — matches your goal "${g.label}": "${g.cta}"`,
+        };
+      }
+      function hookText(fid, idea) {
+        return ({ howto: `How to ${idea}`, list: `${idea}: the short list`, problem_solution: `${idea}? Here's the fix.`, myth_fact: `Myth: ${idea}. Here's the truth.`, before_after: `From stuck to sorted: ${idea}`, story: `Nobody told me this about ${idea}.`, pov: `POV: ${idea}`, question: `${idea}?`, hottake: `Unpopular opinion: ${idea}`, mistake: `The ${idea} mistake most people make`, proof: `Proof: ${idea}`, comparison: `${idea} — which one actually wins?`, reaction: `Everyone's talking about ${idea}. My take:`, bts: `Here's how ${idea} actually works`, student_story: `A student just did this: ${idea}`, founder_story: `Why we're building this: ${idea}`, creative: `${idea} — but make it unexpected` })[fid] || idea;
+      }
+      function captionFor(formula, idea, goal, topic) {
+        return `${hookText(formula.id, idea)}\n\n${goal.desc}. ${goal.cta}\n\n${hashtagsFor(topic)}`;
       }
       function brandBlock() {
         return `You are writing for Universo, a student platform. Mission: ${brain("mission")}
@@ -662,35 +781,81 @@ What Universo is: ${brain("product")}
 Audience: ${brain("audience")}
 Their pains:\n${brain("pains")}
 Tone: ${brain("tone")}
+Audience goals: ${brain("goal_audience")}
+Business goals: ${brain("biz_goals")}
+Investor positioning — problem: ${brain("inv_problem")}; why it matters: ${brain("inv_why")}; what makes us different: ${brain("inv_diff")}; model: ${brain("inv_model")}; vision: ${brain("inv_vision")}
 Hard rules — never break these: ${brain("donot")}
-Approved facts (only state what's here, never invent numbers): ${brain("facts")}`;
+Approved facts (state ONLY what's here; never invent traction, users, revenue, partnerships, investment or statistics): ${brain("facts")}
+Real traction/milestones you may reference (ONLY these, and only if non-empty): ${brain("traction")} ${brain("milestones")}`;
       }
-      function buildPrompt(pk, idea, formula, cta) {
+      function buildPrompt(pk, idea, formula, goal, ep) {
         const p = PLATFORMS[pk];
         return `${brandBlock()}
 
-TASK: Write a ${p.name} about this idea:
-"${idea}"
+TASK: Write a ${p.name} about: "${idea}"
+Primary goal: ${goal.label} — ${goal.desc}
 
-Use this proven structure (adapt naturally, don't label the steps):
+Structure (adapt naturally, don't label the steps):
 ${formula.steps.map((s, i) => `${i + 1}. ${s}`).join("\n")}
 
 Platform rules: ${p.rule}
-End with this call to action (rephrase in Universo's voice): "${cta}"
+Editing intent (for the shoot, not the copy): style ${ep.style}; open with ${ep.opening}.
+End with this call to action (rephrase in Universo's voice): "${goal.cta}"
 
-Style: sound like a real, warm human on the student's side — not a brand or an AI. No clichés, no "in today's fast-paced world", no emoji spam. Be specific and useful.
+Style: warm, real human on the student's side — not a brand or an AI. No clichés, no "in today's fast-paced world", no emoji spam. Be specific. Never invent numbers, users, traction, partnerships or results — use only facts stated above.
 
 Output ONLY the finished ${p.name}, ready to post.`;
       }
-      function buildSkeleton(pk, idea, formula, cta) {
-        const p = PLATFORMS[pk];
-        return `[${p.name}] — skeleton for: ${idea}\n\n` + formula.steps.map((s) => `• ${s}:\n   …`).join("\n") + `\n• CTA: ${cta}\n\n(Platform note: ${p.rule})`;
-      }
-      function outputBlock(pk, idea, formula, cta) {
-        const p = PLATFORMS[pk], pid = "p_" + pk, sid = "s_" + pk;
-        return `<div class="out-block"><div class="out-head"><b>${p.name}</b></div>
-          <div class="out-head" style="background:var(--surface)"><span class="tag prompt">Prompt for free AI</span><button class="btn sm" data-copy="${pid}">Copy prompt</button></div><pre id="${pid}">${esc(buildPrompt(pk, idea, formula, cta))}</pre>
-          <div class="out-head" style="background:var(--surface)"><span class="tag draft">Manual skeleton</span><button class="btn sm alt" data-copy="${sid}">Copy skeleton</button></div><pre id="${sid}">${esc(buildSkeleton(pk, idea, formula, cta))}</pre></div>`;
+      function outputBlock(pk, idea, formula, goals, scriptData) {
+        const p = PLATFORMS[pk], pe = PLAT_EDIT[pk] || { label: p.name, hook: "", pace: "", frame: "" };
+        const primary = goalById(goals[0]), others = goals.slice(1).map((g) => goalById(g).label);
+        const ep = editingPlan(formula.id, goals[0], pk), topic = topicOf(idea);
+        const scriptLines = (scriptData && Array.isArray(scriptData.beats) && scriptData.beats.length)
+          ? [scriptData.headline ? `(${scriptData.headline})` : "", ...scriptData.beats.map((b) => `- ${b.cue}: ${b.line}`)].filter(Boolean).join("\n")
+          : "- No matching real data for this idea — write from your notes and Brand Brain (don't invent facts).";
+        const src = (scriptData && scriptData.sources && scriptData.sources.length) ? "\n\nSOURCES (verify before posting):\n" + scriptData.sources.map((s) => "- " + s).join("\n") : "";
+        const brief = `CONTENT IDEA
+Goal: ${primary.label}${others.length ? " (+ " + others.join(", ") + ")" : ""}
+Formula: ${formula.name}
+Platform: ${pe.label}
+
+HOOK
+${hookText(formula.id, idea)}  (${pe.hook})
+
+SCRIPT
+${scriptLines}
+
+SHOT LIST
+${formula.steps.map((s, i) => `${i + 1}. ${s}`).join("\n")}
+
+EDITING
+- Style: ${ep.style}
+- Opening: ${ep.opening}
+- Pacing: ${ep.pacing}
+- Visuals: ${ep.visuals}
+- Transitions: ${ep.transitions.join(", ")}
+- Captions: ${ep.captions}
+- Sound: ${ep.sound}
+- Ending: ${ep.ending}
+
+PLATFORM NOTES (${pe.label})
+- Hook: ${pe.hook}
+- Pacing: ${pe.pace}
+- Framing: ${pe.frame}
+- Rule: ${p.rule}
+
+CAPTION
+${captionFor(formula, idea, primary, topic)}
+
+CTA
+${primary.cta}
+
+HASHTAGS
+${hashtagsFor(topic)}${src}`;
+        const bid = "b_" + pk, pid = "p_" + pk;
+        return `<div class="out-block"><div class="out-head"><b>${esc(pe.label)}</b><span class="pill teal" style="margin-left:auto">${esc(formula.name)}</span></div>
+          <div class="out-head" style="background:var(--surface)"><span class="tag draft">Ready brief</span><button class="btn sm gold" data-copy="${bid}">Copy brief</button></div><pre id="${bid}">${esc(brief)}</pre>
+          <div class="out-head" style="background:var(--surface)"><span class="tag prompt">Prompt for free AI</span><button class="btn sm" data-copy="${pid}">Copy AI prompt</button></div><pre id="${pid}">${esc(buildPrompt(pk, idea, formula, primary, ep))}</pre></div>`;
       }
 
       // ===== RESULTS / PERFORMANCE (manual feedback loop) =====
@@ -807,7 +972,7 @@ Output ONLY the finished ${p.name}, ready to post.`;
           ${list.length ? list.map(ideaItem).join("") : '<div class="card muted">No saved ideas yet. Add one above, or save one from the Create tab.</div>'}</section>`;
       }
       function ideaItem(i) {
-        const fname = (FORMULAS.find((f) => f.id === i.formula) || {}).name;
+        const fname = (i.formula ? getFormula(i.formula) : {}).name;
         const hasResults = i.results && i.results.length;
         return `<div class="idea-item" data-id="${i.id}"><div class="top"><b>${esc(i.title)}</b>
           <select data-act="status" title="Status">${STATUSES.map((s) => `<option${(i.status || "idea") === s ? " selected" : ""}>${s}</option>`).join("")}</select>
@@ -862,10 +1027,16 @@ Output ONLY the finished ${p.name}, ready to post.`;
       }
 
       // ===== BRAND BRAIN =====
-      const BRAIN_FIELDS = [["mission", "Mission"], ["product", "What Universo is"], ["audience", "Audience"], ["pains", "Student pains"], ["tone", "Tone of voice"], ["donot", "Hard rules (never do)"], ["facts", "Approved facts / numbers"], ["faqs", "FAQs"]];
+      const BRAIN_GROUPS = [
+        { title: "Product & audience", fields: [["mission", "Mission"], ["product", "What Universo is"], ["audience", "Audience"], ["pains", "Student pains"], ["tone", "Tone of voice"], ["donot", "Hard rules (never do)"], ["facts", "Approved facts / numbers"], ["faqs", "FAQs"]] },
+        { title: "Audience goals", fields: [["goal_audience", "Audience goals (grow followers, community, engagement, trust)"]] },
+        { title: "Business goals", fields: [["biz_goals", "Business goals (universities, leads, traction, partnerships, investors, market opportunity, milestones)"]] },
+        { title: "Investor positioning", note: "Only real, verifiable facts. Never invent traction, users, revenue, partnerships, investment or statistics — leave a field blank rather than guess.", fields: [["inv_problem", "What problem we're solving"], ["inv_why", "Why the problem matters"], ["inv_diff", "What makes Universo different"], ["traction", "Traction / progress (real only — blank if none yet)"], ["milestones", "Key milestones (real only)"], ["inv_model", "Business model"], ["inv_market", "Market opportunity"], ["inv_vision", "Vision"], ["inv_want", "What we want investors to understand"]] },
+      ];
+      const BRAIN_BIG = ["product", "pains", "faqs", "biz_goals", "goal_audience"];
       function panelBrain() {
-        return `<section class="panel" id="tab-brain"><h1>Brand Brain</h1><p class="sub">Universo's messaging — written once, injected into every prompt so you never re-explain the product. Edit to refine; blank = the seeded default.</p>
-          ${BRAIN_FIELDS.map(([k, l]) => `<div class="card"><label>${l}</label><textarea data-brain="${k}" rows="${["product", "pains", "faqs"].includes(k) ? 5 : 3}">${esc(brain(k))}</textarea></div>`).join("")}</section>`;
+        return `<section class="panel" id="tab-brain"><h1>Brand Brain</h1><p class="sub">Universo's messaging + goals — written once, injected into every prompt so you never re-explain. Blank = the seeded default. <b>Never invent traction, users, revenue, partnerships or numbers</b> — only real, verifiable facts.</p>
+          ${BRAIN_GROUPS.map((gr) => `<h2>${esc(gr.title)}</h2>${gr.note ? `<p class="muted" style="margin:-4px 0 8px">${esc(gr.note)}</p>` : ""}${gr.fields.map(([k, l]) => `<div class="card"><label>${esc(l)}</label><textarea data-brain="${k}" rows="${BRAIN_BIG.includes(k) ? 5 : 3}" placeholder="${esc(l)}">${esc(brain(k))}</textarea></div>`).join("")}`).join("")}</section>`;
       }
       function wireBrain() {
         document.querySelectorAll("[data-brain]").forEach((t) => { let tm; t.oninput = () => { DATA.brain[t.dataset.brain] = t.value; clearTimeout(tm); tm = setTimeout(() => api("PATCH", "/brain", { [t.dataset.brain]: t.value }), 600); }; });
