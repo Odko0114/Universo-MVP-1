@@ -886,8 +886,8 @@ ${hashtagsFor(topic)}${src}`;
         });
       }
       function renderResultsForm(list) {
-        $("results-body").innerHTML = `<h2 style="margin:0 0 4px">✓ Record results</h2>
-          <p class="res-note-tiny">Where did this go and how did it do? Metrics are whatever you type in by hand — Universo never auto-collects them.</p>
+        $("results-body").innerHTML = `<h2 style="margin:0 0 4px">📢 Publish &amp; measure</h2>
+          <p class="res-note-tiny">Just posted it? Add the platform + date and save — that marks it Published. Come back later to add performance (rating + any metrics). Metrics are whatever you type in by hand — Universo never auto-collects them.</p>
           <div id="res-rows">${list.map(resultRow).join("")}</div>
           <button type="button" class="btn alt sm" id="res-add">＋ Add another platform</button>
           <div class="opp-actions" style="margin-top:16px"><button type="button" class="btn gold" id="res-save">Save results</button></div>
@@ -916,9 +916,14 @@ ${hashtagsFor(topic)}${src}`;
       }
       function postedSummary(i) {
         if (!i.results || !i.results.length) return "";
-        return i.results.map((r) => `<div class="posted-box">
-          <div class="posted-head">✓ Posted · <b>${esc(r.platform)}</b> · ${esc(fmtShort(r.date))}${r.rating ? ` · <span class="rating ${esc(r.rating)}">${esc(r.rating)}</span>` : ""}${r.url ? ` · <a href="${esc(r.url)}" target="_blank" rel="noopener">View post ↗</a>` : ""}</div>
-          ${r.note ? `<div class="posted-note">${esc(r.note)}</div>` : ""}${metricsLine(r)}</div>`).join("");
+        // A post is Published once it has a date; Measured once it has a rating.
+        return i.results.map((r) => {
+          const measured = !!r.rating;
+          const badge = measured ? "📊 <b>Measured</b>" : "📢 <b>Published</b>";
+          return `<div class="posted-box">
+            <div class="posted-head">${badge} · <b>${esc(r.platform)}</b>${r.date ? ` · ${esc(fmtShort(r.date))}` : ""}${measured ? ` · <span class="rating ${esc(r.rating)}">${esc(r.rating)}</span>` : ""}${r.url ? ` · <a href="${esc(r.url)}" target="_blank" rel="noopener">View post ↗</a>` : ""}${measured ? "" : ` · <button class="link-mini" data-act="measure">Add performance →</button>`}</div>
+            ${r.note ? `<div class="posted-note">${esc(r.note)}</div>` : ""}${metricsLine(r)}</div>`;
+        }).join("");
       }
       function perfSection() {
         const posted = DATA.ideas.filter((i) => i.results && i.results.length);
@@ -962,8 +967,8 @@ ${hashtagsFor(topic)}${src}`;
         { key: "idea", label: "💡 Idea", match: (i) => (i.status || "idea") === "idea" },
         { key: "drafting", label: "✍️ Drafting", match: (i) => i.status === "drafting" },
         { key: "review", label: "✅ Ready", match: (i) => i.status === "review" },
-        { key: "published", label: "📢 Published", match: (i) => i.status === "posted" && !(i.results && i.results.length) },
-        { key: "measured", label: "📊 Measured", match: (i) => i.status === "posted" && i.results && i.results.length },
+        { key: "published", label: "📢 Published", match: (i) => i.status === "posted" && !(i.results || []).some((r) => r.rating) },
+        { key: "measured", label: "📊 Measured", match: (i) => i.status === "posted" && (i.results || []).some((r) => r.rating) },
       ];
       const BOARD_EMPTY = '<div class="card muted">No content yet. Add an idea above, or save one from Create.</div>';
       function boardFilter() {
@@ -1006,7 +1011,7 @@ ${hashtagsFor(topic)}${src}`;
         return `<div class="idea-item" data-id="${i.id}"><div class="top"><b>${esc(i.title)}</b>
           <select data-act="status" title="Status">${STATUSES.map((s) => `<option${(i.status || "idea") === s ? " selected" : ""}>${s}</option>`).join("")}</select>
           <button class="chip-btn" data-act="produce" title="Produce (shoot-ready brief)">🎬</button>
-          <button class="chip-btn" data-act="results" title="${hasResults ? "Edit results" : "Record results"}">📊 ${hasResults ? "Edit results" : "Record results"}</button>
+          <button class="chip-btn" data-act="results" title="${hasResults ? "Publish / results" : "Mark published"}">${hasResults ? "📊 Results" : "📢 Mark published"}</button>
           <button class="chip-btn" data-act="del" title="Delete">🗑</button></div>
           <div class="top" style="margin-top:8px">
             <select data-act="owner" title="Owner" style="flex:0 0 auto">${OWNERS.map((o) => `<option${(i.owner || "Marketer") === o ? " selected" : ""}>${o}</option>`).join("")}</select>
@@ -1025,6 +1030,7 @@ ${hashtagsFor(topic)}${src}`;
           el.querySelector('[data-act="due"]').onchange = (e) => { idea.due = e.target.value; api("PATCH", "/idea/" + id, { due: e.target.value }); };
           el.querySelector('[data-act="produce"]').onclick = () => openProduce(ideaToOpp(idea));
           el.querySelector('[data-act="results"]').onclick = () => openResults(idea);
+          el.querySelectorAll('[data-act="measure"]').forEach((b) => b.onclick = () => openResults(idea));
           el.querySelector('[data-act="del"]').onclick = async () => { if (!confirm("Delete this idea?")) return; await api("DELETE", "/idea/" + id); DATA.ideas = DATA.ideas.filter((x) => x.id !== id); await loadInsights(); render(); };
           let t; el.querySelector('[data-act="draft"]').oninput = (e) => { idea.draft = e.target.value; clearTimeout(t); t = setTimeout(() => api("PATCH", "/idea/" + id, { draft: e.target.value }), 600); };
         });
