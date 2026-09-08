@@ -2534,6 +2534,7 @@ mkt.post("/idea", (req, res) => {
     goal: str(b.goal, 40),
     topic: str(b.topic, 60),
     platforms: sanitizePlatforms(b.platforms) || [],
+    approval: b.approval === true,
     draft: "",
     results: [],
     editing: {},
@@ -2559,6 +2560,7 @@ mkt.patch("/idea/:id", (req, res) => {
   if (b.topic !== undefined) idea.topic = str(b.topic, 60);
   if (b.platforms !== undefined) { const p = sanitizePlatforms(b.platforms); if (!p) return res.status(400).json({ error: "platforms must be an array." }); idea.platforms = p; }
   if (b.editing !== undefined) { const e = sanitizeEditing(b.editing); if (!e) return res.status(400).json({ error: "editing must be an object." }); idea.editing = e; }
+  if (b.approval !== undefined) idea.approval = !!b.approval;
   if (b.draft !== undefined) idea.draft = str(b.draft, 8000);
   if (b.results !== undefined) {
     const r = sanitizeResults(b.results);

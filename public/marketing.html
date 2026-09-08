@@ -792,8 +792,8 @@
           ["Ending", g ? `${g.label} — "${g.cta}"` : ep.ending],
         ];
         idea.editing = idea.editing || {};
-        $("editing-body").innerHTML = `<h2 style="margin:0 0 4px">✂️ Editing — ${esc(idea.title)}</h2>
-          <p class="res-note-tiny">Recommended for a <b>${esc((getFormula(idea.formula) || {}).name || "post")}</b>${g ? ` aiming to <b>${esc(g.label)}</b>` : ""}. Tick items as you edit — it's saved on the card.</p>
+        $("editing-body").innerHTML = `<h2 style="margin:0 0 4px">✂️ Edit checklist — ${esc(idea.title)}</h2>
+          <p class="res-note-tiny"><b>What this is:</b> how to cut this video (in a free tool like CapCut or Canva) before you post it — a guide, not an auto-editor. Below is what fits a <b>${esc((getFormula(idea.formula) || {}).name || "post")}</b>${g ? ` aiming to <b>${esc(g.label)}</b>` : ""}; tick each item as you do it (saved on the card).</p>
           <div class="prod-sec">${guide.map(([k, v]) => `<div style="margin:4px 0"><b>${esc(k)}:</b> ${esc(v)}</div>`).join("")}</div>
           <div class="prod-sec"><div class="prod-h">Checklist</div>${EDIT_TASKS.map(([k, l]) => `<label class="prod-check"><input type="checkbox" data-edit="${k}"${idea.editing[k] ? " checked" : ""}> ${esc(l)}</label>`).join("")}</div>
           <div class="opp-actions" style="margin-top:12px"><button class="btn sm gold" id="edit-done">Done</button></div>`;
@@ -1010,6 +1010,8 @@ ${hashtagsFor(topic)}${src}`;
         { key: "measured", label: "📊 Measured", match: (i) => i.status === "posted" && (i.results || []).some((r) => r.rating) },
       ];
       const BOARD_EMPTY = '<div class="card muted">No content yet. Add an idea above, or save one from Create.</div>';
+      let BOARD_APPROVAL = false; // "⚑ Needs approval" filter (transient)
+      const boardApprovalOnly = () => BOARD_APPROVAL;
       function boardFilter() {
         const q = (($("b-search") || {}).value || "").toLowerCase().trim();
         const goal = ($("b-goal") || {}).value || "";
@@ -1017,7 +1019,8 @@ ${hashtagsFor(topic)}${src}`;
         return DATA.ideas.filter((i) =>
           (!q || (i.title + " " + (i.topic || "")).toLowerCase().includes(q)) &&
           (!goal || i.goal === goal) &&
-          (!plat || (i.platforms || []).includes(plat)));
+          (!plat || (i.platforms || []).includes(plat)) &&
+          (!BOARD_APPROVAL || i.approval));
       }
       function boardLanes() {
         const filtered = boardFilter();
@@ -1027,14 +1030,26 @@ ${hashtagsFor(topic)}${src}`;
           return `<div class="card"><h2 style="margin-top:0">${l.label} <span class="pill">${items.length}</span></h2>${items.length ? items.map(ideaItem).join("") : `<div class="muted">—</div>`}</div>`;
         }).join("");
       }
+      function helpOpen() { try { return localStorage.getItem("mkt-help") !== "0"; } catch { return true; } }
       function panelIdeas() {
-        return `<section class="panel" id="tab-ideas"><h1>Content Board</h1><p class="sub">Your whole pipeline in one place: Idea → Drafting → Ready → Published → Measured. Change a card's status to move it along; record results to measure it.</p>
-          <div class="card"><div class="row"><input id="i-title" placeholder="New idea (one line)" /><select id="i-owner" style="flex:0 0 120px">${OWNERS.map((o) => `<option>${o}</option>`).join("")}</select><button class="btn" id="i-add" style="flex:0 0 auto">Add</button></div></div>
+        const approvalOn = boardApprovalOnly();
+        return `<section class="panel" id="tab-ideas"><h1>Content Board</h1><p class="sub">Everything you're making, in one place — from idea to results.</p>
+          <details class="card" id="b-help"${helpOpen() ? " open" : ""}><summary style="cursor:pointer;font-weight:700">📖 How this works (4 steps)</summary>
+            <ol class="work-list" style="margin:10px 0 0;padding-left:20px">
+              <li><b>💡 Create</b> — go to the <b>Create</b> tab, type an idea, pick a goal + a format. You get a ready script + shoot brief.</li>
+              <li><b>✂️ Edit</b> — on a card, hit <b>✂️ Edit</b> for a checklist of how to cut the video (in a free tool like CapCut/Canva). Tick items as you go. It's a guide — it doesn't edit for you.</li>
+              <li><b>📢 Publish</b> — once you post it, hit <b>📢 Mark published</b> (platform + date). No sign-off needed.</li>
+              <li><b>📊 Measure</b> — later, add how it did (a rating + any numbers). The OS learns and suggests what to make next.</li>
+            </ol>
+            <p class="muted" style="margin:8px 0 0"><b>2 people:</b> the marketer just publishes — no approval needed. Tick <b>⚑ Needs approval</b> on a card only when the founder should check it first. Founder: watch the <b>📢 Published</b> / <b>📊 Measured</b> lanes to see everything that's gone out.</p>
+          </details>
+          <div class="card"><label>Quick add an idea</label><div class="row"><input id="i-title" placeholder="New idea (one line)" /><select id="i-owner" style="flex:0 0 120px">${OWNERS.map((o) => `<option>${o}</option>`).join("")}</select><button class="btn" id="i-add" style="flex:0 0 auto">Add</button></div></div>
           ${perfSection()}
           <div class="card"><div class="row">
             <input id="b-search" placeholder="🔎 Search title or topic…" />
             <select id="b-goal" style="flex:0 0 auto"><option value="">All goals</option>${GOALS.map((g) => `<option value="${g.id}">${esc(g.label)}</option>`).join("")}</select>
             <select id="b-plat" style="flex:0 0 auto"><option value="">All platforms</option>${Object.entries(PLATFORMS).map(([k, p]) => `<option value="${k}">${esc((PLAT_EDIT[k] && PLAT_EDIT[k].label) || p.name)}</option>`).join("")}</select>
+            <button type="button" class="chip-btn${approvalOn ? " on" : ""}" id="b-approval" aria-pressed="${approvalOn}" style="flex:0 0 auto">⚑ Needs approval</button>
           </div></div>
           <div id="b-lanes">${DATA.ideas.length ? boardLanes() : BOARD_EMPTY}</div></section>`;
       }
@@ -1043,6 +1058,7 @@ ${hashtagsFor(topic)}${src}`;
         const hasResults = i.results && i.results.length;
         const gLabel = i.goal ? (GOALS.find((g) => g.id === i.goal) || {}).label : "";
         const tags = [
+          i.approval ? `<span class="pill soon">⚑ Needs approval</span>` : "",
           i.topic ? `<span class="pill">${esc(i.topic)}</span>` : "",
           gLabel ? `<span class="pill teal">🎯 ${esc(gLabel)}</span>` : "",
           ...(i.platforms || []).map((p) => `<span class="pill">${esc((PLAT_EDIT[p] && PLAT_EDIT[p].label) || p)}</span>`),
@@ -1056,6 +1072,7 @@ ${hashtagsFor(topic)}${src}`;
           <div class="top" style="margin-top:8px">
             <select data-act="owner" title="Owner" style="flex:0 0 auto">${OWNERS.map((o) => `<option${(i.owner || "Marketer") === o ? " selected" : ""}>${o}</option>`).join("")}</select>
             <label style="flex:0 0 auto;margin:0;display:flex;align-items:center;gap:6px;text-transform:none;font-size:.8rem;color:var(--soft)">Due <input type="date" data-act="due" value="${esc(i.due || "")}" style="min-height:40px;width:auto" /></label>
+            <label style="flex:0 0 auto;margin:0;display:flex;align-items:center;gap:6px;text-transform:none;font-size:.8rem;color:var(--soft)"><input type="checkbox" data-act="approval"${i.approval ? " checked" : ""} style="width:auto;min-height:auto" /> ⚑ Needs approval</label>
             ${fname ? `<span class="pill">${esc(fname)}</span>` : ""}${tags}</div>
           <div style="margin-top:8px"><label>Final draft (paste the AI's output here)</label><textarea data-act="draft" rows="2" placeholder="…">${esc(i.draft || "")}</textarea></div>
           ${postedSummary(i)}</div>`;
@@ -1068,6 +1085,7 @@ ${hashtagsFor(topic)}${src}`;
           el.querySelector('[data-act="status"]').onchange = async (e) => { idea.status = e.target.value; await api("PATCH", "/idea/" + id, { status: e.target.value }); rerender(); if (e.target.value === "posted") openResults(idea); };
           el.querySelector('[data-act="owner"]').onchange = (e) => { idea.owner = e.target.value; api("PATCH", "/idea/" + id, { owner: e.target.value }); };
           el.querySelector('[data-act="due"]').onchange = (e) => { idea.due = e.target.value; api("PATCH", "/idea/" + id, { due: e.target.value }); };
+          el.querySelector('[data-act="approval"]').onchange = (e) => { idea.approval = e.target.checked; api("PATCH", "/idea/" + id, { approval: e.target.checked }); rerender(); };
           el.querySelector('[data-act="produce"]').onclick = () => openProduce(ideaToOpp(idea));
           el.querySelector('[data-act="edit"]').onclick = () => openEditing(idea);
           el.querySelector('[data-act="results"]').onclick = () => openResults(idea);
@@ -1081,6 +1099,10 @@ ${hashtagsFor(topic)}${src}`;
         if (add) add.onclick = async () => { const v = $("i-title").value.trim(); if (!v) return; const r = await api("POST", "/idea", { title: v, owner: $("i-owner").value }); if (r && r.idea) { DATA.ideas.unshift(r.idea); $("i-title").value = ""; render(); } };
         const rerender = () => { const el = $("b-lanes"); if (!el) return; el.innerHTML = DATA.ideas.length ? boardLanes() : BOARD_EMPTY; wireCards(rerender); };
         ["b-search", "b-goal", "b-plat"].forEach((cid) => { const e = $(cid); if (e) { e.oninput = rerender; e.onchange = rerender; } });
+        const appBtn = $("b-approval");
+        if (appBtn) appBtn.onclick = () => { BOARD_APPROVAL = !BOARD_APPROVAL; appBtn.setAttribute("aria-pressed", BOARD_APPROVAL); appBtn.classList.toggle("on", BOARD_APPROVAL); rerender(); };
+        const help = $("b-help");
+        if (help) help.ontoggle = () => { try { localStorage.setItem("mkt-help", help.open ? "1" : "0"); } catch {} };
         wireCards(rerender);
       }
 

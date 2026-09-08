@@ -197,6 +197,17 @@ test("editing checklist persists (booleans, capped); bad payload rejected", asyn
   await req("DELETE", "/api/marketing/idea/" + id);
 });
 
+test("approval flag defaults off and toggles", async () => {
+  const created = await req("POST", "/api/marketing/idea", { title: "Approval idea" });
+  assert.equal(created.json.idea.approval, false); // off by default — no sign-off needed
+  const id = created.json.idea.id;
+  const on = await req("PATCH", "/api/marketing/idea/" + id, { approval: true });
+  assert.equal(on.json.idea.approval, true);
+  const back = await req("GET", "/api/marketing/data");
+  assert.equal(back.json.ideas.find((i) => i.id === id).approval, true); // persists
+  await req("DELETE", "/api/marketing/idea/" + id);
+});
+
 test("insights endpoint returns engine output driven by recorded results", async () => {
   assert.equal(await loginAs(MKT.email, MKT.pw), 200);
   // an idea with a clear winning combo: Story about a distinct topic, two Greats on TikTok
