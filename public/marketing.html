@@ -806,7 +806,7 @@ Keep Universo's honest, warm voice; never invent numbers, traction or results. R
             <div class="field"><select id="c-formula">${FORMULAS.map((f) => `<option value="${f.id}">${esc(f.name)}</option>`).join("")}</select><div class="muted" id="c-formula-desc" style="margin-top:6px"></div></div></div>
           <div class="card"><label>4 · WHERE — platforms</label>
             <div class="chips" id="c-plats">${Object.entries(PLATFORMS).map(([k, p], i) => `<button type="button" class="chip-btn${i < 3 ? " on" : ""}" data-plat="${k}" aria-pressed="${i < 3}">${esc((PLAT_EDIT[k] && PLAT_EDIT[k].label) || p.name)}</button>`).join("")}</div></div>
-          <div class="row" style="margin-top:2px"><button class="btn gold" id="c-go" style="flex:0 0 auto">Generate brief</button><button class="btn alt" id="c-save" style="flex:0 0 auto">Save idea to Ideas</button></div>
+          <div class="row" style="margin-top:2px"><button class="btn gold" id="c-go" style="flex:0 0 auto">Generate brief</button><button class="btn" id="c-editor" style="flex:0 0 auto">✏️ Save &amp; open Editor</button><button class="btn alt" id="c-save" style="flex:0 0 auto">Save to Board</button></div>
           <div id="c-out" style="margin-top:14px"></div></section>`;
       }
       function selectedGoals() { return [...document.querySelectorAll("#c-goals .chip-btn")].filter((b) => b.getAttribute("aria-pressed") === "true").map((b) => b.dataset.goal); }
@@ -861,12 +861,22 @@ Keep Universo's honest, warm voice; never invent numbers, traction or results. R
           $("c-out").innerHTML = chosen.map((p) => outputBlock(p, idea, formula, goals, scriptData)).join("");
           document.querySelectorAll("#c-out [data-copy]").forEach((b) => b.onclick = async () => { try { await navigator.clipboard.writeText($(b.dataset.copy).textContent); const t = b.textContent; b.textContent = "Copied ✓"; setTimeout(() => b.textContent = t, 1200); } catch { alert("Copy failed — select the text manually."); } });
         };
-        $("c-save").onclick = async () => {
-          const v = $("c-idea").value.trim(); if (!v) return;
+        const createIdeaFromForm = async (status) => {
+          const v = $("c-idea").value.trim(); if (!v) { alert("Type the idea first."); return null; }
           const goals = selectedGoals();
           const platforms = [...plats].filter((b) => b.getAttribute("aria-pressed") === "true").map((b) => b.dataset.plat);
-          const r = await api("POST", "/idea", { title: v, formula: $("c-formula").value, goal: goals[0] || "", platforms, topic: topicOf(v), status: "drafting" });
-          if (r && r.idea) { DATA.ideas.unshift(r.idea); alert("Saved to the Ideas tab (Drafting) with its goal, platforms and topic."); }
+          const r = await api("POST", "/idea", { title: v, formula: $("c-formula").value, goal: goals[0] || "", platforms, topic: topicOf(v), status });
+          if (r && r.idea) { DATA.ideas.unshift(r.idea); return r.idea; }
+          return null;
+        };
+        $("c-save").onclick = async () => { const idea = await createIdeaFromForm("drafting"); if (idea) alert("Saved to the Board (Draft) with its goal, platforms and topic."); };
+        // Save the idea, then jump straight into the Content Editor seeded from the form.
+        $("c-editor").onclick = async () => {
+          const idea = await createIdeaFromForm("editing"); if (!idea) return;
+          const primary = goalById(selectedGoals()[0] || "help");
+          idea.content = { hook: idea.title, caption: "", cta: primary.cta, body: "", mediaUrl: "", mediaType: "", notes: "", versions: [] };
+          await api("PATCH", "/idea/" + idea.id, { content: idea.content });
+          openEditor(idea);
         };
       }
       // ===== EDITING PLANNER (deterministic — style/hook/pacing/transitions/etc from formula+goal+platform) =====
