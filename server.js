@@ -2177,7 +2177,7 @@ api.get("/uni/stats", uniAuth.requireUni, (req, res) => {
 
 const adminLoginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: Number(process.env.UNIVERSO_LOGIN_RATE_MAX) || 10, // env-overridable so the test suite's many logins aren't throttled; prod default 10
   message: "Too many attempts. Try again in a few minutes.",
 });
 
@@ -2460,7 +2460,10 @@ const str = (v, n) => (typeof v === "string" ? v.slice(0, n) : "");
 // Real role drives the whole UI (Founder = full admin, Marketer = marketing-only).
 mkt.get("/me", (req, res) => res.json({ email: req.admin.email, role: (/** @type {any} */ (req))._adminRole === "marketing" ? "marketer" : "founder" }));
 mkt.get("/data", (_req, res) => res.json(readMkt()));
+// Founder = full-admin session; Marketer = marketing-only. Drives permissions.
+const mktFounder = (req) => (/** @type {any} */ (req))._adminRole !== "marketing";
 mkt.patch("/brain", (req, res) => {
+  if (!mktFounder(req)) return res.status(403).json({ error: "Only a founder can change brand strategy." });
   const b = req.body || {};
   const m = readMkt();
   for (const k of Object.keys(b)) if (typeof b[k] === "string") m.brain[k] = b[k].slice(0, 4000);
@@ -2561,6 +2564,14 @@ mkt.patch("/idea/:id", (req, res) => {
   const m = readMkt();
   const idea = m.ideas.find((i) => i.id === req.params.id);
   if (!idea) return res.status(404).json({ error: "Not found." });
+  // Permissions (Phase 2): approval is a founder decision, and a flagged item
+  // can't be scheduled/published by a marketer until a founder approves it.
+  const founder = mktFounder(req);
+  if (!founder) {
+    if (b.status === "approved") return res.status(403).json({ error: "Only a founder can approve content." });
+    if (b.approval === false && idea.approval) return res.status(403).json({ error: "Only a founder can grant approval." });
+    if (idea.approval && (b.status === "scheduled" || b.status === "posted")) return res.status(403).json({ error: "This is waiting for the founder's approval — it can't be scheduled or published yet." });
+  }
   if (b.title !== undefined) idea.title = str(b.title, 300);
   if (b.status !== undefined && MKT_STATUS.includes(b.status)) idea.status = b.status;
   if (b.owner !== undefined && MKT_OWNER.includes(b.owner)) idea.owner = b.owner;

@@ -230,12 +230,31 @@ test("image upload stores an asset, serves it back; bad type & traversal rejecte
 });
 
 test("status lifecycle accepts the new stages", async () => {
+  await loginAs(ADM.email, ADM.pw); // founder — "approved" is founder-gated
   const created = await req("POST", "/api/marketing/idea", { title: "Lifecycle idea" });
   const id = created.json.idea.id;
   for (const s of ["editing", "approved", "scheduled"]) {
     const r = await req("PATCH", "/api/marketing/idea/" + id, { status: s });
     assert.equal(r.json.idea.status, s, s + " accepted");
   }
+  await req("DELETE", "/api/marketing/idea/" + id);
+});
+
+test("permissions: marketer can't edit brand, self-approve, or publish a flagged item; founder can", async () => {
+  assert.equal(await loginAs(MKT.email, MKT.pw), 200); // marketer
+  assert.equal((await req("PATCH", "/api/marketing/brain", { perm_probe: "x" })).status, 403); // brand = founder only
+  const it = await req("POST", "/api/marketing/idea", { title: "perm item" });
+  const id = it.json.idea.id;
+  assert.equal((await req("PATCH", "/api/marketing/idea/" + id, { status: "approved" })).status, 403); // can't self-approve
+  assert.equal((await req("PATCH", "/api/marketing/idea/" + id, { approval: true })).status, 200); // can request approval
+  assert.equal((await req("PATCH", "/api/marketing/idea/" + id, { status: "posted" })).status, 403); // flagged → can't publish
+  assert.equal((await req("PATCH", "/api/marketing/idea/" + id, { approval: false })).status, 403); // can't grant own approval
+
+  assert.equal(await loginAs(ADM.email, ADM.pw), 200); // founder
+  const ok = await req("PATCH", "/api/marketing/idea/" + id, { status: "approved", approval: false });
+  assert.equal(ok.status, 200);
+  assert.equal(ok.json.idea.status, "approved");
+  assert.equal((await req("PATCH", "/api/marketing/brain", { perm_probe: "founder-set" })).status, 200); // founder edits brand
   await req("DELETE", "/api/marketing/idea/" + id);
 });
 
@@ -276,6 +295,7 @@ test("two independent adds both persist (granular writes, no whole-blob overwrit
 });
 
 test("brand-brain patches merge field-by-field (a second patch keeps the first)", async () => {
+  await loginAs(ADM.email, ADM.pw); // brand editing is founder-only
   await req("PATCH", "/api/marketing/brain", { mission: "MISSION-X" });
   await req("PATCH", "/api/marketing/brain", { tone: "TONE-Y" });
   const data = await req("GET", "/api/marketing/data");

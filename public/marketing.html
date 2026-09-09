@@ -805,6 +805,16 @@ Keep Universo's honest, warm voice; never invent numbers, traction or results. R
       const OWNERS = ["Marketer", "Founder"];
       const STATUSES = ["idea", "drafting", "editing", "review", "approved", "scheduled", "posted"];
       const STATUS_LABEL = { idea: "Idea", drafting: "Draft", editing: "Editing", review: "Review", approved: "Approved", scheduled: "Scheduled", posted: "Published" };
+      // Permissions: a marketer can't self-approve, and can't schedule/publish an item
+      // that's flagged for approval until a founder approves it.
+      function allowedStatuses(i) {
+        return STATUSES.filter((s) => {
+          if (isFounder()) return true;
+          if (s === "approved") return false;
+          if (i.approval && (s === "scheduled" || s === "posted")) return false;
+          return true;
+        });
+      }
 
       // ===== CALENDAR =====
       const CADENCE = { 1: "Educational / student problem", 2: "Trend — this week's news", 3: "Product / Universo value", 4: "Student story / relatable", 5: "Opinion / hot take", 6: "Community / repurpose", 0: "Plan & rest" };
@@ -1248,6 +1258,7 @@ ${hashtagsFor(topic)}${src}`;
       }
       // ===== HOME — role-aware landing (Founder = decisions; Marketer = execution) =====
       const homeRow = (i) => `<div class="head-item" style="display:flex;gap:8px;align-items:center"><span style="flex:1;min-width:0"><b>${esc(i.title)}</b> <span class="pill">${esc(STATUS_LABEL[i.status || "idea"] || i.status)}</span></span><button class="link-mini" data-open="${i.id}">Open →</button></div>`;
+      const reviewRow = (i) => `<div class="head-item" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="flex:1;min-width:120px"><b>${esc(i.title)}</b>${i.approval ? ` <span class="pill soon">⚑</span>` : ""}</span><button class="btn sm gold" data-approve="${i.id}">Approve</button><button class="link-mini" data-open="${i.id}">Open →</button></div>`;
       function panelHome() {
         const total = DATA.ideas.length, posted = DATA.ideas.filter((i) => i.status === "posted"), active = DATA.ideas.filter((i) => i.status !== "posted");
         const rows = (list, empty) => list.length ? list.slice(0, 6).map(homeRow).join("") : `<div class="muted">${empty}</div>`;
@@ -1258,7 +1269,7 @@ ${hashtagsFor(topic)}${src}`;
           const own = { Founder: active.filter((i) => i.owner === "Founder").length, Marketer: active.filter((i) => (i.owner || "Marketer") === "Marketer").length };
           const goals = firstSentence(brain("biz_goals")) || firstSentence(brain("mission"));
           return `<section class="panel" id="tab-home"><h1>Marketing — founder view</h1><p class="sub">What's happening, and what needs your decision.</p>
-            <div class="card" style="border-color:var(--teal)"><h2 style="margin-top:0">🔑 Needs your decision <span class="pill">${review.length}</span></h2>${rows(review, "Nothing waiting on you right now.")}</div>
+            <div class="card" style="border-color:var(--teal)"><h2 style="margin-top:0">🔑 Needs your decision <span class="pill">${review.length}</span></h2>${review.length ? review.slice(0, 8).map(reviewRow).join("") : '<div class="muted">Nothing waiting on you right now.</div>'}</div>
             <div class="card"><h2 style="margin-top:0">📊 Marketing overview</h2><div class="perf-grid"><div><b>${posted.length}</b><span class="muted">published</span></div><div><b>${active.length}</b><span class="muted">in progress</span></div><div><b>${total}</b><span class="muted">total items</span></div></div>${top ? `<p class="muted" style="margin:10px 0 0">Top performer: <b style="color:var(--ink)">${esc(top.i.title)}</b> — <span class="rating ${esc(top.r.rating)}">${esc(top.r.rating)}</span> on ${esc(top.r.platform)}</p>` : ""}<p style="margin:8px 0 0"><button class="link-mini" data-go="analytics">See full analytics →</button></p></div>
             <div class="card"><h2 style="margin-top:0">🎯 Current goals</h2><p class="muted" style="margin-top:0">${esc(goals || "Set your goals in Brand.")}</p><p><button class="link-mini" data-go="brain">Open Brand →</button></p></div>
             <div class="card"><h2 style="margin-top:0">👥 Team</h2><div class="perf-grid"><div><b>${own.Founder}</b><span class="muted">Founder owns</span></div><div><b>${own.Marketer}</b><span class="muted">Marketer owns</span></div></div></div></section>`;
@@ -1275,6 +1286,7 @@ ${hashtagsFor(topic)}${src}`;
       function wireHome() {
         document.querySelectorAll("#tab-home [data-go]").forEach((b) => b.onclick = () => { TAB = b.dataset.go; render(); });
         document.querySelectorAll("#tab-home [data-open]").forEach((x) => x.onclick = () => { const idea = DATA.ideas.find((i) => i.id === x.dataset.open); if (idea) openEditor(idea); });
+        document.querySelectorAll("#tab-home [data-approve]").forEach((x) => x.onclick = async () => { const idea = DATA.ideas.find((i) => i.id === x.dataset.approve); if (!idea) return; idea.status = "approved"; idea.approval = false; await api("PATCH", "/idea/" + idea.id, { status: "approved", approval: false }); render(); });
         document.querySelectorAll("#tab-home [data-trend]").forEach((x) => x.onclick = async () => {
           const items = (RADAR && RADAR.items || []).filter((y) => y.kind === "news" || y.kind === "trend"); const t = items[+x.dataset.trend]; if (!t) return;
           const r = await api("POST", "/idea", { title: t.title, topic: topicOf(t.title), source: t.source || "", status: "editing" });
@@ -1309,7 +1321,7 @@ ${hashtagsFor(topic)}${src}`;
           ...(i.platforms || []).map((p) => `<span class="pill">${esc((PLAT_EDIT[p] && PLAT_EDIT[p].label) || p)}</span>`),
         ].join("");
         return `<div class="idea-item" data-id="${i.id}"><div class="top"><b>${esc(i.title)}</b>
-          <select data-act="status" title="Status">${STATUSES.map((s) => `<option value="${s}"${(i.status || "idea") === s ? " selected" : ""}>${STATUS_LABEL[s] || s}</option>`).join("")}</select>
+          <select data-act="status" title="Status">${(() => { const cur = i.status || "idea"; const allow = allowedStatuses(i); if (!allow.includes(cur)) allow.unshift(cur); return allow.map((s) => `<option value="${s}"${cur === s ? " selected" : ""}>${STATUS_LABEL[s] || s}</option>`).join(""); })()}</select>
           <button class="chip-btn" data-act="editor" title="Open the content editor — write, edit & produce the actual post">✏️ Open Editor</button>
           <button class="chip-btn" data-act="results" title="${hasResults ? "Publish / results" : "Mark published"}">${hasResults ? "📊 Results" : "📢 Mark published"}</button>
           ${isWinner(i) ? `<button class="chip-btn" data-act="repurpose" title="Make a variant of this winner">♻️ Repurpose</button>` : ""}
@@ -1317,7 +1329,7 @@ ${hashtagsFor(topic)}${src}`;
           <div class="top" style="margin-top:8px">
             <select data-act="owner" title="Owner" style="flex:0 0 auto">${OWNERS.map((o) => `<option${(i.owner || "Marketer") === o ? " selected" : ""}>${o}</option>`).join("")}</select>
             <label style="flex:0 0 auto;margin:0;display:flex;align-items:center;gap:6px;text-transform:none;font-size:.8rem;color:var(--soft)">Due <input type="date" data-act="due" value="${esc(i.due || "")}" style="min-height:40px;width:auto" /></label>
-            <label style="flex:0 0 auto;margin:0;display:flex;align-items:center;gap:6px;text-transform:none;font-size:.8rem;color:var(--soft)"><input type="checkbox" data-act="approval"${i.approval ? " checked" : ""} style="width:auto;min-height:auto" /> ⚑ Needs approval</label>
+            <label style="flex:0 0 auto;margin:0;display:flex;align-items:center;gap:6px;text-transform:none;font-size:.8rem;color:var(--soft)"><input type="checkbox" data-act="approval"${i.approval ? " checked" : ""}${(!isFounder() && i.approval) ? " disabled" : ""} style="width:auto;min-height:auto" /> ⚑ Needs approval</label>
             ${fname ? `<span class="pill">${esc(fname)}</span>` : ""}${tags}</div>
           <div style="margin-top:8px"><label>Final draft (paste the AI's output here)</label><textarea data-act="draft" rows="2" placeholder="…">${esc(i.draft || "")}</textarea></div>
           ${postedSummary(i)}</div>`;
@@ -1388,8 +1400,10 @@ ${hashtagsFor(topic)}${src}`;
       ];
       const BRAIN_BIG = ["product", "pains", "faqs", "biz_goals", "goal_audience"];
       function panelBrain() {
-        return `<section class="panel" id="tab-brain"><h1>Brand Brain</h1><p class="sub">Universo's messaging + goals — written once, injected into every prompt so you never re-explain. Blank = the seeded default. <b>Never invent traction, users, revenue, partnerships or numbers</b> — only real, verifiable facts.</p>
-          ${BRAIN_GROUPS.map((gr) => `<h2>${esc(gr.title)}</h2>${gr.note ? `<p class="muted" style="margin:-4px 0 8px">${esc(gr.note)}</p>` : ""}${gr.fields.map(([k, l]) => `<div class="card"><label>${esc(l)}</label><textarea data-brain="${k}" rows="${BRAIN_BIG.includes(k) ? 5 : 3}" placeholder="${esc(l)}">${esc(brain(k))}</textarea></div>`).join("")}`).join("")}</section>`;
+        const ro = !isFounder(); // marketers can read the brand, only a founder edits it
+        return `<section class="panel" id="tab-brain"><h1>Brand</h1><p class="sub">Universo's messaging + goals — injected into every prompt so you never re-explain. <b>Never invent traction, users, revenue, partnerships or numbers</b> — only real, verifiable facts.</p>
+          ${ro ? `<div class="card muted">👀 View-only — the founder sets brand strategy. You'll see it reflected in every brief and script.</div>` : ""}
+          ${BRAIN_GROUPS.map((gr) => `<h2>${esc(gr.title)}</h2>${gr.note ? `<p class="muted" style="margin:-4px 0 8px">${esc(gr.note)}</p>` : ""}${gr.fields.map(([k, l]) => `<div class="card"><label>${esc(l)}</label><textarea data-brain="${k}" rows="${BRAIN_BIG.includes(k) ? 5 : 3}" placeholder="${esc(l)}"${ro ? " readonly" : ""}>${esc(brain(k))}</textarea></div>`).join("")}`).join("")}</section>`;
       }
       function wireBrain() {
         document.querySelectorAll("[data-brain]").forEach((t) => { let tm; t.oninput = () => { DATA.brain[t.dataset.brain] = t.value; clearTimeout(tm); tm = setTimeout(() => api("PATCH", "/brain", { [t.dataset.brain]: t.value }), 600); }; });
