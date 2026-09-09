@@ -485,7 +485,7 @@
           <div class="opp-meta"><span><b>Audience:</b> ${esc(o.audience)}</span><span><b>Format:</b> ${esc(o.format)}</span></div>
           <div class="opp-hooks"><b>Hooks:</b><ul>${o.hooks.map((h) => `<li>${esc(h)}</li>`).join("")}</ul></div>
           ${o.trend ? `<div class="opp-src"><b>Source:</b> ${o.link ? `<a href="${esc(o.link)}" target="_blank" rel="noopener">${esc(o.trend)} ↗</a>` : esc(o.trend)}${o.source ? " · " + esc(o.source) : ""}</div>` : ""}
-          <div class="opp-actions"><button class="btn sm gold" data-opp-produce="${key}">🎬 Produce</button><button class="btn sm" data-opp-add="${key}">＋ Add to Ideas</button><button class="btn sm alt" data-opp-create="${key}">Create now →</button><button class="btn sm alt" data-opp-prompt="${key}">Copy prompt</button></div>
+          <div class="opp-actions"><button class="btn sm gold" data-opp-editor="${key}">✏️ Open Editor</button><button class="btn sm" data-opp-produce="${key}">🎬 Produce</button><button class="btn sm alt" data-opp-add="${key}">＋ Add to Board</button><button class="btn sm alt" data-opp-prompt="${key}">Copy prompt</button></div>
           <pre class="opp-prompt" id="opp-pre-${key}" hidden></pre></div>`;
       }
       let OPPS = []; // current opportunity objects, indexed by key
@@ -548,6 +548,12 @@
       }
       function wireOppButtons() {
         document.querySelectorAll("[data-opp-produce]").forEach((b) => b.onclick = () => { const o = OPPS[+b.dataset.oppProduce]; if (o) openProduce(o); });
+        // Turn a trend/opportunity straight into an editable draft in the Content Editor.
+        document.querySelectorAll("[data-opp-editor]").forEach((b) => b.onclick = async () => {
+          const o = OPPS[+b.dataset.oppEditor]; if (!o) return;
+          const r = await api("POST", "/idea", { title: o.angle, formula: o.formula, topic: o.topic || "", platforms: o.platform ? [o.platform] : [], source: (o.trend || "") + (o.link ? " — " + o.link : ""), rationale: o.why, status: "editing" });
+          if (r && r.idea) { r.idea.content = { hook: o.angle, caption: "", cta: CTAS[o.cta] || CTAS.Discover, body: "", mediaUrl: "", mediaType: "", notes: o.why || "", versions: [] }; await api("PATCH", "/idea/" + r.idea.id, { content: r.idea.content }); DATA.ideas.unshift(r.idea); openEditor(r.idea); }
+        });
         document.querySelectorAll("[data-opp-add]").forEach((b) => b.onclick = async () => {
           const o = OPPS[+b.dataset.oppAdd]; if (!o) return;
           const r = await api("POST", "/idea", { title: o.angle, formula: o.formula, source: (o.trend || "") + (o.link ? " — " + o.link : ""), rationale: o.why, priority: o.urgency === "This week" ? "high" : "med" });
