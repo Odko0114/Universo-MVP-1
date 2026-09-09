@@ -690,7 +690,7 @@ Keep Universo's honest, warm voice; never invent numbers, traction or results. R
           <div class="field"><label>Caption / post text</label><textarea id="ed-caption" rows="6" placeholder="The actual post…">${esc(c.caption || "")}</textarea></div>
           <div class="field"><label>CTA</label><input id="ed-cta" value="${esc(c.cta || (g ? g.cta : ""))}" placeholder="Call to action" /></div>
           <div class="prod-sec"><div class="prod-h">🎨 Creative / media</div>
-            <div class="chips" style="margin-bottom:8px"><label class="btn sm alt" style="cursor:pointer;text-transform:none;margin:0">⬆️ Upload image<input type="file" id="ed-file" accept="image/*" hidden></label><button class="btn sm gold" id="ed-editimg">🖼️ Edit image (add text)</button></div>
+            <div class="chips" style="margin-bottom:8px"><button class="btn sm gold" id="ed-newcard">🎨 New text card</button><label class="btn sm alt" style="cursor:pointer;text-transform:none;margin:0">⬆️ Upload image<input type="file" id="ed-file" accept="image/*" hidden></label><button class="btn sm alt" id="ed-editimg">🖼️ Edit image</button></div>
             <div id="ed-preview"></div>
             <div class="field"><label>…or paste an image / video link</label><input id="ed-media" value="${esc(c.mediaUrl || "")}" placeholder="https://…" /></div>
             <div class="chips">${VIDEO_TOOLS.map((t) => `<a class="chip-btn" href="${esc(t.url)}" target="_blank" rel="noopener">${esc(t.name)} ↗</a>`).join("")}</div>
@@ -703,6 +703,7 @@ Keep Universo's honest, warm voice; never invent numbers, traction or results. R
         renderPreview(); $("ed-media").oninput = renderPreview;
         $("ed-file").onchange = async (e) => { const f = e.target.files[0]; if (!f) return; if (!/^image\//.test(f.type)) { alert("Pick an image file."); return; } const u = await uploadImage(f); if (u) { $("ed-media").value = u; renderPreview(); } else alert("Upload failed."); };
         $("ed-editimg").onclick = () => openImgEditor($("ed-media").value.trim(), (u) => { $("ed-media").value = u; renderPreview(); });
+        $("ed-newcard").onclick = () => openImgEditor("", (u) => { $("ed-media").value = u; renderPreview(); }, { blank: true });
         const setEng = (e) => { idea.content = editorContent(); try { localStorage.setItem("mkt-ai-engine", e); } catch {} openEditor(idea); };
         $("ed-eng-claude").onclick = () => setEng("claude"); $("ed-eng-gpt").onclick = () => setEng("chatgpt");
         document.querySelectorAll("#editor-body [data-ai]").forEach((b) => b.onclick = () => edAiOpen(AI_ACTIONS[+b.dataset.ai][1]));
@@ -723,37 +724,49 @@ Keep Universo's honest, warm voice; never invent numbers, traction or results. R
       }
       // Real in-app image editor: draw the image + a text overlay on a canvas and
       // export a finished PNG back into the asset store. No third party.
-      function openImgEditor(url, onDone) {
-        if (!url) { alert("Upload or paste an image first."); return; }
-        $("imgedit-body").innerHTML = `<h2 style="margin:0 0 8px">🖼️ Edit image</h2>
+      const CARD_SIZES = { Square: [1080, 1080], Portrait: [1080, 1350], Story: [1080, 1920] };
+      const CARD_BGS = [{ k: "Navy", css: "#0b1f3a", dark: 1 }, { k: "Teal", css: "#0d9488", dark: 1 }, { k: "Gold", css: "#e9b949" }, { k: "Black", css: "#10233f", dark: 1 }, { k: "White", css: "#ffffff" }, { k: "Navy→Teal", grad: ["#0b1f3a", "#46cdb6"], dark: 1 }, { k: "Teal→Gold", grad: ["#0d9488", "#e9b949"] }];
+      function openImgEditor(url, onDone, opts) {
+        opts = opts || {}; const blank = opts.blank || !url;
+        const ff = getComputedStyle(document.body).fontFamily; let bg = CARD_BGS[0];
+        $("imgedit-body").innerHTML = `<h2 style="margin:0 0 8px">${blank ? "🎨 New text card" : "🖼️ Edit image"}</h2>
           <div style="text-align:center;background:var(--surface-2);border-radius:10px;padding:8px;overflow:auto"><canvas id="ie-canvas" style="max-width:100%;height:auto"></canvas></div>
-          <div class="field" style="margin-top:8px"><label>Overlay text</label><textarea id="ie-text" rows="2" placeholder="Big on-screen text / hook"></textarea></div>
+          ${blank ? `<div class="field" style="margin-top:8px"><label>Size</label><div class="chips" id="ie-sizes">${Object.keys(CARD_SIZES).map((k, i) => `<button type="button" class="chip-btn${i === 0 ? " on" : ""}" data-size="${k}">${k}</button>`).join("")}</div></div>
+          <div class="field"><label>Background</label><div class="chips" id="ie-bgs">${CARD_BGS.map((b, i) => `<button type="button" class="chip-btn${i === 0 ? " on" : ""}" data-bg="${i}">${esc(b.k)}</button>`).join("")}<input type="color" id="ie-bgcustom" value="#0b1f3a" style="min-height:36px;width:44px;padding:2px" title="Custom colour"></div></div>` : ""}
+          <div class="field" style="margin-top:8px"><label>Text</label><textarea id="ie-text" rows="2" placeholder="Big on-screen text / hook"></textarea></div>
           <div class="row">
-            <div class="field"><label>Position</label><select id="ie-pos"><option value="top">Top</option><option value="middle">Middle</option><option value="bottom" selected>Bottom</option></select></div>
-            <div class="field"><label>Text size</label><input type="range" id="ie-size" min="24" max="120" value="64" style="min-height:40px"></div>
-            <div class="field" style="flex:0 0 90px"><label>Color</label><input type="color" id="ie-color" value="#ffffff" style="min-height:40px;padding:2px"></div>
-            <div class="field" style="flex:0 0 auto"><label style="text-transform:none">Shade <input type="checkbox" id="ie-bar" checked style="width:auto;min-height:auto"></label></div>
+            <div class="field"><label>Position</label><select id="ie-pos"><option value="top">Top</option><option value="middle"${blank ? " selected" : ""}>Middle</option><option value="bottom"${blank ? "" : " selected"}>Bottom</option></select></div>
+            <div class="field"><label>Text size</label><input type="range" id="ie-size" min="24" max="150" value="${blank ? 100 : 64}" style="min-height:40px"></div>
+            <div class="field" style="flex:0 0 90px"><label>Text colour</label><input type="color" id="ie-color" value="#ffffff" style="min-height:40px;padding:2px"></div>
+            <div class="field" style="flex:0 0 auto"><label style="text-transform:none">Shade <input type="checkbox" id="ie-bar"${blank ? "" : " checked"} style="width:auto;min-height:auto"></label></div>
           </div>
           <div class="opp-actions" style="margin-top:8px"><button class="btn sm gold" id="ie-export">Export &amp; use</button><button class="btn sm alt" id="ie-cancel">Cancel</button></div>
           <div class="muted" id="ie-err" style="margin-top:6px"></div>`;
         $("imgedit-modal").hidden = false;
-        const cv = $("ie-canvas"), ctx = cv.getContext("2d"); const img = new Image(); img.crossOrigin = "anonymous"; let ready = false;
+        const cv = $("ie-canvas"), ctx = cv.getContext("2d"); const img = blank ? null : new Image(); let ready = blank;
         const wrap = (text, maxW) => { const words = text.split(/\s+/), lines = []; let line = ""; for (const w of words) { const t = line ? line + " " + w : w; if (ctx.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t; } if (line) lines.push(line); return lines; };
+        const fillBg = () => { if (bg.grad) { const g = ctx.createLinearGradient(0, 0, cv.width, cv.height); g.addColorStop(0, bg.grad[0]); g.addColorStop(1, bg.grad[1]); ctx.fillStyle = g; } else ctx.fillStyle = bg.css; ctx.fillRect(0, 0, cv.width, cv.height); };
         const draw = () => {
-          if (!ready) return; ctx.clearRect(0, 0, cv.width, cv.height); ctx.drawImage(img, 0, 0, cv.width, cv.height);
+          if (!ready) return;
+          if (blank) fillBg(); else { ctx.clearRect(0, 0, cv.width, cv.height); ctx.drawImage(img, 0, 0, cv.width, cv.height); }
           const text = $("ie-text").value.trim(); if (!text) return;
-          const size = +$("ie-size").value * (cv.width / 1080); ctx.font = `800 ${size}px ${getComputedStyle(document.body).fontFamily}`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-          const lines = wrap(text, cv.width * 0.9), lh = size * 1.2, blockH = lines.length * lh;
+          ctx.textAlign = "center"; ctx.textBaseline = "middle";
+          let size = +$("ie-size").value * (cv.width / 1080), lines, lh, blockH;
+          for (let guard = 0; guard < 40; guard++) { ctx.font = `800 ${size}px ${ff}`; lines = wrap(text, cv.width * 0.86); lh = size * 1.2; blockH = lines.length * lh; if (blockH <= cv.height * 0.86 || size <= 18) break; size *= 0.92; } // auto-fit — no manual fiddling
           const pos = $("ie-pos").value, cy = pos === "top" ? blockH / 2 + cv.height * 0.06 : pos === "middle" ? cv.height / 2 : cv.height - blockH / 2 - cv.height * 0.06;
           if ($("ie-bar").checked) { ctx.fillStyle = "rgba(0,0,0,0.45)"; ctx.fillRect(0, cy - blockH / 2 - lh * 0.3, cv.width, blockH + lh * 0.6); }
-          ctx.fillStyle = $("ie-color").value; ctx.lineWidth = Math.max(2, size * 0.08); ctx.strokeStyle = "rgba(0,0,0,0.55)";
-          lines.forEach((ln, i) => { const y = cy - blockH / 2 + lh / 2 + i * lh; ctx.strokeText(ln, cv.width / 2, y); ctx.fillText(ln, cv.width / 2, y); });
+          ctx.fillStyle = $("ie-color").value; ctx.lineWidth = Math.max(2, size * 0.07); ctx.strokeStyle = "rgba(0,0,0,0.4)";
+          lines.forEach((ln, i) => { const y = cy - blockH / 2 + lh / 2 + i * lh; if (!blank || $("ie-bar").checked) ctx.strokeText(ln, cv.width / 2, y); ctx.fillText(ln, cv.width / 2, y); });
         };
-        img.onload = () => { const max = 1080; const sc = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight)); cv.width = Math.round(img.naturalWidth * sc) || 640; cv.height = Math.round(img.naturalHeight * sc) || 640; ready = true; draw(); };
-        img.onerror = () => { $("ie-err").textContent = "Couldn't load that image."; };
-        img.src = url;
+        const setSize = (k) => { const [w, h] = CARD_SIZES[k], sc = Math.min(1, 1080 / Math.max(w, h)); cv.width = Math.round(w * sc); cv.height = Math.round(h * sc); draw(); };
+        if (blank) { setSize("Square"); } else { img.crossOrigin = "anonymous"; img.onload = () => { const sc = Math.min(1, 1080 / Math.max(img.naturalWidth, img.naturalHeight)); cv.width = Math.round(img.naturalWidth * sc) || 640; cv.height = Math.round(img.naturalHeight * sc) || 640; ready = true; draw(); }; img.onerror = () => { $("ie-err").textContent = "Couldn't load that image."; }; img.src = url; }
         ["ie-text", "ie-pos", "ie-size", "ie-color", "ie-bar"].forEach((id) => { const e = $(id); e.oninput = draw; e.onchange = draw; });
-        const hook = ($("ed-hook") && $("ed-hook").value) || ""; if (hook) $("ie-text").value = hook.slice(0, 120);
+        if (blank) {
+          document.querySelectorAll("#ie-sizes [data-size]").forEach((b) => b.onclick = () => { document.querySelectorAll("#ie-sizes .chip-btn").forEach((x) => x.classList.remove("on")); b.classList.add("on"); setSize(b.dataset.size); });
+          document.querySelectorAll("#ie-bgs [data-bg]").forEach((b) => b.onclick = () => { document.querySelectorAll("#ie-bgs .chip-btn").forEach((x) => x.classList.remove("on")); b.classList.add("on"); bg = CARD_BGS[+b.dataset.bg]; $("ie-color").value = bg.dark ? "#ffffff" : "#0b1f3a"; draw(); });
+          $("ie-bgcustom").oninput = () => { document.querySelectorAll("#ie-bgs .chip-btn").forEach((x) => x.classList.remove("on")); bg = { css: $("ie-bgcustom").value }; draw(); };
+        }
+        const hook = ($("ed-hook") && $("ed-hook").value) || ""; if (hook) $("ie-text").value = hook.slice(0, 140);
         $("ie-cancel").onclick = () => { $("imgedit-modal").hidden = true; };
         $("ie-export").onclick = () => { try { cv.toBlob(async (blob) => { if (!blob) { $("ie-err").textContent = "Export failed (image may be cross-origin — upload it first)."; return; } const u = await uploadImage(blob); if (u) { onDone(u); $("imgedit-modal").hidden = true; } else $("ie-err").textContent = "Upload failed."; }, "image/png"); } catch { $("ie-err").textContent = "This image can't be edited here (cross-origin). Upload it first."; } };
         draw();
