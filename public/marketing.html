@@ -151,6 +151,7 @@
         <button data-tab="home" class="on">🏠 Home</button>
         <button data-tab="ideas">📥 Content</button>
         <button data-tab="calendar">🗓️ Calendar</button>
+        <button data-tab="campaigns">🎯 Campaigns</button>
         <button data-tab="brain">✦ Brand</button>
         <button data-tab="analytics">📊 Analytics</button>
       </nav>
@@ -303,7 +304,8 @@
       const goalById = (id) => GOALS.find((g) => g.id === id) || GOALS[0];
 
       // ===== State =====
-      let DATA = { brain: {}, ideas: [] };
+      let DATA = { brain: {}, ideas: [], campaigns: [] };
+      const CONTENT_TYPES = ["Reel", "Post", "Carousel", "Story", "Image", "Video", "Ad", "Thread", "Email"];
       let FEED = null;
       const $ = (id) => document.getElementById(id);
       const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -340,7 +342,7 @@
       async function start() {
         $("gate").style.display = "none"; $("tabs").hidden = false; $("app").hidden = false;
         const d = await (await fetch("/api/marketing/data")).json().catch(() => ({}));
-        DATA = { brain: d.brain || {}, ideas: Array.isArray(d.ideas) ? d.ideas : [] };
+        DATA = { brain: d.brain || {}, ideas: Array.isArray(d.ideas) ? d.ideas : [], campaigns: Array.isArray(d.campaigns) ? d.campaigns : [] };
         setSave("saved");
         try { const me = await (await fetch("/api/marketing/me")).json(); ROLE = me.role === "founder" ? "founder" : "marketer"; } catch { ROLE = "marketer"; }
         await loadInsights();
@@ -387,11 +389,11 @@
         return parts.join(" ");
       }
       function render() {
-        $("app").innerHTML = [panelHome(), panelCreate(), panelIdeas(), panelCalendar(), panelBrain(), panelLibrary(), panelAnalytics()].join("");
+        $("app").innerHTML = [panelHome(), panelCreate(), panelIdeas(), panelCalendar(), panelCampaigns(), panelBrain(), panelLibrary(), panelAnalytics()].join("");
         // Brand tab shows Brand Brain + the Library reference together.
         document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("on", p.id === "tab-" + TAB || (TAB === "brain" && p.id === "tab-library")));
         $("tabs").querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.tab === TAB)); // keep nav in sync with programmatic navigation
-        wireHome(); wireCreate(); wireIdeas(); wireCalendar(); wireBrain(); wireLibrary(); wireAnalytics();
+        wireHome(); wireCreate(); wireIdeas(); wireCalendar(); wireCampaigns(); wireBrain(); wireLibrary(); wireAnalytics();
       }
 
       // ===== RADAR / INTELLIGENCE =====
@@ -686,6 +688,11 @@ Keep Universo's honest, warm voice; never invent numbers, traction or results. R
             <label style="margin:0;font-size:.76rem;color:var(--soft)">Status <select id="ed-status" style="width:auto;min-height:36px">${STATUSES.map((s) => `<option value="${s}"${(idea.status || "idea") === s ? " selected" : ""}>${STATUS_LABEL[s]}</option>`).join("")}</select></label>
             ${g ? `<span class="pill teal">🎯 ${esc(g.label)}</span>` : ""}${platLabel ? `<span class="pill">${esc(platLabel)}</span>` : ""}${idea.topic ? `<span class="pill">${esc(idea.topic)}</span>` : ""}
           </div>
+          <div class="top" style="margin:0 0 10px;gap:8px;flex-wrap:wrap">
+            <label style="margin:0;font-size:.76rem;color:var(--soft)">Campaign <select id="ed-campaign" style="width:auto;min-height:36px"><option value="">—</option>${(DATA.campaigns || []).map((c) => `<option value="${c.id}"${idea.campaign === c.id ? " selected" : ""}>${esc(c.name)}</option>`).join("")}</select></label>
+            <label style="margin:0;font-size:.76rem;color:var(--soft)">Type <select id="ed-ctype" style="width:auto;min-height:36px"><option value="">—</option>${CONTENT_TYPES.map((t) => `<option${idea.contentType === t ? " selected" : ""}>${t}</option>`).join("")}</select></label>
+            <label style="margin:0;font-size:.76rem;color:var(--soft)">Reviewer <select id="ed-reviewer" style="width:auto;min-height:36px"><option value="">—</option>${OWNERS.map((o) => `<option${idea.reviewer === o ? " selected" : ""}>${o}</option>`).join("")}</select></label>
+          </div>
           <div class="prod-sec"><div class="prod-h">✨ AI actions — open a free AI with the prompt pre-filled</div>
             <div style="margin-bottom:6px;font-size:.8rem;color:var(--soft)">Engine: <button class="chip-btn${edEngine() === "claude" ? " on" : ""}" id="ed-eng-claude">Claude</button> <button class="chip-btn${edEngine() === "chatgpt" ? " on" : ""}" id="ed-eng-gpt">ChatGPT</button></div>
             <div class="chips">${AI_ACTIONS.map((a, idx) => `<button class="chip-btn" data-ai="${idx}">${esc(a[0])}</button>`).join("")}</div>
@@ -712,6 +719,9 @@ Keep Universo's honest, warm voice; never invent numbers, traction or results. R
         $("ed-eng-claude").onclick = () => setEng("claude"); $("ed-eng-gpt").onclick = () => setEng("chatgpt");
         document.querySelectorAll("#editor-body [data-ai]").forEach((b) => b.onclick = () => edAiOpen(AI_ACTIONS[+b.dataset.ai][1]));
         $("ed-status").onchange = (e) => { idea.status = e.target.value; api("PATCH", "/idea/" + idea.id, { status: e.target.value }); };
+        $("ed-campaign").onchange = (e) => { idea.campaign = e.target.value; api("PATCH", "/idea/" + idea.id, { campaign: e.target.value }); };
+        $("ed-ctype").onchange = (e) => { idea.contentType = e.target.value; api("PATCH", "/idea/" + idea.id, { contentType: e.target.value }); };
+        $("ed-reviewer").onchange = (e) => { idea.reviewer = e.target.value; api("PATCH", "/idea/" + idea.id, { reviewer: e.target.value }); };
         $("ed-save").onclick = async () => { await saveEditor(); $("ed-save").textContent = "Saved ✓"; setTimeout(() => ($("ed-save").textContent = "Save"), 1200); };
         $("ed-publish").onclick = async () => { await saveEditor(); $("editor-modal").hidden = true; openResults(idea); };
         const renderVersions = () => { const vs = (idea.content && idea.content.versions) || []; $("ed-versions").innerHTML = vs.length ? vs.map((v, idx) => `<div class="head-item" style="display:flex;gap:8px;align-items:center"><span class="muted" style="flex:1;min-width:0">${esc(v.at || "v" + (vs.length - idx))} — ${esc((v.caption || v.hook || "").slice(0, 40))}</span><button class="link-mini" data-restore="${idx}">Restore</button></div>`).join("") : `<div class="muted">No saved versions yet.</div>`; document.querySelectorAll("#ed-versions [data-restore]").forEach((b) => b.onclick = () => { const v = vs[+b.dataset.restore]; $("ed-hook").value = v.hook || ""; $("ed-caption").value = v.caption || ""; $("ed-cta").value = v.cta || ""; }); };
@@ -1297,6 +1307,26 @@ ${hashtagsFor(topic)}${src}`;
         return `<section class="panel" id="tab-analytics"><h1>Analytics</h1><p class="sub">What worked, and what to make next — from your recorded results only. No AI, no scraping.</p>${perfSection() || '<div class="card muted">No performance data yet. Publish content and record how it did (a rating + any numbers) to see what works.</div>'}</section>`;
       }
       function wireAnalytics() {}
+      // ===== CAMPAIGNS — group the same content around an initiative (no parallel list) =====
+      function panelCampaigns() {
+        const cs = DATA.campaigns || [], founder = isFounder();
+        const campCard = (c) => {
+          const items = DATA.ideas.filter((i) => i.campaign === c.id), pub = items.filter((i) => i.status === "posted");
+          const gl = c.goal ? (GOALS.find((g) => g.id === c.goal) || {}).label : "";
+          return `<div class="card"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><h2 style="margin:0;flex:1;min-width:120px">${esc(c.name)}</h2>${gl ? `<span class="pill teal">🎯 ${esc(gl)}</span>` : ""}${founder ? `<button class="link-mini" data-delc="${c.id}">Delete</button>` : ""}</div>
+            ${c.note ? `<p class="muted" style="margin:6px 0">${esc(c.note)}</p>` : ""}
+            <div class="perf-grid" style="margin:6px 0"><div><b>${items.length}</b><span class="muted">items</span></div><div><b>${pub.length}</b><span class="muted">published</span></div></div>
+            ${items.length ? items.slice(0, 8).map(homeRow).join("") : '<div class="muted">No content yet — assign items to this campaign in their editor.</div>'}</div>`;
+        };
+        return `<section class="panel" id="tab-campaigns"><h1>Campaigns</h1><p class="sub">Group content around a bigger initiative. Assign a content item to a campaign in its editor; it still lives in one place.</p>
+          ${founder ? `<div class="card"><label>New campaign</label><div class="row"><input id="cmp-name" placeholder="Campaign name (e.g. Scholarship season)" /><select id="cmp-goal" style="flex:0 0 auto"><option value="">Goal (optional)</option>${GOALS.map((g) => `<option value="${g.id}">${esc(g.label)}</option>`).join("")}</select><button class="btn" id="cmp-add" style="flex:0 0 auto">Add</button></div></div>` : `<div class="card muted">The founder creates campaigns; you can assign your content to them in the editor.</div>`}
+          ${cs.length ? cs.map(campCard).join("") : '<div class="card muted">No campaigns yet.</div>'}</section>`;
+      }
+      function wireCampaigns() {
+        const add = $("cmp-add"); if (add) add.onclick = async () => { const name = ($("cmp-name").value || "").trim(); if (!name) return; const r = await api("POST", "/campaign", { name, goal: $("cmp-goal").value }); if (r && r.campaign) { DATA.campaigns.unshift(r.campaign); render(); } };
+        document.querySelectorAll("#tab-campaigns [data-delc]").forEach((b) => b.onclick = async () => { if (!confirm("Delete this campaign? The content stays — it's just unassigned.")) return; await api("DELETE", "/campaign/" + b.dataset.delc); DATA.campaigns = DATA.campaigns.filter((c) => c.id !== b.dataset.delc); DATA.ideas.forEach((i) => { if (i.campaign === b.dataset.delc) i.campaign = ""; }); render(); });
+        document.querySelectorAll("#tab-campaigns [data-open]").forEach((x) => x.onclick = () => { const idea = DATA.ideas.find((i) => i.id === x.dataset.open); if (idea) openEditor(idea); });
+      }
       function panelIdeas() {
         const approvalOn = boardApprovalOnly();
         return `<section class="panel" id="tab-ideas"><h1>Content</h1><p class="sub">Everything you're making — from idea to published. Open a card to write, edit and produce it; drag it along by changing its status.</p>
@@ -1314,8 +1344,10 @@ ${hashtagsFor(topic)}${src}`;
         const fname = (i.formula ? getFormula(i.formula) : {}).name;
         const hasResults = i.results && i.results.length;
         const gLabel = i.goal ? (GOALS.find((g) => g.id === i.goal) || {}).label : "";
+        const campName = i.campaign ? (DATA.campaigns.find((c) => c.id === i.campaign) || {}).name : "";
         const tags = [
           i.approval ? `<span class="pill soon">⚑ Needs approval</span>` : "",
+          campName ? `<span class="pill teal">🎯 ${esc(campName)}</span>` : "",
           i.topic ? `<span class="pill">${esc(i.topic)}</span>` : "",
           gLabel ? `<span class="pill teal">🎯 ${esc(gLabel)}</span>` : "",
           ...(i.platforms || []).map((p) => `<span class="pill">${esc((PLAT_EDIT[p] && PLAT_EDIT[p].label) || p)}</span>`),

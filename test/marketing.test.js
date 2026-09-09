@@ -258,6 +258,25 @@ test("permissions: marketer can't edit brand, self-approve, or publish a flagged
   await req("DELETE", "/api/marketing/idea/" + id);
 });
 
+test("campaigns: founder-only create/delete; assign an item; delete unassigns (keeps content)", async () => {
+  assert.equal(await loginAs(MKT.email, MKT.pw), 200);
+  assert.equal((await req("POST", "/api/marketing/campaign", { name: "Scholarship season" })).status, 403); // marketer can't create
+  assert.equal(await loginAs(ADM.email, ADM.pw), 200);
+  const c = await req("POST", "/api/marketing/campaign", { name: "Scholarship season", goal: "signups" });
+  assert.equal(c.status, 200); const cid = c.json.campaign.id;
+  const it = await req("POST", "/api/marketing/idea", { title: "camp item", campaign: cid });
+  assert.equal(it.json.idea.campaign, cid); // assignment persists on the item
+  assert.ok((await req("GET", "/api/marketing/data")).json.campaigns.some((x) => x.id === cid)); // registry in /data
+  assert.equal(await loginAs(MKT.email, MKT.pw), 200);
+  assert.equal((await req("DELETE", "/api/marketing/campaign/" + cid)).status, 403); // marketer can't delete
+  assert.equal(await loginAs(ADM.email, ADM.pw), 200);
+  assert.equal((await req("DELETE", "/api/marketing/campaign/" + cid)).status, 200);
+  const d2 = await req("GET", "/api/marketing/data");
+  assert.ok(!d2.json.campaigns.some((x) => x.id === cid)); // campaign gone
+  assert.equal(d2.json.ideas.find((i) => i.id === it.json.idea.id).campaign, ""); // item kept, unassigned
+  await req("DELETE", "/api/marketing/idea/" + it.json.idea.id);
+});
+
 test("approval flag defaults off and toggles", async () => {
   const created = await req("POST", "/api/marketing/idea", { title: "Approval idea" });
   assert.equal(created.json.idea.approval, false); // off by default — no sign-off needed

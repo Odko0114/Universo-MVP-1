@@ -2454,6 +2454,7 @@ const readMkt = () => {
   const m = store.read("marketing") || {};
   if (!m.brain || typeof m.brain !== "object") m.brain = {};
   if (!Array.isArray(m.ideas)) m.ideas = [];
+  if (!Array.isArray(m.campaigns)) m.campaigns = [];
   return m;
 };
 const str = (v, n) => (typeof v === "string" ? v.slice(0, n) : "");
@@ -2547,6 +2548,9 @@ mkt.post("/idea", (req, res) => {
     goal: str(b.goal, 40),
     topic: str(b.topic, 60),
     platforms: sanitizePlatforms(b.platforms) || [],
+    campaign: str(b.campaign, 60),
+    reviewer: str(b.reviewer, 40),
+    contentType: str(b.contentType, 40),
     approval: b.approval === true,
     draft: "",
     results: [],
@@ -2583,6 +2587,9 @@ mkt.patch("/idea/:id", (req, res) => {
   if (b.platforms !== undefined) { const p = sanitizePlatforms(b.platforms); if (!p) return res.status(400).json({ error: "platforms must be an array." }); idea.platforms = p; }
   if (b.editing !== undefined) { const e = sanitizeEditing(b.editing); if (!e) return res.status(400).json({ error: "editing must be an object." }); idea.editing = e; }
   if (b.content !== undefined) { const c = sanitizeContent(b.content); if (!c) return res.status(400).json({ error: "content must be an object." }); idea.content = c; }
+  if (b.campaign !== undefined) idea.campaign = str(b.campaign, 60);
+  if (b.reviewer !== undefined) idea.reviewer = str(b.reviewer, 40);
+  if (b.contentType !== undefined) idea.contentType = str(b.contentType, 40);
   if (b.approval !== undefined) idea.approval = !!b.approval;
   if (b.draft !== undefined) idea.draft = str(b.draft, 8000);
   if (b.results !== undefined) {
@@ -2648,6 +2655,27 @@ mkt.get("/ideas-feed", (_req, res) => {
 mkt.get("/insights", (_req, res) => {
   try { res.json(recommend.analyze(readMkt().ideas)); }
   catch { res.status(500).json({ error: "Could not compute insights." }); }
+});
+// Campaigns registry — groups content around an initiative. Managing the list is
+// founder-only; assigning a content item to a campaign is done via PATCH /idea.
+mkt.post("/campaign", (req, res) => {
+  if (!mktFounder(req)) return res.status(403).json({ error: "Only a founder can manage campaigns." });
+  const b = req.body || {};
+  if (!str(b.name, 60).trim()) return res.status(400).json({ error: "Campaign name required." });
+  const m = readMkt();
+  if (m.campaigns.length >= 200) return res.status(413).json({ error: "Too many campaigns." });
+  const c = { id: "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: str(b.name, 60).trim(), goal: str(b.goal, 40), note: str(b.note, 300), createdAt: Date.now() };
+  m.campaigns.unshift(c);
+  store.write("marketing", m);
+  res.json({ campaign: c });
+});
+mkt.delete("/campaign/:id", (req, res) => {
+  if (!mktFounder(req)) return res.status(403).json({ error: "Only a founder can delete a campaign." });
+  const m = readMkt();
+  m.campaigns = m.campaigns.filter((c) => c.id !== req.params.id);
+  m.ideas.forEach((i) => { if (i.campaign === req.params.id) i.campaign = ""; }); // unassign, keep the content
+  store.write("marketing", m);
+  res.json({ ok: true });
 });
 // Ready-made script composed deterministically from real data (no AI) — a
 // verified scholarship / hand-verified university / live counts, chosen by the
