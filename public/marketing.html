@@ -171,7 +171,6 @@
 
     <div id="produce-modal" class="modal" hidden><div class="modal-in"><button class="modal-x" id="produce-close" aria-label="Close">×</button><div id="produce-body"></div></div></div>
     <div id="results-modal" class="modal" hidden><div class="modal-in"><button class="modal-x" id="results-close" aria-label="Close">×</button><div id="results-body"></div></div></div>
-    <div id="editing-modal" class="modal" hidden><div class="modal-in"><button class="modal-x" id="editing-close" aria-label="Close">×</button><div id="editing-body"></div></div></div>
 
     <script>
       // ===== Library (version-controlled) =====
@@ -349,10 +348,7 @@
         const closeResults = () => { $("results-modal").hidden = true; };
         $("results-close").onclick = closeResults;
         $("results-modal").onclick = (e) => { if (e.target.id === "results-modal") closeResults(); };
-        const closeEditing = () => { $("editing-modal").hidden = true; render(); }; // re-render so card progress updates
-        $("editing-close").onclick = closeEditing;
-        $("editing-modal").onclick = (e) => { if (e.target.id === "editing-modal") closeEditing(); };
-        document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeProduce(); closeResults(); if (!$("editing-modal").hidden) closeEditing(); } });
+        document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeProduce(); closeResults(); } });
         render();
         loadRadar();
       }
@@ -588,32 +584,42 @@
       };
       const hashtagsFor = (t) => HASHTAGS[t] || HASHTAGS["Study abroad"];
       function ideaToOpp(i) {
-        const topic = topicOf(i.title); const play = TOPIC_PLAY[topic] || {};
-        return { angle: i.title, formula: i.formula || play.formula || "pain", platform: play.platform || "reel", topic, cta: play.cta || "Discover", urgency: i.priority === "high" ? "This week" : "Evergreen", why: i.rationale || "", trend: i.source || "", link: "", hooks: null };
+        const topic = i.topic || topicOf(i.title); const play = TOPIC_PLAY[topic] || {};
+        return { angle: i.title, formula: i.formula || play.formula || "story", platform: (i.platforms && i.platforms[0]) || play.platform || "reel", topic, cta: play.cta || "Discover", urgency: i.priority === "high" ? "This week" : "Evergreen", why: i.rationale || "", trend: i.source || "", link: "", hooks: null };
       }
       async function copyTxt(t, btn) { try { await navigator.clipboard.writeText(t); const x = btn.textContent; btn.textContent = "Copied ✓"; setTimeout(() => (btn.textContent = x), 1400); } catch { alert("Copy failed — select the text manually."); } }
-      function openProduce(o) {
+      // The ONE "make the content" studio. From a real card (idea) it takes you
+      // idea → script → AI writes the caption → edit & make → publish, all here.
+      // Called without `idea` for a What's-Happening opportunity (adds to Ideas).
+      function openProduce(o, idea) {
         const formula = getFormula(o.formula);
         const plat = PLATFORMS[o.platform] || PLATFORMS.reel;
         const hooks = o.hooks || [o.angle, "Save this before you decide.", "Here's what nobody tells you."];
-        const cta = CTAS[o.cta] || CTAS.Discover;
+        const goalObj = idea && idea.goal ? goalById(idea.goal) : null;
+        const cta = goalObj ? goalObj.cta : (CTAS[o.cta] || CTAS.Discover);
+        const ep = editingPlan(formula.id, idea ? idea.goal : "", o.platform || "reel");
         const caption = `${hooks[0]}\n\n${o.angle}. ${cta}\n\n${hashtagsFor(o.topic)}`;
-        const brief = `PRODUCE — ${o.angle}\nFormat: ${plat.name}\n\nHOOK (first 2s):\n${hooks[0]}\nalts: ${hooks.slice(1).join(" / ")}\n\nSCRIPT / SHOT LIST:\n${formula.steps.map((s, i) => `${i + 1}. ${s} — [film this]`).join("\n")}\n\nON-SCREEN TEXT: surface the key phrase from each beat.\n\nCAPTION:\n${caption}\n\nCTA: ${cta}\n\nCHECKLIST:\n[ ] Film  [ ] Captions/subtitles  [ ] On-screen text  [ ] Post/schedule  [ ] Mark posted`;
-        $("produce-body").innerHTML = `<h2 style="margin:0 0 4px">🎬 Produce — go from idea to shoot-ready</h2><div class="opp-angle">${esc(o.angle)}</div><div class="muted" style="margin-bottom:6px">${esc(plat.name)}</div>
-          <div class="prod-sec"><div class="prod-h">Hook (first 2 seconds)</div><div><b>${esc(hooks[0])}</b></div><div class="muted">alts: ${hooks.slice(1).map(esc).join(" · ")}</div></div>
-          <div class="prod-sec" id="prod-datascript"><div class="prod-h">Ready script — from Universo's real data</div><div class="muted">Loading real data…</div></div>
-          <div class="prod-sec"><div class="prod-h">Shot-list structure (${esc(formula.name)})</div><ol class="prod-shots">${formula.steps.map((s) => `<li>${esc(s)} <span class="muted">— film this</span></li>`).join("")}</ol></div>
-          <div class="prod-sec"><div class="prod-h">Caption <button class="link-mini" id="prod-copycap">Copy</button></div><pre id="prod-cap">${esc(caption)}</pre></div>
-          <div class="prod-sec"><div class="prod-h">Write the caption — with AI (free)</div><div class="chips">${aiButtons(buildPrompt(o.platform || "reel", o.angle, formula, cta))}</div><div class="muted" style="margin-top:6px">Opens with your brand prompt already typed — the AI writes the post. Paste it back into the card's <b>Final draft</b>.</div></div>
+        const prompt = buildPrompt(o.platform || "reel", o.angle, formula, goalObj || cta, ep);
+        const editRows = [["Style", ep.style], ["Opening", ep.opening], ["Pacing", ep.pacing], ["Visuals", ep.visuals], ["Transitions", ep.transitions.join(", ")], ["Captions", ep.captions], ["Sound", ep.sound], ["Ending", ep.ending]];
+        const brief = `MAKE — ${o.angle}\nFormat: ${plat.name}\n\nHOOK (first 2s):\n${hooks[0]}\n\nSCRIPT / SHOT LIST:\n${formula.steps.map((s, i) => `${i + 1}. ${s}`).join("\n")}\n\nCAPTION:\n${caption}\n\nCTA: ${cta}\n\nEDITING:\n${editRows.map(([k, v]) => `- ${k}: ${v}`).join("\n")}`;
+        $("produce-body").innerHTML = `<h2 style="margin:0 0 4px">🎬 Make this — idea to ready-to-post</h2><div class="opp-angle">${esc(o.angle)}</div><div class="muted" style="margin-bottom:6px">${esc(plat.name)}</div>
+          <div class="prod-sec"><div class="prod-h">1 · Hook (first 2 seconds)</div><div><b>${esc(hooks[0])}</b></div><div class="muted">alts: ${hooks.slice(1).map(esc).join(" · ")}</div></div>
+          <div class="prod-sec" id="prod-datascript"><div class="prod-h">2 · Ready script — from Universo's real data</div><div class="muted">Loading real data…</div></div>
+          <div class="prod-sec"><div class="prod-h">Shot list (${esc(formula.name)})</div><ol class="prod-shots">${formula.steps.map((s) => `<li>${esc(s)} <span class="muted">— film this</span></li>`).join("")}</ol></div>
+          <div class="prod-sec"><div class="prod-h">3 · Write the caption — with AI (free, 1 click)</div><div class="chips">${aiButtons(prompt)} <button class="btn sm alt" id="prod-copyprompt">Copy prompt</button></div><div class="muted" style="margin-top:6px">Opens Claude/ChatGPT with your brand prompt already typed — the AI writes the post.${idea ? ` Then hit <b>Save script to card</b> below, or paste into Final draft.` : ""}</div><div class="prod-h" style="margin-top:10px">Suggested caption</div><pre id="prod-cap">${esc(caption)}</pre><button class="link-mini" id="prod-copycap">Copy caption</button></div>
+          <div class="prod-sec"><div class="prod-h">4 · Edit &amp; make it</div>${editRows.map(([k, v]) => `<div style="margin:3px 0;font-size:.9rem"><b>${esc(k)}:</b> ${esc(v)}</div>`).join("")}<div class="chips" style="margin-top:10px">${VIDEO_TOOLS.map((t) => `<a class="chip-btn" href="${esc(t.url)}" target="_blank" rel="noopener">${esc(t.name)} ↗</a>`).join("")}</div><div class="muted" style="margin-top:6px">Cut it in a free tool — nothing here makes the video for you.</div></div>
           <div class="prod-sec"><div class="prod-h">Hashtags</div><div>${esc(hashtagsFor(o.topic))}</div></div>
-          <div class="prod-sec"><div class="prod-h">Make it — free tools</div><div class="chips">${VIDEO_TOOLS.map((t) => `<a class="chip-btn" href="${esc(t.url)}" target="_blank" rel="noopener">${esc(t.name)} ↗</a>`).join("")}</div><div class="muted" style="margin-top:6px">Free tiers, no card needed to start. These are where you film/edit — nothing here makes the video for you.</div></div>
-          <div class="prod-sec"><div class="prod-h">Production checklist</div>${["Film", "Captions / subtitles", "On-screen text", "Post / schedule", "Mark posted in Ideas"].map((c) => `<label class="prod-check"><input type="checkbox"> ${c}</label>`).join("")}</div>
-          <div class="opp-actions" style="margin-top:14px"><button class="btn sm gold" id="prod-copybrief">Copy full brief</button><button class="btn sm" id="prod-copyprompt">Copy AI prompt (polished copy)</button><button class="btn sm alt" id="prod-add">＋ Add to Ideas</button></div>`;
+          <div class="opp-actions" style="margin-top:14px"><button class="btn sm gold" id="prod-copybrief">Copy full brief</button>${idea ? `<button class="btn sm" id="prod-savescript">💾 Save script to card</button><button class="btn sm alt" id="prod-publish">📢 5 · Mark published</button>` : `<button class="btn sm alt" id="prod-add">＋ Add to Ideas</button>`}</div>`;
         $("produce-modal").hidden = false;
         $("prod-copybrief").onclick = () => copyTxt(brief, $("prod-copybrief"));
         $("prod-copycap").onclick = () => copyTxt(caption, $("prod-copycap"));
-        $("prod-copyprompt").onclick = () => copyTxt(buildPrompt(o.platform || "reel", o.angle, formula, cta), $("prod-copyprompt"));
-        $("prod-add").onclick = async () => { const r = await api("POST", "/idea", { title: o.angle, formula: o.formula, source: (o.trend || "") + (o.link ? " — " + o.link : ""), rationale: o.why, priority: o.urgency === "This week" ? "high" : "med", topic: o.topic || "", platforms: o.platform ? [o.platform] : [], status: "drafting", draft: PROD_SCRIPT }); if (r && r.idea) { DATA.ideas.unshift(r.idea); $("prod-add").textContent = "Added ✓"; } };
+        $("prod-copyprompt").onclick = () => copyTxt(prompt, $("prod-copyprompt"));
+        if (idea) {
+          $("prod-savescript").onclick = async () => { idea.draft = PROD_SCRIPT || caption; await api("PATCH", "/idea/" + idea.id, { draft: idea.draft }); $("prod-savescript").textContent = "Saved ✓"; };
+          $("prod-publish").onclick = () => { $("produce-modal").hidden = true; openResults(idea); };
+        } else {
+          $("prod-add").onclick = async () => { const r = await api("POST", "/idea", { title: o.angle, formula: o.formula, source: (o.trend || "") + (o.link ? " — " + o.link : ""), rationale: o.why, priority: o.urgency === "This week" ? "high" : "med", topic: o.topic || "", platforms: o.platform ? [o.platform] : [], status: "drafting", draft: PROD_SCRIPT }); if (r && r.idea) { DATA.ideas.unshift(r.idea); $("prod-add").textContent = "Added ✓"; } };
+        }
         loadDataScript(o);
       }
       // Fetch and render the deterministic real-data script into the Produce modal.
@@ -805,41 +811,6 @@
       }
       function captionFor(formula, idea, goal, topic) {
         return `${hookText(formula.id, idea)}\n\n${goal.desc}. ${goal.cta}\n\n${hashtagsFor(topic)}`;
-      }
-      // ===== EDITING STEP (persisted checklist per card) =====
-      const EDIT_TASKS = [
-        ["hook", "Strong hook in the first 2 seconds"],
-        ["deadair", "Cut dead air and filler"],
-        ["broll", "Add B-roll / visuals where explaining"],
-        ["ontext", "On-screen text for the key points"],
-        ["captions", "Burned-in captions, key words highlighted"],
-        ["music", "Music at low volume (only if it helps)"],
-        ["transition", "Transitions that fit (don't over-edit)"],
-        ["cta", "Ending matches the goal (CTA / question)"],
-        ["review", "Watch it back once before posting"],
-      ];
-      const editProgress = (i) => EDIT_TASKS.filter(([k]) => i.editing && i.editing[k]).length;
-      function openEditing(idea) {
-        const ep = editingPlan(idea.formula || "howto", idea.goal || "help", (idea.platforms && idea.platforms[0]) || "reel");
-        const g = GOALS.find((x) => x.id === idea.goal);
-        const guide = [
-          ["Style", ep.style], ["Opening", ep.opening], ["Pacing", ep.pacing],
-          ["Visuals", ep.visuals], ["Transitions", ep.transitions.join(", ")],
-          ["Captions", ep.captions], ["Sound", ep.sound],
-          ["Ending", g ? `${g.label} — "${g.cta}"` : ep.ending],
-        ];
-        idea.editing = idea.editing || {};
-        $("editing-body").innerHTML = `<h2 style="margin:0 0 4px">✂️ Edit checklist — ${esc(idea.title)}</h2>
-          <p class="res-note-tiny"><b>What this is:</b> how to cut this video (in a free tool like CapCut or Canva) before you post it — a guide, not an auto-editor. Below is what fits a <b>${esc((getFormula(idea.formula) || {}).name || "post")}</b>${g ? ` aiming to <b>${esc(g.label)}</b>` : ""}; tick each item as you do it (saved on the card).</p>
-          <div class="prod-sec">${guide.map(([k, v]) => `<div style="margin:4px 0"><b>${esc(k)}:</b> ${esc(v)}</div>`).join("")}</div>
-          <div class="prod-sec"><div class="prod-h">Checklist</div>${EDIT_TASKS.map(([k, l]) => `<label class="prod-check"><input type="checkbox" data-edit="${k}"${idea.editing[k] ? " checked" : ""}> ${esc(l)}</label>`).join("")}</div>
-          <div class="opp-actions" style="margin-top:12px"><button class="btn sm gold" id="edit-done">Done</button></div>`;
-        document.querySelectorAll("#editing-body [data-edit]").forEach((cb) => cb.onchange = () => {
-          idea.editing[cb.dataset.edit] = cb.checked;
-          api("PATCH", "/idea/" + idea.id, { editing: idea.editing });
-        });
-        $("edit-done").onclick = () => { $("editing-modal").hidden = true; render(); };
-        $("editing-modal").hidden = false;
       }
       function brandBlock() {
         return `You are writing for Universo, a student platform. Mission: ${brain("mission")}
@@ -1141,8 +1112,7 @@ ${hashtagsFor(topic)}${src}`;
         ].join("");
         return `<div class="idea-item" data-id="${i.id}"><div class="top"><b>${esc(i.title)}</b>
           <select data-act="status" title="Status">${STATUSES.map((s) => `<option${(i.status || "idea") === s ? " selected" : ""}>${s}</option>`).join("")}</select>
-          <button class="chip-btn" data-act="produce" title="Produce (shoot-ready brief)">🎬</button>
-          <button class="chip-btn" data-act="edit" title="Editing checklist">✂️ Edit${editProgress(i) ? ` ${editProgress(i)}/${EDIT_TASKS.length}` : ""}</button>
+          <button class="chip-btn" data-act="produce" title="Make this — script, AI caption, edit & publish">🎬 Make</button>
           <button class="chip-btn" data-act="results" title="${hasResults ? "Publish / results" : "Mark published"}">${hasResults ? "📊 Results" : "📢 Mark published"}</button>
           ${isWinner(i) ? `<button class="chip-btn" data-act="repurpose" title="Make a variant of this winner">♻️ Repurpose</button>` : ""}
           <button class="chip-btn" data-act="del" title="Delete">🗑</button></div>
@@ -1163,8 +1133,7 @@ ${hashtagsFor(topic)}${src}`;
           el.querySelector('[data-act="owner"]').onchange = (e) => { idea.owner = e.target.value; api("PATCH", "/idea/" + id, { owner: e.target.value }); };
           el.querySelector('[data-act="due"]').onchange = (e) => { idea.due = e.target.value; api("PATCH", "/idea/" + id, { due: e.target.value }); };
           el.querySelector('[data-act="approval"]').onchange = (e) => { idea.approval = e.target.checked; api("PATCH", "/idea/" + id, { approval: e.target.checked }); rerender(); };
-          el.querySelector('[data-act="produce"]').onclick = () => openProduce(ideaToOpp(idea));
-          el.querySelector('[data-act="edit"]').onclick = () => openEditing(idea);
+          el.querySelector('[data-act="produce"]').onclick = () => openProduce(ideaToOpp(idea), idea);
           el.querySelector('[data-act="results"]').onclick = () => openResults(idea);
           const rep = el.querySelector('[data-act="repurpose"]'); if (rep) rep.onclick = () => repurpose(idea);
           el.querySelectorAll('[data-act="measure"]').forEach((b) => b.onclick = () => openResults(idea));
