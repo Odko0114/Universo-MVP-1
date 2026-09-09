@@ -171,6 +171,7 @@
 
     <div id="produce-modal" class="modal" hidden><div class="modal-in"><button class="modal-x" id="produce-close" aria-label="Close">×</button><div id="produce-body"></div></div></div>
     <div id="results-modal" class="modal" hidden><div class="modal-in"><button class="modal-x" id="results-close" aria-label="Close">×</button><div id="results-body"></div></div></div>
+    <div id="editor-modal" class="modal" hidden><div class="modal-in" style="max-width:720px"><button class="modal-x" id="editor-close" aria-label="Close">×</button><div id="editor-body"></div></div></div>
 
     <script>
       // ===== Library (version-controlled) =====
@@ -348,7 +349,10 @@
         const closeResults = () => { $("results-modal").hidden = true; };
         $("results-close").onclick = closeResults;
         $("results-modal").onclick = (e) => { if (e.target.id === "results-modal") closeResults(); };
-        document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeProduce(); closeResults(); } });
+        const closeEditor = () => { saveEditor(); $("editor-modal").hidden = true; render(); };
+        $("editor-close").onclick = closeEditor;
+        $("editor-modal").onclick = (e) => { if (e.target.id === "editor-modal") closeEditor(); };
+        document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeProduce(); closeResults(); if (!$("editor-modal").hidden) closeEditor(); } });
         render();
         loadRadar();
       }
@@ -622,6 +626,81 @@
         }
         loadDataScript(o);
       }
+      // ===== CONTENT EDITOR — the production workspace (the real, editable asset) =====
+      let EDITOR_IDEA = null;
+      const mediaKind = (u) => /\.(png|jpe?g|gif|webp|svg)(\?|#|$)/i.test(u) ? "image" : /\.(mp4|mov|webm|m4v)(\?|#|$)/i.test(u) ? "video" : (u ? "link" : "");
+      const edEngine = () => { try { return localStorage.getItem("mkt-ai-engine") || "claude"; } catch { return "claude"; } };
+      const editorContent = () => ({ hook: $("ed-hook").value, caption: $("ed-caption").value, cta: $("ed-cta").value, body: (EDITOR_IDEA.content && EDITOR_IDEA.content.body) || "", mediaUrl: $("ed-media").value.trim(), mediaType: mediaKind($("ed-media").value.trim()), notes: $("ed-notes").value, versions: (EDITOR_IDEA.content && EDITOR_IDEA.content.versions) || [] });
+      async function saveEditor() { const idea = EDITOR_IDEA; if (!idea || $("editor-modal").hidden || !$("ed-hook")) return; idea.content = editorContent(); await api("PATCH", "/idea/" + idea.id, { content: idea.content }); }
+      // AI actions operate on the CURRENT editor content via a pre-filled free-AI
+      // handoff (honest €0 — the AI writes, you paste the result back).
+      const AI_ACTIONS = [
+        ["✨ Generate draft", "Write a first draft of this post from scratch, based on the idea and goal."],
+        ["Rewrite", "Rewrite the whole post — same meaning, fresh wording."],
+        ["Shorten", "Make it noticeably shorter and punchier without losing the point."],
+        ["Expand", "Add one more useful, concrete point."],
+        ["Change tone", "Rewrite in a warmer, more human tone."],
+        ["Improve hook", "Make the hook stop-the-scroll in the first 2 seconds."],
+        ["Improve CTA", "Make the CTA clearer and more compelling, matched to the goal."],
+        ["Adapt · Instagram", "Adapt this into an Instagram caption."],
+        ["Adapt · TikTok", "Adapt this into a spoken TikTok/Reel script."],
+        ["Adapt · LinkedIn", "Adapt this into a professional LinkedIn post."],
+        ["Adapt · Reddit", "Adapt this into a genuine, value-first Reddit post."],
+      ];
+      function edAiOpen(instruction) {
+        const idea = EDITOR_IDEA || {}; const g = idea.goal ? goalById(idea.goal) : null;
+        const prompt = `${brandBlock()}
+
+You are editing an existing ${(PLAT_EDIT[(idea.platforms || [])[0]] || {}).label || "social"} post for Universo.${g ? ` Goal: ${g.label} — ${g.desc}.` : ""}
+
+CURRENT CONTENT
+Hook: ${$("ed-hook").value || "(empty)"}
+Caption: ${$("ed-caption").value || "(empty)"}
+CTA: ${$("ed-cta").value || "(empty)"}
+
+INSTRUCTION: ${instruction}
+
+Keep Universo's honest, warm voice; never invent numbers, traction or results. Return the revised post clearly labelled Hook:, Caption:, CTA: so I can paste each back.`;
+        window.open(aiUrl(edEngine(), prompt), "_blank", "noopener");
+      }
+      function openEditor(idea) {
+        EDITOR_IDEA = idea; idea.content = idea.content || {};
+        const c = idea.content, g = idea.goal ? goalById(idea.goal) : null;
+        const platLabel = (PLAT_EDIT[(idea.platforms || [])[0]] || {}).label || "";
+        $("editor-body").innerHTML = `<h2 style="margin:0 0 4px">✏️ Content Editor</h2><div class="opp-angle">${esc(idea.title)}</div>
+          <div class="top" style="margin:6px 0 10px;gap:8px">
+            <label style="margin:0;font-size:.76rem;color:var(--soft)">Status <select id="ed-status" style="width:auto;min-height:36px">${STATUSES.map((s) => `<option value="${s}"${(idea.status || "idea") === s ? " selected" : ""}>${STATUS_LABEL[s]}</option>`).join("")}</select></label>
+            ${g ? `<span class="pill teal">🎯 ${esc(g.label)}</span>` : ""}${platLabel ? `<span class="pill">${esc(platLabel)}</span>` : ""}${idea.topic ? `<span class="pill">${esc(idea.topic)}</span>` : ""}
+          </div>
+          <div class="prod-sec"><div class="prod-h">✨ AI actions — open a free AI with the prompt pre-filled</div>
+            <div style="margin-bottom:6px;font-size:.8rem;color:var(--soft)">Engine: <button class="chip-btn${edEngine() === "claude" ? " on" : ""}" id="ed-eng-claude">Claude</button> <button class="chip-btn${edEngine() === "chatgpt" ? " on" : ""}" id="ed-eng-gpt">ChatGPT</button></div>
+            <div class="chips">${AI_ACTIONS.map((a, idx) => `<button class="chip-btn" data-ai="${idx}">${esc(a[0])}</button>`).join("")}</div>
+            <div class="muted" style="margin-top:6px">The AI returns Hook / Caption / CTA — paste them back into the fields below.</div></div>
+          <div class="field"><label>Hook</label><input id="ed-hook" value="${esc(c.hook || "")}" placeholder="First line / opening" /></div>
+          <div class="field"><label>Caption / post text</label><textarea id="ed-caption" rows="6" placeholder="The actual post…">${esc(c.caption || "")}</textarea></div>
+          <div class="field"><label>CTA</label><input id="ed-cta" value="${esc(c.cta || (g ? g.cta : ""))}" placeholder="Call to action" /></div>
+          <div class="prod-sec"><div class="prod-h">🎨 Creative / media</div>
+            <div class="field"><label>Media link — image or video URL (Drive, CapCut, Canva…)</label><input id="ed-media" value="${esc(c.mediaUrl || "")}" placeholder="https://…  (in-app upload coming later)" /></div>
+            <div id="ed-preview"></div>
+            <div class="chips">${VIDEO_TOOLS.map((t) => `<a class="chip-btn" href="${esc(t.url)}" target="_blank" rel="noopener">${esc(t.name)} ↗</a>`).join("")}</div>
+            <div class="field" style="margin-top:8px"><label>Creative notes / concept</label><textarea id="ed-notes" rows="2" placeholder="Concept, shots, what to change…">${esc(c.notes || "")}</textarea></div></div>
+          <div class="prod-sec"><div class="prod-h">Real-data script <button class="link-mini" id="ed-pull">Pull from Universo data →</button></div><div id="ed-script" class="muted">Optional — a source-verified script you can drop into the caption.</div></div>
+          <div class="prod-sec"><div class="prod-h">Versions <button class="link-mini" id="ed-savever">Save current as version</button></div><div id="ed-versions"></div></div>
+          <div class="opp-actions" style="margin-top:12px"><button class="btn sm gold" id="ed-save">Save</button><button class="btn sm alt" id="ed-publish">📢 Mark published</button></div>`;
+        $("editor-modal").hidden = false;
+        const renderPreview = () => { const u = $("ed-media").value.trim(), k = mediaKind(u); $("ed-preview").innerHTML = k === "image" ? `<img src="${esc(u)}" alt="" style="max-height:160px;border-radius:10px;margin:6px 0" onerror="this.style.display='none'">` : k === "video" ? `<video src="${esc(u)}" controls style="max-width:100%;max-height:200px;border-radius:10px;margin:6px 0"></video>` : k === "link" ? `<div class="muted" style="margin:6px 0"><a href="${esc(u)}" target="_blank" rel="noopener">Open media ↗</a></div>` : ""; };
+        renderPreview(); $("ed-media").oninput = renderPreview;
+        const setEng = (e) => { idea.content = editorContent(); try { localStorage.setItem("mkt-ai-engine", e); } catch {} openEditor(idea); };
+        $("ed-eng-claude").onclick = () => setEng("claude"); $("ed-eng-gpt").onclick = () => setEng("chatgpt");
+        document.querySelectorAll("#editor-body [data-ai]").forEach((b) => b.onclick = () => edAiOpen(AI_ACTIONS[+b.dataset.ai][1]));
+        $("ed-status").onchange = (e) => { idea.status = e.target.value; api("PATCH", "/idea/" + idea.id, { status: e.target.value }); };
+        $("ed-save").onclick = async () => { await saveEditor(); $("ed-save").textContent = "Saved ✓"; setTimeout(() => ($("ed-save").textContent = "Save"), 1200); };
+        $("ed-publish").onclick = async () => { await saveEditor(); $("editor-modal").hidden = true; openResults(idea); };
+        const renderVersions = () => { const vs = (idea.content && idea.content.versions) || []; $("ed-versions").innerHTML = vs.length ? vs.map((v, idx) => `<div class="head-item" style="display:flex;gap:8px;align-items:center"><span class="muted" style="flex:1;min-width:0">${esc(v.at || "v" + (vs.length - idx))} — ${esc((v.caption || v.hook || "").slice(0, 40))}</span><button class="link-mini" data-restore="${idx}">Restore</button></div>`).join("") : `<div class="muted">No saved versions yet.</div>`; document.querySelectorAll("#ed-versions [data-restore]").forEach((b) => b.onclick = () => { const v = vs[+b.dataset.restore]; $("ed-hook").value = v.hook || ""; $("ed-caption").value = v.caption || ""; $("ed-cta").value = v.cta || ""; }); };
+        $("ed-savever").onclick = async () => { idea.content = editorContent(); idea.content.versions = [{ at: new Date().toISOString().slice(0, 16).replace("T", " "), hook: idea.content.hook, caption: idea.content.caption, cta: idea.content.cta, body: idea.content.body }, ...(idea.content.versions || [])].slice(0, 20); await api("PATCH", "/idea/" + idea.id, { content: idea.content }); renderVersions(); };
+        renderVersions();
+        $("ed-pull").onclick = async () => { $("ed-script").textContent = "Loading real data…"; let d = null; try { const q = new URLSearchParams({ topic: idea.topic || topicOf(idea.title), angle: idea.title, formula: idea.formula || "", cta: g ? g.cta : "", help: brandHelp() }); d = await (await fetch("/api/marketing/script?" + q)).json(); } catch {} if (!d || !d.beats) { $("ed-script").textContent = "No matching real data for this idea."; return; } const text = d.beats.map((b) => b.line).join(" "); $("ed-script").innerHTML = `<div style="margin:4px 0">${d.beats.map((b) => `<div><b>${esc(b.cue)}:</b> ${esc(b.line)}</div>`).join("")}</div><button class="link-mini" id="ed-usescript">Use as caption</button>${d.sources && d.sources.length ? `<div class="muted" style="margin-top:4px">Sources: ${d.sources.map((s) => /^https?:/.test(s) ? `<a href="${esc(s)}" target="_blank" rel="noopener">link</a>` : esc(s)).join(", ")}</div>` : ""}`; $("ed-usescript").onclick = () => { $("ed-caption").value = text; }; };
+      }
       // Fetch and render the deterministic real-data script into the Produce modal.
       let PROD_SCRIPT = "";
       function scriptToText(data) {
@@ -650,7 +729,8 @@
 
       // Shared idea constants (used by the Board cards). Plan was folded into the Board.
       const OWNERS = ["Marketer", "Founder"];
-      const STATUSES = ["idea", "drafting", "review", "posted"];
+      const STATUSES = ["idea", "drafting", "editing", "review", "approved", "scheduled", "posted"];
+      const STATUS_LABEL = { idea: "Idea", drafting: "Draft", editing: "Editing", review: "Review", approved: "Approved", scheduled: "Scheduled", posted: "Published" };
 
       // ===== CALENDAR =====
       const CADENCE = { 1: "Educational / student problem", 2: "Trend — this week's news", 3: "Product / Universo value", 4: "Student story / relatable", 5: "Opinion / hot take", 6: "Community / repurpose", 0: "Plan & rest" };
@@ -1033,12 +1113,16 @@ ${hashtagsFor(topic)}${src}`;
       // 5 lanes derived from the existing status enum + results presence — no
       // schema change: Published = posted with no results yet; Measured = posted
       // with at least one recorded result.
+      // Lanes follow the real content lifecycle. "Measured" isn't a lane — a
+      // Published card that's been rated shows a 📊 badge (see postedSummary).
       const LANES = [
         { key: "idea", label: "💡 Idea", match: (i) => (i.status || "idea") === "idea" },
-        { key: "drafting", label: "✍️ Drafting", match: (i) => i.status === "drafting" },
-        { key: "review", label: "✅ Ready", match: (i) => i.status === "review" },
-        { key: "published", label: "📢 Published", match: (i) => i.status === "posted" && !(i.results || []).some((r) => r.rating) },
-        { key: "measured", label: "📊 Measured", match: (i) => i.status === "posted" && (i.results || []).some((r) => r.rating) },
+        { key: "drafting", label: "✍️ Draft", match: (i) => i.status === "drafting" },
+        { key: "editing", label: "🎬 Editing", match: (i) => i.status === "editing" },
+        { key: "review", label: "👀 Review", match: (i) => i.status === "review" },
+        { key: "approved", label: "✅ Approved", match: (i) => i.status === "approved" },
+        { key: "scheduled", label: "📅 Scheduled", match: (i) => i.status === "scheduled" },
+        { key: "posted", label: "📢 Published", match: (i) => i.status === "posted" },
       ];
       const BOARD_EMPTY = '<div class="card muted">No content yet. Add an idea above, or save one from Create.</div>';
       let BOARD_APPROVAL = false; // "⚑ Needs approval" filter (transient)
@@ -1111,8 +1195,8 @@ ${hashtagsFor(topic)}${src}`;
           ...(i.platforms || []).map((p) => `<span class="pill">${esc((PLAT_EDIT[p] && PLAT_EDIT[p].label) || p)}</span>`),
         ].join("");
         return `<div class="idea-item" data-id="${i.id}"><div class="top"><b>${esc(i.title)}</b>
-          <select data-act="status" title="Status">${STATUSES.map((s) => `<option${(i.status || "idea") === s ? " selected" : ""}>${s}</option>`).join("")}</select>
-          <button class="chip-btn" data-act="produce" title="Make this — script, AI caption, edit & publish">🎬 Make</button>
+          <select data-act="status" title="Status">${STATUSES.map((s) => `<option value="${s}"${(i.status || "idea") === s ? " selected" : ""}>${STATUS_LABEL[s] || s}</option>`).join("")}</select>
+          <button class="chip-btn" data-act="editor" title="Open the content editor — write, edit & produce the actual post">✏️ Open Editor</button>
           <button class="chip-btn" data-act="results" title="${hasResults ? "Publish / results" : "Mark published"}">${hasResults ? "📊 Results" : "📢 Mark published"}</button>
           ${isWinner(i) ? `<button class="chip-btn" data-act="repurpose" title="Make a variant of this winner">♻️ Repurpose</button>` : ""}
           <button class="chip-btn" data-act="del" title="Delete">🗑</button></div>
@@ -1133,7 +1217,7 @@ ${hashtagsFor(topic)}${src}`;
           el.querySelector('[data-act="owner"]').onchange = (e) => { idea.owner = e.target.value; api("PATCH", "/idea/" + id, { owner: e.target.value }); };
           el.querySelector('[data-act="due"]').onchange = (e) => { idea.due = e.target.value; api("PATCH", "/idea/" + id, { due: e.target.value }); };
           el.querySelector('[data-act="approval"]').onchange = (e) => { idea.approval = e.target.checked; api("PATCH", "/idea/" + id, { approval: e.target.checked }); rerender(); };
-          el.querySelector('[data-act="produce"]').onclick = () => openProduce(ideaToOpp(idea), idea);
+          el.querySelector('[data-act="editor"]').onclick = () => openEditor(idea);
           el.querySelector('[data-act="results"]').onclick = () => openResults(idea);
           const rep = el.querySelector('[data-act="repurpose"]'); if (rep) rep.onclick = () => repurpose(idea);
           el.querySelectorAll('[data-act="measure"]').forEach((b) => b.onclick = () => openResults(idea));

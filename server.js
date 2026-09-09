@@ -2466,7 +2466,7 @@ mkt.patch("/brain", (req, res) => {
   store.write("marketing", m);
   res.json({ ok: true });
 });
-const MKT_STATUS = ["idea", "drafting", "review", "posted"];
+const MKT_STATUS = ["idea", "drafting", "editing", "review", "approved", "scheduled", "posted"];
 const MKT_OWNER = ["Marketer", "Founder"];
 const MKT_PRIORITY = ["low", "med", "high"];
 const MKT_PLATFORMS = ["TikTok", "Instagram", "YouTube", "LinkedIn", "Reddit", "Facebook", "Other"];
@@ -2496,6 +2496,15 @@ const sanitizeEditing = (obj) => {
   const out = {};
   for (const k of Object.keys(obj).slice(0, 30)) out[str(k, 40)] = !!obj[k];
   return out;
+};
+// The actual content asset being produced/edited (stored on the idea). Strings
+// only, capped; a small version history for compare/restore. No binaries — media
+// is a reference URL (real upload can be added later without changing this shape).
+const sanitizeContent = (o) => {
+  if (o === null || o === undefined) return {};
+  if (typeof o !== "object" || Array.isArray(o)) return null;
+  const versions = Array.isArray(o.versions) ? o.versions.slice(0, 20).map((x) => ({ at: str(x && x.at, 30), hook: str(x && x.hook, 300), caption: str(x && x.caption, 4000), cta: str(x && x.cta, 300), body: str(x && x.body, 8000) })) : [];
+  return { hook: str(o.hook, 300), caption: str(o.caption, 4000), cta: str(o.cta, 300), body: str(o.body, 8000), mediaUrl: str(o.mediaUrl, 1000), mediaType: str(o.mediaType, 20), notes: str(o.notes, 4000), versions };
 };
 const sanitizeResults = (arr) => {
   if (!Array.isArray(arr)) return null;
@@ -2538,6 +2547,7 @@ mkt.post("/idea", (req, res) => {
     draft: "",
     results: [],
     editing: {},
+    content: {},
     createdAt: Date.now(),
   };
   m.ideas.unshift(idea);
@@ -2560,6 +2570,7 @@ mkt.patch("/idea/:id", (req, res) => {
   if (b.topic !== undefined) idea.topic = str(b.topic, 60);
   if (b.platforms !== undefined) { const p = sanitizePlatforms(b.platforms); if (!p) return res.status(400).json({ error: "platforms must be an array." }); idea.platforms = p; }
   if (b.editing !== undefined) { const e = sanitizeEditing(b.editing); if (!e) return res.status(400).json({ error: "editing must be an object." }); idea.editing = e; }
+  if (b.content !== undefined) { const c = sanitizeContent(b.content); if (!c) return res.status(400).json({ error: "content must be an object." }); idea.content = c; }
   if (b.approval !== undefined) idea.approval = !!b.approval;
   if (b.draft !== undefined) idea.draft = str(b.draft, 8000);
   if (b.results !== undefined) {

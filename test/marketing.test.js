@@ -197,6 +197,33 @@ test("editing checklist persists (booleans, capped); bad payload rejected", asyn
   await req("DELETE", "/api/marketing/idea/" + id);
 });
 
+test("content workspace persists (fields + versions); bad payload rejected", async () => {
+  const created = await req("POST", "/api/marketing/idea", { title: "Editor idea" });
+  const id = created.json.idea.id;
+  assert.deepEqual(created.json.idea.content, {}); // starts empty
+  const patched = await req("PATCH", "/api/marketing/idea/" + id, {
+    content: { hook: "Big hook", caption: "The post body", cta: "Join free", mediaUrl: "https://x/i.png", mediaType: "image", notes: "punchy", versions: [{ at: "2026-09-09 10:00", hook: "old", caption: "old body", cta: "old", body: "" }] },
+  });
+  assert.equal(patched.status, 200);
+  assert.equal(patched.json.idea.content.hook, "Big hook");
+  assert.equal(patched.json.idea.content.caption, "The post body");
+  assert.equal(patched.json.idea.content.versions.length, 1);
+  const after = await req("GET", "/api/marketing/data");
+  assert.equal(after.json.ideas.find((i) => i.id === id).content.cta, "Join free"); // persisted
+  assert.equal((await req("PATCH", "/api/marketing/idea/" + id, { content: [1, 2] })).status, 400); // array rejected
+  await req("DELETE", "/api/marketing/idea/" + id);
+});
+
+test("status lifecycle accepts the new stages", async () => {
+  const created = await req("POST", "/api/marketing/idea", { title: "Lifecycle idea" });
+  const id = created.json.idea.id;
+  for (const s of ["editing", "approved", "scheduled"]) {
+    const r = await req("PATCH", "/api/marketing/idea/" + id, { status: s });
+    assert.equal(r.json.idea.status, s, s + " accepted");
+  }
+  await req("DELETE", "/api/marketing/idea/" + id);
+});
+
 test("approval flag defaults off and toggles", async () => {
   const created = await req("POST", "/api/marketing/idea", { title: "Approval idea" });
   assert.equal(created.json.idea.approval, false); // off by default — no sign-off needed
