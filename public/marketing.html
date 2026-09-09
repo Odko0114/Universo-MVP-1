@@ -648,21 +648,57 @@
       // ===== CALENDAR =====
       const CADENCE = { 1: "Educational / student problem", 2: "Trend — this week's news", 3: "Product / Universo value", 4: "Student story / relatable", 5: "Opinion / hot take", 6: "Community / repurpose", 0: "Plan & rest" };
       const WD = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      const isoDay = (d) => d.toISOString().slice(0, 10);
+      const labelToPlatId = (label) => { const e = Object.entries(PLAT_EDIT).find(([, v]) => v.label === label); return e ? e[0] : (PLATFORMS[label] ? label : "reel"); };
+      function nextWeekdays(n) { const out = []; const d = new Date(); d.setHours(0, 0, 0, 0); while (out.length < n) { d.setDate(d.getDate() + 1); const w = d.getDay(); if (w !== 0 && w !== 6) out.push(new Date(d)); } return out; }
+      // A weekly slate from REAL signals: what's working (engine v2) + this week's
+      // trend + Brand Brain pains + creative variety. Suggestions only — nothing
+      // invented; each says where it came from.
+      function planSuggestions() {
+        const s = [];
+        if (INSIGHTS && INSIGHTS.nextBest) { const nb = INSIGHTS.nextBest; s.push({ source: "What's working", title: `${getFormula(nb.formula).name}: ${nb.topic || "your best angle"}`, topic: nb.topic || "", formula: nb.formula || "story", goal: "signups", platId: nb.platform ? labelToPlatId(nb.platform) : "reel", why: `${avgWord(nb.avg)} across ${nb.n} of your past posts` }); }
+        const trend = (RADAR && RADAR.items || []).find((x) => x.kind === "trend" || x.kind === "news");
+        if (trend) s.push({ source: "Trend", title: `Universo's take on "${trend.title.slice(0, 60)}"`, topic: trend.title, formula: "reaction", goal: "awareness", platId: "reel", why: "Trending right now — ride it only with a genuine student angle" });
+        String(brain("pains") || "").split(/\n/).map((x) => x.replace(/^[•\-\s]+/, "").trim()).filter(Boolean).slice(0, 2).forEach((p) => s.push({ source: "Brand Brain", title: p, topic: p, formula: "problem_solution", goal: "help", platId: "reel", why: "A core student pain from your Brand Brain" }));
+        const seen = new Set(s.map((x) => x.title));
+        for (const cp of shuffle(CREATIVE_PILLARS.slice())) { if (s.length >= 5) break; if (seen.has(cp.angle)) continue; s.push({ source: "Creative", title: cp.angle, topic: cp.topic, formula: getFormula(cp.formula).id, goal: "engagement", platId: "reel", why: cp.why }); seen.add(cp.angle); }
+        return s.slice(0, 5);
+      }
+      let PLAN_SUGGESTIONS = [];
+      function renderWeekPlan() {
+        const days = nextWeekdays(5);
+        PLAN_SUGGESTIONS = planSuggestions().map((s, i) => ({ ...s, _due: isoDay(days[i] || days[days.length - 1]) }));
+        $("cal-plan").innerHTML = PLAN_SUGGESTIONS.map((s, i) => {
+          const d = new Date(s._due + "T00:00:00");
+          return `<div class="opp"><div class="opp-head"><span class="pill teal">${esc(s.source)}</span><span class="pill">${WD[d.getDay()]} ${esc(s._due.slice(5))}</span></div>
+            <div class="opp-angle">${esc(s.title)}</div><div class="opp-why"><b>Why:</b> ${esc(s.why)}</div>
+            <div class="opp-meta"><span><b>Format:</b> ${esc(getFormula(s.formula).name)}</span><span><b>Platform:</b> ${esc((PLAT_EDIT[s.platId] || {}).label || s.platId)}</span></div>
+            <div class="opp-actions"><button class="btn sm gold" data-plan-add="${i}">＋ Add to board</button></div></div>`;
+        }).join("") + `<div class="opp-actions" style="margin-top:2px"><button class="btn sm" id="cal-plan-addall">＋ Add all ${PLAN_SUGGESTIONS.length} to the board</button></div>`;
+        document.querySelectorAll("#cal-plan [data-plan-add]").forEach((b) => b.onclick = () => addPlanned(+b.dataset.planAdd, b));
+        const all = $("cal-plan-addall"); if (all) all.onclick = async () => { for (let i = 0; i < PLAN_SUGGESTIONS.length; i++) await addPlanned(i); render(); };
+      }
+      async function addPlanned(i, btn) {
+        const s = PLAN_SUGGESTIONS[i]; if (!s || s._added) return;
+        const r = await api("POST", "/idea", { title: s.title, topic: s.topic || topicOf(s.title), formula: s.formula, goal: s.goal, platforms: s.platId ? [s.platId] : [], due: s._due, status: "idea", source: s.source + " — " + s.why });
+        if (r && r.idea) { DATA.ideas.unshift(r.idea); s._added = true; if (btn) { btn.textContent = "Added ✓"; btn.disabled = true; } }
+      }
       function panelCalendar() {
         const start = new Date(); start.setHours(0, 0, 0, 0);
         const days = []; for (let i = 0; i < 14; i++) { const d = new Date(start); d.setDate(start.getDate() + i); days.push(d); }
-        const iso = (d) => d.toISOString().slice(0, 10);
         const row = (d) => {
-          const list = DATA.ideas.filter((x) => x.due === iso(d) && x.status !== "posted");
-          const ideas = list.length ? list.map((x) => `<span class="pill ${x.owner === "Founder" ? "teal" : ""}">${esc(x.title.slice(0, 34))}</span>`).join(" ") : `<button class="link-mini" data-cal-add="${iso(d)}">＋ schedule an idea</button>`;
-          return `<div class="cal-row"><div class="cal-day"><b>${WD[d.getDay()]}</b> ${iso(d).slice(5)}</div><div class="cal-body"><div class="cal-theme">${CADENCE[d.getDay()]}</div><div class="cal-ideas">${ideas}</div></div></div>`;
+          const list = DATA.ideas.filter((x) => x.due === isoDay(d) && x.status !== "posted");
+          const ideas = list.length ? list.map((x) => `<span class="pill ${x.owner === "Founder" ? "teal" : ""}">${esc(x.title.slice(0, 34))}</span>`).join(" ") : `<button class="link-mini" data-cal-add="${isoDay(d)}">＋ schedule an idea</button>`;
+          return `<div class="cal-row"><div class="cal-day"><b>${WD[d.getDay()]}</b> ${isoDay(d).slice(5)}</div><div class="cal-body"><div class="cal-theme">${CADENCE[d.getDay()]}</div><div class="cal-ideas">${ideas}</div></div></div>`;
         };
         const wk = (a, b, label) => `<div class="card"><h2 style="margin-top:0">${label}</h2>${days.slice(a, b).map(row).join("")}</div>`;
-        return `<section class="panel" id="tab-calendar"><h1>Content calendar</h1><p class="sub">A simple two-week schedule with a suggested weekly rhythm. Set a due date on any idea (Ideas tab, or "＋" below) and it lands here.</p>
+        return `<section class="panel" id="tab-calendar"><h1>Content calendar</h1><p class="sub">Plan the week in one click, then see what's scheduled. Anything you accept lands on the Board.</p>
+          <div class="card"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><b>✨ Plan my week</b><span class="muted" style="flex:1;min-width:150px">A suggested slate from what's working + this week's trends + your Brand Brain.</span><button class="btn gold" id="cal-plan-btn" style="flex:0 0 auto">Suggest a week</button></div><div id="cal-plan" style="margin-top:10px"></div></div>
           ${wk(0, 7, "This week")}${wk(7, 14, "Next week")}
-          <div class="card muted">The themes are a starting rhythm, not a rule — mix in whatever <b>What's Happening</b> surfaces.</div></section>`;
+          <div class="card muted">The day themes are a starting rhythm, not a rule.</div></section>`;
       }
       function wireCalendar() {
+        const pb = $("cal-plan-btn"); if (pb) pb.onclick = renderWeekPlan;
         document.querySelectorAll("#tab-calendar [data-cal-add]").forEach((b) => b.onclick = async () => {
           const due = b.dataset.calAdd; const title = prompt("Idea to schedule for " + due + ":"); if (!title) return;
           const r = await api("POST", "/idea", { title: title.trim(), due, status: "drafting" });
@@ -953,6 +989,17 @@ ${hashtagsFor(topic)}${src}`;
         const parts = METRICS.filter(([k]) => r[k] !== "" && r[k] != null).map(([k, l]) => `${num(r[k])} ${l.toLowerCase()}`);
         return parts.length ? `<div class="posted-metrics"><span class="mtag">Manually entered</span> ${parts.join(" · ")}</div>` : "";
       }
+      // A "winner" has at least one Great/Good post — worth repurposing.
+      const bestRatingOf = (i) => (i.results || []).some((r) => r.rating === "Great") ? "Great" : (i.results || []).some((r) => r.rating === "Good") ? "Good" : "";
+      const isWinner = (i) => !!bestRatingOf(i);
+      async function repurpose(idea) {
+        let nf = (INSIGHTS && INSIGHTS.dims && INSIGHTS.dims.formula[0] && INSIGHTS.dims.formula[0].key) || "";
+        if (!nf || nf === idea.formula) { const idx = FORMULAS.findIndex((f) => f.id === idea.formula); nf = FORMULAS[(idx + 1) % FORMULAS.length].id; } // a different angle
+        const used = new Set(idea.platforms || []);
+        const platId = ["reel", "ig", "shorts", "linkedin"].find((p) => !used.has(p)) || "ig"; // a platform it wasn't on
+        const r = await api("POST", "/idea", { title: "Repurpose: " + idea.title, topic: idea.topic || "", formula: nf, goal: idea.goal || "", platforms: [platId], status: "idea", source: `Repurposed from a ${bestRatingOf(idea)} post` });
+        if (r && r.idea) { DATA.ideas.unshift(r.idea); render(); }
+      }
       function postedSummary(i) {
         if (!i.results || !i.results.length) return "";
         // A post is Published once it has a date; Measured once it has a rating.
@@ -1031,6 +1078,21 @@ ${hashtagsFor(topic)}${src}`;
         }).join("");
       }
       function helpOpen() { try { return localStorage.getItem("mkt-help") !== "0"; } catch { return true; } }
+      // Founder's at-a-glance: what shipped in the last 7 days, the top performer,
+      // and how many cards are waiting on approval. Only shows when there's something.
+      function weeklyMonitor() {
+        const now = Date.now(), weekAgo = now - 7 * 864e5;
+        const posts = [];
+        DATA.ideas.forEach((i) => (i.results || []).forEach((r) => { if (r.date) { const t = new Date(r.date + "T00:00:00").getTime(); if (t >= weekAgo && t <= now + 864e5) posts.push({ i, r }); } }));
+        const awaiting = DATA.ideas.filter((i) => i.approval).length;
+        if (!posts.length && !awaiting) return "";
+        const rated = posts.filter((p) => p.r.rating).sort((a, b) => RATING_SCORE[b.r.rating] - RATING_SCORE[a.r.rating]);
+        const top = rated[0];
+        return `<div class="card" style="border-color:var(--teal)"><h2 style="margin-top:0">📋 This week</h2>
+          <div class="perf-grid"><div><b>${posts.length}</b><span class="muted">shipped (last 7 days)</span></div><div><b>${awaiting}</b><span class="muted">awaiting approval</span></div></div>
+          ${top ? `<p class="muted" style="margin:10px 0 0">Top performer: <b style="color:var(--ink)">${esc(top.i.title)}</b> — <span class="rating ${esc(top.r.rating)}">${esc(top.r.rating)}</span> on ${esc(top.r.platform)}</p>` : ""}
+          ${awaiting ? `<p style="margin:8px 0 0"><button class="link-mini" id="mon-approve">See ${awaiting} awaiting your approval →</button></p>` : ""}</div>`;
+      }
       function panelIdeas() {
         const approvalOn = boardApprovalOnly();
         return `<section class="panel" id="tab-ideas"><h1>Content Board</h1><p class="sub">Everything you're making, in one place — from idea to results.</p>
@@ -1043,6 +1105,7 @@ ${hashtagsFor(topic)}${src}`;
             </ol>
             <p class="muted" style="margin:8px 0 0"><b>2 people:</b> the marketer just publishes — no approval needed. Tick <b>⚑ Needs approval</b> on a card only when the founder should check it first. Founder: watch the <b>📢 Published</b> / <b>📊 Measured</b> lanes to see everything that's gone out.</p>
           </details>
+          ${weeklyMonitor()}
           <div class="card"><label>Quick add an idea</label><div class="row"><input id="i-title" placeholder="New idea (one line)" /><select id="i-owner" style="flex:0 0 120px">${OWNERS.map((o) => `<option>${o}</option>`).join("")}</select><button class="btn" id="i-add" style="flex:0 0 auto">Add</button></div></div>
           ${perfSection()}
           <div class="card"><div class="row">
@@ -1068,6 +1131,7 @@ ${hashtagsFor(topic)}${src}`;
           <button class="chip-btn" data-act="produce" title="Produce (shoot-ready brief)">🎬</button>
           <button class="chip-btn" data-act="edit" title="Editing checklist">✂️ Edit${editProgress(i) ? ` ${editProgress(i)}/${EDIT_TASKS.length}` : ""}</button>
           <button class="chip-btn" data-act="results" title="${hasResults ? "Publish / results" : "Mark published"}">${hasResults ? "📊 Results" : "📢 Mark published"}</button>
+          ${isWinner(i) ? `<button class="chip-btn" data-act="repurpose" title="Make a variant of this winner">♻️ Repurpose</button>` : ""}
           <button class="chip-btn" data-act="del" title="Delete">🗑</button></div>
           <div class="top" style="margin-top:8px">
             <select data-act="owner" title="Owner" style="flex:0 0 auto">${OWNERS.map((o) => `<option${(i.owner || "Marketer") === o ? " selected" : ""}>${o}</option>`).join("")}</select>
@@ -1089,6 +1153,7 @@ ${hashtagsFor(topic)}${src}`;
           el.querySelector('[data-act="produce"]').onclick = () => openProduce(ideaToOpp(idea));
           el.querySelector('[data-act="edit"]').onclick = () => openEditing(idea);
           el.querySelector('[data-act="results"]').onclick = () => openResults(idea);
+          const rep = el.querySelector('[data-act="repurpose"]'); if (rep) rep.onclick = () => repurpose(idea);
           el.querySelectorAll('[data-act="measure"]').forEach((b) => b.onclick = () => openResults(idea));
           el.querySelector('[data-act="del"]').onclick = async () => { if (!confirm("Delete this idea?")) return; await api("DELETE", "/idea/" + id); DATA.ideas = DATA.ideas.filter((x) => x.id !== id); await loadInsights(); render(); };
           let t; el.querySelector('[data-act="draft"]').oninput = (e) => { idea.draft = e.target.value; clearTimeout(t); t = setTimeout(() => api("PATCH", "/idea/" + id, { draft: e.target.value }), 600); };
@@ -1103,6 +1168,8 @@ ${hashtagsFor(topic)}${src}`;
         if (appBtn) appBtn.onclick = () => { BOARD_APPROVAL = !BOARD_APPROVAL; appBtn.setAttribute("aria-pressed", BOARD_APPROVAL); appBtn.classList.toggle("on", BOARD_APPROVAL); rerender(); };
         const help = $("b-help");
         if (help) help.ontoggle = () => { try { localStorage.setItem("mkt-help", help.open ? "1" : "0"); } catch {} };
+        const mon = $("mon-approve");
+        if (mon) mon.onclick = () => { BOARD_APPROVAL = true; const ab = $("b-approval"); if (ab) { ab.setAttribute("aria-pressed", "true"); ab.classList.add("on"); } rerender(); const lanes = $("b-lanes"); if (lanes) lanes.scrollIntoView({ block: "start" }); };
         wireCards(rerender);
       }
 
