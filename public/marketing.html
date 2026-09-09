@@ -148,12 +148,11 @@
         <div class="save-state" id="saveState"></div>
       </div>
       <nav class="tabs" id="tabs" hidden>
-        <button data-tab="radar" class="on">🔥 What's Happening</button>
-        <button data-tab="calendar">Calendar</button>
-        <button data-tab="create">Create</button>
-        <button data-tab="ideas">Board</button>
-        <button data-tab="library">Library</button>
-        <button data-tab="brain">Brand Brain</button>
+        <button data-tab="home" class="on">🏠 Home</button>
+        <button data-tab="ideas">📥 Content</button>
+        <button data-tab="calendar">🗓️ Calendar</button>
+        <button data-tab="brain">✦ Brand</button>
+        <button data-tab="analytics">📊 Analytics</button>
       </nav>
     </header>
 
@@ -333,14 +332,17 @@
       });
       $("g-pass").addEventListener("keydown", (e) => { if (e.key === "Enter") $("g-btn").click(); });
 
-      let TAB = "radar";
+      let TAB = "home";
       let RADAR = null; // { items, research, updatedAt } — this week's news, fetched once
-      function mode() { try { return localStorage.getItem("mkt-mode") || "Marketer"; } catch { return "Marketer"; } }
+      let ROLE = "marketer"; // real account role from /me: "founder" (full admin) or "marketer"
+      const isFounder = () => ROLE === "founder";
+      const mode = () => isFounder() ? "Founder" : "Marketer"; // compat for helpers that predate ROLE
       async function start() {
         $("gate").style.display = "none"; $("tabs").hidden = false; $("app").hidden = false;
         const d = await (await fetch("/api/marketing/data")).json().catch(() => ({}));
         DATA = { brain: d.brain || {}, ideas: Array.isArray(d.ideas) ? d.ideas : [] };
         setSave("saved");
+        try { const me = await (await fetch("/api/marketing/me")).json(); ROLE = me.role === "founder" ? "founder" : "marketer"; } catch { ROLE = "marketer"; }
         await loadInsights();
         $("tabs").querySelectorAll("button").forEach((b) => b.onclick = () => { TAB = b.dataset.tab; $("tabs").querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); render(); });
         // Produce modal close (wired once — the modal is static, not re-rendered).
@@ -362,7 +364,7 @@
       }
       async function loadRadar() {
         try { RADAR = await (await fetch("/api/marketing/radar")).json(); } catch { RADAR = { items: [], research: [] }; }
-        if (TAB === "radar") render();
+        if (TAB === "home" || TAB === "create") render(); // trends feed the marketer Home + Create banner
       }
       // Recommendation engine v2 — server computes it from recorded results.
       let INSIGHTS = null;
@@ -385,9 +387,11 @@
         return parts.join(" ");
       }
       function render() {
-        $("app").innerHTML = [panelRadar(), panelCalendar(), panelCreate(), panelIdeas(), panelLibrary(), panelBrain()].join("");
-        document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("on", p.id === "tab-" + TAB));
-        wireRadar(); wireCalendar(); wireCreate(); wireIdeas(); wireLibrary(); wireBrain();
+        $("app").innerHTML = [panelHome(), panelCreate(), panelIdeas(), panelCalendar(), panelBrain(), panelLibrary(), panelAnalytics()].join("");
+        // Brand tab shows Brand Brain + the Library reference together.
+        document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("on", p.id === "tab-" + TAB || (TAB === "brain" && p.id === "tab-library")));
+        $("tabs").querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.tab === TAB)); // keep nav in sync with programmatic navigation
+        wireHome(); wireCreate(); wireIdeas(); wireCalendar(); wireBrain(); wireLibrary(); wireAnalytics();
       }
 
       // ===== RADAR / INTELLIGENCE =====
@@ -865,7 +869,7 @@ Keep Universo's honest, warm voice; never invent numbers, traction or results. R
 
       // ===== CREATE =====
       function panelCreate() {
-        return `<section class="panel" id="tab-create"><h1>Create</h1><p class="sub">Answer four things — <b>what</b>, <b>why</b>, <b>how</b>, <b>where</b> — and get a practical, ready-to-shoot brief per platform, built from your real data. Nothing is sent anywhere.</p>
+        return `<section class="panel" id="tab-create"><button class="link-mini" id="c-back" style="margin-bottom:6px">← Back to Content</button><h1>Create content</h1><p class="sub">Answer four things — <b>what</b>, <b>why</b>, <b>how</b>, <b>where</b> — and get a practical, ready-to-shoot brief per platform, built from your real data. Nothing is sent anywhere.</p>
           <div id="c-reco"></div>
           <div class="card"><label>1 · WHAT — the idea (one line)</label>
             <div class="field"><input id="c-idea" placeholder="e.g. Why students miss scholarships they qualify for" /></div>
@@ -882,6 +886,7 @@ Keep Universo's honest, warm voice; never invent numbers, traction or results. R
       function selectedGoals() { return [...document.querySelectorAll("#c-goals .chip-btn")].filter((b) => b.getAttribute("aria-pressed") === "true").map((b) => b.dataset.goal); }
       function updateFormulaDesc() { const d = $("c-formula-desc"); if (d) d.textContent = getFormula($("c-formula").value).desc; }
       function wireCreate() {
+        const back = $("c-back"); if (back) back.onclick = () => { TAB = "ideas"; render(); };
         const toggle = (b) => { const on = b.getAttribute("aria-pressed") !== "true"; b.setAttribute("aria-pressed", on); b.classList.toggle("on", on); };
         const plats = document.querySelectorAll("#c-plats .chip-btn");
         plats.forEach((b) => b.onclick = () => toggle(b));
@@ -1241,21 +1246,50 @@ ${hashtagsFor(topic)}${src}`;
           ${top ? `<p class="muted" style="margin:10px 0 0">Top performer: <b style="color:var(--ink)">${esc(top.i.title)}</b> — <span class="rating ${esc(top.r.rating)}">${esc(top.r.rating)}</span> on ${esc(top.r.platform)}</p>` : ""}
           ${awaiting ? `<p style="margin:8px 0 0"><button class="link-mini" id="mon-approve">See ${awaiting} awaiting your approval →</button></p>` : ""}</div>`;
       }
+      // ===== HOME — role-aware landing (Founder = decisions; Marketer = execution) =====
+      const homeRow = (i) => `<div class="head-item" style="display:flex;gap:8px;align-items:center"><span style="flex:1;min-width:0"><b>${esc(i.title)}</b> <span class="pill">${esc(STATUS_LABEL[i.status || "idea"] || i.status)}</span></span><button class="link-mini" data-open="${i.id}">Open →</button></div>`;
+      function panelHome() {
+        const total = DATA.ideas.length, posted = DATA.ideas.filter((i) => i.status === "posted"), active = DATA.ideas.filter((i) => i.status !== "posted");
+        const rows = (list, empty) => list.length ? list.slice(0, 6).map(homeRow).join("") : `<div class="muted">${empty}</div>`;
+        if (isFounder()) {
+          const review = DATA.ideas.filter((i) => i.status === "review" || (i.approval && i.status !== "posted"));
+          const measured = []; posted.forEach((i) => (i.results || []).forEach((r) => { if (r.rating) measured.push({ i, r }); }));
+          const top = measured.sort((a, b) => RATING_SCORE[b.r.rating] - RATING_SCORE[a.r.rating])[0];
+          const own = { Founder: active.filter((i) => i.owner === "Founder").length, Marketer: active.filter((i) => (i.owner || "Marketer") === "Marketer").length };
+          const goals = firstSentence(brain("biz_goals")) || firstSentence(brain("mission"));
+          return `<section class="panel" id="tab-home"><h1>Marketing — founder view</h1><p class="sub">What's happening, and what needs your decision.</p>
+            <div class="card" style="border-color:var(--teal)"><h2 style="margin-top:0">🔑 Needs your decision <span class="pill">${review.length}</span></h2>${rows(review, "Nothing waiting on you right now.")}</div>
+            <div class="card"><h2 style="margin-top:0">📊 Marketing overview</h2><div class="perf-grid"><div><b>${posted.length}</b><span class="muted">published</span></div><div><b>${active.length}</b><span class="muted">in progress</span></div><div><b>${total}</b><span class="muted">total items</span></div></div>${top ? `<p class="muted" style="margin:10px 0 0">Top performer: <b style="color:var(--ink)">${esc(top.i.title)}</b> — <span class="rating ${esc(top.r.rating)}">${esc(top.r.rating)}</span> on ${esc(top.r.platform)}</p>` : ""}<p style="margin:8px 0 0"><button class="link-mini" data-go="analytics">See full analytics →</button></p></div>
+            <div class="card"><h2 style="margin-top:0">🎯 Current goals</h2><p class="muted" style="margin-top:0">${esc(goals || "Set your goals in Brand.")}</p><p><button class="link-mini" data-go="brain">Open Brand →</button></p></div>
+            <div class="card"><h2 style="margin-top:0">👥 Team</h2><div class="perf-grid"><div><b>${own.Founder}</b><span class="muted">Founder owns</span></div><div><b>${own.Marketer}</b><span class="muted">Marketer owns</span></div></div></div></section>`;
+        }
+        const mine = DATA.ideas.filter((i) => ["drafting", "editing"].includes(i.status));
+        const attention = DATA.ideas.filter((i) => ["review", "approved", "scheduled"].includes(i.status));
+        const trends = (RADAR && RADAR.items || []).filter((x) => x.kind === "news" || x.kind === "trend").slice(0, 4);
+        return `<section class="panel" id="tab-home"><h1>Your marketing work</h1><p class="sub">What to create, edit and publish next.</p>
+          <div class="card" style="border-color:var(--teal)"><div class="row" style="align-items:center"><div style="flex:1;min-width:150px"><b>Start something new</b><div class="muted">Pick a goal + platform and produce it.</div></div><button class="btn gold" data-go="create" style="flex:0 0 auto">＋ Create content</button></div></div>
+          <div class="card"><h2 style="margin-top:0">✍️ My work <span class="pill">${mine.length}</span></h2>${rows(mine, "Nothing in progress — create something above.")}</div>
+          <div class="card"><h2 style="margin-top:0">👀 Needs attention <span class="pill">${attention.length}</span></h2>${rows(attention, "Nothing waiting right now.")}</div>
+          <div class="card"><h2 style="margin-top:0">💡 Ideas this week</h2>${trends.length ? trends.map((t, idx) => `<div class="head-item" style="display:flex;gap:8px;align-items:center"><span style="flex:1;min-width:0">${esc(t.title)}</span><button class="link-mini" data-trend="${idx}">Draft this →</button></div>`).join("") : `<div class="muted">Fetching this week's trends…</div>`}</div></section>`;
+      }
+      function wireHome() {
+        document.querySelectorAll("#tab-home [data-go]").forEach((b) => b.onclick = () => { TAB = b.dataset.go; render(); });
+        document.querySelectorAll("#tab-home [data-open]").forEach((x) => x.onclick = () => { const idea = DATA.ideas.find((i) => i.id === x.dataset.open); if (idea) openEditor(idea); });
+        document.querySelectorAll("#tab-home [data-trend]").forEach((x) => x.onclick = async () => {
+          const items = (RADAR && RADAR.items || []).filter((y) => y.kind === "news" || y.kind === "trend"); const t = items[+x.dataset.trend]; if (!t) return;
+          const r = await api("POST", "/idea", { title: t.title, topic: topicOf(t.title), source: t.source || "", status: "editing" });
+          if (r && r.idea) { r.idea.content = { hook: t.title, caption: "", cta: "", body: "", mediaUrl: "", mediaType: "", notes: "", versions: [] }; await api("PATCH", "/idea/" + r.idea.id, { content: r.idea.content }); DATA.ideas.unshift(r.idea); openEditor(r.idea); }
+        });
+      }
+      function panelAnalytics() {
+        return `<section class="panel" id="tab-analytics"><h1>Analytics</h1><p class="sub">What worked, and what to make next — from your recorded results only. No AI, no scraping.</p>${perfSection() || '<div class="card muted">No performance data yet. Publish content and record how it did (a rating + any numbers) to see what works.</div>'}</section>`;
+      }
+      function wireAnalytics() {}
       function panelIdeas() {
         const approvalOn = boardApprovalOnly();
-        return `<section class="panel" id="tab-ideas"><h1>Content Board</h1><p class="sub">Everything you're making, in one place — from idea to results.</p>
-          <details class="card" id="b-help"${helpOpen() ? " open" : ""}><summary style="cursor:pointer;font-weight:700">📖 How this works (4 steps)</summary>
-            <ol class="work-list" style="margin:10px 0 0;padding-left:20px">
-              <li><b>💡 Create</b> — go to the <b>Create</b> tab, type an idea, pick a goal + a format. You get a ready script + shoot brief, and can <b>open Claude/ChatGPT with the prompt already typed</b> to write the caption in one click.</li>
-              <li><b>✂️ Edit</b> — on a card, hit <b>✂️ Edit</b> for a checklist of how to cut the video (in a free tool like CapCut/Canva). Tick items as you go. It's a guide — it doesn't edit for you.</li>
-              <li><b>📢 Publish</b> — once you post it, hit <b>📢 Mark published</b> (platform + date). No sign-off needed.</li>
-              <li><b>📊 Measure</b> — later, add how it did (a rating + any numbers). The OS learns and suggests what to make next.</li>
-            </ol>
-            <p class="muted" style="margin:8px 0 0"><b>2 people:</b> the marketer just publishes — no approval needed. Tick <b>⚑ Needs approval</b> on a card only when the founder should check it first. Founder: watch the <b>📢 Published</b> / <b>📊 Measured</b> lanes to see everything that's gone out.</p>
-          </details>
-          ${weeklyMonitor()}
+        return `<section class="panel" id="tab-ideas"><h1>Content</h1><p class="sub">Everything you're making — from idea to published. Open a card to write, edit and produce it; drag it along by changing its status.</p>
+          <div class="row" style="margin-bottom:12px"><button class="btn gold" id="c-new" style="flex:0 0 auto">＋ Create content</button><span class="muted" style="align-self:center">or quick-add a rough idea below</span></div>
           <div class="card"><label>Quick add an idea</label><div class="row"><input id="i-title" placeholder="New idea (one line)" /><select id="i-owner" style="flex:0 0 120px">${OWNERS.map((o) => `<option>${o}</option>`).join("")}</select><button class="btn" id="i-add" style="flex:0 0 auto">Add</button></div></div>
-          ${perfSection()}
           <div class="card"><div class="row">
             <input id="b-search" placeholder="🔎 Search title or topic…" />
             <select id="b-goal" style="flex:0 0 auto"><option value="">All goals</option>${GOALS.map((g) => `<option value="${g.id}">${esc(g.label)}</option>`).join("")}</select>
@@ -1306,6 +1340,7 @@ ${hashtagsFor(topic)}${src}`;
         });
       }
       function wireIdeas() {
+        const cnew = $("c-new"); if (cnew) cnew.onclick = () => { TAB = "create"; render(); };
         const add = $("i-add");
         if (add) add.onclick = async () => { const v = $("i-title").value.trim(); if (!v) return; const r = await api("POST", "/idea", { title: v, owner: $("i-owner").value }); if (r && r.idea) { DATA.ideas.unshift(r.idea); $("i-title").value = ""; render(); } };
         const rerender = () => { const el = $("b-lanes"); if (!el) return; el.innerHTML = DATA.ideas.length ? boardLanes() : BOARD_EMPTY; wireCards(rerender); };

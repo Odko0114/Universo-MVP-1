@@ -2457,7 +2457,8 @@ const readMkt = () => {
   return m;
 };
 const str = (v, n) => (typeof v === "string" ? v.slice(0, n) : "");
-mkt.get("/me", (req, res) => res.json({ email: req.admin.email }));
+// Real role drives the whole UI (Founder = full admin, Marketer = marketing-only).
+mkt.get("/me", (req, res) => res.json({ email: req.admin.email, role: (/** @type {any} */ (req))._adminRole === "marketing" ? "marketer" : "founder" }));
 mkt.get("/data", (_req, res) => res.json(readMkt()));
 mkt.patch("/brain", (req, res) => {
   const b = req.body || {};
