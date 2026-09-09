@@ -277,6 +277,27 @@ test("campaigns: founder-only create/delete; assign an item; delete unassigns (k
   await req("DELETE", "/api/marketing/idea/" + it.json.idea.id);
 });
 
+test("team & invite: founder invites → invitee sets own password → becomes a marketer (one-time)", async () => {
+  assert.equal(await loginAs(ADM.email, ADM.pw), 200); // founder
+  const email = "invitee-" + Date.now() + "@example.com";
+  const r = await req("POST", "/api/marketing/invite", { email });
+  assert.equal(r.status, 200);
+  const token = r.json.invite.url.split("token=")[1];
+  assert.ok(token && token.length > 20);
+  assert.ok((await req("GET", "/api/marketing/team")).json.invites.some((i) => i.email === email)); // listed as pending
+
+  assert.equal(await loginAs(MKT.email, MKT.pw), 200); // marketer can't invite or see team
+  assert.equal((await req("POST", "/api/marketing/invite", { email: "x@y.zz" })).status, 403);
+  assert.equal((await req("GET", "/api/marketing/team")).status, 403);
+
+  const accept = (pw) => fetch(base + "/marketing/join", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, password: pw }) });
+  assert.equal((await accept("short")).status, 400); // too short rejected
+  assert.equal((await accept("a-good-password-123")).status, 200); // creates the account (invitee's own password)
+  assert.equal(await loginAs(email, "a-good-password-123"), 200); // the new marketer can log in
+  assert.equal((await req("GET", "/api/marketing/me")).json.role, "marketer");
+  assert.ok([409, 410].includes((await accept("a-good-password-123")).status)); // token is one-time
+});
+
 test("approval flag defaults off and toggles", async () => {
   const created = await req("POST", "/api/marketing/idea", { title: "Approval idea" });
   assert.equal(created.json.idea.approval, false); // off by default — no sign-off needed

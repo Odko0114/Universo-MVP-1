@@ -2455,6 +2455,7 @@ const readMkt = () => {
   if (!m.brain || typeof m.brain !== "object") m.brain = {};
   if (!Array.isArray(m.ideas)) m.ideas = [];
   if (!Array.isArray(m.campaigns)) m.campaigns = [];
+  if (!Array.isArray(m.invites)) m.invites = [];
   return m;
 };
 const str = (v, n) => (typeof v === "string" ? v.slice(0, n) : "");
@@ -2677,6 +2678,36 @@ mkt.delete("/campaign/:id", (req, res) => {
   store.write("marketing", m);
   res.json({ ok: true });
 });
+// Team: founder sees members + pending invites; invites a marketer via a one-time
+// link. Passwords are never shared or handled here — the invitee sets their own
+// via the join page. Founder-only.
+const INVITE_TTL = 7 * 864e5;
+mkt.get("/team", (req, res) => {
+  if (!mktFounder(req)) return res.status(403).json({ error: "Founder only." });
+  const m = readMkt();
+  const members = (store.read("admins") || []).map((a) => ({ email: a.email, role: a.role === "marketing" ? "marketer" : "founder" }));
+  const invites = m.invites.filter((i) => i.expiresAt > Date.now()).map((i) => ({ email: i.email, createdAt: i.createdAt, url: `${appOrigin(req)}/marketing/join?token=${i.token}` }));
+  res.json({ members, invites });
+});
+mkt.post("/invite", (req, res) => {
+  if (!mktFounder(req)) return res.status(403).json({ error: "Only a founder can invite team members." });
+  const email = str((req.body || {}).email, 120).trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ error: "A valid email is required." });
+  if (adminAuth.findAdminByEmail(email)) return res.status(409).json({ error: "That person is already a member." });
+  const m = readMkt();
+  m.invites = m.invites.filter((i) => i.email !== email && i.expiresAt > Date.now()); // one live invite per email
+  const token = crypto.randomBytes(24).toString("hex");
+  m.invites.unshift({ token, email, role: "marketer", createdAt: Date.now(), expiresAt: Date.now() + INVITE_TTL });
+  store.write("marketing", m);
+  res.json({ invite: { email, url: `${appOrigin(req)}/marketing/join?token=${token}` } });
+});
+mkt.delete("/invite/:token", (req, res) => {
+  if (!mktFounder(req)) return res.status(403).json({ error: "Founder only." });
+  const m = readMkt();
+  m.invites = m.invites.filter((i) => i.token !== req.params.token);
+  store.write("marketing", m);
+  res.json({ ok: true });
+});
 // Ready-made script composed deterministically from real data (no AI) — a
 // verified scholarship / hand-verified university / live counts, chosen by the
 // opportunity's topic, with the source links returned for verification.
@@ -2805,6 +2836,29 @@ app.use(
 app.get("/admin", (_req, res) => sendHtml(res, ADMIN_PAGE));
 // Marketing OS: a clean top-level URL, separate from /admin. Old path kept as an alias.
 app.get("/marketing", (_req, res) => sendHtml(res, MARKETING_PAGE));
+// Public invite-accept flow — the invited marketer sets their OWN password here.
+// No auth gate (they have no account yet); guarded by the one-time token + limiter.
+const JOIN_PAGE = `<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>Join — Universo Marketing OS</title><style>body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#0b1f3a;color:#eee;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:20px}.box{background:#fff;color:#10233f;max-width:380px;width:100%;border-radius:16px;padding:26px}h1{font-size:1.2rem;margin:0 0 4px}p{color:#45566e;font-size:.9rem;margin:0 0 16px}label{display:block;font-size:.78rem;font-weight:700;color:#45566e;margin:0 0 5px}input{width:100%;box-sizing:border-box;padding:11px 12px;border:1px solid #e1e6ee;border-radius:10px;font-size:1rem;margin-bottom:12px}button{width:100%;border:0;border-radius:10px;padding:12px;background:#0d9488;color:#fff;font-weight:700;font-size:1rem;cursor:pointer}.msg{font-size:.85rem;margin-top:10px}.err{color:#d64550}.ok{color:#0d9488}</style></head><body><div class="box"><h1>Join Universo Marketing OS</h1><p>You've been invited as a marketer. Set your password to create your account.</p><label>Password (min 10 characters)</label><input id="pw" type="password" autocomplete="new-password"><label>Confirm password</label><input id="pw2" type="password" autocomplete="new-password"><button id="go">Create my account</button><div class="msg" id="msg"></div></div><script>
+const q=new URLSearchParams(location.search),token=q.get("token")||"";const $=i=>document.getElementById(i);
+$("go").onclick=async()=>{const pw=$("pw").value,pw2=$("pw2").value,m=$("msg");m.className="msg";m.textContent="";
+if(pw.length<10){m.className="msg err";m.textContent="Password must be at least 10 characters.";return;}
+if(pw!==pw2){m.className="msg err";m.textContent="Passwords don't match.";return;}
+$("go").disabled=true;try{const r=await fetch("/marketing/join",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token,password:pw})});const j=await r.json().catch(()=>({}));if(r.ok){m.className="msg ok";m.innerHTML="Account created for "+(j.email||"you")+". <a href='/marketing'>Log in →</a>";}else{$("go").disabled=false;m.className="msg err";m.textContent=j.error||"Something went wrong.";}}catch{$("go").disabled=false;m.className="msg err";m.textContent="Network error.";}};
+$("pw2").addEventListener("keydown",e=>{if(e.key==="Enter")$("go").click();});
+</script></body></html>`;
+app.get("/marketing/join", (_req, res) => sendHtml(res, JOIN_PAGE));
+app.post("/marketing/join", adminLoginLimiter, asyncRoute(async (req, res) => {
+  const { token, password } = req.body || {};
+  const m = readMkt();
+  const inv = m.invites.find((i) => i.token === String(token || "") && i.expiresAt > Date.now());
+  if (!inv) return res.status(410).json({ error: "This invite link is invalid or has expired. Ask the founder for a new one." });
+  if (!password || String(password).length < 10) return res.status(400).json({ error: "Choose a password of at least 10 characters." });
+  if (adminAuth.findAdminByEmail(inv.email)) { m.invites = m.invites.filter((i) => i.token !== inv.token); await store.write("marketing", m); return res.status(409).json({ error: "An account for this email already exists — just log in." }); }
+  await adminAuth.createAdmin(inv.email, String(password), "marketing");
+  m.invites = m.invites.filter((i) => i.token !== inv.token); // one-time
+  await store.write("marketing", m);
+  res.json({ ok: true, email: inv.email });
+}));
 app.get("/admin/marketing", (_req, res) => sendHtml(res, MARKETING_PAGE));
 
 // Partner dashboard — one shared static page for every university account;

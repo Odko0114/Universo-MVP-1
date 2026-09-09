@@ -154,6 +154,7 @@
         <button data-tab="campaigns">🎯 Campaigns</button>
         <button data-tab="brain">✦ Brand</button>
         <button data-tab="analytics">📊 Analytics</button>
+        <button data-tab="team" hidden>👥 Team</button>
       </nav>
     </header>
 
@@ -389,11 +390,12 @@
         return parts.join(" ");
       }
       function render() {
-        $("app").innerHTML = [panelHome(), panelCreate(), panelIdeas(), panelCalendar(), panelCampaigns(), panelBrain(), panelLibrary(), panelAnalytics()].join("");
+        $("app").innerHTML = [panelHome(), panelCreate(), panelIdeas(), panelCalendar(), panelCampaigns(), panelBrain(), panelLibrary(), panelAnalytics(), panelTeam()].join("");
         // Brand tab shows Brand Brain + the Library reference together.
         document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("on", p.id === "tab-" + TAB || (TAB === "brain" && p.id === "tab-library")));
+        const teamBtn = $("tabs").querySelector('[data-tab="team"]'); if (teamBtn) teamBtn.hidden = !isFounder(); // Team is founder-only
         $("tabs").querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.tab === TAB)); // keep nav in sync with programmatic navigation
-        wireHome(); wireCreate(); wireIdeas(); wireCalendar(); wireCampaigns(); wireBrain(); wireLibrary(); wireAnalytics();
+        wireHome(); wireCreate(); wireIdeas(); wireCalendar(); wireCampaigns(); wireBrain(); wireLibrary(); wireAnalytics(); wireTeam();
       }
 
       // ===== RADAR / INTELLIGENCE =====
@@ -1326,6 +1328,32 @@ ${hashtagsFor(topic)}${src}`;
         const add = $("cmp-add"); if (add) add.onclick = async () => { const name = ($("cmp-name").value || "").trim(); if (!name) return; const r = await api("POST", "/campaign", { name, goal: $("cmp-goal").value }); if (r && r.campaign) { DATA.campaigns.unshift(r.campaign); render(); } };
         document.querySelectorAll("#tab-campaigns [data-delc]").forEach((b) => b.onclick = async () => { if (!confirm("Delete this campaign? The content stays — it's just unassigned.")) return; await api("DELETE", "/campaign/" + b.dataset.delc); DATA.campaigns = DATA.campaigns.filter((c) => c.id !== b.dataset.delc); DATA.ideas.forEach((i) => { if (i.campaign === b.dataset.delc) i.campaign = ""; }); render(); });
         document.querySelectorAll("#tab-campaigns [data-open]").forEach((x) => x.onclick = () => { const idea = DATA.ideas.find((i) => i.id === x.dataset.open); if (idea) openEditor(idea); });
+      }
+      // ===== TEAM — members + one-time invite links (founder-only) =====
+      function panelTeam() {
+        if (!isFounder()) return `<section class="panel" id="tab-team"><h1>Team</h1><div class="card muted">Team management is founder-only.</div></section>`;
+        return `<section class="panel" id="tab-team"><h1>Team</h1><p class="sub">Who's in your workspace, and invite a marketer with their own login.</p>
+          <div class="card"><label>Invite a marketer</label><div class="row"><input id="tm-email" type="email" placeholder="their@email.com" /><button class="btn" id="tm-invite" style="flex:0 0 auto">Send invite</button></div><div id="tm-invite-out" class="muted" style="margin-top:8px">They set their own password from the link — no shared passwords.</div></div>
+          <div class="card"><h2 style="margin-top:0">Members</h2><div id="tm-members" class="muted">Loading…</div></div>
+          <div class="card"><h2 style="margin-top:0">Pending invites</h2><div id="tm-invites" class="muted">Loading…</div></div></section>`;
+      }
+      async function loadTeam() {
+        if (!$("tm-members")) return;
+        let t = null; try { t = await (await fetch("/api/marketing/team")).json(); } catch {}
+        if (!t || !t.members) { $("tm-members").textContent = "Couldn't load the team."; return; }
+        $("tm-members").innerHTML = t.members.map((mem) => `<div class="head-item">${esc(mem.email)} <span class="pill${mem.role === "founder" ? " teal" : ""}">${esc(mem.role)}</span></div>`).join("") || '<div class="muted">No members.</div>';
+        $("tm-invites").innerHTML = t.invites.length ? t.invites.map((i) => `<div class="head-item" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span style="flex:1;min-width:110px">${esc(i.email)}</span><input readonly value="${esc(i.url)}" style="flex:2;min-width:170px" onclick="this.select()" /><button class="link-mini" data-revoke="${esc((i.url.split("token=")[1] || ""))}">Revoke</button></div>`).join("") : '<div class="muted">No pending invites.</div>';
+        document.querySelectorAll("#tab-team [data-revoke]").forEach((b) => b.onclick = async () => { await api("DELETE", "/invite/" + b.dataset.revoke); loadTeam(); });
+      }
+      function wireTeam() {
+        const inv = $("tm-invite"); if (!inv) return;
+        inv.onclick = async () => {
+          const email = ($("tm-email").value || "").trim(); if (!email) return;
+          const r = await api("POST", "/invite", { email }); const out = $("tm-invite-out");
+          if (r && r.invite) { out.innerHTML = `Invite ready — send this link to <b>${esc(r.invite.email)}</b>:<br><input readonly value="${esc(r.invite.url)}" style="width:100%;margin-top:6px" onclick="this.select()" />`; $("tm-email").value = ""; loadTeam(); }
+          else { out.className = "muted"; out.textContent = "Couldn't create the invite — they may already be a member."; }
+        };
+        loadTeam();
       }
       function panelIdeas() {
         const approvalOn = boardApprovalOnly();
