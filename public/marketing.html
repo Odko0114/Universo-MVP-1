@@ -604,6 +604,7 @@
           <div class="prod-sec" id="prod-datascript"><div class="prod-h">Ready script — from Universo's real data</div><div class="muted">Loading real data…</div></div>
           <div class="prod-sec"><div class="prod-h">Shot-list structure (${esc(formula.name)})</div><ol class="prod-shots">${formula.steps.map((s) => `<li>${esc(s)} <span class="muted">— film this</span></li>`).join("")}</ol></div>
           <div class="prod-sec"><div class="prod-h">Caption <button class="link-mini" id="prod-copycap">Copy</button></div><pre id="prod-cap">${esc(caption)}</pre></div>
+          <div class="prod-sec"><div class="prod-h">Write the caption — with AI (free)</div><div class="chips">${aiButtons(buildPrompt(o.platform || "reel", o.angle, formula, cta))}</div><div class="muted" style="margin-top:6px">Opens with your brand prompt already typed — the AI writes the post. Paste it back into the card's <b>Final draft</b>.</div></div>
           <div class="prod-sec"><div class="prod-h">Hashtags</div><div>${esc(hashtagsFor(o.topic))}</div></div>
           <div class="prod-sec"><div class="prod-h">Make it — free tools</div><div class="chips">${VIDEO_TOOLS.map((t) => `<a class="chip-btn" href="${esc(t.url)}" target="_blank" rel="noopener">${esc(t.name)} ↗</a>`).join("")}</div><div class="muted" style="margin-top:6px">Free tiers, no card needed to start. These are where you film/edit — nothing here makes the video for you.</div></div>
           <div class="prod-sec"><div class="prod-h">Production checklist</div>${["Film", "Captions / subtitles", "On-screen text", "Post / schedule", "Mark posted in Ideas"].map((c) => `<label class="prod-check"><input type="checkbox"> ${c}</label>`).join("")}</div>
@@ -853,8 +854,20 @@ Hard rules — never break these: ${brain("donot")}
 Approved facts (state ONLY what's here; never invent traction, users, revenue, partnerships, investment or statistics): ${brain("facts")}
 Real traction/milestones you may reference (ONLY these, and only if non-empty): ${brain("traction")} ${brain("milestones")}`;
       }
+      // Open a free AI with the brand prompt already typed in — the AI writes the
+      // finished caption; €0, nothing sent by us (it's just a link the user follows).
+      function aiUrl(engine, prompt) {
+        const q = encodeURIComponent(String(prompt).slice(0, 4000)); // keep the URL within safe limits
+        return engine === "claude" ? "https://claude.ai/new?q=" + q : "https://chatgpt.com/?q=" + q;
+      }
+      function aiButtons(prompt) {
+        return `<a class="btn sm" href="${esc(aiUrl("claude", prompt))}" target="_blank" rel="noopener">✍️ Write in Claude ↗</a> <a class="btn sm" href="${esc(aiUrl("chatgpt", prompt))}" target="_blank" rel="noopener">✍️ Write in ChatGPT ↗</a>`;
+      }
       function buildPrompt(pk, idea, formula, goal, ep) {
-        const p = PLATFORMS[pk];
+        const p = PLATFORMS[pk] || PLATFORMS.reel;
+        // Tolerate a string CTA (Produce path) or a full goal object (Create path).
+        goal = (goal && typeof goal === "object") ? goal : { label: "reach the right students", desc: "", cta: (typeof goal === "string" && goal) ? goal : CTAS.Discover };
+        ep = ep || editingPlan(formula.id, "", pk);
         return `${brandBlock()}
 
 TASK: Write a ${p.name} about: "${idea}"
@@ -917,10 +930,10 @@ ${primary.cta}
 
 HASHTAGS
 ${hashtagsFor(topic)}${src}`;
-        const bid = "b_" + pk, pid = "p_" + pk;
+        const bid = "b_" + pk, pid = "p_" + pk, aiPrompt = buildPrompt(pk, idea, formula, primary, ep);
         return `<div class="out-block"><div class="out-head"><b>${esc(pe.label)}</b><span class="pill teal" style="margin-left:auto">${esc(formula.name)}</span></div>
           <div class="out-head" style="background:var(--surface)"><span class="tag draft">Ready brief</span><button class="btn sm gold" data-copy="${bid}">Copy brief</button></div><pre id="${bid}">${esc(brief)}</pre>
-          <div class="out-head" style="background:var(--surface)"><span class="tag prompt">Prompt for free AI</span><button class="btn sm" data-copy="${pid}">Copy AI prompt</button></div><pre id="${pid}">${esc(buildPrompt(pk, idea, formula, primary, ep))}</pre></div>`;
+          <div class="out-head" style="background:var(--surface);flex-wrap:wrap"><span class="tag prompt">Write with free AI</span>${aiButtons(aiPrompt)}<button class="btn sm alt" data-copy="${pid}">Copy prompt</button></div><pre id="${pid}">${esc(aiPrompt)}</pre></div>`;
       }
 
       // ===== RESULTS / PERFORMANCE (manual feedback loop) =====
@@ -1098,7 +1111,7 @@ ${hashtagsFor(topic)}${src}`;
         return `<section class="panel" id="tab-ideas"><h1>Content Board</h1><p class="sub">Everything you're making, in one place — from idea to results.</p>
           <details class="card" id="b-help"${helpOpen() ? " open" : ""}><summary style="cursor:pointer;font-weight:700">📖 How this works (4 steps)</summary>
             <ol class="work-list" style="margin:10px 0 0;padding-left:20px">
-              <li><b>💡 Create</b> — go to the <b>Create</b> tab, type an idea, pick a goal + a format. You get a ready script + shoot brief.</li>
+              <li><b>💡 Create</b> — go to the <b>Create</b> tab, type an idea, pick a goal + a format. You get a ready script + shoot brief, and can <b>open Claude/ChatGPT with the prompt already typed</b> to write the caption in one click.</li>
               <li><b>✂️ Edit</b> — on a card, hit <b>✂️ Edit</b> for a checklist of how to cut the video (in a free tool like CapCut/Canva). Tick items as you go. It's a guide — it doesn't edit for you.</li>
               <li><b>📢 Publish</b> — once you post it, hit <b>📢 Mark published</b> (platform + date). No sign-off needed.</li>
               <li><b>📊 Measure</b> — later, add how it did (a rating + any numbers). The OS learns and suggests what to make next.</li>
