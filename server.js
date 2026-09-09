@@ -2763,6 +2763,8 @@ app.use(
 );
 
 app.get("/admin", (_req, res) => sendHtml(res, ADMIN_PAGE));
+// Marketing OS: a clean top-level URL, separate from /admin. Old path kept as an alias.
+app.get("/marketing", (_req, res) => sendHtml(res, MARKETING_PAGE));
 app.get("/admin/marketing", (_req, res) => sendHtml(res, MARKETING_PAGE));
 
 // Partner dashboard — one shared static page for every university account;
