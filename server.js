@@ -2652,6 +2652,26 @@ mkt.get("/script", (req, res) => {
     res.status(500).json({ error: "Could not build a script." });
   }
 });
+// Media assets for the Content Editor (uploaded images + exported creatives).
+// Stored on the persistent data disk (€0). Sent as raw octet-stream so the 16kb
+// global JSON parser skips it; a route-level 10MB cap applies. Gated with the
+// rest of /marketing (requireMarketing), so assets aren't public.
+const MKT_ASSETS_DIR = path.join(store.DATA_DIR, "marketing-assets");
+try { fs.mkdirSync(MKT_ASSETS_DIR, { recursive: true }); } catch { /* best effort */ }
+const MKT_ASSET_EXT = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "image/gif": "gif" };
+mkt.post("/upload", express.raw({ type: () => true, limit: "10mb" }), (req, res) => {
+  const ext = MKT_ASSET_EXT[String(req.query.type || "")];
+  if (!ext) return res.status(400).json({ error: "Only PNG, JPEG, WebP or GIF images." });
+  if (!Buffer.isBuffer(req.body) || !req.body.length) return res.status(400).json({ error: "Empty upload." });
+  const name = Date.now().toString(36) + Math.random().toString(36).slice(2, 8) + "." + ext;
+  try { fs.writeFileSync(path.join(MKT_ASSETS_DIR, name), req.body); }
+  catch { return res.status(500).json({ error: "Could not save the image." }); }
+  res.json({ url: "/api/marketing/asset/" + name });
+});
+mkt.get("/asset/:file", (req, res) => {
+  if (!/^[a-z0-9]+\.(png|jpg|webp|gif)$/.test(req.params.file)) return res.status(400).end(); // no path traversal
+  res.sendFile(path.join(MKT_ASSETS_DIR, req.params.file), (e) => { if (e && !res.headersSent) res.status(404).end(); });
+});
 api.use("/marketing", mkt);
 
 app.use("/api", api);

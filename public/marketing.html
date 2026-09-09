@@ -172,6 +172,7 @@
     <div id="produce-modal" class="modal" hidden><div class="modal-in"><button class="modal-x" id="produce-close" aria-label="Close">×</button><div id="produce-body"></div></div></div>
     <div id="results-modal" class="modal" hidden><div class="modal-in"><button class="modal-x" id="results-close" aria-label="Close">×</button><div id="results-body"></div></div></div>
     <div id="editor-modal" class="modal" hidden><div class="modal-in" style="max-width:720px"><button class="modal-x" id="editor-close" aria-label="Close">×</button><div id="editor-body"></div></div></div>
+    <div id="imgedit-modal" class="modal" hidden><div class="modal-in" style="max-width:640px"><button class="modal-x" id="imgedit-close" aria-label="Close">×</button><div id="imgedit-body"></div></div></div>
 
     <script>
       // ===== Library (version-controlled) =====
@@ -352,6 +353,9 @@
         const closeEditor = () => { saveEditor(); $("editor-modal").hidden = true; render(); };
         $("editor-close").onclick = closeEditor;
         $("editor-modal").onclick = (e) => { if (e.target.id === "editor-modal") closeEditor(); };
+        const closeImgEdit = () => { $("imgedit-modal").hidden = true; };
+        $("imgedit-close").onclick = closeImgEdit;
+        $("imgedit-modal").onclick = (e) => { if (e.target.id === "imgedit-modal") closeImgEdit(); };
         document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeProduce(); closeResults(); if (!$("editor-modal").hidden) closeEditor(); } });
         render();
         loadRadar();
@@ -686,8 +690,9 @@ Keep Universo's honest, warm voice; never invent numbers, traction or results. R
           <div class="field"><label>Caption / post text</label><textarea id="ed-caption" rows="6" placeholder="The actual post…">${esc(c.caption || "")}</textarea></div>
           <div class="field"><label>CTA</label><input id="ed-cta" value="${esc(c.cta || (g ? g.cta : ""))}" placeholder="Call to action" /></div>
           <div class="prod-sec"><div class="prod-h">🎨 Creative / media</div>
-            <div class="field"><label>Media link — image or video URL (Drive, CapCut, Canva…)</label><input id="ed-media" value="${esc(c.mediaUrl || "")}" placeholder="https://…  (in-app upload coming later)" /></div>
+            <div class="chips" style="margin-bottom:8px"><label class="btn sm alt" style="cursor:pointer;text-transform:none;margin:0">⬆️ Upload image<input type="file" id="ed-file" accept="image/*" hidden></label><button class="btn sm gold" id="ed-editimg">🖼️ Edit image (add text)</button></div>
             <div id="ed-preview"></div>
+            <div class="field"><label>…or paste an image / video link</label><input id="ed-media" value="${esc(c.mediaUrl || "")}" placeholder="https://…" /></div>
             <div class="chips">${VIDEO_TOOLS.map((t) => `<a class="chip-btn" href="${esc(t.url)}" target="_blank" rel="noopener">${esc(t.name)} ↗</a>`).join("")}</div>
             <div class="field" style="margin-top:8px"><label>Creative notes / concept</label><textarea id="ed-notes" rows="2" placeholder="Concept, shots, what to change…">${esc(c.notes || "")}</textarea></div></div>
           <div class="prod-sec"><div class="prod-h">Real-data script <button class="link-mini" id="ed-pull">Pull from Universo data →</button></div><div id="ed-script" class="muted">Optional — a source-verified script you can drop into the caption.</div></div>
@@ -696,6 +701,8 @@ Keep Universo's honest, warm voice; never invent numbers, traction or results. R
         $("editor-modal").hidden = false;
         const renderPreview = () => { const u = $("ed-media").value.trim(), k = mediaKind(u); $("ed-preview").innerHTML = k === "image" ? `<img src="${esc(u)}" alt="" style="max-height:160px;border-radius:10px;margin:6px 0" onerror="this.style.display='none'">` : k === "video" ? `<video src="${esc(u)}" controls style="max-width:100%;max-height:200px;border-radius:10px;margin:6px 0"></video>` : k === "link" ? `<div class="muted" style="margin:6px 0"><a href="${esc(u)}" target="_blank" rel="noopener">Open media ↗</a></div>` : ""; };
         renderPreview(); $("ed-media").oninput = renderPreview;
+        $("ed-file").onchange = async (e) => { const f = e.target.files[0]; if (!f) return; if (!/^image\//.test(f.type)) { alert("Pick an image file."); return; } const u = await uploadImage(f); if (u) { $("ed-media").value = u; renderPreview(); } else alert("Upload failed."); };
+        $("ed-editimg").onclick = () => openImgEditor($("ed-media").value.trim(), (u) => { $("ed-media").value = u; renderPreview(); });
         const setEng = (e) => { idea.content = editorContent(); try { localStorage.setItem("mkt-ai-engine", e); } catch {} openEditor(idea); };
         $("ed-eng-claude").onclick = () => setEng("claude"); $("ed-eng-gpt").onclick = () => setEng("chatgpt");
         document.querySelectorAll("#editor-body [data-ai]").forEach((b) => b.onclick = () => edAiOpen(AI_ACTIONS[+b.dataset.ai][1]));
@@ -706,6 +713,50 @@ Keep Universo's honest, warm voice; never invent numbers, traction or results. R
         $("ed-savever").onclick = async () => { idea.content = editorContent(); idea.content.versions = [{ at: new Date().toISOString().slice(0, 16).replace("T", " "), hook: idea.content.hook, caption: idea.content.caption, cta: idea.content.cta, body: idea.content.body }, ...(idea.content.versions || [])].slice(0, 20); await api("PATCH", "/idea/" + idea.id, { content: idea.content }); renderVersions(); };
         renderVersions();
         $("ed-pull").onclick = async () => { $("ed-script").textContent = "Loading real data…"; let d = null; try { const q = new URLSearchParams({ topic: idea.topic || topicOf(idea.title), angle: idea.title, formula: idea.formula || "", cta: g ? g.cta : "", help: brandHelp() }); d = await (await fetch("/api/marketing/script?" + q)).json(); } catch {} if (!d || !d.beats) { $("ed-script").textContent = "No matching real data for this idea."; return; } const text = d.beats.map((b) => b.line).join(" "); $("ed-script").innerHTML = `<div style="margin:4px 0">${d.beats.map((b) => `<div><b>${esc(b.cue)}:</b> ${esc(b.line)}</div>`).join("")}</div><button class="link-mini" id="ed-usescript">Use as caption</button>${d.sources && d.sources.length ? `<div class="muted" style="margin-top:4px">Sources: ${d.sources.map((s) => /^https?:/.test(s) ? `<a href="${esc(s)}" target="_blank" rel="noopener">link</a>` : esc(s)).join(", ")}</div>` : ""}`; $("ed-usescript").onclick = () => { $("ed-caption").value = text; }; };
+      }
+      // Upload an image blob to the OS asset store (€0, on the persistent disk).
+      async function uploadImage(blob) {
+        try {
+          const r = await fetch("/api/marketing/upload?type=" + encodeURIComponent(blob.type || "image/png"), { method: "POST", headers: { "Content-Type": "application/octet-stream" }, body: blob });
+          if (!r.ok) return null; const j = await r.json().catch(() => null); return (j && j.url) || null;
+        } catch { return null; }
+      }
+      // Real in-app image editor: draw the image + a text overlay on a canvas and
+      // export a finished PNG back into the asset store. No third party.
+      function openImgEditor(url, onDone) {
+        if (!url) { alert("Upload or paste an image first."); return; }
+        $("imgedit-body").innerHTML = `<h2 style="margin:0 0 8px">🖼️ Edit image</h2>
+          <div style="text-align:center;background:var(--surface-2);border-radius:10px;padding:8px;overflow:auto"><canvas id="ie-canvas" style="max-width:100%;height:auto"></canvas></div>
+          <div class="field" style="margin-top:8px"><label>Overlay text</label><textarea id="ie-text" rows="2" placeholder="Big on-screen text / hook"></textarea></div>
+          <div class="row">
+            <div class="field"><label>Position</label><select id="ie-pos"><option value="top">Top</option><option value="middle">Middle</option><option value="bottom" selected>Bottom</option></select></div>
+            <div class="field"><label>Text size</label><input type="range" id="ie-size" min="24" max="120" value="64" style="min-height:40px"></div>
+            <div class="field" style="flex:0 0 90px"><label>Color</label><input type="color" id="ie-color" value="#ffffff" style="min-height:40px;padding:2px"></div>
+            <div class="field" style="flex:0 0 auto"><label style="text-transform:none">Shade <input type="checkbox" id="ie-bar" checked style="width:auto;min-height:auto"></label></div>
+          </div>
+          <div class="opp-actions" style="margin-top:8px"><button class="btn sm gold" id="ie-export">Export &amp; use</button><button class="btn sm alt" id="ie-cancel">Cancel</button></div>
+          <div class="muted" id="ie-err" style="margin-top:6px"></div>`;
+        $("imgedit-modal").hidden = false;
+        const cv = $("ie-canvas"), ctx = cv.getContext("2d"); const img = new Image(); img.crossOrigin = "anonymous"; let ready = false;
+        const wrap = (text, maxW) => { const words = text.split(/\s+/), lines = []; let line = ""; for (const w of words) { const t = line ? line + " " + w : w; if (ctx.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t; } if (line) lines.push(line); return lines; };
+        const draw = () => {
+          if (!ready) return; ctx.clearRect(0, 0, cv.width, cv.height); ctx.drawImage(img, 0, 0, cv.width, cv.height);
+          const text = $("ie-text").value.trim(); if (!text) return;
+          const size = +$("ie-size").value * (cv.width / 1080); ctx.font = `800 ${size}px ${getComputedStyle(document.body).fontFamily}`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+          const lines = wrap(text, cv.width * 0.9), lh = size * 1.2, blockH = lines.length * lh;
+          const pos = $("ie-pos").value, cy = pos === "top" ? blockH / 2 + cv.height * 0.06 : pos === "middle" ? cv.height / 2 : cv.height - blockH / 2 - cv.height * 0.06;
+          if ($("ie-bar").checked) { ctx.fillStyle = "rgba(0,0,0,0.45)"; ctx.fillRect(0, cy - blockH / 2 - lh * 0.3, cv.width, blockH + lh * 0.6); }
+          ctx.fillStyle = $("ie-color").value; ctx.lineWidth = Math.max(2, size * 0.08); ctx.strokeStyle = "rgba(0,0,0,0.55)";
+          lines.forEach((ln, i) => { const y = cy - blockH / 2 + lh / 2 + i * lh; ctx.strokeText(ln, cv.width / 2, y); ctx.fillText(ln, cv.width / 2, y); });
+        };
+        img.onload = () => { const max = 1080; const sc = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight)); cv.width = Math.round(img.naturalWidth * sc) || 640; cv.height = Math.round(img.naturalHeight * sc) || 640; ready = true; draw(); };
+        img.onerror = () => { $("ie-err").textContent = "Couldn't load that image."; };
+        img.src = url;
+        ["ie-text", "ie-pos", "ie-size", "ie-color", "ie-bar"].forEach((id) => { const e = $(id); e.oninput = draw; e.onchange = draw; });
+        const hook = ($("ed-hook") && $("ed-hook").value) || ""; if (hook) $("ie-text").value = hook.slice(0, 120);
+        $("ie-cancel").onclick = () => { $("imgedit-modal").hidden = true; };
+        $("ie-export").onclick = () => { try { cv.toBlob(async (blob) => { if (!blob) { $("ie-err").textContent = "Export failed (image may be cross-origin — upload it first)."; return; } const u = await uploadImage(blob); if (u) { onDone(u); $("imgedit-modal").hidden = true; } else $("ie-err").textContent = "Upload failed."; }, "image/png"); } catch { $("ie-err").textContent = "This image can't be edited here (cross-origin). Upload it first."; } };
+        draw();
       }
       // Fetch and render the deterministic real-data script into the Produce modal.
       let PROD_SCRIPT = "";

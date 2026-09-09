@@ -214,6 +214,21 @@ test("content workspace persists (fields + versions); bad payload rejected", asy
   await req("DELETE", "/api/marketing/idea/" + id);
 });
 
+test("image upload stores an asset, serves it back; bad type & traversal rejected", async () => {
+  assert.equal(await loginAs(MKT.email, MKT.pw), 200);
+  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==", "base64");
+  const up = await fetch(base + "/api/marketing/upload?type=image/png", { method: "POST", headers: { "Content-Type": "application/octet-stream", Cookie: cookieHeader() }, body: png });
+  const j = await up.json();
+  assert.equal(up.status, 200);
+  assert.match(j.url, /^\/api\/marketing\/asset\/[a-z0-9]+\.png$/);
+  const get = await fetch(base + j.url, { headers: { Cookie: cookieHeader() } });
+  assert.equal(get.status, 200); // serves the stored asset
+  const bad = await fetch(base + "/api/marketing/upload?type=text/plain", { method: "POST", headers: { "Content-Type": "application/octet-stream", Cookie: cookieHeader() }, body: png });
+  assert.equal(bad.status, 400); // non-image rejected
+  const trav = await fetch(base + "/api/marketing/asset/..%2fmarketing.json", { headers: { Cookie: cookieHeader() } });
+  assert.ok(trav.status === 400 || trav.status === 404); // no path traversal
+});
+
 test("status lifecycle accepts the new stages", async () => {
   const created = await req("POST", "/api/marketing/idea", { title: "Lifecycle idea" });
   const id = created.json.idea.id;
