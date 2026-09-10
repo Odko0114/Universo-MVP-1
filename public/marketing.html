@@ -1333,7 +1333,7 @@ ${hashtagsFor(topic)}${src}`;
       function panelTeam() {
         if (!isFounder()) return `<section class="panel" id="tab-team"><h1>Team</h1><div class="card muted">Team management is founder-only.</div></section>`;
         return `<section class="panel" id="tab-team"><h1>Team</h1><p class="sub">Who's in your workspace, and invite a marketer with their own login.</p>
-          <div class="card"><label>Invite a marketer</label><div class="row"><input id="tm-email" type="email" placeholder="their@email.com" /><button class="btn" id="tm-invite" style="flex:0 0 auto">Create invite link</button></div><div id="tm-invite-out" class="muted" style="margin-top:8px">We don't email invites — you'll get a private link to send them yourself. They set their own password from it (no shared passwords).</div></div>
+          <div class="card"><label>Invite a marketer</label><div class="row"><input id="tm-email" type="email" placeholder="their@email.com" /><button class="btn" id="tm-invite" style="flex:0 0 auto">Invite marketer</button></div><div id="tm-invite-out" class="muted" style="margin-top:8px">We'll email them a join link (and show it here too, so you can always send it yourself). They set their own password — no shared passwords.</div></div>
           <div class="card"><h2 style="margin-top:0">Members</h2><div id="tm-members" class="muted">Loading…</div></div>
           <div class="card"><h2 style="margin-top:0">Pending invites</h2><div id="tm-invites" class="muted">Loading…</div></div></section>`;
       }
@@ -1350,7 +1350,7 @@ ${hashtagsFor(topic)}${src}`;
         inv.onclick = async () => {
           const email = ($("tm-email").value || "").trim(); if (!email) return;
           const r = await api("POST", "/invite", { email }); const out = $("tm-invite-out");
-          if (r && r.invite) { out.innerHTML = `Invite ready — send this link to <b>${esc(r.invite.email)}</b>:<br><input readonly value="${esc(r.invite.url)}" style="width:100%;margin-top:6px" onclick="this.select()" />`; $("tm-email").value = ""; loadTeam(); }
+          if (r && r.invite) { const lead = r.invite.emailed ? `✓ Emailed the invite to <b>${esc(r.invite.email)}</b>. Link (backup — send it yourself if needed):` : `Invite ready — email isn't switched on, so send this link to <b>${esc(r.invite.email)}</b> yourself:`; out.innerHTML = `${lead}<br><input readonly value="${esc(r.invite.url)}" style="width:100%;margin-top:6px" onclick="this.select()" />`; $("tm-email").value = ""; loadTeam(); }
           else { out.className = "muted"; out.textContent = "Couldn't create the invite — they may already be a member."; }
         };
         loadTeam();

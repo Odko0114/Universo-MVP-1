@@ -2689,17 +2689,21 @@ mkt.get("/team", (req, res) => {
   const invites = m.invites.filter((i) => i.expiresAt > Date.now()).map((i) => ({ email: i.email, createdAt: i.createdAt, url: `${appOrigin(req)}/marketing/join?token=${i.token}` }));
   res.json({ members, invites });
 });
-mkt.post("/invite", (req, res) => {
+mkt.post("/invite", async (req, res) => {
   if (!mktFounder(req)) return res.status(403).json({ error: "Only a founder can invite team members." });
-  const email = str((req.body || {}).email, 120).trim().toLowerCase();
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ error: "A valid email is required." });
-  if (adminAuth.findAdminByEmail(email)) return res.status(409).json({ error: "That person is already a member." });
+  const to = str((req.body || {}).email, 120).trim().toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) return res.status(400).json({ error: "A valid email is required." });
+  if (adminAuth.findAdminByEmail(to)) return res.status(409).json({ error: "That person is already a member." });
   const m = readMkt();
-  m.invites = m.invites.filter((i) => i.email !== email && i.expiresAt > Date.now()); // one live invite per email
+  m.invites = m.invites.filter((i) => i.email !== to && i.expiresAt > Date.now()); // one live invite per email
   const token = crypto.randomBytes(24).toString("hex");
-  m.invites.unshift({ token, email, role: "marketer", createdAt: Date.now(), expiresAt: Date.now() + INVITE_TTL });
-  store.write("marketing", m);
-  res.json({ invite: { email, url: `${appOrigin(req)}/marketing/join?token=${token}` } });
+  m.invites.unshift({ token, email: to, role: "marketer", createdAt: Date.now(), expiresAt: Date.now() + INVITE_TTL });
+  await store.write("marketing", m);
+  const url = `${appOrigin(req)}/marketing/join?token=${token}`;
+  // Try to email it; the link is returned regardless so the founder can always
+  // send it themselves (email is dormant until RESEND_API_KEY is set).
+  const sent = await email.sendMarketerInvite(to, { inviterEmail: req.admin && req.admin.email, joinUrl: url });
+  res.json({ invite: { email: to, url, emailed: !!(sent && sent.sent) } });
 });
 mkt.delete("/invite/:token", (req, res) => {
   if (!mktFounder(req)) return res.status(403).json({ error: "Founder only." });

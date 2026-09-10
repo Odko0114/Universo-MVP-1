@@ -282,6 +282,7 @@ test("team & invite: founder invites → invitee sets own password → becomes a
   const email = "invitee-" + Date.now() + "@example.com";
   const r = await req("POST", "/api/marketing/invite", { email });
   assert.equal(r.status, 200);
+  assert.equal(r.json.invite.emailed, false); // email dormant in tests (no RESEND_API_KEY) → link-only
   const token = r.json.invite.url.split("token=")[1];
   assert.ok(token && token.length > 20);
   assert.ok((await req("GET", "/api/marketing/team")).json.invites.some((i) => i.email === email)); // listed as pending

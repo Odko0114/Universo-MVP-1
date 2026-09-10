@@ -80,6 +80,15 @@ test("all templates produce a non-empty plain-text alternative (deliverability)"
   }
 });
 
+test("marketerInviteTemplate carries the join link, plain-text alt, and no unsubscribe footer", () => {
+  const url = "https://uni.test/marketing/join?token=abc123";
+  const t = email.marketerInviteTemplate({ inviterEmail: "founder@uni.test", joinUrl: url });
+  assert.ok(t.subject && t.subject.length > 0);
+  assert.ok(t.html.includes(url)); // button + fallback link
+  assert.ok(t.text.includes(url));
+  assert.ok(!/Unsubscribe from these emails/i.test(t.html)); // transactional, no opt-out footer
+});
+
 test("layout uses the real mark + sans wordmark, not the old serif italic", () => {
   const t = email.welcomeTemplate({ name: "A" });
   assert.ok(
