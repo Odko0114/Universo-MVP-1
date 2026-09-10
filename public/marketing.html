@@ -1333,7 +1333,7 @@ ${hashtagsFor(topic)}${src}`;
       function panelTeam() {
         if (!isFounder()) return `<section class="panel" id="tab-team"><h1>Team</h1><div class="card muted">Team management is founder-only.</div></section>`;
         return `<section class="panel" id="tab-team"><h1>Team</h1><p class="sub">Who's in your workspace, and invite a marketer with their own login.</p>
-          <div class="card"><label>Invite a marketer</label><div class="row"><input id="tm-email" type="email" placeholder="their@email.com" /><button class="btn" id="tm-invite" style="flex:0 0 auto">Send invite</button></div><div id="tm-invite-out" class="muted" style="margin-top:8px">They set their own password from the link — no shared passwords.</div></div>
+          <div class="card"><label>Invite a marketer</label><div class="row"><input id="tm-email" type="email" placeholder="their@email.com" /><button class="btn" id="tm-invite" style="flex:0 0 auto">Create invite link</button></div><div id="tm-invite-out" class="muted" style="margin-top:8px">We don't email invites — you'll get a private link to send them yourself. They set their own password from it (no shared passwords).</div></div>
           <div class="card"><h2 style="margin-top:0">Members</h2><div id="tm-members" class="muted">Loading…</div></div>
           <div class="card"><h2 style="margin-top:0">Pending invites</h2><div id="tm-invites" class="muted">Loading…</div></div></section>`;
       }
