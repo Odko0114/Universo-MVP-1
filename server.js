@@ -211,8 +211,25 @@ app.use((req, res, next) => {
   return res.redirect(301, `${want.origin}${req.originalUrl}`);
 });
 
-// Baseline security headers (a CSP is deliberately omitted for now — the SPA
-// uses inline styles throughout, so a useful CSP needs a dedicated pass).
+// Baseline security headers.
+// CSP: the pages load only self-hosted assets (fonts, vendored JS, images via
+// the /api/* proxies), so default-src 'self' is safe. 'unsafe-inline' is kept
+// for script/style because the no-flash THEME_INIT and the standalone pages use
+// inline <script>/style; output is escaped via esc() everywhere, and tightening
+// script-src to nonces is a deliberate future pass. img-src allows https: so the
+// proxied Wikipedia cover photos / favicon fallbacks render.
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: https:",
+  "font-src 'self'",
+  "connect-src 'self'",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "object-src 'none'",
+].join("; ");
 app.use((_req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "DENY");
@@ -221,6 +238,15 @@ app.use((_req, res, next) => {
     "Permissions-Policy",
     "camera=(), microphone=(), geolocation=()",
   );
+  res.setHeader("Content-Security-Policy", CSP);
+  // HSTS only in production (and once behind HTTPS) — never on local http dev,
+  // where it would pin localhost to https and break the dev server.
+  if (cfg.PROD) {
+    res.setHeader(
+      "Strict-Transport-Security",
+      "max-age=31536000; includeSubDomains",
+    );
+  }
   next();
 });
 
