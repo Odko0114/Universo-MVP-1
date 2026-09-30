@@ -2238,6 +2238,17 @@ api.get("/admin/me", adminAuth.requireAdmin, (req, res) =>
 const adminApi = express.Router();
 adminApi.use(adminAuth.requireAdmin);
 
+// TEMP diagnostic (admin-only): surfaces the real Resend status/body for a test
+// send, so a silently-failing email can be diagnosed. Remove once email is fixed.
+adminApi.get(
+  "/email-debug",
+  asyncRoute(async (req, res) => {
+    const to = String(req.query.to || "").trim();
+    if (!to) return res.status(400).json({ error: "Pass ?to=<email>" });
+    res.json(await email.debugSend(to));
+  }),
+);
+
 adminApi.get("/stats", (_req, res) => {
   // Read the event log once and reuse it for every aggregation below — this
   // used to call events.summary() and events.topByUni() separately, each
