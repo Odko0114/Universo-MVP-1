@@ -1957,6 +1957,45 @@ img {
   outline: 2px solid var(--teal-500);
   outline-offset: 2px;
 }
+/* "Verify your email" banner (shown above the view while unverified). */
+.verify-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  background: var(--card);
+  color: var(--ink);
+  border-bottom: 2px solid var(--gold);
+  font-size: var(--text-sm);
+}
+.verify-banner .vb-msg {
+  flex: 1 1 240px;
+}
+.verify-banner .vb-resend {
+  border: 1px solid var(--gold);
+  background: transparent;
+  color: var(--ink);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  min-height: 36px;
+  font-weight: 600;
+}
+.verify-banner .vb-resend:hover {
+  background: var(--gold);
+  color: #1a1400;
+}
+.verify-banner .vb-x {
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--ink-soft);
+  min-width: 36px;
+  min-height: 36px;
+}
 .consent {
   display: flex;
   gap: 12px;

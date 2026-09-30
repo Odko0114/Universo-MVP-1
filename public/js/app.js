@@ -3873,6 +3873,7 @@
   async function afterAuth(data, isNew) {
     state.user = data.student;
     state.savedIds = new Set(data.student.saved_universities || []);
+    verifyBannerDismissed = false; // re-show the verify reminder for this fresh session
     toast(`Welcome, ${data.student.full_name.split(" ")[0]}!`);
     // A brand-new account with no matching profile yet goes through onboarding
     // once (unless they were mid-flow toward a specific page). Everyone else
@@ -4212,6 +4213,50 @@
   // A reload keeps history.state, so saving on the way out covers refresh too.
   window.addEventListener("pagehide", rememberScroll);
 
+  // Top-of-page reminder while a logged-in student hasn't verified their email
+  // (only when verification is actually enforced — email.ENABLED sets
+  // email_verification_required). Lives as a sibling above #view so it survives
+  // route re-renders. Dismissible per session; re-shown after a fresh login/signup.
+  let verifyBannerDismissed = false;
+  function syncVerifyBanner() {
+    const u = state.user;
+    const need = !!(
+      u &&
+      u.email_verification_required &&
+      !u.email_verified &&
+      !verifyBannerDismissed
+    );
+    let el = document.getElementById("verify-banner");
+    if (!need) {
+      if (el) el.remove();
+      return;
+    }
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "verify-banner";
+      el.className = "verify-banner";
+      view.parentNode.insertBefore(el, view);
+    }
+    el.innerHTML = `<span class="vb-msg">${icon("alert", 16)} Verify your email — we sent a link to <strong>${esc(u.email)}</strong>. Check your inbox and spam.</span> <button type="button" class="vb-resend" id="vb-resend">Resend</button> <button type="button" class="vb-x" id="vb-dismiss" aria-label="Dismiss">×</button>`;
+    document.getElementById("vb-resend").onclick = async (e) => {
+      const b = e.currentTarget;
+      b.disabled = true;
+      b.textContent = "Sending…";
+      try {
+        await API.resendVerification();
+        toast("Verification email sent — check your inbox and spam");
+      } catch (err) {
+        toast((err && err.message) || "Couldn't resend right now", true);
+        b.disabled = false;
+        b.textContent = "Resend";
+      }
+    };
+    document.getElementById("vb-dismiss").onclick = () => {
+      verifyBannerDismissed = true;
+      el.remove();
+    };
+  }
+
   function render() {
     const parts = location.pathname.split("/").filter(Boolean);
     // Only an entry we've navigated away from carries an offset; a freshly
@@ -4219,6 +4264,7 @@
     const savedY = Number((history.state || {}).scrollY) || 0;
     if (!savedY) window.scrollTo(0, 0);
     view.focus({ preventScroll: true });
+    syncVerifyBanner();
 
     // "/" is the marketing landing page (served statically). If the SPA is ever
     // asked to render it, send a logged-in student to their plan (their "what
