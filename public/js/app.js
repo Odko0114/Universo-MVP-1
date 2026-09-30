@@ -3999,6 +3999,30 @@
   // Email verification + password reset
   // =========================================================================
 
+  // Finished-action screen for tabs opened from an email link (verify / reset).
+  // Tries to close the tab — but browsers only allow a script to close a tab it
+  // opened itself, so an email-opened tab won't close; the visible "you can close
+  // this tab" message + continue button cover that case so it's never a dead end.
+  function renderDoneCanClose({ title, sub, ctaHref, ctaLabel }) {
+    view.innerHTML = `
+      <div class="auth-card">
+        <div class="card auth-card__body" style="text-align:center">
+          <span aria-hidden="true">${icon("check", 28)}</span>
+          <h2>${esc(title)}</h2>
+          <p class="muted">${esc(sub)}</p>
+          <p class="muted" style="font-size:.85rem">You can close this tab.</p>
+          <a class="btn btn--primary btn--block" href="${ctaHref}" data-link>${esc(ctaLabel)}</a>
+        </div>
+      </div>`;
+    setTimeout(() => {
+      try {
+        window.close();
+      } catch (e) {
+        /* email-opened tabs can't be closed by script — the message covers it */
+      }
+    }, 500);
+  }
+
   async function renderVerifyEmail() {
     setActiveNav("account");
     document.title = "Verify email — Universo";
@@ -4018,12 +4042,11 @@
       await API.verifyEmail(token);
       if (state.user) state.user.email_verified = true;
       toast("Email verified");
-      view.innerHTML = emptyState({
-        iconName: "check",
-        title: "You're verified",
+      renderDoneCanClose({
+        title: "You're verified 🎉",
         sub: "Your Universo account is fully active.",
-        ctaHref: state.user ? "/account" : "/account?mode=login",
-        ctaLabel: state.user ? "Go to account" : "Log in",
+        ctaHref: state.user ? "/journey" : "/account?mode=login",
+        ctaLabel: state.user ? "Continue to Universo" : "Log in",
       });
     } catch (e) {
       view.innerHTML = emptyState({
@@ -4123,8 +4146,13 @@
           // this one) needs to log in fresh with the new password.
           state.user = null;
           state.savedIds = new Set();
-          toast("Password updated — log in with your new password");
-          navigate("/account?mode=login", true);
+          toast("Password updated");
+          renderDoneCanClose({
+            title: "Password updated",
+            sub: "Log in with your new password.",
+            ctaHref: "/account?mode=login",
+            ctaLabel: "Log in",
+          });
         } catch (err) {
           showAuthError(err.message);
           btn.disabled = false;
