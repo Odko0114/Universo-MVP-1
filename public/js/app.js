@@ -4257,6 +4257,69 @@
     };
   }
 
+  // Full-screen wall shown to a logged-in, unverified student on any gated route.
+  function renderVerifyRequired() {
+    const bn = document.getElementById("verify-banner");
+    if (bn) bn.remove();
+    setActiveNav("account");
+    document.title = "Verify your email — Universo";
+    const u = state.user;
+    view.innerHTML = `
+      <div class="auth-card">
+        <div class="card auth-card__body" style="text-align:center">
+          <span aria-hidden="true">${icon("alert", 28)}</span>
+          <h2>Verify your email to continue</h2>
+          <p class="muted">We sent a verification link to <strong>${esc(u.email)}</strong>. Click it to unlock your account — check your Spam folder too.</p>
+          <div id="auth-error" class="form-error" hidden></div>
+          <button class="btn btn--primary btn--block" id="vr-continue">I've verified — continue</button>
+          <button class="btn btn--ghost btn--block" id="vr-resend" style="margin-top:8px">Resend the email</button>
+          <p class="auth-fineprint"><button class="link-btn" id="vr-logout" type="button">Log out</button></p>
+        </div>
+      </div>`;
+    document.getElementById("vr-continue").onclick = async (e) => {
+      const b = e.currentTarget;
+      b.disabled = true;
+      b.textContent = "Checking…";
+      try {
+        const d = await API.me();
+        state.user = d.student || d;
+        if (state.user && state.user.email_verified) {
+          toast("Email verified — welcome!");
+          navigate("/journey", true);
+          return;
+        }
+        showAuthError("Not verified yet — click the link in your email, then tap continue.");
+      } catch (err) {
+        showAuthError((err && err.message) || "Couldn't check right now.");
+      }
+      b.disabled = false;
+      b.textContent = "I've verified — continue";
+    };
+    document.getElementById("vr-resend").onclick = async (e) => {
+      const b = e.currentTarget;
+      b.disabled = true;
+      b.textContent = "Sending…";
+      try {
+        await API.resendVerification();
+        toast("Verification email sent — check inbox and spam");
+      } catch (err) {
+        toast((err && err.message) || "Couldn't resend right now", true);
+      }
+      b.disabled = false;
+      b.textContent = "Resend the email";
+    };
+    document.getElementById("vr-logout").onclick = async () => {
+      try {
+        await API.logout();
+      } catch {
+        /* ignore */
+      }
+      state.user = null;
+      state.savedIds = new Set();
+      navigate("/account?mode=login", true);
+    };
+  }
+
   function render() {
     const parts = location.pathname.split("/").filter(Boolean);
     // Only an entry we've navigated away from carries an offset; a freshly
@@ -4264,7 +4327,6 @@
     const savedY = Number((history.state || {}).scrollY) || 0;
     if (!savedY) window.scrollTo(0, 0);
     view.focus({ preventScroll: true });
-    syncVerifyBanner();
 
     // "/" is the marketing landing page (served statically). If the SPA is ever
     // asked to render it, send a logged-in student to their plan (their "what
@@ -4273,6 +4335,21 @@
       navigate(state.user ? "/journey" : "/discover", true);
       return;
     }
+
+    // Hard verify-gate: a logged-in student whose email isn't verified (only when
+    // verification is actually enforced — email.ENABLED) can't reach the app until
+    // they verify. The verify-email token page and the legal pages stay reachable.
+    if (
+      state.user &&
+      state.user.email_verification_required &&
+      !state.user.email_verified &&
+      !["verify-email", "privacy", "terms"].includes(parts[0])
+    ) {
+      renderVerifyRequired();
+      return;
+    }
+
+    syncVerifyBanner();
 
     // Profile views are tracked inside renderProfile (with the university id,
     // once it's confirmed to exist); every other route is a generic pageview.
