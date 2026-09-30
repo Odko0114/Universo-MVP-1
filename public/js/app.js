@@ -3815,13 +3815,34 @@
       );
     if (isLogin) wireLogin();
     else wireRegister();
+    wirePwToggles(view);
+  }
+
+  // A password input with a Show/Hide toggle. `extra` carries attrs like minlength.
+  function pwField(label, name, autocomplete, extra) {
+    return `<div class="form-group"><label>${label}</label>
+        <div class="pw-wrap"><input type="password" name="${name}" required autocomplete="${autocomplete}"${extra || ""} /><button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false">Show</button></div></div>`;
+  }
+  function wirePwToggles(root) {
+    (root || document).querySelectorAll(".pw-toggle").forEach((btn) => {
+      if (btn.dataset.wired) return;
+      btn.dataset.wired = "1";
+      btn.addEventListener("click", () => {
+        const input = btn.parentElement.querySelector("input");
+        const reveal = input.type === "password";
+        input.type = reveal ? "text" : "password";
+        btn.textContent = reveal ? "Hide" : "Show";
+        btn.setAttribute("aria-pressed", reveal ? "true" : "false");
+        btn.setAttribute("aria-label", reveal ? "Hide password" : "Show password");
+      });
+    });
   }
 
   function loginForm() {
     return `<h2>Welcome back</h2><p class="muted" style="margin-top:0">Log in to pick up your shortlist where you left off.</p>
       <form id="login-form">
         <div class="form-group"><label>Email</label><input type="email" name="email" required autocomplete="email" /></div>
-        <div class="form-group"><label>Password</label><input type="password" name="password" required autocomplete="current-password" /></div>
+        ${pwField("Password", "password", "current-password")}
         <button class="btn btn--primary btn--block" type="submit" id="login-submit">Log in</button>
         <p class="auth-fineprint"><a href="/forgot-password">Forgot your password?</a></p>
       </form>`;
@@ -3832,11 +3853,11 @@
       <form id="register-form">
         <div class="form-group"><label>Full name *</label><input type="text" name="full_name" required autocomplete="name" /></div>
         <div class="form-group"><label>Email *</label><input type="email" name="email" required autocomplete="email" /></div>
-        <div class="form-group"><label>Password * <span class="muted">(min 8 characters)</span></label><input type="password" name="password" required minlength="8" autocomplete="new-password" /></div>
+        ${pwField('Password * <span class="muted">(min 8 characters)</span>', "password", "new-password", ' minlength="8"')}
         <div class="form-group"><label>Country of origin</label><input type="text" name="country_of_origin" placeholder="Your country" /></div>
         <div class="form-group"><label>Field of interest</label><input type="text" name="field_of_interest" placeholder="e.g. Computer Science" /></div>
         <div class="form-group"><label>Target degree level</label><select name="target_degree_level"><option value="">Select…</option><option>Bachelor</option><option>Master</option><option>PhD</option></select></div>
-        <div class="form-group"><label class="consent"><input type="checkbox" name="consent" /><span>I have read and accept the <a href="/privacy">privacy policy</a>, and consent to Universo storing my account data. *</span></label></div>
+        <div class="form-group"><label class="consent"><input type="checkbox" name="consent" /><span>I have read and accept the <a href="/privacy">privacy policy</a> and <a href="/terms">terms of service</a>, and consent to Universo storing my account data. *</span></label></div>
         <div class="form-group"><label class="consent"><input type="checkbox" name="updates_optin" /><span>Email me when new universities and scholarships are added. <span class="muted">(optional, unsubscribe any time)</span></span></label></div>
         <button class="btn btn--primary btn--block" type="submit" id="register-submit">Create account</button>
         <p class="muted auth-fineprint">Free for students, always. We never sell your data.</p>
@@ -3923,16 +3944,53 @@
     });
   }
 
+  function renderNotFound() {
+    document.title = "Page not found — Universo";
+    view.innerHTML = emptyState({
+      iconName: "alert",
+      title: "Page not found",
+      sub: "That page doesn't exist or may have moved.",
+      ctaHref: state.user ? "/journey" : "/discover",
+      ctaLabel: state.user ? "Go to your plan" : "Explore universities",
+    });
+  }
+
   function renderPrivacy() {
     setActiveNav("account");
     document.title = "Privacy — Universo";
     view.innerHTML = `
       <a class="back-link" href="/account">← Back</a>
-      <div class="card" style="max-width:640px">
+      <div class="card" style="max-width:680px">
         <h2>Privacy policy</h2>
+        <p class="muted" style="font-size:.85rem">Last updated: 29 September 2026 · Data controller: Universo, operated by its founders from Finland · Contact: <a href="mailto:join.universo@gmail.com">join.universo@gmail.com</a></p>
         <p><strong>What we store.</strong> The account details you provide — your name, email, country of origin, and your study preferences (fields of interest, budget, preferred languages, and location or degree-level preferences) — plus what you build inside Universo: the universities you save, the applications you create and their status, deadlines and notes, the documents you mark as ready (and any expiry dates you add), and the scholarships you choose to track. Universo does not host uploaded files — documents are self-tracked only. Your password is stored only as a secure bcrypt hash.</p>
-        <p><strong>How we measure usage.</strong> We record anonymous, non-identifying behavioral events — page views, searches, filters used, saves, and Apply-Now clicks — to understand how the site is used and improve it. These are tied to a random anonymous browser id (a cookie), never to your name or email, and we do not send your details to any university. An internal, password-protected admin dashboard uses this data in aggregate (traffic, popular universities, funnel and retention metrics); we do not sell it or share it with third parties.</p>
-        <p><strong>Your control.</strong> You can <strong>export</strong> your account data, or <strong>permanently delete</strong> your account at any time from the Account page. Deleting your account also erases the anonymous behavioral history linked to it. For any privacy question or data request, email <a href="mailto:join.universo@gmail.com">join.universo@gmail.com</a>.</p>
+        <p><strong>Why we use it (lawful basis).</strong> We process your account data to provide the service you signed up for, on the basis of your consent given at registration and to perform the service. We do not use it for advertising.</p>
+        <p><strong>How we measure usage.</strong> We record anonymous, non-identifying behavioral events — page views, searches, filters used, saves, and Apply-Now clicks — to understand how the site is used and improve it. These are tied to a random anonymous browser id, never to your name or email, and we do not send your details to any university. An internal, password-protected admin dashboard uses this data in aggregate; we do not sell it or share it for marketing.</p>
+        <p><strong>Cookies.</strong> We use only essential cookies: one for your login session and one random anonymous id for the usage measurement above. We use no third-party advertising or tracking cookies, so Universo shows no cookie-consent banner.</p>
+        <p><strong>Who else is involved.</strong> Hosting is provided by our infrastructure provider (Render); transactional emails, once enabled, are sent through an email provider (Resend); university logos and photos are fetched from public sources (e.g. Wikipedia). We share your personal account data with none of them beyond what is technically required to run the service, and we never sell it.</p>
+        <p><strong>Retention.</strong> We keep your account data for as long as your account exists. When you delete your account, it is removed along with the anonymous behavioral history linked to it. Aggregated, non-identifying usage statistics may be kept to understand overall trends.</p>
+        <p><strong>Your rights.</strong> You can <strong>export</strong> your account data, or <strong>permanently delete</strong> your account at any time from the Account page — deleting also erases the anonymous behavioral history linked to it. You may also ask us to correct your data or object to processing. For any privacy request, email <a href="mailto:join.universo@gmail.com">join.universo@gmail.com</a>. If you are in the EU/EEA and believe your data is mishandled, you have the right to complain to your local data protection authority (in Finland, the Office of the Data Protection Ombudsman, tietosuoja.fi).</p>
+      </div>`;
+  }
+
+  function renderTerms() {
+    setActiveNav("account");
+    document.title = "Terms — Universo";
+    view.innerHTML = `
+      <a class="back-link" href="/account">← Back</a>
+      <div class="card" style="max-width:680px">
+        <h2>Terms of service</h2>
+        <p class="muted" style="font-size:.85rem">Last updated: 29 September 2026</p>
+        <p><strong>What Universo is.</strong> Universo helps international students discover, compare and plan university choices in Europe. It is a planning and information tool — it is not a university, an agent, or an application service, and it does not submit applications on your behalf.</p>
+        <p><strong>Accuracy — please verify.</strong> University information is gathered from public sources and, for many fields (such as tuition, living costs and deadlines), shown as estimates that are clearly labelled as such. Always confirm the details on the university's official website before you rely on them. We do not guarantee that any information is complete, current or error-free.</p>
+        <p><strong>Your account.</strong> Keep your login details secure and give accurate information. You are responsible for activity on your account. Universo is free for students.</p>
+        <p><strong>Acceptable use.</strong> Do not misuse the service — no attempts to break security, scrape at scale, disrupt the service, or use it unlawfully. We may suspend accounts that do.</p>
+        <p><strong>Your content.</strong> The notes, lists and plans you create belong to you. Universo does not accept uploaded files.</p>
+        <p><strong>Availability.</strong> The service is provided "as is" and may change or be unavailable at times, especially while it is still in development.</p>
+        <p><strong>Liability.</strong> Universo is provided "as is" and "as available". To the maximum extent permitted by law, we are not responsible for indirect or consequential losses, or for decisions you make based on information in the service — always confirm details on the university's official website. Nothing here limits any liability that cannot be limited by law.</p>
+        <p><strong>Governing law.</strong> These terms are governed by the laws of Finland, and any disputes fall under the jurisdiction of the Finnish courts.</p>
+        <p><strong>Changes.</strong> We may update these terms; significant changes will be reflected by the "last updated" date above.</p>
+        <p><strong>Contact.</strong> <a href="mailto:join.universo@gmail.com">join.universo@gmail.com</a></p>
       </div>`;
   }
 
@@ -4042,11 +4100,12 @@
           <h2>Choose a new password</h2>
           <div id="auth-error" class="form-error" hidden></div>
           <form id="reset-form">
-            <div class="form-group"><label>New password <span class="muted">(min 8 characters)</span></label><input type="password" name="password" required minlength="8" autocomplete="new-password" /></div>
+            ${pwField('New password <span class="muted">(min 8 characters)</span>', "password", "new-password", ' minlength="8"')}
             <button class="btn btn--primary btn--block" type="submit" id="reset-submit">Set new password</button>
           </form>
         </div>
       </div>`;
+    wirePwToggles(view);
     document
       .getElementById("reset-form")
       .addEventListener("submit", async (e) => {
@@ -4192,11 +4251,12 @@
       else if (parts[0] === "account")
         p = renderAccount(new URLSearchParams(location.search).get("mode"));
       else if (parts[0] === "privacy") p = renderPrivacy();
+      else if (parts[0] === "terms") p = renderTerms();
       else if (parts[0] === "verify-email") p = renderVerifyEmail();
       else if (parts[0] === "forgot-password") p = renderForgotPassword();
       else if (parts[0] === "reset-password") p = renderResetPassword();
       else if (isProfile) p = renderProfile(decodeURIComponent(parts[1]));
-      else p = renderDiscover();
+      else p = renderNotFound();
     } catch (e) {
       return showCrash(e);
     }

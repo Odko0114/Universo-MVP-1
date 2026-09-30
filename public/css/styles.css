@@ -1927,6 +1927,36 @@ img {
   border-color: var(--teal-500);
   box-shadow: 0 0 0 3px var(--teal-050);
 }
+/* Password show/hide toggle (login / register / reset). */
+.pw-wrap {
+  position: relative;
+}
+.pw-wrap input {
+  padding-right: 68px;
+}
+.pw-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  min-width: 60px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: none;
+  background: transparent;
+  color: var(--teal-500);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.pw-toggle:hover {
+  color: var(--ink);
+}
+.pw-toggle:focus-visible {
+  outline: 2px solid var(--teal-500);
+  outline-offset: 2px;
+}
 .consent {
   display: flex;
   gap: 12px;
