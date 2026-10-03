@@ -7,6 +7,11 @@
     <title>Universo — Marketing OS</title>
     <link rel="icon" href="/favicon.svg?v=3" />
     <style>
+      /* Self-hosted Public Sans (variable, full weight range) — CSP-compliant
+         (font-src 'self'), no external font host. Loads the brand font the page
+         declared but never actually fetched, and gives the Reels canvas 400–900. */
+      @font-face { font-family: "Public Sans"; src: url("/fonts/publicsans-latin.woff2") format("woff2"); font-weight: 100 900; font-display: swap; unicode-range: U+0000-00FF, U+2000-206F, U+20A0-20BF, U+2212; }
+      @font-face { font-family: "Public Sans"; src: url("/fonts/publicsans-latin-ext.woff2") format("woff2"); font-weight: 100 900; font-display: swap; unicode-range: U+0100-024F, U+1E00-1EFF; }
       :root {
         --bg: #f5f7fb; --surface: #ffffff; --surface-2: #eef1f6;
         --ink: #10233f; --soft: #45566e; --faint: #6b7688; --line: #e1e6ee;
@@ -150,6 +155,7 @@
       <nav class="tabs" id="tabs" hidden>
         <button data-tab="home" class="on">🏠 Home</button>
         <button data-tab="ideas">📥 Content</button>
+        <button data-tab="studio">🎬 Reels</button>
         <button data-tab="calendar">🗓️ Calendar</button>
         <button data-tab="campaigns">🎯 Campaigns</button>
         <button data-tab="brain">✦ Brand</button>
@@ -389,13 +395,212 @@
         if (c.platform) parts.push("on " + dimLabel("platform", c.platform));
         return parts.join(" ");
       }
+      // ===== REELS (Studio) =====
+      // Make a branded vertical reel in the browser from a real scriptgen script.
+      // Canvas + MediaRecorder only — €0, no server render, no video storage; the
+      // finished file downloads to the device. Mirrors the look of the standalone
+      // Reel Maker and the FFmpeg renderer (navy #0b1f3a, white, gold #e9b949).
+      const ST = { topic: "Overview", angle: "", slides: [], accent: "#e9b949", dur: 3.0, prov: null };
+      let stRAF = null, stPlaying = true, stT0 = 0, stPaused = 0, stRec = false, stRecClock = 0, stBgCache = null, stMarkImg = null;
+      const ST_TOPICS = ["Overview", "Scholarships", "Cost", "Applications", "Rankings"];
+      // The mark is drawn from the server-injected <!--BRAND_MARK--> SVG in the header
+      // (lib/brand.js is the single source) — never hardcode the path data here.
+      function stLoadMark() {
+        if (stMarkImg) return;
+        const src = document.querySelector(".brand svg"); if (!src) return;
+        try {
+          const clone = src.cloneNode(true); clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+          clone.querySelectorAll("path").forEach((p) => p.setAttribute("fill", "#f5f7ff"));
+          const img = new Image(); img.onload = () => { stMarkImg = img; }; img.src = "data:image/svg+xml;utf8," + encodeURIComponent(new XMLSerializer().serializeToString(clone));
+        } catch (e) {}
+      }
+      const ST_TAGS = { Scholarships: ["#scholarships", "#studyabroad", "#studyineurope", "#fullyfundedscholarship", "#internationalstudents"], Cost: ["#studyabroad", "#studyineurope", "#tuitionfree", "#studentbudget", "#internationalstudents"], Applications: ["#studyabroad", "#universityapplication", "#studyineurope", "#studentlife", "#internationalstudents"], Rankings: ["#studyineurope", "#university", "#studyabroad", "#studentlife", "#internationalstudents"], Overview: ["#studyabroad", "#studyineurope", "#universitysearch", "#internationalstudents", "#studentlife"] };
+      const studioTopic = (t) => (ST_TOPICS.indexOf(t) > -1 ? t : "Overview");
+      // keep whole sentences up to a cap; never invents words
+      function stTighten(line, cap) {
+        const t = String(line || "").replace(/…$/, "").trim();
+        if (t.length <= cap) return t;
+        const parts = t.split(/(?<=[.!?])\s+/); let out = "";
+        for (const p of parts) { if (!out) { out = p; if (out.length >= cap * 0.5) break; } else if ((out + " " + p).length <= cap) out += " " + p; else break; }
+        return out || t.slice(0, cap).replace(/\s+\S*$/, "");
+      }
+      function panelStudio() {
+        return `<section class="panel" id="tab-studio"><h1>Reels</h1>
+          <p class="sub">A branded vertical reel from your real data — pick a topic, tweak the words, record. Faceless, no footage, nothing invented. Download it and post to Reels, Shorts or TikTok.</p>
+          <div class="row" style="align-items:flex-start">
+            <div style="flex:1 1 320px;min-width:0;display:grid;gap:14px">
+              <div class="card">
+                <div class="row">
+                  <div class="field"><label>Topic</label><select id="st-topic">${ST_TOPICS.map((t) => `<option${t === ST.topic ? " selected" : ""}>${t}</option>`).join("")}</select></div>
+                  <div class="field"><label>Angle (optional)</label><input id="st-angle" type="text" value="${esc(ST.angle)}" placeholder="e.g. Germany, Finland, DAAD" /></div>
+                </div>
+                <button class="btn gold" id="st-load">Load script from my data</button>
+                <div id="st-prov" class="muted" style="margin-top:4px"></div>
+              </div>
+              <div class="card"><label>The words — edit freely</label><div id="st-slides" style="display:grid;gap:8px"></div><button class="btn sm alt" id="st-add" style="justify-self:start">+ Add a slide</button></div>
+              <div class="card">
+                <div class="field"><label>Accent</label><div class="chips" id="st-acc"></div></div>
+                <div class="field"><label>Seconds per slide: <span id="st-durout">${ST.dur.toFixed(1)}</span>s · total <span id="st-tot">0</span>s</label><input type="range" id="st-dur" min="2.2" max="4.5" step="0.1" value="${ST.dur}" style="min-height:40px" /></div>
+              </div>
+            </div>
+            <div style="flex:0 0 300px;max-width:300px">
+              <canvas id="st-cv" width="1080" height="1920" style="width:100%;aspect-ratio:9/16;height:auto;border-radius:12px;border:1px solid var(--line);background:#0b1f3a;display:block" aria-label="Reel preview"></canvas>
+              <div style="display:flex;gap:8px;align-items:center;margin:8px 0"><button class="btn sm alt" id="st-play" style="width:46px" aria-label="Play or pause">⏸</button><span class="muted" id="st-time" style="flex:1"></span></div>
+              <button class="btn gold" id="st-rec" style="width:100%">● Record reel</button>
+              <button class="btn sm alt" id="st-png" style="width:100%;margin-top:6px">Save cover (PNG)</button>
+              <button class="btn sm alt" id="st-cap" style="width:100%;margin-top:6px">Copy caption + hashtags</button>
+              <div class="muted" id="st-msg" style="margin-top:6px" role="status"></div>
+            </div>
+          </div>
+        </section>`;
+      }
+      async function loadStudioScript() {
+        const msg = $("st-msg"); if (msg) { msg.className = "muted"; msg.textContent = "Loading real data…"; }
+        let d = null;
+        try { const q = new URLSearchParams({ topic: ST.topic, angle: ST.angle, help: brandHelp() }); d = await (await fetch("/api/marketing/script?" + q)).json(); } catch {}
+        if (!d || !d.beats) { if (msg) { msg.className = "muted"; msg.textContent = "No matching data for that topic — try another."; } return; }
+        ST.slides = d.beats.map((b, i) => ({ cue: b.cue || "", text: stTighten(b.line, i === 0 ? 120 : 95), big: i === 0 }));
+        ST.slides.push({ cue: "", text: d.cta || "Find your matches free on Universo — link in bio.", big: false });
+        ST.prov = { dataLabel: d.dataLabel || "", sources: d.sources || [], note: d.note || "" };
+        renderStudioSlides(); renderStudioProv(); updateStudioTotals();
+        if (msg) msg.textContent = "";
+      }
+      function renderStudioProv() {
+        const p = $("st-prov"); if (!p) return; p.innerHTML = "";
+        if (!ST.prov) return;
+        const bits = [];
+        if (ST.prov.dataLabel) bits.push(`<span style="color:var(--gold);font-weight:700">${esc(ST.prov.dataLabel)}</span>`);
+        if (ST.prov.sources && ST.prov.sources.length) bits.push("Source: " + ST.prov.sources.slice(0, 2).map((s) => /^https?:/.test(s) ? `<a href="${esc(s)}" target="_blank" rel="noopener">link</a>` : esc(s)).join(", "));
+        p.innerHTML = bits.join(" · ") + (ST.prov.note ? `<div style="margin-top:3px">${esc(ST.prov.note)}</div>` : "");
+      }
+      function renderStudioSlides() {
+        const box = $("st-slides"); if (!box) return; box.innerHTML = "";
+        ST.slides.forEach((sl, i) => {
+          const row = document.createElement("div"); row.style.cssText = "display:grid;gap:5px;border:1px solid var(--line);border-radius:10px;padding:9px;background:var(--surface-2)";
+          const top = document.createElement("div"); top.style.cssText = "display:flex;gap:7px;align-items:center";
+          const cue = document.createElement("input"); cue.type = "text"; cue.value = sl.cue; cue.placeholder = "Label (optional)"; cue.maxLength = 28; cue.style.cssText = "flex:1;min-width:0;min-height:36px;font-size:0.85rem"; cue.setAttribute("aria-label", "Slide " + (i + 1) + " label"); cue.oninput = () => { sl.cue = cue.value; };
+          const rm = document.createElement("button"); rm.type = "button"; rm.className = "btn sm alt"; rm.textContent = "×"; rm.style.cssText = "flex:0 0 auto;min-height:36px;width:38px;padding:0"; rm.setAttribute("aria-label", "Remove slide " + (i + 1)); rm.onclick = () => { ST.slides.splice(i, 1); renderStudioSlides(); updateStudioTotals(); };
+          top.append(cue, rm);
+          const ta = document.createElement("textarea"); ta.value = sl.text; ta.rows = 2; ta.maxLength = 220; ta.style.minHeight = "48px"; ta.setAttribute("aria-label", "Slide " + (i + 1) + " text"); ta.oninput = () => { sl.text = ta.value; };
+          row.append(top, ta); box.appendChild(row);
+        });
+      }
+      function updateStudioTotals() { const t = $("st-tot"); if (t) t.textContent = (ST.slides.length * ST.dur).toFixed(0); }
+      // ---- canvas drawing (mirrors reel.js / Reel Maker) ----
+      const stClamp = (x, a, b) => Math.min(b == null ? 1 : b, Math.max(a == null ? 0 : a, x));
+      function stDrawBg(ctx) {
+        if (stBgCache) { ctx.drawImage(stBgCache, 0, 0); return; }
+        const off = document.createElement("canvas"); off.width = 1080; off.height = 1920; const c = off.getContext("2d");
+        const g = c.createLinearGradient(0, 0, 486, 1920); g.addColorStop(0, "#102a4e"); g.addColorStop(0.55, "#0b1f3a"); g.addColorStop(1, "#060f1f"); c.fillStyle = g; c.fillRect(0, 0, 1080, 1920);
+        let r = c.createRadialGradient(886, 269, 0, 886, 269, 640); r.addColorStop(0, "rgba(90,132,216,0.26)"); r.addColorStop(1, "rgba(90,132,216,0)"); c.fillStyle = r; c.fillRect(0, 0, 1080, 1920);
+        r = c.createRadialGradient(130, 1728, 0, 130, 1728, 520); r.addColorStop(0, "rgba(233,185,73,0.10)"); r.addColorStop(1, "rgba(233,185,73,0)"); c.fillStyle = r; c.fillRect(0, 0, 1080, 1920);
+        stBgCache = off; ctx.drawImage(off, 0, 0);
+      }
+      function stWrap(ctx, text, font, maxW) {
+        ctx.font = font; const words = String(text).split(/\s+/).filter(Boolean), lines = []; let cur = "";
+        for (const w of words) { const t = cur ? cur + " " + w : w; if (ctx.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t; }
+        if (cur) lines.push(cur); return lines;
+      }
+      function stFit(ctx, text, big, maxH) {
+        const maxF = big ? 100 : 76, minF = big ? 54 : 46, weight = big ? 800 : 700, maxW = 888;
+        for (let size = maxF; size >= minF; size -= 4) { const font = weight + " " + size + 'px "Public Sans", sans-serif'; const lines = stWrap(ctx, text, font, maxW); const lh = Math.round(size * 1.18); if (lines.length * lh <= maxH) return { size, lines, lh, weight }; }
+        return { size: minF, lines: stWrap(ctx, text, weight + " " + minF + 'px "Public Sans", sans-serif', maxW), lh: Math.round(minF * 1.18), weight };
+      }
+      function stFooter(ctx) {
+        if (stMarkImg) ctx.drawImage(stMarkImg, 96, 1772, 58, 58);
+        ctx.textAlign = "left"; ctx.textBaseline = "alphabetic"; ctx.fillStyle = "#f5f7ff"; ctx.globalAlpha = 0.95; ctx.font = '700 44px "Public Sans", sans-serif'; ctx.fillText("Universo", stMarkImg ? 170 : 96, 1816);
+        ctx.fillStyle = "#bfc9da"; ctx.globalAlpha = 0.8; ctx.font = '400 27px "Public Sans", sans-serif'; ctx.fillText("universo-edu.com", 170, 1854); ctx.globalAlpha = 1;
+      }
+      function stDraw(ctx, t) {
+        stDrawBg(ctx);
+        const dur = ST.dur, n = ST.slides.length;
+        if (n) {
+          const total = n * dur, tt = ((t % total) + total) % total, idx = Math.min(n - 1, Math.max(0, Math.floor(tt / dur))), local = tt - idx * dur, sl = ST.slides[idx];
+          if (!sl) { stFooter(ctx); return; }
+          let alpha = 1; if (local < 0.45) alpha = local / 0.45; else if (local > dur - 0.35) alpha = Math.max(0, (dur - local) / 0.35);
+          const CT = 400, CB = 1670, CH = CB - CT, cueH = sl.cue ? 78 : 0;
+          const { size, lines, lh, weight } = stFit(ctx, sl.text, sl.big, CH - cueH - 60);
+          const blockH = lines.length * lh, totalH = cueH + blockH; let y = CT + Math.max(0, Math.round((CH - totalH) / 2));
+          ctx.textAlign = "left"; ctx.textBaseline = "top"; ctx.globalAlpha = alpha;
+          if (sl.cue) { ctx.fillStyle = ST.accent; ctx.font = '700 36px "Public Sans", sans-serif'; ctx.fillText(sl.cue.toUpperCase(), 96, y); y += cueH; }
+          ctx.fillStyle = "#f5f7ff"; ctx.font = weight + " " + size + 'px "Public Sans", sans-serif'; lines.forEach((ln, i) => ctx.fillText(ln, 96, y + i * lh));
+          const barY = y + blockH + 22, barA = stClamp((local - 0.2) / 0.5) * (local > dur - 0.35 ? Math.max(0, (dur - local) / 0.35) : 1);
+          ctx.globalAlpha = barA; ctx.fillStyle = ST.accent; ctx.fillRect(96, barY, 150, 8); ctx.globalAlpha = 1;
+        }
+        stFooter(ctx);
+      }
+      function stLoop(now) {
+        const cvEl = $("st-cv"); if (!cvEl) { stRAF = null; return; } // tab left — stop
+        const ctx = cvEl.getContext("2d");
+        let t; if (stRec) t = stRecClock; else if (stPlaying) t = (now - stT0) / 1000; else t = stPaused;
+        stDraw(ctx, t);
+        const tm = $("st-time"), total = (ST.slides.length * ST.dur) || 1; if (tm) tm.textContent = ST.slides.length ? ("Preview · " + total.toFixed(0) + "s loop") : "Load a script to begin";
+        stRAF = requestAnimationFrame(stLoop);
+      }
+      function stDownload(filename, blob) { try { const u = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = u; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); return true; } catch (e) { return false; } }
+      function stPickMime() { const types = ["video/mp4;codecs=h264", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"]; for (const x of types) { try { if (MediaRecorder.isTypeSupported(x)) return x; } catch (e) {} } return ""; }
+      function wireStudio() {
+        const cvEl = $("st-cv"); if (!cvEl) return;
+        if (stRAF) { cancelAnimationFrame(stRAF); stRAF = null; }
+        stLoadMark();
+        // accent chips
+        const accents = [{ n: "Gold", c: "#e9b949" }, { n: "White", c: "#f5f7ff" }, { n: "Sky", c: "#8fb4ff" }];
+        const accBox = $("st-acc"); accBox.innerHTML = accents.map((a) => `<button type="button" class="chip-btn${a.c === ST.accent ? " on" : ""}" data-acc="${a.c}">${a.n}</button>`).join("");
+        accBox.querySelectorAll("[data-acc]").forEach((b) => b.onclick = () => { ST.accent = b.dataset.acc; accBox.querySelectorAll("[data-acc]").forEach((x) => x.classList.toggle("on", x === b)); });
+        $("st-topic").onchange = (e) => { ST.topic = e.target.value; };
+        $("st-angle").oninput = (e) => { ST.angle = e.target.value; };
+        $("st-load").onclick = () => loadStudioScript();
+        $("st-add").onclick = () => { ST.slides.push({ cue: "", text: "New line of text.", big: false }); renderStudioSlides(); updateStudioTotals(); };
+        $("st-dur").oninput = (e) => { ST.dur = +e.target.value; $("st-durout").textContent = ST.dur.toFixed(1); updateStudioTotals(); };
+        $("st-play").onclick = () => { stPlaying = !stPlaying; if (stPlaying) { stT0 = performance.now() - stPaused * 1000; $("st-play").textContent = "⏸"; } else { stPaused = (performance.now() - stT0) / 1000; $("st-play").textContent = "▶"; } };
+        $("st-rec").onclick = () => stRecord();
+        $("st-png").onclick = () => stSavePng();
+        $("st-cap").onclick = () => stCopyCaption();
+        // restore any in-progress edits; else load the current topic so it opens working
+        renderStudioProv(); updateStudioTotals();
+        if (ST.slides.length) renderStudioSlides(); else loadStudioScript();
+        stPlaying = true; stT0 = performance.now(); stPaused = 0;
+        if (document.fonts && document.fonts.load) { Promise.all([document.fonts.load('800 80px "Public Sans"'), document.fonts.load('700 40px "Public Sans"'), document.fonts.load('400 27px "Public Sans"')]).then(() => { stBgCache = stBgCache; }).catch(() => {}); }
+        stRAF = requestAnimationFrame(stLoop);
+      }
+      function stRecord() {
+        const msg = $("st-msg"), btn = $("st-rec"), cvEl = $("st-cv");
+        if (stRec || !ST.slides.length || !cvEl) return;
+        if (typeof MediaRecorder === "undefined" || !cvEl.captureStream) { msg.className = "muted"; msg.textContent = "This browser can't record. Try Chrome or Edge."; return; }
+        const mime = stPickMime(); if (!mime) { msg.className = "muted"; msg.textContent = "Recording isn't supported here."; return; }
+        const ext = mime.indexOf("mp4") > -1 ? "mp4" : "webm", total = ST.slides.length * ST.dur, chunks = [];
+        let rec; try { rec = new MediaRecorder(cvEl.captureStream(30), { mimeType: mime, videoBitsPerSecond: 9000000 }); } catch (e) { msg.textContent = "Could not start recording."; return; }
+        rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+        rec.onstop = () => {
+          stRec = false; btn.disabled = false; btn.textContent = "● Record reel"; stT0 = performance.now(); stPlaying = true; $("st-play").textContent = "⏸";
+          const blob = new Blob(chunks, { type: mime }), mb = (blob.size / 1048576).toFixed(1), fn = "universo-reel-" + ST.topic.toLowerCase() + "." + ext;
+          if (stDownload(fn, blob)) { msg.className = "muted"; msg.textContent = "Saved " + fn + " (" + mb + " MB). Post it to Reels, Shorts or TikTok."; }
+          else { msg.textContent = "Recorded " + mb + " MB but the download was blocked."; }
+        };
+        stRec = true; stRecClock = 0; btn.disabled = true; btn.textContent = "Recording…"; msg.className = "muted"; msg.textContent = "Recording " + total.toFixed(0) + "s…";
+        rec.start(); const started = performance.now();
+        (function tick() { stRecClock = (performance.now() - started) / 1000; if (stRecClock >= total) { stRecClock = total - 0.001; try { rec.stop(); } catch (e) {} return; } setTimeout(tick, 33); })();
+      }
+      function stSavePng() {
+        const msg = $("st-msg"), cvEl = $("st-cv"); if (!cvEl) return;
+        const wasPlaying = stPlaying; stPlaying = false; stPaused = 0.45; stDraw(cvEl.getContext("2d"), 0.45);
+        cvEl.toBlob((blob) => { stPlaying = wasPlaying; if (stPlaying) stT0 = performance.now() - stPaused * 1000; if (!blob) return; if (stDownload("universo-cover-" + ST.topic.toLowerCase() + ".png", blob)) { msg.className = "muted"; msg.textContent = "Saved the cover image."; } }, "image/png");
+      }
+      function stCopyCaption() {
+        const msg = $("st-msg");
+        const body = ST.slides.filter((sl) => sl.text).map((sl) => sl.text).slice(0, 4).join("\n\n");
+        const tags = (ST_TAGS[ST.topic] || ST_TAGS.Overview).concat(["#universo"]).join(" ");
+        const src = (ST.prov && ST.prov.sources && ST.prov.sources[0]) ? ("\n\nSource: " + ST.prov.sources[0]) : "";
+        const caption = body + src + "\n\n" + tags;
+        try { navigator.clipboard.writeText(caption).then(() => { msg.className = "muted"; msg.textContent = "Caption + hashtags copied."; }, () => { msg.textContent = "Copy failed — select it manually."; }); } catch (e) { msg.textContent = "Copy not available here."; }
+      }
       function render() {
-        $("app").innerHTML = [panelHome(), panelCreate(), panelIdeas(), panelCalendar(), panelCampaigns(), panelBrain(), panelLibrary(), panelAnalytics(), panelTeam()].join("");
+        $("app").innerHTML = [panelHome(), panelCreate(), panelIdeas(), panelStudio(), panelCalendar(), panelCampaigns(), panelBrain(), panelLibrary(), panelAnalytics(), panelTeam()].join("");
         // Brand tab shows Brand Brain + the Library reference together.
         document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("on", p.id === "tab-" + TAB || (TAB === "brain" && p.id === "tab-library")));
         const teamBtn = $("tabs").querySelector('[data-tab="team"]'); if (teamBtn) teamBtn.hidden = !isFounder(); // Team is founder-only
         $("tabs").querySelectorAll("button").forEach((b) => b.classList.toggle("on", b.dataset.tab === TAB)); // keep nav in sync with programmatic navigation
-        wireHome(); wireCreate(); wireIdeas(); wireCalendar(); wireCampaigns(); wireBrain(); wireLibrary(); wireAnalytics(); wireTeam();
+        wireHome(); wireCreate(); wireIdeas(); wireStudio(); wireCalendar(); wireCampaigns(); wireBrain(); wireLibrary(); wireAnalytics(); wireTeam();
       }
 
       // ===== RADAR / INTELLIGENCE =====
@@ -708,7 +913,7 @@ Keep Universo's honest, warm voice; never invent numbers, traction or results. R
             <div class="field"><label>…or paste an image / video link</label><input id="ed-media" value="${esc(c.mediaUrl || "")}" placeholder="https://…" /></div>
             <div class="chips">${VIDEO_TOOLS.map((t) => `<a class="chip-btn" href="${esc(t.url)}" target="_blank" rel="noopener">${esc(t.name)} ↗</a>`).join("")}</div>
             <div class="field" style="margin-top:8px"><label>Creative notes / concept</label><textarea id="ed-notes" rows="2" placeholder="Concept, shots, what to change…">${esc(c.notes || "")}</textarea></div></div>
-          <div class="prod-sec"><div class="prod-h">Real-data script <button class="link-mini" id="ed-pull">Pull from Universo data →</button></div><div id="ed-script" class="muted">Optional — a source-verified script you can drop into the caption.</div></div>
+          <div class="prod-sec"><div class="prod-h">Real-data script <button class="link-mini" id="ed-pull">Pull from Universo data →</button> <button class="link-mini" id="ed-reel">🎬 Make a reel →</button></div><div id="ed-script" class="muted">Optional — a source-verified script you can drop into the caption, or turn into a branded reel.</div></div>
           <div class="prod-sec"><div class="prod-h">Versions <button class="link-mini" id="ed-savever">Save current as version</button></div><div id="ed-versions"></div></div>
           <div class="opp-actions" style="margin-top:12px"><button class="btn sm gold" id="ed-save">Save</button><button class="btn sm alt" id="ed-publish">📢 Mark published</button></div>`;
         $("editor-modal").hidden = false;
@@ -730,6 +935,7 @@ Keep Universo's honest, warm voice; never invent numbers, traction or results. R
         $("ed-savever").onclick = async () => { idea.content = editorContent(); idea.content.versions = [{ at: new Date().toISOString().slice(0, 16).replace("T", " "), hook: idea.content.hook, caption: idea.content.caption, cta: idea.content.cta, body: idea.content.body }, ...(idea.content.versions || [])].slice(0, 20); await api("PATCH", "/idea/" + idea.id, { content: idea.content }); renderVersions(); };
         renderVersions();
         $("ed-pull").onclick = async () => { $("ed-script").textContent = "Loading real data…"; let d = null; try { const q = new URLSearchParams({ topic: idea.topic || topicOf(idea.title), angle: idea.title, formula: idea.formula || "", cta: g ? g.cta : "", help: brandHelp() }); d = await (await fetch("/api/marketing/script?" + q)).json(); } catch {} if (!d || !d.beats) { $("ed-script").textContent = "No matching real data for this idea."; return; } const text = d.beats.map((b) => b.line).join(" "); $("ed-script").innerHTML = `<div style="margin:4px 0">${d.beats.map((b) => `<div><b>${esc(b.cue)}:</b> ${esc(b.line)}</div>`).join("")}</div><button class="link-mini" id="ed-usescript">Use as caption</button>${d.sources && d.sources.length ? `<div class="muted" style="margin-top:4px">Sources: ${d.sources.map((s) => /^https?:/.test(s) ? `<a href="${esc(s)}" target="_blank" rel="noopener">link</a>` : esc(s)).join(", ")}</div>` : ""}`; $("ed-usescript").onclick = () => { $("ed-caption").value = text; }; };
+        $("ed-reel").onclick = () => { ST.topic = studioTopic(idea.topic || topicOf(idea.title)); ST.angle = idea.title || ""; ST.slides = []; $("editor-modal").hidden = true; TAB = "studio"; render(); window.scrollTo(0, 0); };
       }
       // Upload an image blob to the OS asset store (€0, on the persistent disk).
       async function uploadImage(blob) {
