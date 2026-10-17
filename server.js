@@ -39,6 +39,7 @@ const scriptgen = require("./lib/scriptgen");
 const recommend = require("./lib/recommend");
 const trends = require("./lib/trends");
 const overridesLib = require("./lib/overrides");
+const csvImport = require("./lib/csv-import");
 const usage = require("./lib/usage");
 const adminData = require("./lib/admin-data");
 const languageReqs = require("./lib/language-requirements");
@@ -82,7 +83,11 @@ store.init("pilot_leads", []); // university contact/pilot/claim leads (/for-uni
 store.init("marketing", { brain: {}, ideas: [] }); // Marketing OS state (founder + marketer)
 // Admin-edited facts (sourced tuition/deadlines/etc.) layered over the DERIVED
 // dataset — see lib/overrides.js. Persistent so a redeploy never loses an edit.
-store.init("opportunity_overrides", { university: {}, scholarship: {}, log: [] });
+store.init("opportunity_overrides", {
+  university: {},
+  scholarship: {},
+  log: [],
+});
 store.init("uni_accounts", []); // partner logins, each bound to one university_id
 store.init("claims", {}); // { universityId: { account_id, claimed_at } } — kept
 // separate from the universities file because that
@@ -114,7 +119,8 @@ const overlay = overridesLib.createOverrides({
   doc: store.read("opportunity_overrides"),
   universities: UNIVERSITIES,
   scholarships: curatedScholarships.allCurated(),
-  persist: () => store.write("opportunity_overrides", store.read("opportunity_overrides")),
+  persist: () =>
+    store.write("opportunity_overrides", store.read("opportunity_overrides")),
 });
 overlay.applyAll();
 const INDEX = search.buildIndex(UNIVERSITIES); // built once (dataset is static)
@@ -925,11 +931,14 @@ api.get("/universities", universitiesLimiter, (req, res) => {
       .filter(Boolean);
     if (q)
       unis = unis.filter((u) =>
-        `${u.name} ${u.city || ""} ${u.country || ""}`.toLowerCase().includes(q),
+        `${u.name} ${u.city || ""} ${u.country || ""}`
+          .toLowerCase()
+          .includes(q),
       );
     const universities = unis.map((u) => {
       const withP = withPhoto({ ...u, click_count: clickOf(u.id) });
-      if (curatedScholarships.isCuratedUniversity(u.id)) withP.has_funding = true;
+      if (curatedScholarships.isCuratedUniversity(u.id))
+        withP.has_funding = true;
       return withP;
     });
     return res.json({
@@ -967,7 +976,12 @@ api.get("/universities", universitiesLimiter, (req, res) => {
   // is what makes unmet demand visible ("Medicine in Finland → 0 matches").
   if (!(Number(req.query.offset) > 0)) {
     const meta = usage.searchMeta(req.query, SEARCH_VOCAB);
-    if (meta) events.record("search", { anon: req.anon, results: result.count, ...meta });
+    if (meta)
+      events.record("search", {
+        anon: req.anon,
+        results: result.count,
+        ...meta,
+      });
   }
   res.json(result);
 });
@@ -1612,7 +1626,9 @@ function buildJourneyData(student) {
   // ---- Scholarships: destination-driven, each linked to the applications it
   // could fund, plus your home country's outbound schemes. ----
   const homeCountry = student.home_country || student.country_of_origin || "";
-  const destCountries = [...new Set(saved.map((u) => u.country).filter(Boolean))];
+  const destCountries = [
+    ...new Set(saved.map((u) => u.country).filter(Boolean)),
+  ];
   const prefCountries = Array.isArray(student.country_preference)
     ? student.country_preference
     : [];
@@ -1632,10 +1648,14 @@ function buildJourneyData(student) {
   const scholarships = {
     groups: schData.groups.map((g) => ({
       country: g.country,
-      scholarships: g.scholarships.map((s) => withMeta(s, appsByCountry(g.country))),
+      scholarships: g.scholarships.map((s) =>
+        withMeta(s, appsByCountry(g.country)),
+      ),
     })),
     eu_wide: schData.eu_wide.map((s) => withMeta(s, allAppNames)),
-    outbound: scholarshipsOutbound(homeCountry).map((s) => withMeta(s, allAppNames)),
+    outbound: scholarshipsOutbound(homeCountry).map((s) =>
+      withMeta(s, allAppNames),
+    ),
     destinations: schCountries,
     home_country: homeCountry,
     source: destCountries.length
@@ -1870,11 +1890,18 @@ api.post("/me/scholarship", auth.requireAuth, (req, res) => {
   const key = typeof req.body.key === "string" ? req.body.key : "";
   const b = req.body || {};
   if (!key) return res.status(400).json({ error: "Unknown scholarship." });
-  if (b.status !== undefined && b.status !== "" && !journey.SCHOLARSHIP_STATUS_KEYS.has(b.status))
+  if (
+    b.status !== undefined &&
+    b.status !== "" &&
+    !journey.SCHOLARSHIP_STATUS_KEYS.has(b.status)
+  )
     return res.status(400).json({ error: "Unknown status." });
   if (
     b.deadline !== undefined &&
-    !(b.deadline === "" || (typeof b.deadline === "string" && DATE_RE.test(b.deadline)))
+    !(
+      b.deadline === "" ||
+      (typeof b.deadline === "string" && DATE_RE.test(b.deadline))
+    )
   )
     return res.status(400).json({ error: "Deadline must be YYYY-MM-DD." });
 
@@ -1917,7 +1944,10 @@ api.post("/me/application/:id", auth.requireAuth, (req, res) => {
     return res.status(400).json({ error: "Unknown status." });
   if (
     b.deadline !== undefined &&
-    !(b.deadline === "" || (typeof b.deadline === "string" && DATE_RE.test(b.deadline)))
+    !(
+      b.deadline === "" ||
+      (typeof b.deadline === "string" && DATE_RE.test(b.deadline))
+    )
   )
     return res.status(400).json({ error: "Deadline must be YYYY-MM-DD." });
   if (b.program !== undefined && typeof b.program !== "string")
@@ -1935,7 +1965,10 @@ api.post("/me/application/:id", auth.requireAuth, (req, res) => {
     return res.status(400).json({ error: "Invalid reason." });
   if (
     b.decision_date !== undefined &&
-    !(b.decision_date === "" || (typeof b.decision_date === "string" && DATE_RE.test(b.decision_date)))
+    !(
+      b.decision_date === "" ||
+      (typeof b.decision_date === "string" && DATE_RE.test(b.decision_date))
+    )
   )
     return res.status(400).json({ error: "Decision date must be YYYY-MM-DD." });
 
@@ -1996,12 +2029,20 @@ const MAX_CUSTOM_DOCS = 12;
 api.post("/me/application/:id/custom", auth.requireAuth, (req, res) => {
   if (!requireSaved(req, res)) return;
   const label =
-    typeof req.body.label === "string" ? req.body.label.trim().slice(0, 60) : "";
-  if (!label) return res.status(400).json({ error: "Give the document a name." });
+    typeof req.body.label === "string"
+      ? req.body.label.trim().slice(0, 60)
+      : "";
+  if (!label)
+    return res.status(400).json({ error: "Give the document a name." });
   const level = journey.LEVEL_KEYS.has(req.body.level)
     ? req.body.level
     : "required";
-  const doc = { id: `c_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`, label, level, ready: false };
+  const doc = {
+    id: `c_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`,
+    label,
+    level,
+    ready: false,
+  };
   let over = false;
   updateApplication(req, req.params.id, (a) => {
     if (a.custom.length >= MAX_CUSTOM_DOCS) {
@@ -2011,7 +2052,9 @@ api.post("/me/application/:id/custom", auth.requireAuth, (req, res) => {
     a.custom.push(doc);
   });
   if (over)
-    return res.status(400).json({ error: "That application has enough documents." });
+    return res
+      .status(400)
+      .json({ error: "That application has enough documents." });
   res.json({ id: req.params.id, document: doc });
 });
 
@@ -2247,7 +2290,8 @@ adminApi.use(adminAuth.requireAdmin);
 // ---------------------------------------------------------------------------
 
 const adminActor = (req) => (req.admin && req.admin.email) || "admin";
-const recordType = (t) => (t === "university" || t === "scholarship" ? t : null);
+const recordType = (t) =>
+  t === "university" || t === "scholarship" ? t : null;
 
 // An edit to teaching languages can change the filter options and the set of
 // values a search may record, so rebuild both (cheap: ~3k records, rare edit).
@@ -2297,7 +2341,8 @@ adminApi.patch("/record/:type/:id", (req, res) => {
   if (!type) return res.status(404).json({ error: "Record not found." });
   const fields = (req.body || {}).fields;
   const r = overlay.save(type, req.params.id, fields, adminActor(req));
-  if (!r.ok) return res.status(r.status || 400).json({ error: r.error, field: r.field });
+  if (!r.ok)
+    return res.status(r.status || 400).json({ error: r.error, field: r.field });
   if (fields && "languages" in fields) refreshFilters();
   res.json(r.record);
 });
@@ -2329,7 +2374,9 @@ adminApi.get("/usage", (_req, res) => {
   // Field/country demand only exists from the day searches started carrying their
   // filters; say so, so an empty list is explained rather than mysterious.
   const firstFilterSearch = all.find(
-    (e) => e.type === "search" && (e.field || e.country || e.degree || e.language || e.budget),
+    (e) =>
+      e.type === "search" &&
+      (e.field || e.country || e.degree || e.language || e.budget),
   );
   res.json({
     ...u,
@@ -2409,6 +2456,80 @@ adminApi.get("/subscribers.csv", (_req, res) => {
     );
 });
 
+// ---- Spreadsheet (CSV) export / import --------------------------------------
+// Export the current list as a template, fill it in Excel/Sheets, upload it,
+// preview what would change, then confirm. Same honesty rules as single edits
+// (lib/overrides.js validates again on apply); nothing is saved until confirm.
+adminApi.get("/records.csv", (req, res) => {
+  const list = adminData.listRecords({
+    universities: UNIVERSITIES,
+    scholarships: curatedScholarships.allCurated(),
+    verifiedAt: overlay.verifiedAt,
+    interest: adminData.interestIndex(events.readAll()),
+    query: { ...req.query, all: true },
+  });
+  const kind =
+    req.query.scope === "scholarships" ? "scholarship" : "university";
+  const rows = list.items.filter((r) => r.type === kind);
+  const delimiter = req.query.sep === "comma" ? "," : ";";
+  const scope = ["all", "scholarships"].includes(String(req.query.scope))
+    ? req.query.scope
+    : "featured";
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename="universo-${kind}s-${scope}-${new Date().toISOString().slice(0, 10)}.csv"`,
+  );
+  res
+    .type("text/csv")
+    .send(csvImport.buildSheet(kind, rows, overlay, { delimiter }));
+});
+
+// Plans waiting for a confirm. In memory on purpose: a restart just means
+// "upload again", and a plan is never trusted on apply anyway.
+const IMPORT_PLANS = new Map();
+const PLAN_TTL = 30 * 60 * 1000;
+function takePlan(token) {
+  const p = IMPORT_PLANS.get(token);
+  IMPORT_PLANS.delete(token);
+  return p && p.expires > Date.now() ? p : null;
+}
+
+adminApi.post(
+  "/import/preview",
+  express.text({ type: ["text/csv", "text/plain"], limit: "2mb" }),
+  (req, res) => {
+    if (typeof req.body !== "string")
+      return res.status(400).json({ error: "Send the file as text/csv." });
+    const plan = csvImport.planImport(req.body, overlay);
+    if (!("items" in plan)) return res.status(400).json({ error: plan.error });
+    const now = Date.now();
+    for (const [t, p] of IMPORT_PLANS)
+      if (p.expires <= now) IMPORT_PLANS.delete(t);
+    while (IMPORT_PLANS.size >= 20)
+      IMPORT_PLANS.delete(IMPORT_PLANS.keys().next().value);
+    const token = require("crypto").randomBytes(16).toString("hex");
+    IMPORT_PLANS.set(token, {
+      items: plan.items,
+      admin: adminActor(req),
+      expires: now + PLAN_TTL,
+    });
+    const { items, ...view } = plan;
+    res.json({ ...view, token, toApply: items.length });
+  },
+);
+
+adminApi.post("/import/apply", (req, res) => {
+  const plan = takePlan(String((req.body || {}).token || ""));
+  if (!plan || plan.admin !== adminActor(req))
+    return res
+      .status(400)
+      .json({ error: "This preview expired. Upload the file again." });
+  const r = overlay.saveMany(plan.items, adminActor(req));
+  if (plan.items.some((i) => i.patch && "languages" in i.patch))
+    refreshFilters();
+  res.json({ applied: r.applied, failed: r.failed });
+});
+
 api.use("/admin", adminApi);
 
 // ---- Marketing OS ---------------------------------------------------------
@@ -2428,22 +2549,50 @@ const readMkt = () => {
 };
 const str = (v, n) => (typeof v === "string" ? v.slice(0, n) : "");
 // Real role drives the whole UI (Founder = full admin, Marketer = marketing-only).
-mkt.get("/me", (req, res) => res.json({ email: req.admin.email, role: (/** @type {any} */ (req))._adminRole === "marketing" ? "marketer" : "founder" }));
+mkt.get("/me", (req, res) =>
+  res.json({
+    email: req.admin.email,
+    role:
+      /** @type {any} */ (req)._adminRole === "marketing"
+        ? "marketer"
+        : "founder",
+  }),
+);
 mkt.get("/data", (_req, res) => res.json(readMkt()));
 // Founder = full-admin session; Marketer = marketing-only. Drives permissions.
-const mktFounder = (req) => (/** @type {any} */ (req))._adminRole !== "marketing";
+const mktFounder = (req) => /** @type {any} */ (req)._adminRole !== "marketing";
 mkt.patch("/brain", (req, res) => {
-  if (!mktFounder(req)) return res.status(403).json({ error: "Only a founder can change brand strategy." });
+  if (!mktFounder(req))
+    return res
+      .status(403)
+      .json({ error: "Only a founder can change brand strategy." });
   const b = req.body || {};
   const m = readMkt();
-  for (const k of Object.keys(b)) if (typeof b[k] === "string") m.brain[k] = b[k].slice(0, 4000);
+  for (const k of Object.keys(b))
+    if (typeof b[k] === "string") m.brain[k] = b[k].slice(0, 4000);
   store.write("marketing", m);
   res.json({ ok: true });
 });
-const MKT_STATUS = ["idea", "drafting", "editing", "review", "approved", "scheduled", "posted"];
+const MKT_STATUS = [
+  "idea",
+  "drafting",
+  "editing",
+  "review",
+  "approved",
+  "scheduled",
+  "posted",
+];
 const MKT_OWNER = ["Marketer", "Founder"];
 const MKT_PRIORITY = ["low", "med", "high"];
-const MKT_PLATFORMS = ["TikTok", "Instagram", "YouTube", "LinkedIn", "Reddit", "Facebook", "Other"];
+const MKT_PLATFORMS = [
+  "TikTok",
+  "Instagram",
+  "YouTube",
+  "LinkedIn",
+  "Reddit",
+  "Facebook",
+  "Other",
+];
 const MKT_RATINGS = ["Great", "Good", "Average", "Poor"];
 const okDue = (d) => d === "" || (typeof d === "string" && DATE_RE.test(d));
 // Manual performance records, one per platform a post went out on. Every field
@@ -2461,7 +2610,10 @@ const mktNum = (v) => {
 const sanitizePlatforms = (arr) => {
   if (!Array.isArray(arr)) return null;
   const seen = new Set();
-  return arr.map((p) => str(p, 20)).filter((p) => p && !seen.has(p) && seen.add(p)).slice(0, 12);
+  return arr
+    .map((p) => str(p, 20))
+    .filter((p) => p && !seen.has(p) && seen.add(p))
+    .slice(0, 12);
 };
 // Editing checklist: a small map of task-key -> done. The client owns the task
 // list; the server just guards shape (string keys, boolean values, capped).
@@ -2477,8 +2629,25 @@ const sanitizeEditing = (obj) => {
 const sanitizeContent = (o) => {
   if (o === null || o === undefined) return {};
   if (typeof o !== "object" || Array.isArray(o)) return null;
-  const versions = Array.isArray(o.versions) ? o.versions.slice(0, 20).map((x) => ({ at: str(x && x.at, 30), hook: str(x && x.hook, 300), caption: str(x && x.caption, 4000), cta: str(x && x.cta, 300), body: str(x && x.body, 8000) })) : [];
-  return { hook: str(o.hook, 300), caption: str(o.caption, 4000), cta: str(o.cta, 300), body: str(o.body, 8000), mediaUrl: str(o.mediaUrl, 1000), mediaType: str(o.mediaType, 20), notes: str(o.notes, 4000), versions };
+  const versions = Array.isArray(o.versions)
+    ? o.versions.slice(0, 20).map((x) => ({
+        at: str(x && x.at, 30),
+        hook: str(x && x.hook, 300),
+        caption: str(x && x.caption, 4000),
+        cta: str(x && x.cta, 300),
+        body: str(x && x.body, 8000),
+      }))
+    : [];
+  return {
+    hook: str(o.hook, 300),
+    caption: str(o.caption, 4000),
+    cta: str(o.cta, 300),
+    body: str(o.body, 8000),
+    mediaUrl: str(o.mediaUrl, 1000),
+    mediaType: str(o.mediaType, 20),
+    notes: str(o.notes, 4000),
+    versions,
+  };
 };
 const sanitizeResults = (arr) => {
   if (!Array.isArray(arr)) return null;
@@ -2500,10 +2669,13 @@ const sanitizeResults = (arr) => {
 };
 mkt.post("/idea", (req, res) => {
   const b = req.body || {};
-  if (!str(b.title, 300).trim()) return res.status(400).json({ error: "Title required." });
-  if (b.due !== undefined && !okDue(b.due)) return res.status(400).json({ error: "Due must be YYYY-MM-DD." });
+  if (!str(b.title, 300).trim())
+    return res.status(400).json({ error: "Title required." });
+  if (b.due !== undefined && !okDue(b.due))
+    return res.status(400).json({ error: "Due must be YYYY-MM-DD." });
   const m = readMkt();
-  if (m.ideas.length >= 1000) return res.status(413).json({ error: "Too many ideas." });
+  if (m.ideas.length >= 1000)
+    return res.status(413).json({ error: "Too many ideas." });
   const idea = {
     id: "m" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     title: str(b.title, 300).trim(),
@@ -2533,7 +2705,8 @@ mkt.post("/idea", (req, res) => {
 });
 mkt.patch("/idea/:id", (req, res) => {
   const b = req.body || {};
-  if (b.due !== undefined && !okDue(b.due)) return res.status(400).json({ error: "Due must be YYYY-MM-DD." });
+  if (b.due !== undefined && !okDue(b.due))
+    return res.status(400).json({ error: "Due must be YYYY-MM-DD." });
   const m = readMkt();
   const idea = m.ideas.find((i) => i.id === req.params.id);
   if (!idea) return res.status(404).json({ error: "Not found." });
@@ -2541,21 +2714,49 @@ mkt.patch("/idea/:id", (req, res) => {
   // can't be scheduled/published by a marketer until a founder approves it.
   const founder = mktFounder(req);
   if (!founder) {
-    if (b.status === "approved") return res.status(403).json({ error: "Only a founder can approve content." });
-    if (b.approval === false && idea.approval) return res.status(403).json({ error: "Only a founder can grant approval." });
-    if (idea.approval && (b.status === "scheduled" || b.status === "posted")) return res.status(403).json({ error: "This is waiting for the founder's approval — it can't be scheduled or published yet." });
+    if (b.status === "approved")
+      return res
+        .status(403)
+        .json({ error: "Only a founder can approve content." });
+    if (b.approval === false && idea.approval)
+      return res
+        .status(403)
+        .json({ error: "Only a founder can grant approval." });
+    if (idea.approval && (b.status === "scheduled" || b.status === "posted"))
+      return res.status(403).json({
+        error:
+          "This is waiting for the founder's approval — it can't be scheduled or published yet.",
+      });
   }
   if (b.title !== undefined) idea.title = str(b.title, 300);
-  if (b.status !== undefined && MKT_STATUS.includes(b.status)) idea.status = b.status;
-  if (b.owner !== undefined && MKT_OWNER.includes(b.owner)) idea.owner = b.owner;
-  if (b.priority !== undefined && MKT_PRIORITY.includes(b.priority)) idea.priority = b.priority;
+  if (b.status !== undefined && MKT_STATUS.includes(b.status))
+    idea.status = b.status;
+  if (b.owner !== undefined && MKT_OWNER.includes(b.owner))
+    idea.owner = b.owner;
+  if (b.priority !== undefined && MKT_PRIORITY.includes(b.priority))
+    idea.priority = b.priority;
   if (b.due !== undefined) idea.due = b.due || "";
   if (b.formula !== undefined) idea.formula = str(b.formula, 40);
   if (b.goal !== undefined) idea.goal = str(b.goal, 40);
   if (b.topic !== undefined) idea.topic = str(b.topic, 60);
-  if (b.platforms !== undefined) { const p = sanitizePlatforms(b.platforms); if (!p) return res.status(400).json({ error: "platforms must be an array." }); idea.platforms = p; }
-  if (b.editing !== undefined) { const e = sanitizeEditing(b.editing); if (!e) return res.status(400).json({ error: "editing must be an object." }); idea.editing = e; }
-  if (b.content !== undefined) { const c = sanitizeContent(b.content); if (!c) return res.status(400).json({ error: "content must be an object." }); idea.content = c; }
+  if (b.platforms !== undefined) {
+    const p = sanitizePlatforms(b.platforms);
+    if (!p)
+      return res.status(400).json({ error: "platforms must be an array." });
+    idea.platforms = p;
+  }
+  if (b.editing !== undefined) {
+    const e = sanitizeEditing(b.editing);
+    if (!e)
+      return res.status(400).json({ error: "editing must be an object." });
+    idea.editing = e;
+  }
+  if (b.content !== undefined) {
+    const c = sanitizeContent(b.content);
+    if (!c)
+      return res.status(400).json({ error: "content must be an object." });
+    idea.content = c;
+  }
   if (b.campaign !== undefined) idea.campaign = str(b.campaign, 60);
   if (b.reviewer !== undefined) idea.reviewer = str(b.reviewer, 40);
   if (b.contentType !== undefined) idea.contentType = str(b.contentType, 40);
@@ -2577,9 +2778,22 @@ mkt.get("/radar", (_req, res) => {
   trends
     .getRadar()
     .then((r) =>
-      res.json({ updatedAt: r.at, fromCache: r.fromCache, items: r.items, errors: r.errors, research: trends.RESEARCH_LINKS }),
+      res.json({
+        updatedAt: r.at,
+        fromCache: r.fromCache,
+        items: r.items,
+        errors: r.errors,
+        research: trends.RESEARCH_LINKS,
+      }),
     )
-    .catch(() => res.json({ updatedAt: 0, items: [], errors: [], research: trends.RESEARCH_LINKS }));
+    .catch(() =>
+      res.json({
+        updatedAt: 0,
+        items: [],
+        errors: [],
+        research: trends.RESEARCH_LINKS,
+      }),
+    );
 });
 mkt.delete("/idea/:id", (req, res) => {
   const m = readMkt();
@@ -2595,25 +2809,51 @@ mkt.get("/ideas-feed", (_req, res) => {
   try {
     const sch = curatedScholarships.allCurated();
     sch.slice(0, 10).forEach((s) => {
-      seeds.push({ cat: "Scholarship", text: `${s.name} (${s.country})${s.tagline ? " — " + s.tagline : ""}` });
-      seeds.push({ cat: "Scholarship", text: `Who actually qualifies for ${s.name}?` });
+      seeds.push({
+        cat: "Scholarship",
+        text: `${s.name} (${s.country})${s.tagline ? " — " + s.tagline : ""}`,
+      });
+      seeds.push({
+        cat: "Scholarship",
+        text: `Who actually qualifies for ${s.name}?`,
+      });
     });
   } catch {}
-  const byCountry = {}, byField = {};
+  const byCountry = {},
+    byField = {};
   for (const u of UNIVERSITIES) {
     if (u.country) byCountry[u.country] = (byCountry[u.country] || 0) + 1;
-    (u.fields_of_study || []).forEach((f) => (byField[f] = (byField[f] || 0) + 1));
+    (u.fields_of_study || []).forEach(
+      (f) => (byField[f] = (byField[f] || 0) + 1),
+    );
   }
-  Object.entries(byCountry).sort((a, b) => b[1] - a[1]).slice(0, 6)
-    .forEach(([c, n]) => seeds.push({ cat: "Country", text: `Studying in ${c}: ${n.toLocaleString("en-US")} universities to explore` }));
-  Object.entries(byField).sort((a, b) => b[1] - a[1]).slice(0, 6)
-    .forEach(([f]) => seeds.push({ cat: "Field", text: `Best European universities for ${f}` }));
-  UNIVERSITIES.filter((u) => u.data_verified).slice(0, 5)
-    .forEach((u) => seeds.push({ cat: "University", text: `Spotlight: ${u.name}${u.city ? " in " + u.city : ""}` }));
+  Object.entries(byCountry)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .forEach(([c, n]) =>
+      seeds.push({
+        cat: "Country",
+        text: `Studying in ${c}: ${n.toLocaleString("en-US")} universities to explore`,
+      }),
+    );
+  Object.entries(byField)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .forEach(([f]) =>
+      seeds.push({ cat: "Field", text: `Best European universities for ${f}` }),
+    );
+  UNIVERSITIES.filter((u) => u.data_verified)
+    .slice(0, 5)
+    .forEach((u) =>
+      seeds.push({
+        cat: "University",
+        text: `Spotlight: ${u.name}${u.city ? " in " + u.city : ""}`,
+      }),
+    );
   [
     "Is studying in Europe really free? What Universo shows vs the myth",
     "How students miss scholarships they actually qualify for",
-    "\"Is my degree eligible?\" — how to actually check",
+    '"Is my degree eligible?" — how to actually check',
     "The hidden costs of studying abroad nobody warns you about",
     "How Universo is different from just Googling universities",
   ].forEach((t) => seeds.push({ cat: "FAQ", text: t }));
@@ -2622,27 +2862,46 @@ mkt.get("/ideas-feed", (_req, res) => {
 // Recommendation engine v2 — plain-language guidance derived only from recorded
 // results (goal x formula x topic x platform). Never invents; gated by support.
 mkt.get("/insights", (_req, res) => {
-  try { res.json(recommend.analyze(readMkt().ideas)); }
-  catch { res.status(500).json({ error: "Could not compute insights." }); }
+  try {
+    res.json(recommend.analyze(readMkt().ideas));
+  } catch {
+    res.status(500).json({ error: "Could not compute insights." });
+  }
 });
 // Campaigns registry — groups content around an initiative. Managing the list is
 // founder-only; assigning a content item to a campaign is done via PATCH /idea.
 mkt.post("/campaign", (req, res) => {
-  if (!mktFounder(req)) return res.status(403).json({ error: "Only a founder can manage campaigns." });
+  if (!mktFounder(req))
+    return res
+      .status(403)
+      .json({ error: "Only a founder can manage campaigns." });
   const b = req.body || {};
-  if (!str(b.name, 60).trim()) return res.status(400).json({ error: "Campaign name required." });
+  if (!str(b.name, 60).trim())
+    return res.status(400).json({ error: "Campaign name required." });
   const m = readMkt();
-  if (m.campaigns.length >= 200) return res.status(413).json({ error: "Too many campaigns." });
-  const c = { id: "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), name: str(b.name, 60).trim(), goal: str(b.goal, 40), note: str(b.note, 300), createdAt: Date.now() };
+  if (m.campaigns.length >= 200)
+    return res.status(413).json({ error: "Too many campaigns." });
+  const c = {
+    id: "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
+    name: str(b.name, 60).trim(),
+    goal: str(b.goal, 40),
+    note: str(b.note, 300),
+    createdAt: Date.now(),
+  };
   m.campaigns.unshift(c);
   store.write("marketing", m);
   res.json({ campaign: c });
 });
 mkt.delete("/campaign/:id", (req, res) => {
-  if (!mktFounder(req)) return res.status(403).json({ error: "Only a founder can delete a campaign." });
+  if (!mktFounder(req))
+    return res
+      .status(403)
+      .json({ error: "Only a founder can delete a campaign." });
   const m = readMkt();
   m.campaigns = m.campaigns.filter((c) => c.id !== req.params.id);
-  m.ideas.forEach((i) => { if (i.campaign === req.params.id) i.campaign = ""; }); // unassign, keep the content
+  m.ideas.forEach((i) => {
+    if (i.campaign === req.params.id) i.campaign = "";
+  }); // unassign, keep the content
   store.write("marketing", m);
   res.json({ ok: true });
 });
@@ -2653,24 +2912,51 @@ const INVITE_TTL = 7 * 864e5;
 mkt.get("/team", (req, res) => {
   if (!mktFounder(req)) return res.status(403).json({ error: "Founder only." });
   const m = readMkt();
-  const members = (store.read("admins") || []).map((a) => ({ email: a.email, role: a.role === "marketing" ? "marketer" : "founder" }));
-  const invites = m.invites.filter((i) => i.expiresAt > Date.now()).map((i) => ({ email: i.email, createdAt: i.createdAt, url: `${appOrigin(req)}/marketing/join?token=${i.token}` }));
+  const members = (store.read("admins") || []).map((a) => ({
+    email: a.email,
+    role: a.role === "marketing" ? "marketer" : "founder",
+  }));
+  const invites = m.invites
+    .filter((i) => i.expiresAt > Date.now())
+    .map((i) => ({
+      email: i.email,
+      createdAt: i.createdAt,
+      url: `${appOrigin(req)}/marketing/join?token=${i.token}`,
+    }));
   res.json({ members, invites });
 });
 mkt.post("/invite", async (req, res) => {
-  if (!mktFounder(req)) return res.status(403).json({ error: "Only a founder can invite team members." });
-  const to = str((req.body || {}).email, 120).trim().toLowerCase();
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) return res.status(400).json({ error: "A valid email is required." });
-  if (adminAuth.findAdminByEmail(to)) return res.status(409).json({ error: "That person is already a member." });
+  if (!mktFounder(req))
+    return res
+      .status(403)
+      .json({ error: "Only a founder can invite team members." });
+  const to = str((req.body || {}).email, 120)
+    .trim()
+    .toLowerCase();
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to))
+    return res.status(400).json({ error: "A valid email is required." });
+  if (adminAuth.findAdminByEmail(to))
+    return res.status(409).json({ error: "That person is already a member." });
   const m = readMkt();
-  m.invites = m.invites.filter((i) => i.email !== to && i.expiresAt > Date.now()); // one live invite per email
+  m.invites = m.invites.filter(
+    (i) => i.email !== to && i.expiresAt > Date.now(),
+  ); // one live invite per email
   const token = crypto.randomBytes(24).toString("hex");
-  m.invites.unshift({ token, email: to, role: "marketer", createdAt: Date.now(), expiresAt: Date.now() + INVITE_TTL });
+  m.invites.unshift({
+    token,
+    email: to,
+    role: "marketer",
+    createdAt: Date.now(),
+    expiresAt: Date.now() + INVITE_TTL,
+  });
   await store.write("marketing", m);
   const url = `${appOrigin(req)}/marketing/join?token=${token}`;
   // Try to email it; the link is returned regardless so the founder can always
   // send it themselves (email is dormant until RESEND_API_KEY is set).
-  const sent = await email.sendMarketerInvite(to, { inviterEmail: req.admin && req.admin.email, joinUrl: url });
+  const sent = await email.sendMarketerInvite(to, {
+    inviterEmail: req.admin && req.admin.email,
+    joinUrl: url,
+  });
   res.json({ invite: { email: to, url, emailed: !!(sent && sent.sent) } });
 });
 mkt.delete("/invite/:token", (req, res) => {
@@ -2686,8 +2972,16 @@ mkt.delete("/invite/:token", (req, res) => {
 mkt.get("/script", (req, res) => {
   try {
     const out = scriptgen.composeScript(
-      { topic: str(req.query.topic, 40), formula: str(req.query.formula, 40), angle: str(req.query.angle, 300), platform: str(req.query.platform, 20) },
-      { universities: UNIVERSITIES, scholarships: curatedScholarships.allCurated() },
+      {
+        topic: str(req.query.topic, 40),
+        formula: str(req.query.formula, 40),
+        angle: str(req.query.angle, 300),
+        platform: str(req.query.platform, 20),
+      },
+      {
+        universities: UNIVERSITIES,
+        scholarships: curatedScholarships.allCurated(),
+      },
       { cta: str(req.query.cta, 200), help: str(req.query.help, 240) }, // Brand Brain + goal steer voice/CTA
     );
     res.json(out);
@@ -2700,20 +2994,47 @@ mkt.get("/script", (req, res) => {
 // global JSON parser skips it; a route-level 10MB cap applies. Gated with the
 // rest of /marketing (requireMarketing), so assets aren't public.
 const MKT_ASSETS_DIR = path.join(store.DATA_DIR, "marketing-assets");
-try { fs.mkdirSync(MKT_ASSETS_DIR, { recursive: true }); } catch { /* best effort */ }
-const MKT_ASSET_EXT = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "image/gif": "gif" };
-mkt.post("/upload", express.raw({ type: () => true, limit: "10mb" }), (req, res) => {
-  const ext = MKT_ASSET_EXT[String(req.query.type || "")];
-  if (!ext) return res.status(400).json({ error: "Only PNG, JPEG, WebP or GIF images." });
-  if (!Buffer.isBuffer(req.body) || !req.body.length) return res.status(400).json({ error: "Empty upload." });
-  const name = Date.now().toString(36) + Math.random().toString(36).slice(2, 8) + "." + ext;
-  try { fs.writeFileSync(path.join(MKT_ASSETS_DIR, name), req.body); }
-  catch { return res.status(500).json({ error: "Could not save the image." }); }
-  res.json({ url: "/api/marketing/asset/" + name });
-});
+try {
+  fs.mkdirSync(MKT_ASSETS_DIR, { recursive: true });
+} catch {
+  /* best effort */
+}
+const MKT_ASSET_EXT = {
+  "image/png": "png",
+  "image/jpeg": "jpg",
+  "image/webp": "webp",
+  "image/gif": "gif",
+};
+mkt.post(
+  "/upload",
+  express.raw({ type: () => true, limit: "10mb" }),
+  (req, res) => {
+    const ext = MKT_ASSET_EXT[String(req.query.type || "")];
+    if (!ext)
+      return res
+        .status(400)
+        .json({ error: "Only PNG, JPEG, WebP or GIF images." });
+    if (!Buffer.isBuffer(req.body) || !req.body.length)
+      return res.status(400).json({ error: "Empty upload." });
+    const name =
+      Date.now().toString(36) +
+      Math.random().toString(36).slice(2, 8) +
+      "." +
+      ext;
+    try {
+      fs.writeFileSync(path.join(MKT_ASSETS_DIR, name), req.body);
+    } catch {
+      return res.status(500).json({ error: "Could not save the image." });
+    }
+    res.json({ url: "/api/marketing/asset/" + name });
+  },
+);
 mkt.get("/asset/:file", (req, res) => {
-  if (!/^[a-z0-9]+\.(png|jpg|webp|gif)$/.test(req.params.file)) return res.status(400).end(); // no path traversal
-  res.sendFile(path.join(MKT_ASSETS_DIR, req.params.file), (e) => { if (e && !res.headersSent) res.status(404).end(); });
+  if (!/^[a-z0-9]+\.(png|jpg|webp|gif)$/.test(req.params.file))
+    return res.status(400).end(); // no path traversal
+  res.sendFile(path.join(MKT_ASSETS_DIR, req.params.file), (e) => {
+    if (e && !res.headersSent) res.status(404).end();
+  });
 });
 api.use("/marketing", mkt);
 
@@ -2819,18 +3140,37 @@ $("go").disabled=true;try{const r=await fetch("/marketing/join",{method:"POST",h
 $("pw2").addEventListener("keydown",e=>{if(e.key==="Enter")$("go").click();});
 </script></body></html>`;
 app.get("/marketing/join", (_req, res) => sendHtml(res, JOIN_PAGE));
-app.post("/marketing/join", adminLoginLimiter, asyncRoute(async (req, res) => {
-  const { token, password } = req.body || {};
-  const m = readMkt();
-  const inv = m.invites.find((i) => i.token === String(token || "") && i.expiresAt > Date.now());
-  if (!inv) return res.status(410).json({ error: "This invite link is invalid or has expired. Ask the founder for a new one." });
-  if (!password || String(password).length < 10) return res.status(400).json({ error: "Choose a password of at least 10 characters." });
-  if (adminAuth.findAdminByEmail(inv.email)) { m.invites = m.invites.filter((i) => i.token !== inv.token); await store.write("marketing", m); return res.status(409).json({ error: "An account for this email already exists — just log in." }); }
-  await adminAuth.createAdmin(inv.email, String(password), "marketing");
-  m.invites = m.invites.filter((i) => i.token !== inv.token); // one-time
-  await store.write("marketing", m);
-  res.json({ ok: true, email: inv.email });
-}));
+app.post(
+  "/marketing/join",
+  adminLoginLimiter,
+  asyncRoute(async (req, res) => {
+    const { token, password } = req.body || {};
+    const m = readMkt();
+    const inv = m.invites.find(
+      (i) => i.token === String(token || "") && i.expiresAt > Date.now(),
+    );
+    if (!inv)
+      return res.status(410).json({
+        error:
+          "This invite link is invalid or has expired. Ask the founder for a new one.",
+      });
+    if (!password || String(password).length < 10)
+      return res
+        .status(400)
+        .json({ error: "Choose a password of at least 10 characters." });
+    if (adminAuth.findAdminByEmail(inv.email)) {
+      m.invites = m.invites.filter((i) => i.token !== inv.token);
+      await store.write("marketing", m);
+      return res.status(409).json({
+        error: "An account for this email already exists — just log in.",
+      });
+    }
+    await adminAuth.createAdmin(inv.email, String(password), "marketing");
+    m.invites = m.invites.filter((i) => i.token !== inv.token); // one-time
+    await store.write("marketing", m);
+    res.json({ ok: true, email: inv.email });
+  }),
+);
 app.get("/admin/marketing", (_req, res) => sendHtml(res, MARKETING_PAGE));
 
 // Partner dashboard — one shared static page for every university account;
@@ -3000,7 +3340,11 @@ app.get("/unsubscribe", (req, res) => {
       );
 
   const id = auth.verifyUnsubscribeToken(req.query.token);
-  if (!id) return page("Link expired", "<p>This unsubscribe link isn't valid. You can manage email preferences from your account settings.</p>");
+  if (!id)
+    return page(
+      "Link expired",
+      "<p>This unsubscribe link isn't valid. You can manage email preferences from your account settings.</p>",
+    );
   const students = store.read("students");
   const student = students.find((s) => s.student_id === id);
   if (!student) return page("Done", "<p>You won't receive these emails.</p>");
@@ -3142,8 +3486,11 @@ app.get("*", (_req, res) => res.send(SHELL));
 
 // Error handler (last).
 app.use((err, req, res, _next) => {
-  log.captureError(err, { id: req.id, path: req.path });
   if (res.headersSent) return;
+  // Body-parser rejections (too large, malformed JSON) are the sender's mistake, not ours.
+  if (err.status === 413)
+    return res.status(413).json({ error: "That upload is too large." });
+  log.captureError(err, { id: req.id, path: req.path });
   res.status(500).json({ error: "Something went wrong." });
 });
 

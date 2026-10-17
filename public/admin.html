@@ -520,6 +520,102 @@
         text-align: center;
         color: var(--ink-faint);
       }
+      .sheet {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 0;
+        width: min(640px, calc(100vw - 32px));
+        max-height: calc(100vh - 48px);
+        background: var(--surface);
+        color: var(--ink);
+      }
+      .sheet::backdrop {
+        background: rgba(10, 16, 28, 0.5);
+      }
+      .sheet-in {
+        padding: 18px 20px 20px;
+        display: grid;
+        gap: 14px;
+      }
+      .sheet-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+      .sheet-step {
+        display: grid;
+        gap: 8px;
+      }
+      .sheet-step p,
+      .sheet-note {
+        margin: 0;
+        font-size: 0.88rem;
+        color: var(--ink-soft);
+      }
+      .sheet-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+      .sheet select,
+      .sheet input[type="file"] {
+        min-height: 42px;
+        max-width: 100%;
+      }
+      .sheet-sum {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .sheet-sum span {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: 0.84rem;
+        font-weight: 600;
+      }
+      .sheet-sum .bad {
+        background: var(--bad-weak);
+        color: var(--bad);
+        border-color: transparent;
+      }
+      .sheet-sum .good {
+        color: var(--ok);
+      }
+      .sheet-list {
+        display: grid;
+        gap: 6px;
+        max-height: 40vh;
+        overflow-y: auto;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .sheet-list li {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 8px 12px;
+        font-size: 0.86rem;
+        overflow-wrap: anywhere;
+      }
+      .sheet-list li.err {
+        border-color: var(--bad);
+      }
+      .sheet-list small {
+        display: block;
+        color: var(--ink-soft);
+      }
+      .sheet-list li.err small {
+        color: var(--bad);
+      }
+      @media (max-width: 560px) {
+        .sheet .btn {
+          width: 100%;
+          min-height: 44px;
+        }
+      }
       .more {
         padding: 14px;
         text-align: center;
@@ -1178,6 +1274,9 @@
                 <option value="scholarships">Scholarships</option>
               </select>
               <span class="count" id="count"></span>
+              <button class="btn quiet sm" id="sheet-open" type="button">
+                Spreadsheet
+              </button>
             </div>
             <div class="chips" id="chips" role="group" aria-label="Show"></div>
             <div class="controls">
@@ -1273,6 +1372,18 @@
         <p class="foot" id="foot"></p>
       </main>
     </div>
+
+    <dialog class="sheet" id="sheet" aria-labelledby="sheet-title">
+      <div class="sheet-in">
+        <div class="sheet-head">
+          <h2 class="t" id="sheet-title">Edit in a spreadsheet</h2>
+          <button class="btn quiet sm" id="sheet-close" type="button">
+            Close
+          </button>
+        </div>
+        <div id="sheet-body"></div>
+      </div>
+    </dialog>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -1560,7 +1671,9 @@
                     esc(
                       f.action === "verify"
                         ? "confirmed"
-                        : (f.fields || []).join(", ") || "edited",
+                        : f.action === "import"
+                          ? "imported " + (f.fields || []).join(", ")
+                          : (f.fields || []).join(", ") || "edited",
                     ) +
                     " · " +
                     esc(f.by) +
@@ -2131,6 +2244,170 @@
           loadHealth();
           loadRecords(true);
         };
+
+        // =====================================================================
+        // SPREADSHEET (CSV export / import)
+        // =====================================================================
+        const sheet = $("#sheet");
+        const sheetBody = $("#sheet-body");
+        const sheetStart = () => {
+          const scholarships = q.scope === "scholarships";
+          sheetBody.innerHTML =
+            '<div class="sheet-step"><b>1. Download the list</b>' +
+            "<p>" +
+            esc(
+              scholarships
+                ? "Scholarships"
+                : q.scope === "all"
+                  ? "All universities"
+                  : "Featured universities",
+            ) +
+            " matching your current search and filters. Fill in the facts you have checked, with a source link for each number or date.</p>" +
+            '<div class="sheet-row"><select id="sheet-sep" aria-label="File format">' +
+            '<option value="semicolon">Excel in Europe (semicolons)</option>' +
+            '<option value="comma">Google Sheets / US Excel (commas)</option></select>' +
+            '<a class="btn primary" id="sheet-dl" role="button">Download</a></div></div>' +
+            '<div class="sheet-step"><b>2. Upload it back</b>' +
+            "<p>You see a preview first. Nothing is saved until you confirm.</p>" +
+            '<input type="file" id="sheet-file" accept=".csv,text/csv,text/plain" aria-label="Filled-in spreadsheet"></div>' +
+            '<p class="sheet-note" id="sheet-msg" role="status"></p>';
+          const dl = $("#sheet-dl");
+          const href = () => {
+            const p = new URLSearchParams({
+              scope: q.scope,
+              sep: $("#sheet-sep").value,
+            });
+            ["q", "country", "field", "filter"].forEach((k) => {
+              if (q[k]) p.set(k, q[k]);
+            });
+            dl.href = "/api/admin/records.csv?" + p;
+          };
+          href();
+          $("#sheet-sep").addEventListener("change", href);
+          $("#sheet-file").addEventListener("change", (e) => {
+            const f = e.target.files[0];
+            if (f) sheetPreview(f);
+          });
+        };
+        const sheetPreview = (file) => {
+          const msg = $("#sheet-msg");
+          msg.textContent = "Checking " + file.name + "…";
+          file
+            .text()
+            .then((text) =>
+              fetch("/api/admin/import/preview", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: { "Content-Type": "text/csv" },
+                body: text,
+              }),
+            )
+            .then((res) =>
+              res
+                .json()
+                .catch(() => ({}))
+                .then((d) => {
+                  if (res.status === 401) {
+                    sheet.close();
+                    showGate();
+                    throw new Error("Please sign in again.");
+                  }
+                  if (res.status === 413)
+                    throw new Error("That file is too large (2 MB max).");
+                  if (!res.ok)
+                    throw new Error(d.error || "Could not read that file.");
+                  return d;
+                }),
+            )
+            .then(sheetPlan)
+            .catch((e) => (msg.textContent = e.message));
+        };
+        const sheetPlan = (d) => {
+          const s = d.summary;
+          const bad = d.rows.filter((r) => r.status === "error");
+          const upd = d.rows.filter((r) => r.status === "update");
+          const li = (r, cls, lines) =>
+            '<li class="' +
+            cls +
+            '"><b>' +
+            esc(r.name || r.id || "Line " + r.line) +
+            "</b>" +
+            lines.map((l) => "<small>" + esc(l) + "</small>").join("") +
+            "</li>";
+          sheetBody.innerHTML =
+            '<div class="sheet-sum">' +
+            '<span class="good">' +
+            plural(s.update, "record will change", "records will change") +
+            "</span>" +
+            "<span>" +
+            nfmt(s.unchanged) +
+            " unchanged</span>" +
+            (s.error
+              ? '<span class="bad">' +
+                plural(s.error, "problem", "problems") +
+                "</span>"
+              : "") +
+            "</div>" +
+            (d.warnings || [])
+              .map((w) => '<p class="sheet-note">' + esc(w) + "</p>")
+              .join("") +
+            (bad.length
+              ? '<b>Problems (these rows are skipped)</b><ul class="sheet-list">' +
+                bad
+                  .map((r) =>
+                    li(
+                      r,
+                      "err",
+                      r.errors.map((x) => "Line " + r.line + ": " + x),
+                    ),
+                  )
+                  .join("") +
+                "</ul>"
+              : "") +
+            (upd.length
+              ? '<b>Will be saved</b><ul class="sheet-list">' +
+                upd.map((r) => li(r, "", r.changes)).join("") +
+                "</ul>"
+              : '<p class="sheet-note">Nothing to save from this file.</p>') +
+            '<div class="sheet-row">' +
+            (d.toApply
+              ? '<button class="btn primary" id="sheet-ok" type="button">Save ' +
+                plural(d.toApply, "record", "records") +
+                "</button>"
+              : "") +
+            '<button class="btn quiet" id="sheet-back" type="button">Choose another file</button></div>' +
+            '<p class="sheet-note" id="sheet-msg" role="status"></p>';
+          $("#sheet-back").addEventListener("click", sheetStart);
+          const ok = $("#sheet-ok");
+          if (ok)
+            ok.addEventListener("click", () => {
+              ok.disabled = true;
+              api("/api/admin/import/apply", {
+                method: "POST",
+                body: { token: d.token },
+              })
+                .then((r) => {
+                  sheet.close();
+                  toast(
+                    "Saved " +
+                      plural(r.applied, "record", "records") +
+                      (r.failed.length
+                        ? " · " + r.failed.length + " skipped"
+                        : ""),
+                  );
+                  refreshAfterEdit();
+                })
+                .catch((e) => {
+                  ok.disabled = false;
+                  $("#sheet-msg").textContent = e.message;
+                });
+            });
+        };
+        $("#sheet-open").addEventListener("click", () => {
+          sheetStart();
+          sheet.showModal();
+        });
+        $("#sheet-close").addEventListener("click", () => sheet.close());
 
         // =====================================================================
         // USAGE

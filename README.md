@@ -146,6 +146,7 @@ Short-form video feed, student-to-student chat/networking, and lead-capture form
 
 - A dataset-health band (how many of the ~300 *featured* profiles a person has confirmed) and a work queue: featured universities with no deadline, with an estimated tuition, or not confirmed in 6 months — ranked by how much students look at them.
 - Edit a university's tuition, deadline, requirements, teaching languages and application link, or a scholarship's deadline and link. **Any number, date or language claim is rejected without a source link** (enforced on the server, `lib/overrides.js`). "Mark verified today" and "Revert to original" are one click; every change is logged.
+- **Spreadsheet** button: download the current list as a CSV (semicolons for Excel in Europe, or commas), fill in confirmed facts with their source links, upload it, review a preview (will change / unchanged / problems), then confirm. Same no-source-no-number rules; nothing is saved until confirm; one history entry per import. Money is whole euros, dates ISO or `D.M.YYYY`. Code: `lib/csv.js`, `lib/csv-import.js`.
 - Edits are stored in `opportunity_overrides.json` (on the persistent disk) and re-applied over the dataset at every boot, so a redeploy never loses them. A sourced tuition figure flips `tuition_source` to `curated_research`, which is the gate every student-facing tuition display already checks.
 
 **Usage** — plain numbers, no cohorts.
