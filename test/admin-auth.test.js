@@ -61,8 +61,8 @@ test("GET /api/admin/me without a session is 401", async () => {
   assert.equal(r.status, 401);
 });
 
-test("GET /api/admin/stats without a session is 401 (dashboard data is protected)", async () => {
-  const r = await req("GET", "/api/admin/stats");
+test("GET /api/admin/health without a session is 401 (dashboard data is protected)", async () => {
+  const r = await req("GET", "/api/admin/health");
   assert.equal(r.status, 401);
 });
 
@@ -96,16 +96,47 @@ test("GET /api/admin/me now succeeds with the session cookie", async () => {
   assert.equal(r.json.admin.email, email);
 });
 
-test("GET /api/admin/stats succeeds and returns the expected shape", async () => {
-  const r = await req("GET", "/api/admin/stats");
+test("GET /api/admin/health returns the dataset overview and recent edits", async () => {
+  const r = await req("GET", "/api/admin/health");
   assert.equal(r.status, 200);
-  assert.ok(typeof r.json.totals.universities === "number");
-  assert.ok(Array.isArray(r.json.top_universities_by_apply_clicks));
-  // Lead/subscriber/verified-tier counts — the dashboard shouldn't require
-  // reading a JSON file over SSH to know whether the funnel is working.
-  assert.ok(typeof r.json.totals.pilot_leads === "number");
-  assert.ok(typeof r.json.totals.update_subscribers === "number");
-  assert.ok(r.json.totals.universities_verified > 0);
+  const o = r.json.overview;
+  assert.ok(typeof o.total === "number" && o.total > 2000);
+  assert.ok(o.featured > 0 && o.featured <= o.total);
+  assert.ok(typeof o.researchedTuition === "number");
+  assert.ok(
+    typeof o.scholarships.total === "number" && o.scholarships.total > 0,
+  );
+  assert.ok(Array.isArray(r.json.recent));
+});
+
+test("GET /api/admin/records lists the featured work queue, filters and searches", async () => {
+  const r = await req("GET", "/api/admin/records?limit=5");
+  assert.equal(r.status, 200);
+  assert.ok(r.json.total > 0 && r.json.items.length <= 5);
+  const it = r.json.items[0];
+  assert.ok(it.id && it.name && Array.isArray(it.needs));
+  assert.equal(it.type, "university");
+
+  const sch = await req(
+    "GET",
+    "/api/admin/records?scope=scholarships&limit=100",
+  );
+  assert.ok(
+    sch.json.items.length > 0 &&
+      sch.json.items.every((x) => x.type === "scholarship"),
+  );
+
+  const q = await req(
+    "GET",
+    "/api/admin/records?scope=all&q=" + encodeURIComponent(it.name.slice(0, 8)),
+  );
+  assert.ok(q.json.items.some((x) => x.id === it.id));
+
+  const f = await req(
+    "GET",
+    "/api/admin/records?filter=missing_deadline&limit=100",
+  );
+  assert.ok(f.json.items.every((x) => x.needs.includes("deadline")));
 });
 
 test("GET /api/admin/leads returns the pilot-lead rows with a session", async () => {
@@ -130,29 +161,179 @@ test("GET /api/admin/subscribers.csv is admin-gated and returns a CSV header row
   assert.equal(anon.status, 401);
 });
 
-test("GET /api/admin/funnel and /api/admin/retention are reachable with a session", async () => {
-  const f = await req("GET", "/api/admin/funnel?days=7");
-  assert.equal(f.status, 200);
-  assert.equal(
-    f.json.stages.length,
-    6,
-    "Visitor -> Register -> Dream -> Save -> Compare -> Apply",
-  );
+const SRC = "https://www.example-university.edu/admissions";
+let editId;
 
-  const r = await req("GET", "/api/admin/retention?weeks=4");
-  assert.equal(r.status, 200);
-  assert.ok(Array.isArray(r.json.cohorts));
+test("editing: a number or date without a source link is refused (server-side, not just the form)", async () => {
+  const list = await req(
+    "GET",
+    "/api/admin/records?filter=missing_deadline&limit=1",
+  );
+  editId = list.json.items[0].id;
+  const bad = await req("PATCH", "/api/admin/record/university/" + editId, {
+    fields: { deadline: { value: "31 January 2027" } },
+  });
+  assert.equal(bad.status, 400);
+  assert.equal(bad.json.field, "deadline");
+  assert.match(bad.json.error, /source/i);
+  const nothing = await req("PATCH", "/api/admin/record/university/" + editId, {
+    fields: {},
+  });
+  assert.equal(nothing.status, 400);
+  const unknown = await req("PATCH", "/api/admin/record/university/" + editId, {
+    fields: { name: { value: "x" } },
+  });
+  assert.equal(unknown.status, 400);
+  assert.equal(
+    (await req("PATCH", "/api/admin/record/nonsense/" + editId, { fields: {} }))
+      .status,
+    404,
+  );
+  assert.equal(
+    (
+      await req("PATCH", "/api/admin/record/university/does-not-exist", {
+        fields: { deadline: { value: "x", source: SRC } },
+      })
+    ).status,
+    404,
+  );
 });
 
-test("GET /api/admin/overview needs a session and returns the three windows", async () => {
-  const r = await req("GET", "/api/admin/overview");
-  assert.equal(r.status, 200);
-  for (const w of ["dau", "wau", "mau"]) {
-    assert.ok(r.json[w], `missing ${w}`);
-    assert.equal(typeof r.json[w].active, "number");
-    // The split has to add up, or the panel is quietly lying.
-    assert.equal(r.json[w].new + r.json[w].returning, r.json[w].active);
-  }
+test("editing: a sourced edit is saved, shown to students as verified, logged, and revertible", async () => {
+  const before = (await req("GET", "/api/universities/" + editId)).json
+    .university;
+  const ok = await req("PATCH", "/api/admin/record/university/" + editId, {
+    fields: {
+      deadline: { value: "31 January 2027", source: SRC },
+      tuition: { min: "1,200", max: "1,200", source: SRC },
+    },
+  });
+  assert.equal(ok.status, 200);
+  assert.equal(ok.json.fields.deadline.status, "edited");
+  assert.equal(ok.json.fields.tuition.status, "edited");
+  assert.ok(ok.json.verified_at, "a sourced save counts as a verification");
+
+  // What a STUDENT now sees from the public API.
+  const after = (await req("GET", "/api/universities/" + editId)).json
+    .university;
+  assert.equal(after.application_deadline, "31 January 2027");
+  assert.equal(
+    after.tuition_source,
+    "curated_research",
+    "the gate every tuition display checks",
+  );
+  assert.equal(after.tuition_range.min, 1200);
+  assert.equal(after.tuition_range.estimated, undefined);
+  assert.equal(after.sources.deadline, SRC);
+
+  // It is in the activity feed.
+  const health = await req("GET", "/api/admin/health");
+  assert.ok(
+    health.json.recent.some(
+      (l) => l.id === editId && l.fields.includes("deadline"),
+    ),
+  );
+
+  // And it can be reverted to exactly what the seed said.
+  const rev = await req("PATCH", "/api/admin/record/university/" + editId, {
+    fields: { deadline: null, tuition: null },
+  });
+  assert.equal(rev.status, 200);
+  const reverted = (await req("GET", "/api/universities/" + editId)).json
+    .university;
+  assert.equal(reverted.application_deadline, before.application_deadline);
+  assert.equal(reverted.tuition_source, before.tuition_source);
+});
+
+test("editing: 'mark verified today' stamps the record and appears in the feed", async () => {
+  const v = await req(
+    "POST",
+    "/api/admin/record/university/" + editId + "/verify",
+  );
+  assert.equal(v.status, 200);
+  assert.equal(v.json.verified_at, new Date().toISOString().slice(0, 10));
+  assert.equal(v.json.verified_by, email);
+  assert.equal(
+    (await req("POST", "/api/admin/record/university/does-not-exist/verify"))
+      .status,
+    404,
+  );
+});
+
+test("editing: scholarships take a validated deadline and a link", async () => {
+  const sch = (
+    await req("GET", "/api/admin/records?scope=scholarships&limit=1")
+  ).json.items[0];
+  const badDate = await req(
+    "PATCH",
+    "/api/admin/record/scholarship/" + sch.id,
+    { fields: { deadline: { value: "15 Jan", source: SRC } } },
+  );
+  assert.equal(badDate.status, 400);
+  const ok = await req("PATCH", "/api/admin/record/scholarship/" + sch.id, {
+    fields: { deadline: { value: "2027-01-15", note: "Round 2", source: SRC } },
+  });
+  assert.equal(ok.status, 200);
+  assert.equal(ok.json.fields.deadline.value, "2027-01-15");
+  assert.equal(ok.json.fields.deadline.note, "Round 2");
+});
+
+test("usage: real searches are recorded with their filters and result count, and show up", async () => {
+  const events = require("../lib/events");
+  // A real search with filters, one with a free-text query that finds nothing,
+  // a "load more" (must not count) and a bare page load (must not count).
+  const anon = "uv_anon=usage-test-" + Date.now();
+  const hit = (qs) =>
+    fetch(base + "/api/universities?" + qs, { headers: { Cookie: anon } });
+  await hit("country=Germany&limit=5");
+  await hit("q=zzzqqqnotauniversity&limit=5");
+  await hit("country=Germany&limit=5&offset=5");
+  await hit("limit=5");
+  await events.flush();
+
+  const u = await req("GET", "/api/admin/usage");
+  assert.equal(u.status, 200);
+  assert.equal(u.json.series.searches.length, 8);
+  assert.ok(u.json.current.searches >= 2, "both real searches counted");
+  assert.ok(u.json.lists.countries.some((c) => c.name === "Germany"));
+  assert.ok(
+    u.json.gaps.some((g) => g.q === "zzzqqqnotauniversity" && g.results === 0),
+    "a search that found nothing is surfaced as unmet demand",
+  );
+  assert.ok(u.json.searchQuality.zero >= 1);
+  assert.equal(typeof u.json.accounts.total, "number");
+  assert.equal(typeof u.json.enquiries.count, "number");
+  assert.equal(u.json.subscribersCsv, "/api/admin/subscribers.csv");
+});
+
+test("usage: pageviews carry only an anonymous id — no device, referrer, language or path", async () => {
+  const events = require("../lib/events");
+  const anon = "uv_anon=privacy-test-" + Date.now();
+  await fetch(base + "/api/track", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Cookie: anon,
+      Referer: "https://example.org/x",
+      "Accept-Language": "mn-MN",
+    },
+    body: JSON.stringify({
+      type: "pageview",
+      path: "/secret",
+      device: "mobile",
+    }),
+  });
+  // An old cached client still sending the retired filter beacon is accepted and dropped.
+  const legacy = await fetch(base + "/api/track", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Cookie: anon },
+    body: JSON.stringify({ type: "filter_used", filter: "field", value: "x" }),
+  });
+  assert.equal(legacy.status, 204);
+  await events.flush();
+  const mine = events.readAll().filter((e) => e.anon === anon.split("=")[1]);
+  assert.equal(mine.length, 1, "the legacy beacon recorded nothing");
+  assert.deepEqual(Object.keys(mine[0]).sort(), ["anon", "ts", "type"]);
 });
 
 test("a student session cannot access admin routes", async () => {
@@ -165,7 +346,7 @@ test("a student session cannot access admin routes", async () => {
     consent: true,
   });
   assert.equal(reg.status, 201);
-  const r = await req("GET", "/api/admin/stats"); // has uv_token but no uv_admin
+  const r = await req("GET", "/api/admin/health"); // has uv_token but no uv_admin
   assert.equal(r.status, 401);
   await req("DELETE", "/api/me"); // cleanup the student account
 });

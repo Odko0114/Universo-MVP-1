@@ -174,52 +174,21 @@ test("a duplicate partner email is rejected", async () => {
   assert.equal(r.status, 400);
 });
 
-test("admin data-quality audit returns the aggregate over the full dataset", async () => {
-  const r = await req("admin", "GET", "/api/admin/data-quality");
+test("admin health reports the dataset audit and the featured work queue", async () => {
+  const r = await req("admin", "GET", "/api/admin/health");
   assert.equal(r.status, 200);
-  assert.ok(r.json.count > 2000, "audits the whole dataset");
-  assert.ok(r.json.average_score >= 0 && r.json.average_score <= 100);
+  const o = r.json.overview;
+  assert.ok(o.total > 2000, "covers the whole dataset");
   assert.ok(
-    r.json.distribution.Excellent >= 0 && r.json.distribution.Incomplete >= 0,
+    o.featured > 0 && o.featured <= o.total,
+    "the featured queue is a subset",
   );
-  assert.ok(r.json.by_status.Verified > 0);
-  assert.ok(
-    Array.isArray(r.json.missing_fields) && r.json.missing_fields.length > 0,
-  );
-  assert.ok(
-    Array.isArray(r.json.structurally_unavailable) &&
-      r.json.structurally_unavailable.length > 0,
-    "structurally-absent fields reported, never faked as missing-per-record",
-  );
-});
-
-test("admin data-quality records filter by band and stale flag", async () => {
-  const all = await req(
-    "admin",
-    "GET",
-    "/api/admin/data-quality/records?limit=5",
-  );
-  assert.equal(all.status, 200);
-  assert.ok(all.json.records.length > 0 && all.json.records.length <= 5);
-  // lowest score first
-  assert.ok(
-    all.json.records[0].score <=
-      all.json.records[all.json.records.length - 1].score,
-  );
-
-  const excellent = await req(
-    "admin",
-    "GET",
-    "/api/admin/data-quality/records?band=Excellent&limit=5",
-  );
-  assert.ok(excellent.json.records.every((r) => r.band === "Excellent"));
-
-  const stale = await req(
-    "admin",
-    "GET",
-    "/api/admin/data-quality/records?stale=1&limit=5",
-  );
-  assert.ok(stale.json.records.every((r) => r.stale === true));
+  assert.ok(o.completeness.avg >= 0 && o.completeness.avg <= 100);
+  assert.ok(o.completeness.distribution.Excellent >= 0);
+  // A register record is never counted as human-confirmed just because the
+  // register stamped a reference year on it.
+  assert.ok(o.featuredVerified <= o.featured);
+  assert.ok(Array.isArray(r.json.recent));
 });
 
 test("SECURITY: the internal quality score is NOT exposed in public university responses", async () => {

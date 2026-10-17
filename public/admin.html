@@ -5,423 +5,1190 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex, nofollow" />
     <link rel="icon" href="/favicon.svg?v=3" />
-    <title>Universo — Admin dashboard</title>
+    <link rel="stylesheet" href="/css/fonts.css" />
+    <title>Universo — Admin</title>
     <style>
+      /* Two calm screens. Data: one progress card, simple filters, key facts first.
+         Usage: a few numbers, what students could not find, what they want.
+         Tokens mirror the student app so the admin never drifts into its own palette. */
       :root {
-        --navy: #0b1f3a;
-        --navy2: #12294d;
-        --teal: #14b8a6;
-        --teal2: #0d9488;
-        --gold: #e9b949;
-        --line: #e4e8ef;
+        --bg: #f5f7fb;
+        --surface: #ffffff;
+        --surface-2: #eef2f7;
         --ink: #10233f;
-        --faint: #7a879b;
-        --danger: #d64550;
+        --ink-soft: #45566e;
+        --ink-faint: #616e82;
+        --line: #e4e8ef;
+        --accent: #0b7f73; /* text and links on light */
+        --accent-fill: #14b8a6; /* fills and bars */
+        --accent-weak: #e6f7f4;
+        --on-accent: #04201c;
+        --ok: #1f8a5b;
+        --warn: #8f6500;
+        --warn-weak: #fbf1d8;
+        --bad: #b83a2e;
+        --bad-weak: #fbe7e4;
+        --shadow:
+          0 1px 2px rgba(16, 35, 63, 0.05), 0 8px 24px rgba(16, 35, 63, 0.05);
+        --radius: 16px;
+        --font-ui:
+          "Public Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        --font-display: "Newsreader", Georgia, "Times New Roman", serif;
+        color-scheme: light;
+      }
+      :root[data-theme="dark"] {
+        --bg: #1c1b1a;
+        --surface: #292826;
+        --surface-2: #34322f;
+        --ink: #eeede9;
+        --ink-soft: #bebbb4;
+        --ink-faint: #949089;
+        --line: rgba(255, 255, 255, 0.12);
+        --accent: #3fcbb4;
+        --accent-fill: #33c2ab;
+        --accent-weak: rgba(51, 194, 171, 0.14);
+        --on-accent: #04201c;
+        --ok: #5fcf97;
+        --warn: #e6b34a;
+        --warn-weak: rgba(230, 179, 74, 0.14);
+        --bad: #f08577;
+        --bad-weak: rgba(240, 133, 119, 0.14);
+        --shadow:
+          0 1px 2px rgba(0, 0, 0, 0.35), 0 10px 28px rgba(0, 0, 0, 0.28);
+        color-scheme: dark;
       }
       * {
         box-sizing: border-box;
       }
+      [hidden] {
+        display: none !important;
+      }
       body {
         margin: 0;
-        font-family:
-          "Public Sans",
-          -apple-system,
-          BlinkMacSystemFont,
-          "Segoe UI",
-          Roboto,
-          sans-serif;
-        background: #f5f7fb;
+        background: var(--bg);
         color: var(--ink);
+        font-family: var(--font-ui);
+        font-size: 15px;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
       }
-      header {
-        background: var(--navy);
-        color: #fff;
-        padding: 18px 20px;
-      }
-      header .row {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 12px;
-        flex-wrap: wrap;
-      }
-      header h1 {
+      h1,
+      h2,
+      h3,
+      p {
         margin: 0;
-        font-size: 1.2rem;
       }
-      header p {
-        margin: 4px 0 0;
-        color: #c7d2e2;
-        font-size: 0.85rem;
-      }
-      a.back,
-      a.logout-link {
-        color: var(--gold);
-        font-weight: 600;
-        text-decoration: none;
-        font-size: 0.85rem;
+      button {
+        font: inherit;
         cursor: pointer;
+        color: inherit;
       }
-      .wrap {
-        max-width: 1100px;
-        margin: 0 auto;
-        padding: 20px;
+      a {
+        color: var(--accent);
       }
-      .grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 12px;
-        margin-bottom: 24px;
+      :focus-visible {
+        outline: 2px solid var(--accent-fill);
+        outline-offset: 2px;
       }
-      .stat {
-        background: #fff;
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        padding: 16px;
-        box-shadow: 0 1px 3px rgba(11, 31, 58, 0.06);
+      .muted {
+        color: var(--ink-soft);
       }
-      .stat .n {
-        font-size: 2rem;
-        font-weight: 800;
-        color: var(--navy);
-      }
-      .stat .l {
-        font-size: 0.78rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: var(--faint);
-        font-weight: 700;
-        margin-top: 2px;
-      }
-      .stat.primary {
-        background: linear-gradient(135deg, var(--teal), var(--teal2));
-        border: none;
-      }
-      .stat.primary .n,
-      .stat.primary .l {
-        color: #fff;
-      }
-      .stat.gold {
-        background: linear-gradient(135deg, var(--gold), #d4a017);
-        border: none;
-      }
-      .stat.gold .n,
-      .stat.gold .l {
-        color: var(--navy);
-      }
-      h2 {
-        font-size: 1.05rem;
-        margin: 28px 0 10px;
-      }
-      h2:first-of-type {
-        margin-top: 0;
-      }
-      .panel {
-        background: #fff;
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        padding: 18px;
-        margin-bottom: 20px;
-        box-shadow: 0 1px 3px rgba(11, 31, 58, 0.06);
-      }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        background: #fff;
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        overflow: hidden;
-      }
-      th,
-      td {
-        text-align: left;
-        padding: 10px 14px;
-        border-bottom: 1px solid var(--line);
-        font-size: 0.87rem;
-      }
-      th {
-        background: #eef1f6;
-        font-size: 0.72rem;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: var(--faint);
-      }
-      tr:last-child td {
-        border-bottom: none;
-      }
-      td.num {
-        text-align: right;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-        white-space: nowrap;
-      }
-      .bar {
-        display: inline-block;
-        height: 8px;
-        background: var(--teal);
-        border-radius: 4px;
-        vertical-align: middle;
-        margin-right: 8px;
-        min-width: 2px;
-      }
-      .foot {
-        color: var(--faint);
-        font-size: 0.82rem;
-        margin-top: 16px;
-      }
-      .windows {
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-        margin: -8px 0 22px;
-      }
-      .win {
-        background: #fff;
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        padding: 8px 14px;
-        font-size: 0.85rem;
-        color: var(--ink);
-      }
-      .refresh {
-        background: var(--gold);
-        color: var(--navy);
-        border: none;
-        border-radius: 8px;
-        padding: 8px 14px;
-        font-weight: 700;
-        cursor: pointer;
-      }
-      .tabs {
-        display: flex;
-        gap: 6px;
-        margin-bottom: 12px;
-      }
-      .tabs button {
-        background: #eef1f6;
-        border: none;
-        border-radius: 999px;
-        padding: 6px 14px;
-        font-size: 0.82rem;
-        font-weight: 700;
-        color: var(--faint);
-        cursor: pointer;
-      }
-      .tabs button.active {
-        background: var(--navy);
-        color: #fff;
-      }
-      .two-col {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 18px;
-      }
-      @media (max-width: 720px) {
-        .two-col {
-          grid-template-columns: 1fr;
-        }
-      }
-      .funnel-row {
-        display: grid;
-        grid-template-columns: 150px 1fr 130px;
-        gap: 12px;
-        align-items: center;
-        margin-bottom: 10px;
-        font-size: 0.87rem;
-      }
-      .funnel-track {
-        background: #eef1f6;
-        border-radius: 8px;
-        height: 26px;
-        position: relative;
-        overflow: hidden;
-      }
-      .funnel-fill {
-        background: linear-gradient(90deg, var(--teal), var(--teal2));
-        height: 100%;
-        border-radius: 8px;
-        min-width: 3px;
-      }
-      .funnel-nums {
-        text-align: right;
-        font-variant-numeric: tabular-nums;
-        color: var(--faint);
+      .note {
         font-size: 0.8rem;
-      }
-      .device-row {
-        display: flex;
-        gap: 16px;
-        margin-top: 6px;
-      }
-      .device-item {
-        flex: 1;
-      }
-      .device-track {
-        background: #eef1f6;
-        border-radius: 8px;
-        height: 18px;
-        overflow: hidden;
-        margin-top: 4px;
-      }
-      .device-fill {
-        background: var(--teal);
-        height: 100%;
-      }
-      .retention-table td,
-      .retention-table th {
-        text-align: center;
-      }
-      .retention-table td:first-child,
-      .retention-table th:first-child {
-        text-align: left;
-      }
-      .ret-cell {
-        border-radius: 6px;
-        padding: 4px 6px;
-        display: inline-block;
-        min-width: 44px;
-        font-weight: 700;
-        font-variant-numeric: tabular-nums;
-      }
-      .empty-note {
-        color: var(--faint);
-        font-size: 0.85rem;
-        padding: 14px;
-        text-align: center;
+        color: var(--ink-faint);
       }
 
-      /* ---- login gate ---- */
+      /* ---------- sign in (deliberately minimal: a public URL never describes its own auth) ---------- */
       #login-gate {
-        max-width: 380px;
-        margin: 60px auto;
-        background: #fff;
-        border: 1px solid var(--line);
-        border-radius: 14px;
+        max-width: 360px;
+        margin: 12vh auto 0;
         padding: 28px;
-        box-shadow: 0 4px 20px rgba(11, 31, 58, 0.08);
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
       }
       #login-gate h2 {
-        margin: 0 0 4px;
-        font-size: 1.2rem;
-      }
-      #login-gate p.sub {
-        color: var(--faint);
-        font-size: 0.85rem;
-        margin: 0 0 18px;
+        font-family: var(--font-display);
+        font-size: 1.6rem;
+        font-weight: 600;
+        margin-bottom: 14px;
       }
       #login-gate label {
         display: block;
-        font-size: 0.82rem;
-        font-weight: 700;
-        color: var(--faint);
-        margin-bottom: 5px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--ink-soft);
+        margin: 12px 0 5px;
       }
       #login-gate input {
         width: 100%;
-        padding: 10px 12px;
+        padding: 11px 12px;
+        font: inherit;
+        color: var(--ink);
+        background: var(--bg);
         border: 1px solid var(--line);
-        border-radius: 8px;
-        font-size: 0.95rem;
-        margin-bottom: 14px;
+        border-radius: 10px;
       }
       #login-gate button {
         width: 100%;
-        background: var(--teal);
-        color: #fff;
-        border: none;
-        border-radius: 8px;
-        padding: 11px;
-        font-weight: 700;
-        font-size: 0.95rem;
-        cursor: pointer;
-      }
-      #login-gate button:hover {
-        background: var(--teal2);
+        margin-top: 16px;
       }
       #login-error {
-        background: #fdecee;
-        color: var(--danger);
-        border: 1px solid #f6c9ce;
+        display: none;
+        margin-bottom: 4px;
         padding: 9px 12px;
-        border-radius: 8px;
+        border-radius: 9px;
         font-size: 0.85rem;
-        margin-bottom: 14px;
+        color: var(--bad);
+        background: var(--bad-weak);
+      }
+
+      /* ---------- shell: one row, always ---------- */
+      .top {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 10px 24px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--line);
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        color: var(--ink);
+        text-decoration: none;
+        flex: 0 0 auto;
+      }
+      .brand svg {
+        width: 26px;
+        height: 26px;
+      }
+      .brand b {
+        font-family: var(--font-display);
+        font-style: italic;
+        font-size: 1.3rem;
+        font-weight: 600;
+        line-height: 1;
+      }
+      .tabs {
+        display: inline-flex;
+        background: var(--surface-2);
+        border-radius: 11px;
+        padding: 3px;
+        gap: 2px;
+        flex: 0 0 auto;
+      }
+      .tabs button {
+        border: 0;
+        background: transparent;
+        color: var(--ink-soft);
+        font-weight: 600;
+        font-size: 0.9rem;
+        padding: 7px 18px;
+        border-radius: 9px;
+        min-height: 36px;
+      }
+      .tabs button[aria-selected="true"] {
+        background: var(--surface);
+        color: var(--ink);
+        box-shadow: var(--shadow);
+      }
+      .grow {
+        flex: 1;
+      }
+      .menu-wrap {
+        position: relative;
+        flex: 0 0 auto;
+      }
+      .icon-btn {
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        border: 1px solid var(--line);
+        background: var(--surface);
+        border-radius: 10px;
+        color: var(--ink-soft);
+      }
+      .icon-btn:hover {
+        color: var(--ink);
+        background: var(--surface-2);
+      }
+      .menu {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 8px);
+        min-width: 190px;
+        padding: 6px;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        display: grid;
+        gap: 2px;
+      }
+      .menu button {
+        text-align: left;
+        border: 0;
+        background: none;
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+      .menu button:hover,
+      .menu button:focus-visible {
+        background: var(--surface-2);
+      }
+
+      .wrap {
+        max-width: 1160px;
+        margin: 0 auto;
+        padding: 24px;
+        display: grid;
+        gap: 20px;
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        min-width: 0;
+      }
+      h2.t,
+      h3.t {
+        font-size: 1rem;
+        font-weight: 700;
+      }
+
+      .btn {
+        white-space: nowrap;
+        border: 0;
+        border-radius: 10px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        padding: 10px 18px;
+        min-height: 42px;
+      }
+      .btn.primary {
+        background: var(--accent-fill);
+        color: var(--on-accent);
+      }
+      .btn.primary:disabled {
+        opacity: 0.55;
+        cursor: default;
+      }
+      .btn.quiet {
+        background: transparent;
+        border: 1px solid var(--line);
+        color: var(--ink);
+      }
+      .btn.quiet:hover {
+        background: var(--surface-2);
+      }
+      .btn.sm {
+        padding: 6px 13px;
+        font-size: 0.82rem;
+        min-height: 34px;
+      }
+      .link-btn {
+        border: 0;
+        background: none;
+        /* a bigger hit area without moving the text around it */
+        padding: 11px 8px;
+        margin: -11px -8px;
+        color: var(--accent);
+        text-decoration: underline;
+        font-size: inherit;
+      }
+
+      /* ---------- Data: progress ---------- */
+      .progress {
+        padding: 22px 24px;
+      }
+      .p-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+      .p-num {
+        font-family: var(--font-display);
+        font-size: 2.9rem;
+        font-weight: 600;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+      }
+      .p-num span {
+        font-size: 1.5rem;
+        color: var(--ink-faint);
+      }
+      .p-cap {
+        margin-top: 6px;
+        color: var(--ink-soft);
+      }
+      .p-side {
+        max-width: 380px;
+        font-size: 0.86rem;
+        color: var(--ink-faint);
+      }
+      .bar {
+        height: 10px;
+        border-radius: 6px;
+        background: var(--surface-2);
+        overflow: hidden;
+        margin-top: 18px;
+      }
+      .bar > i {
+        display: block;
+        height: 100%;
+        background: var(--accent-fill);
+        border-radius: 6px;
+        transition: width 0.5s ease;
+      }
+      .p-foot {
+        margin-top: 12px;
+        font-size: 0.86rem;
+        color: var(--ink-soft);
+      }
+
+      /* ---------- Data: list + editor ---------- */
+      .grid-2 {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+        gap: 20px;
+        align-items: start;
+      }
+      .lc-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 18px 20px 4px;
+      }
+      .title-select {
+        font-family: var(--font-display);
+        font-size: 1.25rem;
+        font-weight: 600;
+        border: 0;
+        background: transparent;
+        padding: 4px 0;
+        min-height: 36px;
+        cursor: pointer;
+        max-width: 70%;
+      }
+      .title-select:hover {
+        color: var(--accent);
+      }
+      .lc-head .count {
+        font-size: 0.82rem;
+        color: var(--ink-faint);
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 10px 20px 4px;
+      }
+      .chip {
+        border: 1px solid var(--line);
+        background: transparent;
+        color: var(--ink-soft);
+        border-radius: 999px;
+        padding: 6px 14px;
+        font-size: 0.84rem;
+        font-weight: 600;
+        min-height: 34px;
+      }
+      .chip:hover {
+        background: var(--surface-2);
+      }
+      .chip[aria-pressed="true"] {
+        background: var(--accent-weak);
+        border-color: var(--accent-fill);
+        color: var(--accent);
+      }
+      .controls {
+        display: flex;
+        gap: 10px;
+        padding: 10px 20px 8px;
+        flex-wrap: wrap;
+      }
+      select,
+      input[type="search"],
+      .fval,
+      .area,
+      .src input {
+        font: inherit;
+        font-size: 0.92rem;
+        color: var(--ink);
+        background: var(--bg);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px 12px;
+        min-height: 42px;
+        min-width: 0;
+      }
+      .controls select {
+        flex: 0 1 190px;
+      }
+      .controls input {
+        flex: 1 1 160px;
+      }
+      details > summary {
+        cursor: pointer;
+        list-style: none;
+      }
+      details > summary::-webkit-details-marker {
         display: none;
       }
-      #login-gate .hint {
-        color: var(--faint);
-        font-size: 0.78rem;
-        margin-top: 14px;
+      .more-filters {
+        padding: 0 20px 10px;
+      }
+      .more-filters summary {
+        font-size: 0.84rem;
+        color: var(--accent);
+        font-weight: 600;
+        padding: 4px 0;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+      }
+      .more-filters .mf {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        padding-top: 6px;
+      }
+      .more-filters select {
+        flex: 1 1 160px;
+      }
+      .rows {
+        max-height: 640px;
+        overflow-y: auto;
+        border-top: 1px solid var(--line);
+        margin-top: 6px;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 2px 14px;
+        width: 100%;
+        text-align: left;
+        padding: 14px 20px;
+        border: 0;
+        border-bottom: 1px solid var(--line);
+        background: none;
+      }
+      .row:last-child {
+        border-bottom: 0;
+      }
+      .row:hover {
+        background: var(--surface-2);
+      }
+      .row[aria-current="true"] {
+        background: var(--accent-weak);
+        box-shadow: inset 3px 0 0 var(--accent-fill);
+      }
+      .r-name {
+        font-weight: 700;
+      }
+      .r-state {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--warn);
+        text-align: right;
+        align-self: center;
+      }
+      .r-state.ok {
+        color: var(--ok);
+      }
+      .r-meta {
+        grid-column: 1 / -1;
+        font-size: 0.8rem;
+        color: var(--ink-faint);
+      }
+      .empty {
+        padding: 36px 20px;
         text-align: center;
+        color: var(--ink-faint);
+      }
+      .sheet {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 0;
+        width: min(640px, calc(100vw - 32px));
+        max-height: calc(100vh - 48px);
+        background: var(--surface);
+        color: var(--ink);
+      }
+      .sheet::backdrop {
+        background: rgba(10, 16, 28, 0.5);
+      }
+      .sheet-in {
+        padding: 18px 20px 20px;
+        display: grid;
+        gap: 14px;
+      }
+      .sheet-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+      .sheet-step {
+        display: grid;
+        gap: 8px;
+      }
+      .sheet-step p,
+      .sheet-note {
+        margin: 0;
+        font-size: 0.88rem;
+        color: var(--ink-soft);
+      }
+      .sheet-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+      .sheet select,
+      .sheet input[type="file"] {
+        min-height: 42px;
+        max-width: 100%;
+      }
+      .sheet-sum {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .sheet-sum span {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: 0.84rem;
+        font-weight: 600;
+      }
+      .sheet-sum .bad {
+        background: var(--bad-weak);
+        color: var(--bad);
+        border-color: transparent;
+      }
+      .sheet-sum .good {
+        color: var(--ok);
+      }
+      .sheet-list {
+        display: grid;
+        gap: 6px;
+        max-height: 40vh;
+        overflow-y: auto;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+      .sheet-list li {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 8px 12px;
+        font-size: 0.86rem;
+        overflow-wrap: anywhere;
+      }
+      .sheet-list li.err {
+        border-color: var(--bad);
+      }
+      .sheet-list small {
+        display: block;
+        color: var(--ink-soft);
+      }
+      .sheet-list li.err small {
+        color: var(--bad);
+      }
+      @media (max-width: 560px) {
+        .sheet .btn {
+          width: 100%;
+          min-height: 44px;
+        }
+      }
+      .more {
+        padding: 14px;
+        text-align: center;
+        border-top: 1px solid var(--line);
       }
 
-      /* ---- Dark theme ----------------------------------------------------
-         Admin follows the app-wide theme: the no-flash <head> script (injected
-         on every served page) stamps <html data-theme> from the same saved
-         preference, so choosing Dark in the app carries here. Graphite palette
-         matching the main app; only the token values + hardcoded surfaces flip. */
-      :root[data-theme="dark"] {
-        --navy: #201e1c; /* header → graphite, not blue */
-        --navy2: #262320;
-        --teal: #33c2ab;
-        --teal2: #46cdb6;
-        --gold: #f2be5b;
-        --line: rgba(255, 255, 255, 0.11);
-        --ink: #eeede9;
-        --faint: #9a968d;
-        --danger: #ec6f79;
-        color-scheme: dark;
+      .rcol {
+        display: grid;
+        gap: 20px;
+        min-width: 0;
       }
-      :root[data-theme="dark"] body {
-        background: #1c1b1a;
+      .editor-card {
+        padding: 22px 24px;
       }
-      :root[data-theme="dark"] .stat,
-      :root[data-theme="dark"] .panel,
-      :root[data-theme="dark"] table,
-      :root[data-theme="dark"] .win,
-      :root[data-theme="dark"] #login-gate {
-        background: #292826;
+      .e-back {
+        display: none;
+        margin-bottom: 10px;
       }
-      :root[data-theme="dark"] th,
-      :root[data-theme="dark"] .tabs button,
-      :root[data-theme="dark"] .funnel-track,
-      :root[data-theme="dark"] .device-track {
-        background: #151413;
+      .e-name {
+        font-family: var(--font-display);
+        font-size: 1.6rem;
+        font-weight: 600;
+        line-height: 1.15;
       }
-      :root[data-theme="dark"] #login-error {
-        background: rgba(236, 111, 121, 0.16);
-        color: #f0a7ab;
+      .e-ctx {
+        margin-top: 3px;
+        font-size: 0.86rem;
+        color: var(--ink-soft);
+      }
+      .e-conf {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+        padding: 10px 14px;
+        background: var(--surface-2);
+        border-radius: 12px;
+        font-size: 0.86rem;
+        color: var(--ink-soft);
+      }
+      .e-conf b {
+        color: var(--ink);
+      }
+      .e-body {
+        display: grid;
+        gap: 20px;
+        margin-top: 20px;
+      }
+      .field {
+        display: grid;
+        gap: 8px;
+      }
+      .f-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .f-head label {
+        font-weight: 700;
+        font-size: 0.92rem;
+      }
+      .tag {
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        padding: 2px 9px;
+        border-radius: 999px;
+        background: var(--warn-weak);
+        color: var(--warn);
+      }
+      .tag.ok {
+        background: var(--accent-weak);
+        color: var(--ok);
+      }
+      .hint {
+        font-size: 0.84rem;
+        color: var(--ink-soft);
+      }
+      .two {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .mini {
+        display: grid;
+        gap: 4px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        min-width: 0;
+      }
+      .mini input {
+        text-transform: none;
+        letter-spacing: normal;
+        font-weight: 400;
+        font-size: 0.92rem;
+      }
+      .fval,
+      .area {
+        width: 100%;
+      }
+      .area {
+        min-height: 92px;
+        resize: vertical;
+      }
+      .src {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 10px;
+        align-items: center;
+      }
+      .src .sl {
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+      }
+      .src input {
+        width: 100%;
+        font-size: 0.84rem;
+        padding: 8px 10px;
+        min-height: 38px;
+      }
+      .field.invalid .fval,
+      .field.invalid .area,
+      .field.invalid .src input {
+        border-color: var(--bad);
+      }
+      .err {
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--bad);
+      }
+      .more-details {
+        border-top: 1px solid var(--line);
+        margin-top: 20px;
+        padding-top: 14px;
+      }
+      .more-details > summary {
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: var(--ink-soft);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .more-details > summary::before {
+        content: "›";
+        display: inline-block;
+        transition: transform 0.15s;
+        font-size: 1.2rem;
+        line-height: 1;
+      }
+      .more-details[open] > summary::before {
+        transform: rotate(90deg);
+      }
+      .more-details .e-body {
+        margin-top: 16px;
+      }
+      .e-actions {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+        margin-top: 22px;
+      }
+      .recent > summary {
+        padding: 16px 24px;
+        font-weight: 700;
+        font-size: 0.92rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .recent > summary::after {
+        content: "+";
+        color: var(--ink-faint);
+        font-size: 1.2rem;
+        line-height: 1;
+      }
+      .recent[open] > summary::after {
+        content: "–";
+      }
+      .feed-i {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 24px;
+        border-top: 1px solid var(--line);
+        font-size: 0.86rem;
+      }
+      .feed-i .w {
+        color: var(--ink-faint);
+        white-space: nowrap;
+      }
+      .feed-i .by {
+        display: block;
+        font-size: 0.78rem;
+        color: var(--ink-faint);
+      }
+
+      /* ---------- Usage ---------- */
+      .label {
+        font-size: 0.74rem;
+        font-weight: 700;
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+      }
+      .tiles {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+      }
+      .tile {
+        padding: 18px 20px;
+      }
+      .tile .r1 {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        gap: 8px;
+      }
+      .tile .n {
+        font-family: var(--font-display);
+        font-size: 2.6rem;
+        font-weight: 600;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+      }
+      .tile .d {
+        font-size: 0.76rem;
+        font-weight: 700;
+        color: var(--ink-faint);
+        white-space: nowrap;
+      }
+      .tile .d.up {
+        color: var(--ok);
+      }
+      .tile .l {
+        margin-top: 6px;
+        font-size: 0.88rem;
+        color: var(--ink-soft);
+      }
+      .tile svg {
+        display: block;
+        width: 100%;
+        height: 34px;
+        margin-top: 12px;
+        overflow: visible;
+      }
+      .also {
+        font-size: 0.88rem;
+        color: var(--ink-soft);
+      }
+      .gaps {
+        padding: 22px 24px;
+        border-left: 4px solid var(--warn);
+      }
+      .gaps .sub {
+        margin-top: 3px;
+        font-size: 0.86rem;
+        color: var(--ink-soft);
+      }
+      .gap {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px;
+        padding: 12px 0;
+        border-top: 1px solid var(--line);
+      }
+      .gaps .sub + .gap {
+        margin-top: 12px;
+      }
+      .gap .q {
+        font-weight: 600;
+        min-width: 0;
+        overflow-wrap: anywhere;
+      }
+      .gap .q small {
+        font-weight: 400;
+        color: var(--ink-faint);
+      }
+      .gap .m {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--warn);
+        margin-top: 2px;
+      }
+      .gap .m.zero {
+        color: var(--bad);
+      }
+      .none {
+        padding: 8px 0;
+        font-size: 0.9rem;
+        color: var(--ink-faint);
+      }
+      .grid-e {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px;
+        align-items: start;
+      }
+      .tabcard {
+        padding: 20px 24px 22px;
+      }
+      .tc-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+      .seg {
+        display: inline-flex;
+        background: var(--surface-2);
+        border-radius: 10px;
+        padding: 3px;
+        gap: 2px;
+        max-width: 100%;
+        overflow-x: auto;
+      }
+      .seg button {
+        border: 0;
+        background: transparent;
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--ink-soft);
+        white-space: nowrap;
+        min-height: 30px;
+      }
+      .seg button[aria-pressed="true"] {
+        background: var(--surface);
+        color: var(--ink);
+        box-shadow: var(--shadow);
+      }
+      .lr {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 6px 12px;
+        align-items: center;
+        padding: 9px 0;
+      }
+      .lr + .lr {
+        border-top: 1px solid var(--line);
+      }
+      .lr .nm {
+        overflow-wrap: anywhere;
+      }
+      .lr .ct {
+        font-weight: 700;
+        color: var(--ink-soft);
+        font-variant-numeric: tabular-nums;
+      }
+      .lr .ba {
+        grid-column: 1 / -1;
+        height: 5px;
+        border-radius: 3px;
+        background: var(--surface-2);
+        overflow: hidden;
+      }
+      .lr .ba > i {
+        display: block;
+        height: 100%;
+        background: var(--accent-fill);
+        border-radius: 3px;
+      }
+      .people {
+        padding: 22px 24px;
+      }
+      .big {
+        font-family: var(--font-display);
+        font-size: 2.6rem;
+        font-weight: 600;
+        line-height: 1;
+      }
+      .kvs {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px 20px;
+        margin-top: 16px;
+      }
+      .kv .v {
+        font-size: 1.3rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        line-height: 1.1;
+      }
+      .kv .k {
+        font-size: 0.8rem;
+        color: var(--ink-soft);
+        margin-top: 2px;
+      }
+      .homes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 1px solid var(--line);
+      }
+      .homes span {
+        font-size: 0.84rem;
+        background: var(--surface-2);
+        border-radius: 999px;
+        padding: 4px 12px;
+        color: var(--ink-soft);
+      }
+      .homes b {
+        color: var(--ink);
+      }
+      .inbox {
+        padding: 22px 24px;
+        display: grid;
+        gap: 16px;
+      }
+      .in-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .in-row .v {
+        font-size: 1.3rem;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+      .in-row .k {
+        font-size: 0.82rem;
+        color: var(--ink-soft);
+      }
+      .leads {
+        display: grid;
+        gap: 10px;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      .lead {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px 14px;
+        font-size: 0.86rem;
+      }
+      .lead p {
+        margin: 6px 0 0;
+        color: var(--ink-soft);
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      .foot {
+        font-size: 0.8rem;
+        color: var(--ink-faint);
+        padding-bottom: 12px;
+      }
+
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 24px;
+        transform: translateX(-50%) translateY(16px);
+        background: var(--ink);
+        color: var(--bg);
+        padding: 11px 18px;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        box-shadow: var(--shadow);
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 0.2s,
+          transform 0.2s;
+        z-index: 60;
+        max-width: calc(100vw - 32px);
+      }
+      .toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      @media (min-width: 821px) {
+        .editor-card {
+          position: sticky;
+          top: 80px;
+          max-height: calc(100vh - 100px);
+          overflow-y: auto;
+        }
+      }
+      @media (max-width: 1000px) {
+        .tiles {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+      @media (max-width: 820px) {
+        .wrap {
+          padding: 16px;
+          gap: 16px;
+        }
+        .grid-2,
+        .grid-e {
+          grid-template-columns: 1fr;
+        }
+        .rows {
+          max-height: none;
+        }
+        .e-back {
+          display: inline-block;
+        }
+        .top {
+          padding: 10px 16px;
+          gap: 10px;
+        }
+        .progress,
+        .editor-card,
+        .tabcard,
+        .people,
+        .inbox,
+        .gaps {
+          padding-left: 18px;
+          padding-right: 18px;
+        }
+      }
+      @media (max-width: 520px) {
+        .tiles {
+          grid-template-columns: 1fr 1fr;
+          gap: 12px;
+        }
+        .tile {
+          padding: 14px 14px 12px;
+        }
+        .tile .n {
+          font-size: 2.1rem;
+        }
+        .tile .d {
+          display: none;
+        }
+        .two {
+          grid-template-columns: 1fr;
+        }
+        .p-num {
+          font-size: 2.4rem;
+        }
+        .tabs button {
+          padding: 7px 14px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          transition: none !important;
+        }
       }
     </style>
-    <link rel="stylesheet" href="/css/fonts.css" />
   </head>
   <body>
-    <header>
-      <div class="wrap" style="padding: 0">
-        <div class="row">
-          <div style="display: flex; align-items: center; gap: 10px">
-            <!--BRAND_MARK-->
-            <div>
-              <h1>Universo — Admin dashboard</h1>
-              <p>
-                Growth, engagement and university leads.
-                <a class="back" href="/">← Back to app</a>
-              </p>
-            </div>
-          </div>
-          <a class="logout-link" id="logout-link" style="display: none"
-            >Log out ↦</a
-          >
-        </div>
-      </div>
-    </header>
-
-    <!-- Signed-out state is deliberately minimal: a title, the two fields, and
-       the button. No description, no provisioning hint — a public URL should
-       never describe its own auth setup. Admin provisioning lives in README. -->
-    <div id="login-gate">
+    <!-- Signed-out state is deliberately minimal: a title, the two fields, and the
+       button. No description, no provisioning hint — a public URL should never
+       describe its own auth setup. Admin provisioning lives in README. -->
+    <div id="login-gate" hidden>
       <h2>Admin sign in</h2>
-      <div id="login-error"></div>
+      <div id="login-error" role="alert"></div>
       <form id="login-form">
         <label for="admin-email">Email</label>
         <input id="admin-email" type="email" autocomplete="username" required />
@@ -432,710 +1199,1583 @@
           autocomplete="current-password"
           required
         />
-        <button type="submit">Sign in</button>
+        <button class="btn primary" type="submit">Sign in</button>
       </form>
     </div>
 
-    <div class="wrap" id="dashboard" style="display: none">
-      <div
-        style="
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 14px;
-        "
-      >
-        <span id="ts" class="foot" style="margin: 0"></span>
-        <button class="refresh" id="refresh-btn">↻ Refresh</button>
-      </div>
-
-      <!-- ============ LEVEL 1 · how Universo is doing (real data) ========= -->
-      <h2>How Universo is doing</h2>
-      <div id="headline" class="grid"></div>
-      <p class="foot" style="margin: -14px 0 26px">
-        Real numbers, tied to actual accounts and actions — these you can trust.
-      </p>
-
-      <!-- ============ LEVEL 2 · engagement (anonymous, approximate) ======== -->
-      <div
-        class="panel"
-        style="background: #fff8e6; border-color: #f0dfae; margin-bottom: 16px"
-      >
-        <strong style="font-size: 0.9rem"
-          >Why it's doing that — engagement &amp; behaviour</strong
-        >
-        <p class="foot" style="margin: 4px 0 0; color: #8a6d1a">
-          ⚠︎ Everything below counts <em>anonymous browser activity</em>, not
-          verified people. One person on two devices, in incognito, or a bot
-          each look like separate “users.” Read these as approximate trends —
-          not exact headcounts.
-        </p>
-      </div>
-
-      <h2>Active users</h2>
-      <div class="panel">
-        <div id="overview" class="grid"></div>
-        <p class="foot" style="margin-top: 4px">
-          Distinct browsers active in each window (not events).
-          <em>New</em> = first-ever activity falls inside the window; everyone
-          else is returning.
-        </p>
-      </div>
-
-      <h2>
-        Where interest thins — reach funnel (last
-        <span id="funnel-days-label">7</span> days)
-      </h2>
-      <div class="panel">
-        <div class="tabs" id="funnel-range"></div>
-        <div id="funnel"></div>
-        <p class="foot" style="margin-top: 4px">
-          Anonymous reach at each step — a browser counts if it fired that event
-          once in the window. Stages are counted independently, so this is not a
-          strict start-to-finish path.
-        </p>
-      </div>
-
-      <div class="two-col">
-        <div>
-          <h2>Traffic (last <span id="traffic-days-label">7</span> days)</h2>
-          <div class="panel">
-            <div class="tabs" id="traffic-range"></div>
-            <div
-              id="traffic-summary"
-              class="grid"
-              style="margin-bottom: 14px"
-            ></div>
-            <h3 style="font-size: 0.85rem; margin: 0 0 8px">Top pages</h3>
-            <div id="top-pages"></div>
-            <h3 style="font-size: 0.85rem; margin: 16px 0 8px">
-              Top referrers
-            </h3>
-            <div id="top-referrers"></div>
-            <h3 style="font-size: 0.85rem; margin: 16px 0 8px">Device split</h3>
-            <div id="device-split"></div>
+    <div id="app" hidden>
+      <header class="top">
+        <a class="brand" href="/admin"><!--BRAND_MARK--><b>Universo</b></a>
+        <div class="tabs" role="tablist" aria-label="Admin sections">
+          <button
+            role="tab"
+            id="tab-data"
+            aria-selected="true"
+            data-screen="data"
+          >
+            Data
+          </button>
+          <button
+            role="tab"
+            id="tab-usage"
+            aria-selected="false"
+            data-screen="usage"
+          >
+            Usage
+          </button>
+        </div>
+        <div class="grow"></div>
+        <div class="menu-wrap">
+          <button
+            class="icon-btn"
+            id="menu-btn"
+            type="button"
+            aria-haspopup="true"
+            aria-expanded="false"
+            aria-label="Menu"
+          >
+            <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+              <circle cx="3" cy="9" r="1.7" fill="currentColor" />
+              <circle cx="9" cy="9" r="1.7" fill="currentColor" />
+              <circle cx="15" cy="9" r="1.7" fill="currentColor" />
+            </svg>
+          </button>
+          <div class="menu" id="menu" hidden>
+            <button type="button" id="refresh-btn">Refresh</button>
+            <button type="button" id="theme-btn">Dark mode</button>
+            <button type="button" id="logout-link">Sign out</button>
           </div>
         </div>
-        <div>
-          <h2>Top search terms</h2>
-          <div class="panel"><div id="top-searches"></div></div>
-          <h2>Weekly retention</h2>
-          <div class="panel"><div id="retention"></div></div>
-        </div>
-      </div>
+      </header>
 
-      <h2>Most-viewed &amp; most-applied universities</h2>
-      <div class="two-col">
-        <div>
-          <h3 style="font-size: 0.85rem; margin: 0 0 8px">By profile views</h3>
-          <div id="table-views"></div>
-        </div>
-        <div>
-          <h3 style="font-size: 0.85rem; margin: 0 0 8px">By Apply-Now clicks</h3>
-          <div id="table-clicks"></div>
-        </div>
-      </div>
-
-      <div
-        style="
-          display: flex;
-          justify-content: space-between;
-          align-items: baseline;
-          gap: 10px;
-          margin-top: 28px;
-        "
+      <!-- ================= DATA ================= -->
+      <main
+        class="wrap"
+        id="screen-data"
+        role="tabpanel"
+        aria-labelledby="tab-data"
       >
-        <h2 style="margin: 0">University leads (B2B)</h2>
-        <!-- Injected by showDash() only once the admin session is confirmed, so
-           the export URL never appears in the HTML served to a signed-out
-           visitor. (The endpoint itself is also requireAdmin-guarded.) -->
-        <span id="csv-slot"></span>
-      </div>
-      <div class="panel">
-        <div id="table-leads"></div>
-        <p class="foot" style="margin-top: 4px">
-          Submitted through the landing page's "For universities" form. The CSV
-          button downloads students who opted into product-update emails — paste
-          into any mail tool to send an update.
-        </p>
-      </div>
+        <section
+          class="card progress"
+          id="progress"
+          aria-label="Progress"
+        ></section>
 
-      <!-- ============ LEVEL 3 · content & system ============ -->
-      <h2 style="margin-top: 28px">
-        Content quality — the university dataset
-      </h2>
-      <div
-        class="panel"
-        style="background: #eef6f5; border-color: #cfe7e3; margin-bottom: 14px"
+        <div class="grid-2">
+          <section class="card" id="list-card" aria-label="Records">
+            <div class="lc-head">
+              <select
+                id="f-scope"
+                class="title-select"
+                aria-label="Which records to show"
+              >
+                <option value="featured">Featured universities</option>
+                <option value="all">All universities</option>
+                <option value="scholarships">Scholarships</option>
+              </select>
+              <span class="count" id="count"></span>
+              <button class="btn quiet sm" id="sheet-open" type="button">
+                Spreadsheet
+              </button>
+            </div>
+            <div class="chips" id="chips" role="group" aria-label="Show"></div>
+            <div class="controls">
+              <input
+                id="f-q"
+                type="search"
+                placeholder="Search by name"
+                aria-label="Search records"
+                autocomplete="off"
+              />
+            </div>
+            <details class="more-filters" id="more-filters">
+              <summary>More filters</summary>
+              <div class="mf">
+                <select id="f-country" aria-label="Country">
+                  <option value="">All countries</option>
+                </select>
+                <select id="f-field" aria-label="Field of study">
+                  <option value="">All fields</option>
+                </select>
+              </div>
+            </details>
+            <div class="rows" id="rows" aria-live="polite"></div>
+            <div class="more" id="more" hidden>
+              <button class="btn quiet sm" id="more-btn" type="button">
+                Show more
+              </button>
+            </div>
+          </section>
+
+          <div class="rcol">
+            <section
+              class="card editor-card"
+              aria-label="Edit record"
+              id="editor-card"
+            >
+              <div id="editor">
+                <div class="empty">Pick a record on the left to edit it.</div>
+              </div>
+            </section>
+            <details class="card recent" id="recent">
+              <summary>Recent edits</summary>
+              <div id="feed"></div>
+            </details>
+          </div>
+        </div>
+      </main>
+
+      <!-- ================= USAGE ================= -->
+      <main
+        class="wrap"
+        id="screen-usage"
+        role="tabpanel"
+        aria-labelledby="tab-usage"
+        hidden
       >
-        <p class="foot" style="margin: 0; color: #0d6b60">
-          This is about the university <strong>database</strong>, not user
-          activity. All 2,899 universities come from the official EU register
-          (ETER) or are hand-curated — and 300 are deeply verified by hand. A
-          “missing field” count here just means the register doesn't carry that
-          field for every institution; a lower completeness score on a plain
-          register entry is expected, not a bug.
-        </p>
-      </div>
-      <div id="dq-stats" class="grid"></div>
-      <div class="two-col" style="margin-top: 14px">
         <div>
-          <h3 style="font-size: 0.9rem; margin: 0 0 8px">
-            Most-missing fields
-          </h3>
-          <div class="panel"><div id="dq-missing"></div></div>
+          <div class="label" style="margin-bottom: 12px">
+            Last 7 days · trend over 8 weeks
+          </div>
+          <div class="tiles" id="tiles"></div>
+          <p class="also" id="also" style="margin-top: 14px"></p>
         </div>
-        <div>
-          <h3 style="font-size: 0.9rem; margin: 0 0 8px">
-            Completeness spread
-          </h3>
-          <div class="panel"><div id="dq-distribution"></div></div>
-        </div>
-      </div>
-      <div class="panel" style="margin-top: 14px">
-        <div
-          class="dq-filters"
-          style="
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: center;
-            margin-bottom: 12px;
-          "
-        >
-          <label
-            >Band
-            <select id="dq-band">
-              <option value="">All</option>
-              <option>Incomplete</option>
-              <option>Needs Improvement</option>
-              <option>Good</option>
-              <option>Excellent</option>
-            </select></label
-          >
-          <label
-            >Status
-            <select id="dq-status">
-              <option value="">All</option>
-              <option>Verified</option>
-              <option>Needs Review</option>
-              <option>Unknown</option>
-            </select></label
-          >
-          <label><input type="checkbox" id="dq-stale" /> Stale only</label>
-          <span id="dq-records-count" class="foot"></span>
-        </div>
-        <div id="dq-records"></div>
-        <p class="foot" style="margin-top: 6px" id="dq-note"></p>
-      </div>
 
-      <p class="foot">
-        User events are anonymous and deduplicable (a random client id, never an
-        email) in <code>data/events.jsonl</code>. Deleting a student account
-        purges their linked event history.
-      </p>
+        <section class="card gaps" aria-label="Searches with no good match">
+          <h2 class="t">Searches with no good match</h2>
+          <div class="sub" id="gaps-sub"></div>
+          <div id="gaps"></div>
+        </section>
+
+        <div class="grid-e">
+          <section
+            class="card tabcard"
+            id="want"
+            aria-label="What students search for"
+          ></section>
+          <section
+            class="card tabcard"
+            id="care"
+            aria-label="Universities students care about"
+          ></section>
+        </div>
+
+        <div class="grid-e">
+          <section
+            class="card people"
+            id="people"
+            aria-label="Your students"
+          ></section>
+          <section class="card inbox" id="inbox" aria-label="Inbox"></section>
+        </div>
+
+        <p class="foot" id="foot"></p>
+      </main>
     </div>
 
+    <dialog class="sheet" id="sheet" aria-labelledby="sheet-title">
+      <div class="sheet-in">
+        <div class="sheet-head">
+          <h2 class="t" id="sheet-title">Edit in a spreadsheet</h2>
+          <button class="btn quiet sm" id="sheet-close" type="button">
+            Close
+          </button>
+        </div>
+        <div id="sheet-body"></div>
+      </div>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
     <script>
-      const gate = document.getElementById("login-gate");
-      const dash = document.getElementById("dashboard");
-      let funnelDays = 7,
-        trafficDays = 7;
+      (() => {
+        "use strict";
+        const $ = (s, r = document) => r.querySelector(s);
+        const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+        const esc = (s) =>
+          String(s == null ? "" : s).replace(
+            /[&<>"']/g,
+            (c) =>
+              ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;",
+              })[c],
+          );
+        const nfmt = (n) => Number(n || 0).toLocaleString("en-US");
+        const plural = (n, one, many) => nfmt(n) + " " + (n === 1 ? one : many);
+        const fmtDate = (iso) => {
+          const t = Date.parse(iso);
+          return isFinite(t)
+            ? new Date(t).toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+              })
+            : "";
+        };
+        const ago = (iso) => {
+          const t = Date.parse(iso);
+          if (!isFinite(t)) return "";
+          const m = Math.round((Date.now() - t) / 60000);
+          if (m < 2) return "just now";
+          if (m < 60) return m + " min ago";
+          const h = Math.round(m / 60);
+          if (h < 24) return h + " h ago";
+          const d = Math.round(h / 24);
+          return d + (d === 1 ? " day ago" : " days ago");
+        };
+        let toastT;
+        const toast = (msg) => {
+          const t = $("#toast");
+          t.textContent = msg;
+          t.classList.add("show");
+          clearTimeout(toastT);
+          toastT = setTimeout(() => t.classList.remove("show"), 2300);
+        };
+        const api = (path, opts = {}) => {
+          const init = {
+            method: opts.method || "GET",
+            credentials: "same-origin",
+            headers: {},
+          };
+          if (opts.body !== undefined) {
+            init.headers["Content-Type"] = "application/json";
+            init.body = JSON.stringify(opts.body);
+          }
+          return fetch(path, init).then((res) =>
+            res
+              .json()
+              .catch(() => ({}))
+              .then((data) => {
+                if (res.status === 401) {
+                  showGate();
+                  throw new Error("Please sign in again.");
+                }
+                if (!res.ok) {
+                  const e = new Error(data.error || "Something went wrong.");
+                  e.field = data.field;
+                  throw e;
+                }
+                return data;
+              }),
+          );
+        };
 
-      async function api(path, opts) {
-        const res = await fetch(path, { credentials: "same-origin", ...opts });
-        if (res.status === 401) {
-          showGate();
-          throw new Error("unauthorized");
-        }
-        if (!res.ok) throw new Error("Request failed: " + res.status);
-        return res.status === 204 ? null : res.json();
-      }
-
-      function showGate() {
-        gate.style.display = "block";
-        dash.style.display = "none";
-        document.getElementById("logout-link").style.display = "none";
-        document.getElementById("csv-slot").innerHTML = ""; // never expose the export URL signed out
-      }
-      function showDash() {
-        gate.style.display = "none";
-        dash.style.display = "block";
-        document.getElementById("logout-link").style.display = "inline";
-        // Built via DOM (not markup) so the export path appears nowhere in the
-        // HTML served to a signed-out visitor.
-        const slot = document.getElementById("csv-slot");
-        slot.innerHTML = "";
-        const a = document.createElement("a");
-        a.className = "refresh";
-        a.href = "/api/" + "admin/subscribers" + ".csv";
-        a.download = "";
-        a.style.textDecoration = "none";
-        a.textContent = "⬇ Subscribers CSV";
-        slot.appendChild(a);
-      }
-
-      // ---- login ----
-      document
-        .getElementById("login-form")
-        .addEventListener("submit", async (e) => {
+        // ---------- sign in / out ----------
+        const showGate = () => {
+          $("#app").hidden = true;
+          $("#login-gate").hidden = false;
+        };
+        const showApp = () => {
+          $("#login-gate").hidden = true;
+          $("#app").hidden = false;
+        };
+        $("#login-form").addEventListener("submit", (e) => {
           e.preventDefault();
-          const err = document.getElementById("login-error");
+          const err = $("#login-error");
           err.style.display = "none";
-          const email = document.getElementById("admin-email").value;
-          const password = document.getElementById("admin-password").value;
-          try {
-            const res = await fetch("/api/admin/login", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              credentials: "same-origin",
-              body: JSON.stringify({ email, password }),
+          fetch("/api/admin/login", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: $("#admin-email").value,
+              password: $("#admin-password").value,
+            }),
+          })
+            .then((res) =>
+              res
+                .json()
+                .catch(() => ({}))
+                .then((data) => {
+                  if (!res.ok) throw new Error(data.error || "Sign in failed.");
+                  $("#admin-password").value = "";
+                  start();
+                }),
+            )
+            .catch((ex) => {
+              err.textContent = ex.message;
+              err.style.display = "block";
             });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || "Login failed");
-            showDash();
-            loadAll();
-          } catch (ex) {
-            err.textContent = ex.message;
-            err.style.display = "block";
+        });
+
+        // ---------- header menu (Refresh / Theme / Sign out) ----------
+        const menuBtn = $("#menu-btn"),
+          menu = $("#menu");
+        const setMenu = (open) => {
+          menu.hidden = !open;
+          menuBtn.setAttribute("aria-expanded", String(open));
+          if (open) $("button", menu).focus();
+        };
+        menuBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          setMenu(menu.hidden);
+        });
+        document.addEventListener("click", (e) => {
+          if (!menu.hidden && !menu.contains(e.target)) setMenu(false);
+        });
+        document.addEventListener("keydown", (e) => {
+          if (e.key === "Escape" && !menu.hidden) {
+            setMenu(false);
+            menuBtn.focus();
           }
         });
-      document
-        .getElementById("logout-link")
-        .addEventListener("click", async () => {
-          try {
-            await fetch("/api/admin/logout", {
-              method: "POST",
-              credentials: "same-origin",
-            });
-          } catch {}
-          showGate();
-        });
-      document.getElementById("refresh-btn").addEventListener("click", loadAll);
-
-      // ---- rendering helpers ----
-      const esc = (s) =>
-        String(s == null ? "" : s).replace(
-          /[&<>"']/g,
-          (c) =>
-            ({
-              "&": "&amp;",
-              "<": "&lt;",
-              ">": "&gt;",
-              '"': "&quot;",
-              "'": "&#39;",
-            })[c],
-        );
-      const nfmt = (n) => Number(n || 0).toLocaleString("en-US");
-
-      function barTable(rows, cols) {
-        // rows: array of objects; cols: [{key,label,num?}]
-        if (!rows.length) return '<p class="empty-note">No data yet.</p>';
-        const max = Math.max(
-          1,
-          ...rows.map((r) => Number(r[cols[cols.length - 1].key]) || 0),
-        );
-        return `<table><thead><tr>${cols.map((c) => `<th${c.num ? ' style="text-align:right"' : ""}>${esc(c.label)}</th>`).join("")}</tr></thead>
-        <tbody>${rows
-          .map(
-            (r) =>
-              `<tr>${cols
-                .map((c, i) => {
-                  const v = r[c.key];
-                  if (c.num) {
-                    const w =
-                      i === cols.length - 1
-                        ? Math.round(((Number(v) || 0) / max) * 70)
-                        : 0;
-                    return `<td class="num">${i === cols.length - 1 ? `<span class="bar" style="width:${w}px"></span>` : ""}${nfmt(v)}</td>`;
-                  }
-                  return `<td>${esc(v)}</td>`;
-                })
-                .join("")}</tr>`,
-          )
-          .join("")}</tbody></table>`;
-      }
-
-      function renderRangeTabs(container, days, onPick) {
-        const opts = [7, 14, 30];
-        container.innerHTML = opts
-          .map(
-            (d) =>
-              `<button data-d="${d}" class="${d === days ? "active" : ""}">${d}d</button>`,
-          )
-          .join("");
-        container
-          .querySelectorAll("button")
-          .forEach((b) =>
-            b.addEventListener("click", () => onPick(Number(b.dataset.d))),
-          );
-      }
-
-      // ---- sections ----
-      async function loadStats() {
-        const d = await api("/api/admin/stats");
-        const t = d.totals;
-        const a = d.activation || { activated: 0, rate: 0, signups: 0 };
-
-        // Week-over-week sign-up change.
-        let chg;
-        if (d.signups_prev_7d) {
-          const pct = Math.round(
-            ((d.signups_7d - d.signups_prev_7d) / d.signups_prev_7d) * 100,
-          );
-          chg = `+${d.signups_7d} this week · ${pct >= 0 ? "↑" : "↓"}${Math.abs(pct)}% vs last`;
-        } else {
-          chg = d.signups_7d
-            ? `+${d.signups_7d} this week`
-            : "no new sign-ups this week";
-        }
-
-        const tiles = [
-          ["primary", t.students, "Sign-ups", chg],
-          [
-            "",
-            `${a.rate}%`,
-            "Activation rate",
-            `${a.activated} of ${a.signups} traceable sign-ups saved / compared / applied`,
-          ],
-          [
-            "",
-            t.apply_clicks,
-            "Apply clicks",
-            `strongest intent · ${nfmt(t.apply_clicks_unique)} unique`,
-          ],
-          ["", t.compares || 0, "Comparisons run", "shortlist intent"],
-          [
-            "gold",
-            t.pilot_leads,
-            "University leads (B2B)",
-            d.leads_7d ? `+${d.leads_7d} this week` : "your revenue path",
-          ],
-          [
-            "gold",
-            t.update_subscribers,
-            "Update subscribers",
-            "opted into emails",
-          ],
-        ];
-        document.getElementById("headline").innerHTML = tiles
-          .map(([cls, n, l, sub]) => {
-            const subColor =
-              cls === "primary"
-                ? "rgba(255,255,255,.85)"
-                : cls === "gold"
-                  ? "rgba(11,31,58,.7)"
-                  : "var(--faint)";
-            return `<div class="stat ${cls}"><div class="n">${typeof n === "number" ? nfmt(n) : esc(n)}</div><div class="l">${esc(l)}</div>${sub ? `<div style="text-transform:none;letter-spacing:0;font-weight:600;font-size:.74rem;margin-top:5px;color:${subColor}">${esc(sub)}</div>` : ""}</div>`;
+        $("#logout-link").addEventListener("click", () => {
+          setMenu(false);
+          fetch("/api/admin/logout", {
+            method: "POST",
+            credentials: "same-origin",
           })
-          .join("");
-
-        document.getElementById("table-clicks").innerHTML = barTable(
-          d.top_universities_by_apply_clicks.map((r) => ({
-            name: r.name,
-            country: r.country,
-            click_count: r.click_count,
-          })),
-          [
-            { key: "name", label: "University" },
-            { key: "country", label: "Country" },
-            { key: "click_count", label: "Apply clicks", num: true },
-          ],
-        );
-        document.getElementById("table-views").innerHTML = barTable(
-          d.top_universities_by_views.map((r) => ({
-            name: r.name,
-            country: r.country,
-            unique_viewers: r.unique_viewers,
-            views: r.views,
-          })),
-          [
-            { key: "name", label: "University" },
-            { key: "country", label: "Country" },
-            { key: "unique_viewers", label: "Unique viewers" },
-            { key: "views", label: "Views", num: true },
-          ],
-        );
-        document.getElementById("ts").textContent =
-          "Updated " + new Date(d.generated_at).toLocaleString();
-      }
-
-      async function loadOverview() {
-        const d = await api("/api/admin/overview");
-        const rows = [
-          ["primary", "Active today", d.dau],
-          ["", "Active this week", d.wau],
-          ["", "Active this month", d.mau],
-        ];
-        document.getElementById("overview").innerHTML = rows
-          .map(
-            ([tone, label, w]) =>
-              '<div class="stat ' +
-              tone +
-              '">' +
-              '<div class="n">' +
-              nfmt(w.active) +
-              "</div>" +
-              '<div class="l">' +
-              label +
-              "</div>" +
-              '<div style="text-transform:none;letter-spacing:0;font-weight:600;font-size:.74rem;margin-top:5px;color:' +
-              (tone === "primary" ? "rgba(255,255,255,.85)" : "var(--faint)") +
-              '">' +
-              nfmt(w.new) +
-              " new · " +
-              nfmt(w.returning) +
-              " returning</div></div>",
-          )
-          .join("");
-      }
-
-      async function loadFunnel() {
-        document.getElementById("funnel-days-label").textContent = funnelDays;
-        renderRangeTabs(
-          document.getElementById("funnel-range"),
-          funnelDays,
-          (d) => {
-            funnelDays = d;
-            loadFunnel();
-          },
-        );
-        const d = await api(`/api/admin/funnel?days=${funnelDays}`);
-        const max = Math.max(1, ...d.stages.map((s) => s.count));
-        document.getElementById("funnel").innerHTML = d.stages
-          .map(
-            (s) => `
-        <div class="funnel-row">
-          <div>${esc(s.label)}</div>
-          <div class="funnel-track"><div class="funnel-fill" style="width:${Math.round((s.count / max) * 100)}%"></div></div>
-          <div class="funnel-nums">${nfmt(s.count)} · ${s.pct_of_first}% of visits</div>
-        </div>`,
-          )
-          .join("");
-      }
-
-      async function loadTraffic() {
-        document.getElementById("traffic-days-label").textContent = trafficDays;
-        renderRangeTabs(
-          document.getElementById("traffic-range"),
-          trafficDays,
-          (d) => {
-            trafficDays = d;
-            loadTraffic();
-          },
-        );
-        const d = await api(`/api/admin/traffic?days=${trafficDays}`);
-
-        document.getElementById("traffic-summary").innerHTML = [
-          ["primary", d.unique_visitors, "Unique visitors"],
-          ["", d.pageviews, "Pageviews"],
-        ]
-          .map(
-            ([cls, n, l]) =>
-              `<div class="stat ${cls}"><div class="n">${nfmt(n)}</div><div class="l">${l}</div></div>`,
-          )
-          .join("");
-
-        document.getElementById("top-pages").innerHTML = barTable(
-          d.top_paths.map((r) => ({ key: r.key, count: r.count })),
-          [
-            { key: "key", label: "Path" },
-            { key: "count", label: "Views", num: true },
-          ],
-        );
-        document.getElementById("top-referrers").innerHTML = barTable(
-          d.top_referrers.map((r) => ({
-            key: r.key === "direct" ? "Direct / unknown" : r.key,
-            count: r.count,
-          })),
-          [
-            { key: "key", label: "Referrer" },
-            { key: "count", label: "Visits", num: true },
-          ],
-        );
-
-        const dv = d.device_split || { mobile: 0, desktop: 0, unknown: 0 };
-        const total = Math.max(1, dv.mobile + dv.desktop + dv.unknown);
-        document.getElementById("device-split").innerHTML = `
-        <div class="device-row">
-          <div class="device-item">Mobile — ${nfmt(dv.mobile)} (${Math.round((dv.mobile / total) * 100)}%)
-            <div class="device-track"><div class="device-fill" style="width:${Math.round((dv.mobile / total) * 100)}%"></div></div>
-          </div>
-          <div class="device-item">Desktop — ${nfmt(dv.desktop)} (${Math.round((dv.desktop / total) * 100)}%)
-            <div class="device-track"><div class="device-fill" style="width:${Math.round((dv.desktop / total) * 100)}%"></div></div>
-          </div>
-        </div>`;
-      }
-
-      async function loadSearches() {
-        const d = await api("/api/admin/searches?days=30&limit=12");
-        document.getElementById("top-searches").innerHTML = d.terms.length
-          ? barTable(
-              d.terms.map((r) => ({ q: r.q, count: r.count })),
-              [
-                { key: "q", label: "Search term" },
-                { key: "count", label: "Count", num: true },
-              ],
-            )
-          : '<p class="empty-note">No searches in the last 30 days yet.</p>';
-      }
-
-      async function loadLeads() {
-        const d = await api("/api/admin/leads");
-        document.getElementById("table-leads").innerHTML = d.leads.length
-          ? `<table><thead><tr><th>Date</th><th>Name</th><th>Email</th><th>University</th><th>Country</th><th>Message</th></tr></thead>
-           <tbody>${d.leads
-             .map(
-               (l) => `<tr>
-             <td>${esc(String(l.created_at || "").slice(0, 10))}</td>
-             <td>${esc(l.contact_name)}</td>
-             <td><a href="mailto:${esc(l.work_email)}">${esc(l.work_email)}</a></td>
-             <td>${esc(l.university_name)}</td>
-             <td>${esc(l.country)}</td>
-             <td>${esc((l.message || "").slice(0, 120))}</td>
-           </tr>`,
-             )
-             .join("")}</tbody></table>`
-          : '<p class="empty-note">No university leads yet — they land here when the "For universities" form on the landing page is submitted.</p>';
-      }
-
-      let dqWired = false;
-      async function loadDataQuality() {
-        const a = await api("/api/admin/data-quality");
-        const dist = a.distribution;
-        const wellDetailed = (dist.Excellent || 0) + (dist.Good || 0);
-        const basic =
-          (dist["Needs Improvement"] || 0) + (dist.Incomplete || 0);
-        document.getElementById("dq-stats").innerHTML = [
-          ["", a.count, "Universities total"],
-          ["gold", a.deeply_verified || 0, "Deeply verified (by hand)"],
-          ["", wellDetailed, "Well-detailed"],
-          ["", basic, "Basic register entry"],
-          ["", a.average_score + "%", "Avg completeness"],
-          ["", a.researched_tuition, "Hand-researched tuition"],
-        ]
-          .map(
-            ([cls, n, l]) =>
-              `<div class="stat ${cls}"><div class="n">${typeof n === "number" ? nfmt(n) : esc(n)}</div><div class="l">${esc(l)}</div></div>`,
-          )
-          .join("");
-
-        document.getElementById("dq-missing").innerHTML = barTable(
-          a.missing_fields.map((m) => ({ label: m.label, missing: m.missing })),
-          [
-            { key: "label", label: "Field" },
-            { key: "missing", label: "Records missing", num: true },
-          ],
-        );
-        document.getElementById("dq-distribution").innerHTML = barTable(
-          [
-            ["Excellent", dist.Excellent],
-            ["Good", dist.Good],
-            ["Needs Improvement", dist["Needs Improvement"]],
-            ["Incomplete", dist.Incomplete],
-          ].map(([band, n]) => ({ band, n })),
-          [
-            { key: "band", label: "Band" },
-            { key: "n", label: "Universities", num: true },
-          ],
-        );
-        document.getElementById("dq-note").textContent =
-          "Not scored per record because no data source provides them per university (reported here, never faked): " +
-          a.structurally_unavailable.join(", ") +
-          ".";
-
-        await loadDqRecords();
-        if (!dqWired) {
-          dqWired = true;
-          ["dq-band", "dq-status", "dq-stale"].forEach((id) =>
-            document
-              .getElementById(id)
-              .addEventListener("change", loadDqRecords),
-          );
-        }
-      }
-
-      async function loadDqRecords() {
-        const band = document.getElementById("dq-band").value;
-        const status = document.getElementById("dq-status").value;
-        const stale = document.getElementById("dq-stale").checked ? "1" : "";
-        const qs = new URLSearchParams({ limit: "50" });
-        if (band) qs.set("band", band);
-        if (status) qs.set("status", status);
-        if (stale) qs.set("stale", "1");
-        const d = await api("/api/admin/data-quality/records?" + qs);
-        document.getElementById("dq-records-count").textContent =
-          nfmt(d.count) + " match — showing up to 50 (lowest score first)";
-        document.getElementById("dq-records").innerHTML = d.records.length
-          ? `<table><thead><tr><th>Score</th><th>Band</th><th>University</th><th>Country</th><th>Status</th><th>Verified</th><th>Missing</th></tr></thead>
-           <tbody>${d.records
-             .map(
-               (r) => `<tr>
-             <td class="num">${r.score}%</td>
-             <td>${esc(r.band)}</td>
-             <td>${esc(r.name)}</td>
-             <td>${esc(r.country)}</td>
-             <td>${esc(r.verification_status)}${r.stale ? ' <span title="source data is old">· stale</span>' : ""}</td>
-             <td>${esc(r.last_verified_at || "—")}</td>
-             <td>${esc((r.missing || []).join(", ") || "—")}</td>
-           </tr>`,
-             )
-             .join("")}</tbody></table>`
-          : '<p class="empty-note">No records match this filter.</p>';
-      }
-
-      async function loadRetention() {
-        const d = await api("/api/admin/retention?weeks=6");
-        if (!d.cohorts.length) {
-          document.getElementById("retention").innerHTML =
-            '<p class="empty-note">Not enough data yet — check back after a week of traffic.</p>';
-          return;
-        }
-        const weeks = d.weeks;
-        const heat = (pct) => {
-          if (pct == null)
-            return '<span class="ret-cell" style="color:var(--faint)">—</span>';
-          const alpha = Math.max(0.08, Math.min(1, pct / 100));
-          const color =
-            pct >= 40
-              ? `rgba(20,184,166,${alpha})`
-              : pct >= 15
-                ? `rgba(233,185,73,${alpha})`
-                : `rgba(214,69,80,${Math.max(0.12, alpha * 0.6)})`;
-          return `<span class="ret-cell" style="background:${color}">${pct}%</span>`;
+            .catch(() => {})
+            .then(showGate);
+        });
+        $("#refresh-btn").addEventListener("click", () => {
+          setMenu(false);
+          if (screen === "usage") loadUsage();
+          else {
+            loadHealth();
+            loadRecords(true);
+          }
+          toast("Refreshed");
+        });
+        const root = document.documentElement;
+        const themeLabel = () => {
+          $("#theme-btn").textContent =
+            root.getAttribute("data-theme") === "dark"
+              ? "Light mode"
+              : "Dark mode";
         };
-        document.getElementById("retention").innerHTML = `
-        <table class="retention-table"><thead><tr><th>Cohort</th><th>Size</th>${Array.from({ length: weeks }, (_, i) => `<th>Wk ${i}</th>`).join("")}</tr></thead>
-        <tbody>${d.cohorts.map((c) => `<tr><td>${esc(c.week_start)}</td><td>${nfmt(c.size)}</td>${c.retention.map(heat).join("")}</tr>`).join("")}</tbody></table>
-        <p class="foot">% of each weekly cohort (grouped by the week they were first seen) that returned in a later week.</p>`;
-      }
+        $("#theme-btn").addEventListener("click", () => {
+          const next =
+            root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+          root.setAttribute("data-theme", next);
+          try {
+            localStorage.setItem("universo-theme", next);
+          } catch (e) {}
+          themeLabel();
+          setMenu(false);
+        });
+        themeLabel();
 
-      async function loadAll() {
-        try {
-          await Promise.all([
-            loadStats(),
-            loadOverview(),
-            loadFunnel(),
-            loadTraffic(),
-            loadSearches(),
-            loadRetention(),
-            loadLeads(),
-            loadDataQuality(),
+        // ---------- tabs ----------
+        let screen = "data";
+        let usageLoaded = false;
+        const setScreen = (name) => {
+          screen = name === "usage" ? "usage" : "data";
+          $$(".tabs button").forEach((b) =>
+            b.setAttribute(
+              "aria-selected",
+              String(b.getAttribute("data-screen") === screen),
+            ),
+          );
+          $("#screen-data").hidden = screen !== "data";
+          $("#screen-usage").hidden = screen !== "usage";
+          try {
+            history.replaceState(
+              null,
+              "",
+              screen === "usage" ? "#usage" : location.pathname,
+            );
+          } catch (e) {}
+          if (screen === "usage" && !usageLoaded) loadUsage();
+          window.scrollTo(0, 0);
+        };
+        $$(".tabs button").forEach((b) =>
+          b.addEventListener("click", () =>
+            setScreen(b.getAttribute("data-screen")),
+          ),
+        );
+
+        // =====================================================================
+        // DATA
+        // =====================================================================
+        const q = {
+          scope: "featured",
+          q: "",
+          country: "",
+          field: "",
+          filter: "",
+        };
+        const list = { items: [], total: 0 };
+        const PAGE = 40;
+        let selected = null;
+        let detail = null;
+
+        // ---- progress ----
+        const loadHealth = () =>
+          api("/api/admin/health")
+            .then((h) => {
+              const o = h.overview;
+              const pct = o.featured
+                ? (o.featuredVerified / o.featured) * 100
+                : 0;
+              const sch = o.scholarships;
+              $("#progress").innerHTML =
+                '<div class="p-top"><div><div class="p-num">' +
+                nfmt(o.featuredVerified) +
+                "<span> / " +
+                nfmt(o.featured) +
+                "</span></div>" +
+                '<div class="p-cap">featured profiles confirmed by a person in the last 6 months</div></div>' +
+                '<p class="p-side">Students see these ' +
+                nfmt(o.featured) +
+                " in full. The other " +
+                nfmt(o.total - o.featured) +
+                " are register records with estimated figures.</p></div>" +
+                '<div class="bar" role="img" aria-label="' +
+                o.featuredVerified +
+                " of " +
+                o.featured +
+                ' confirmed"><i style="width:' +
+                pct.toFixed(1) +
+                '%"></i></div>' +
+                '<div class="p-foot">' +
+                plural(sch.total, "scholarship", "scholarships") +
+                " · " +
+                (sch.needCheck
+                  ? '<button class="link-btn" id="sch-link" type="button">' +
+                    nfmt(sch.needCheck) +
+                    " need a check</button>"
+                  : "all checked") +
+                "</div>";
+              const link = $("#sch-link");
+              if (link)
+                link.addEventListener("click", () => {
+                  q.scope = "scholarships";
+                  q.filter = "stale";
+                  syncScope();
+                  loadRecords(true);
+                  $("#list-card").scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                  });
+                });
+              renderFeed(h.recent || []);
+            })
+            .catch((e) => toast(e.message));
+
+        const renderFeed = (items) => {
+          $("#recent > summary").textContent = items.length
+            ? "Recent edits · " + items.length
+            : "Recent edits";
+          $("#feed").innerHTML = items.length
+            ? items
+                .map(
+                  (f) =>
+                    '<div class="feed-i"><div><b>' +
+                    esc(f.name) +
+                    '</b><span class="by">' +
+                    esc(
+                      f.action === "verify"
+                        ? "confirmed"
+                        : f.action === "import"
+                          ? "imported " + (f.fields || []).join(", ")
+                          : (f.fields || []).join(", ") || "edited",
+                    ) +
+                    " · " +
+                    esc(f.by) +
+                    '</span></div><div class="w">' +
+                    esc(ago(f.ts)) +
+                    "</div></div>",
+                )
+                .join("")
+            : '<div class="empty">No edits yet. Your changes will appear here.</div>';
+        };
+
+        // ---- filter pills ----
+        const chipsFor = () => {
+          const sch = q.scope === "scholarships";
+          return [
+            ["", "Everything"],
+            ["missing_deadline", "No deadline"],
+            ...(sch ? [] : [["estimated_tuition", "Estimated tuition"]]),
+            ["stale", sch ? "Needs a check" : "Not confirmed lately"],
+          ];
+        };
+        const renderChips = () => {
+          $("#chips").innerHTML = chipsFor()
+            .map(
+              ([k, label]) =>
+                '<button class="chip" type="button" data-f="' +
+                k +
+                '" aria-pressed="' +
+                (q.filter === k) +
+                '">' +
+                label +
+                "</button>",
+            )
+            .join("");
+          $$("#chips .chip").forEach((b) =>
+            b.addEventListener("click", () => {
+              q.filter = b.getAttribute("data-f");
+              renderChips();
+              loadRecords(true);
+            }),
+          );
+        };
+        const syncScope = () => {
+          $("#f-scope").value = q.scope;
+          const sch = q.scope === "scholarships";
+          $("#more-filters").hidden = sch;
+
+          if (q.filter === "estimated_tuition" && sch) q.filter = "";
+          renderChips();
+        };
+
+        // ---- list ----
+        const params = (offset) => {
+          const p = new URLSearchParams();
+          p.set("scope", q.scope);
+          if (q.q) p.set("q", q.q);
+          if (q.country && q.scope !== "scholarships")
+            p.set("country", q.country);
+          if (q.field && q.scope !== "scholarships") p.set("field", q.field);
+          if (q.filter) p.set("filter", q.filter);
+          p.set("offset", String(offset || 0));
+          p.set("limit", String(PAGE));
+          return p.toString();
+        };
+        const rowHtml = (r) => {
+          const cur =
+            selected && selected.id === r.id && selected.type === r.type;
+          const state = r.needs.length
+            ? '<span class="r-state">Needs ' +
+              esc(r.needs.join(" and ")) +
+              "</span>"
+            : '<span class="r-state ok">✓ Complete</span>';
+          const conf = r.verified_at
+            ? "confirmed " +
+              fmtDate(r.verified_at) +
+              (r.stale ? " (over 6 months ago)" : "")
+            : "never confirmed";
+          const place = [r.city, r.country].filter(Boolean).join(", ");
+          return (
+            '<button class="row" type="button" data-type="' +
+            esc(r.type) +
+            '" data-id="' +
+            esc(r.id) +
+            '" aria-current="' +
+            !!cur +
+            '">' +
+            '<span class="r-name">' +
+            esc(r.name) +
+            "</span>" +
+            state +
+            '<span class="r-meta">' +
+            esc(place) +
+            (place ? " · " : "") +
+            (r.interest ? "student interest " + r.interest + " · " : "") +
+            esc(conf) +
+            "</span></button>"
+          );
+        };
+        const paintRows = () => {
+          $("#count").textContent = plural(list.total, "record", "records");
+          $("#rows").innerHTML = list.items.length
+            ? list.items.map(rowHtml).join("")
+            : '<div class="empty">Nothing matches. Try a different filter or search.</div>';
+          $("#more").hidden = list.items.length >= list.total;
+        };
+        let reqId = 0;
+        const loadRecords = (reset) => {
+          const my = ++reqId;
+          return api(
+            "/api/admin/records?" + params(reset ? 0 : list.items.length),
+          )
+            .then((r) => {
+              if (my !== reqId) return;
+              list.total = r.total;
+              list.items = reset ? r.items : list.items.concat(r.items);
+              paintRows();
+            })
+            .catch((e) => {
+              if (my === reqId) toast(e.message);
+            });
+        };
+        $("#rows").addEventListener("click", (e) => {
+          const b = e.target.closest(".row");
+          if (b)
+            openRecord(b.getAttribute("data-type"), b.getAttribute("data-id"));
+        });
+        $("#more-btn").addEventListener("click", () => loadRecords(false));
+        let qT;
+        $("#f-q").addEventListener("input", (e) => {
+          clearTimeout(qT);
+          qT = setTimeout(() => {
+            q.q = e.target.value.trim();
+            loadRecords(true);
+          }, 250);
+        });
+        $("#f-scope").addEventListener("change", (e) => {
+          q.scope = e.target.value;
+          q.filter = "";
+          syncScope();
+          loadRecords(true);
+        });
+        $("#f-country").addEventListener("change", (e) => {
+          q.country = e.target.value;
+          loadRecords(true);
+        });
+        $("#f-field").addEventListener("change", (e) => {
+          q.field = e.target.value;
+          loadRecords(true);
+        });
+        const loadVocab = () =>
+          fetch("/api/universities/filters", { credentials: "same-origin" })
+            .then((r) => r.json())
+            .then((f) => {
+              const opts = (all, items) =>
+                '<option value="">' +
+                all +
+                "</option>" +
+                (items || [])
+                  .map(
+                    (c) =>
+                      '<option value="' + esc(c) + '">' + esc(c) + "</option>",
+                  )
+                  .join("");
+              $("#f-country").innerHTML = opts("All countries", f.countries);
+              $("#f-field").innerHTML = opts("All fields", f.fields_of_study);
+            })
+            .catch(() => {});
+
+        // ---- editor ----
+        // Key facts are always visible; the rest sits behind one fold so the form stays short.
+        const UNI_KEY = [
+          {
+            k: "tuition",
+            label: "Tuition for international students",
+            sourced: true,
+            kind: "money",
+          },
+          {
+            k: "deadline",
+            label: "Application deadline",
+            sourced: true,
+            kind: "text",
+            ph: "e.g. 31 January (autumn intake)",
+          },
+        ];
+        const UNI_MORE = [
+          {
+            k: "requirements",
+            label: "Entry and English requirements",
+            sourced: true,
+            kind: "area",
+            ph: "e.g. Bachelor's degree, IELTS 6.5",
+          },
+          {
+            k: "languages",
+            label: "Teaching languages",
+            sourced: true,
+            kind: "list",
+            ph: "English, German",
+          },
+          {
+            k: "application_link",
+            label: "Application link",
+            sourced: false,
+            kind: "url",
+            ph: "https://…",
+          },
+        ];
+        const SCH_KEY = [
+          { k: "deadline", label: "Deadline", sourced: true, kind: "sdate" },
+        ];
+        const SCH_MORE = [
+          {
+            k: "portal",
+            label: "Application link",
+            sourced: false,
+            kind: "url",
+            ph: "https://…",
+          },
+        ];
+
+        const fieldHtml = (def, f) => {
+          const todo = f.status === "estimate" || f.status === "missing";
+          const tag = f.edited
+            ? '<span class="tag ok">Edited</span>'
+            : todo
+              ? '<span class="tag">' +
+                (f.status === "estimate" ? "Estimate" : "Missing") +
+                "</span>"
+              : "";
+          const revert = f.edited
+            ? '<button class="link-btn revert" type="button" data-k="' +
+              def.k +
+              '">Revert to original</button>'
+            : "";
+          let hint = "",
+            body = "";
+          if (def.kind === "money") {
+            if (f.estimate)
+              hint =
+                "Students currently see “check the official site”. Our country-level guess is about €" +
+                nfmt(f.estimate.min) +
+                " to €" +
+                nfmt(f.estimate.max) +
+                " a year. Enter the real figure.";
+            body =
+              '<div class="two"><label class="mini">Lowest, € a year<input class="fval" id="in-tuition-a" data-p="min" inputmode="numeric" placeholder="e.g. 0" value="' +
+              esc(f.min == null ? "" : f.min) +
+              '" /></label>' +
+              '<label class="mini">Highest, € a year<input class="fval" id="in-tuition-b" data-p="max" inputmode="numeric" placeholder="e.g. 12000" value="' +
+              esc(f.max == null ? "" : f.max) +
+              '" /></label></div>';
+          } else if (def.kind === "area") {
+            body =
+              '<textarea class="area" id="in-' +
+              def.k +
+              '-a" data-p="value" maxlength="1200" placeholder="' +
+              esc(def.ph || "") +
+              '">' +
+              esc(f.value) +
+              "</textarea>";
+          } else if (def.kind === "list") {
+            if (f.estimate && f.estimate.length)
+              hint =
+                "A typical guess for this country: " +
+                f.estimate.join(", ") +
+                ". Enter what the university teaches in.";
+            body =
+              '<input class="fval" id="in-' +
+              def.k +
+              '-a" data-p="value" placeholder="' +
+              esc(def.ph || "") +
+              '" value="' +
+              esc((f.value || []).join(", ")) +
+              '" />';
+          } else if (def.kind === "sdate") {
+            body =
+              '<div class="two"><label class="mini">Date<input class="fval" id="in-deadline-a" data-p="value" type="date" value="' +
+              esc(f.value) +
+              '" /></label>' +
+              '<label class="mini">Note<input class="fval" id="in-deadline-b" data-p="note" maxlength="240" placeholder="e.g. Round 2 closes 1 Mar" value="' +
+              esc(f.note || "") +
+              '" /></label></div>';
+          } else {
+            body =
+              '<input class="fval" id="in-' +
+              def.k +
+              '-a" data-p="value" ' +
+              (def.kind === "url" ? 'type="url" ' : "") +
+              'placeholder="' +
+              esc(def.ph || "") +
+              '" value="' +
+              esc(f.value) +
+              '" />';
+          }
+          const src = def.sourced
+            ? '<div class="src"><span class="sl">Source</span><input data-p="source" type="url" placeholder="https://the-official-page…" aria-label="Source link for ' +
+              esc(def.label) +
+              '" value="' +
+              esc(f.source || "") +
+              '" /></div>'
+            : "";
+          return (
+            '<div class="field" data-k="' +
+            def.k +
+            '"><div class="f-head"><label for="in-' +
+            def.k +
+            '-a">' +
+            esc(def.label) +
+            "</label>" +
+            tag +
+            revert +
+            "</div>" +
+            (hint ? '<div class="hint">' + esc(hint) + "</div>" : "") +
+            body +
+            src +
+            '<div class="err" role="alert" hidden></div></div>'
+          );
+        };
+
+        const renderEditor = () => {
+          const d = detail;
+          if (!d) {
+            $("#editor").innerHTML =
+              '<div class="empty">Pick a record on the left to edit it.</div>';
+            return;
+          }
+          const uni = d.type === "university";
+          const key = uni ? UNI_KEY : SCH_KEY,
+            more = uni ? UNI_MORE : SCH_MORE;
+          const ctx =
+            (uni ? "University" : "Scholarship") +
+            (d.country ? " · " + d.country : "") +
+            (d.city ? " · " + d.city : "");
+          const conf = d.verified_at
+            ? "Last confirmed <b>" +
+              esc(fmtDate(d.verified_at)) +
+              "</b>" +
+              (d.verified_by ? " by " + esc(d.verified_by) : "")
+            : "<b>Never confirmed</b> by a person";
+          const noSource = [...key, ...more].some(
+            (def) =>
+              def.sourced &&
+              !d.fields[def.k].source &&
+              ["researched", "set"].includes(d.fields[def.k].status),
+          );
+          const moreOpen = more.some((def) => d.fields[def.k].edited);
+          $("#editor").innerHTML =
+            '<button class="link-btn e-back" type="button" id="e-back">← Back to the list</button>' +
+            '<div class="e-name">' +
+            esc(d.name) +
+            '</div><div class="e-ctx">' +
+            esc(ctx) +
+            "</div>" +
+            '<div class="e-conf"><span>' +
+            conf +
+            '</span><button class="btn quiet sm" id="verify-btn" type="button">Mark verified today</button></div>' +
+            '<div class="e-body">' +
+            key.map((def) => fieldHtml(def, d.fields[def.k])).join("") +
+            "</div>" +
+            '<details class="more-details"' +
+            (moreOpen ? " open" : "") +
+            '><summary>More details</summary><div class="e-body">' +
+            more.map((def) => fieldHtml(def, d.fields[def.k])).join("") +
+            "</div></details>" +
+            (noSource
+              ? '<p class="note" style="margin-top:16px">Some of this was researched before source links existed. Add the official page the next time you confirm it.</p>'
+              : "") +
+            '<div class="e-actions"><button class="btn primary" id="save-btn" type="button">Save changes</button><span class="note">Numbers, dates and languages need a source link.</span></div>';
+          $("#save-btn").addEventListener("click", save);
+          $("#verify-btn").addEventListener("click", verify);
+          $("#e-back").addEventListener("click", () =>
+            $("#list-card").scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            }),
+          );
+          $$("#editor .revert").forEach((b) =>
+            b.addEventListener("click", () => revert(b)),
+          );
+        };
+
+        const openRecord = (type, id) => {
+          selected = { type, id };
+          $$("#rows .row").forEach((r) =>
+            r.setAttribute(
+              "aria-current",
+              String(
+                r.getAttribute("data-id") === id &&
+                  r.getAttribute("data-type") === type,
+              ),
+            ),
+          );
+          return api(
+            "/api/admin/record/" +
+              encodeURIComponent(type) +
+              "/" +
+              encodeURIComponent(id),
+          )
+            .then((d) => {
+              detail = d;
+              renderEditor();
+              if (window.innerWidth <= 820)
+                $("#editor-card").scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                });
+            })
+            .catch((e) => toast(e.message));
+        };
+
+        const defsOf = () =>
+          detail.type === "university"
+            ? [...UNI_KEY, ...UNI_MORE]
+            : [...SCH_KEY, ...SCH_MORE];
+        const readField = (def) => {
+          const el = $('#editor .field[data-k="' + def.k + '"]');
+          const val = {};
+          $$("[data-p]", el).forEach((i) => {
+            val[i.getAttribute("data-p")] = i.value.trim();
+          });
+          return { el, val };
+        };
+        const unchanged = (def, cur, f) => {
+          const s = (cur.source || "") === (f.source || "");
+          if (def.kind === "money")
+            return (
+              s &&
+              String(cur.min) === String(f.min == null ? "" : f.min) &&
+              String(cur.max) === String(f.max == null ? "" : f.max)
+            );
+          if (def.kind === "list")
+            return s && cur.value === (f.value || []).join(", ");
+          if (def.kind === "sdate")
+            return (
+              s &&
+              cur.value === (f.value || "") &&
+              (cur.note || "") === (f.note || "")
+            );
+          return s && cur.value === (f.value || "");
+        };
+        const fieldError = (el, msg) => {
+          el.classList.add("invalid");
+          const e = $(".err", el);
+          e.textContent = msg;
+          e.hidden = false;
+          const det = el.closest("details");
+          if (det) det.open = true;
+        };
+        const save = () => {
+          const patch = {};
+          let any = false,
+            bad = false;
+          $$("#editor .field").forEach((el) => {
+            el.classList.remove("invalid");
+            $(".err", el).hidden = true;
+          });
+          defsOf().forEach((def) => {
+            const f = detail.fields[def.k];
+            const r = readField(def);
+            if (unchanged(def, r.val, f)) return;
+            const empty =
+              def.kind === "money"
+                ? !r.val.min
+                : def.kind === "sdate"
+                  ? !r.val.value && !r.val.note
+                  : !r.val.value;
+            if (empty) {
+              if (f.edited) {
+                fieldError(
+                  r.el,
+                  "To remove your edit, use “Revert to original”.",
+                );
+                bad = true;
+              }
+              return; // an untouched empty field is left alone
+            }
+            patch[def.k] = r.val;
+            any = true;
+          });
+          if (bad) return;
+          if (!any) {
+            toast("Nothing changed");
+            return;
+          }
+          const btn = $("#save-btn");
+          btn.disabled = true;
+          btn.textContent = "Saving…";
+          api(
+            "/api/admin/record/" +
+              encodeURIComponent(detail.type) +
+              "/" +
+              encodeURIComponent(detail.id),
+            { method: "PATCH", body: { fields: patch } },
+          )
+            .then((d) => {
+              detail = d;
+              renderEditor();
+              toast("Saved");
+              refreshAfterEdit();
+            })
+            .catch((e) => {
+              btn.disabled = false;
+              btn.textContent = "Save changes";
+              const el =
+                e.field && $('#editor .field[data-k="' + e.field + '"]');
+              if (el) {
+                fieldError(el, e.message);
+                el.scrollIntoView({ block: "center", behavior: "smooth" });
+                return;
+              }
+              toast(e.message);
+            });
+        };
+        const verify = () => {
+          const b = $("#verify-btn");
+          b.disabled = true;
+          api(
+            "/api/admin/record/" +
+              encodeURIComponent(detail.type) +
+              "/" +
+              encodeURIComponent(detail.id) +
+              "/verify",
+            { method: "POST" },
+          )
+            .then((d) => {
+              detail = d;
+              renderEditor();
+              toast("Marked verified today");
+              refreshAfterEdit();
+            })
+            .catch((e) => {
+              b.disabled = false;
+              toast(e.message);
+            });
+        };
+        let revertArmed = null;
+        const revert = (btn) => {
+          const k = btn.getAttribute("data-k");
+          if (revertArmed !== k) {
+            revertArmed = k;
+            btn.textContent = "Click again to confirm";
+            setTimeout(() => {
+              if (revertArmed === k) {
+                revertArmed = null;
+                btn.textContent = "Revert to original";
+              }
+            }, 3500);
+            return;
+          }
+          revertArmed = null;
+          api(
+            "/api/admin/record/" +
+              encodeURIComponent(detail.type) +
+              "/" +
+              encodeURIComponent(detail.id),
+            { method: "PATCH", body: { fields: { [k]: null } } },
+          )
+            .then((d) => {
+              detail = d;
+              renderEditor();
+              toast("Reverted");
+              refreshAfterEdit();
+            })
+            .catch((e) => toast(e.message));
+        };
+        const refreshAfterEdit = () => {
+          loadHealth();
+          loadRecords(true);
+        };
+
+        // =====================================================================
+        // SPREADSHEET (CSV export / import)
+        // =====================================================================
+        const sheet = $("#sheet");
+        const sheetBody = $("#sheet-body");
+        const sheetStart = () => {
+          const scholarships = q.scope === "scholarships";
+          sheetBody.innerHTML =
+            '<div class="sheet-step"><b>1. Download the list</b>' +
+            "<p>" +
+            esc(
+              scholarships
+                ? "Scholarships"
+                : q.scope === "all"
+                  ? "All universities"
+                  : "Featured universities",
+            ) +
+            " matching your current search and filters. Fill in the facts you have checked, with a source link for each number or date.</p>" +
+            '<div class="sheet-row"><select id="sheet-sep" aria-label="File format">' +
+            '<option value="semicolon">Excel in Europe (semicolons)</option>' +
+            '<option value="comma">Google Sheets / US Excel (commas)</option></select>' +
+            '<a class="btn primary" id="sheet-dl" role="button">Download</a></div></div>' +
+            '<div class="sheet-step"><b>2. Upload it back</b>' +
+            "<p>You see a preview first. Nothing is saved until you confirm.</p>" +
+            '<input type="file" id="sheet-file" accept=".csv,text/csv,text/plain" aria-label="Filled-in spreadsheet"></div>' +
+            '<p class="sheet-note" id="sheet-msg" role="status"></p>';
+          const dl = $("#sheet-dl");
+          const href = () => {
+            const p = new URLSearchParams({
+              scope: q.scope,
+              sep: $("#sheet-sep").value,
+            });
+            ["q", "country", "field", "filter"].forEach((k) => {
+              if (q[k]) p.set(k, q[k]);
+            });
+            dl.href = "/api/admin/records.csv?" + p;
+          };
+          href();
+          $("#sheet-sep").addEventListener("change", href);
+          $("#sheet-file").addEventListener("change", (e) => {
+            const f = e.target.files[0];
+            if (f) sheetPreview(f);
+          });
+        };
+        const sheetPreview = (file) => {
+          const msg = $("#sheet-msg");
+          msg.textContent = "Checking " + file.name + "…";
+          file
+            .text()
+            .then((text) =>
+              fetch("/api/admin/import/preview", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: { "Content-Type": "text/csv" },
+                body: text,
+              }),
+            )
+            .then((res) =>
+              res
+                .json()
+                .catch(() => ({}))
+                .then((d) => {
+                  if (res.status === 401) {
+                    sheet.close();
+                    showGate();
+                    throw new Error("Please sign in again.");
+                  }
+                  if (res.status === 413)
+                    throw new Error("That file is too large (2 MB max).");
+                  if (!res.ok)
+                    throw new Error(d.error || "Could not read that file.");
+                  return d;
+                }),
+            )
+            .then(sheetPlan)
+            .catch((e) => (msg.textContent = e.message));
+        };
+        const sheetPlan = (d) => {
+          const s = d.summary;
+          const bad = d.rows.filter((r) => r.status === "error");
+          const upd = d.rows.filter((r) => r.status === "update");
+          const li = (r, cls, lines) =>
+            '<li class="' +
+            cls +
+            '"><b>' +
+            esc(r.name || r.id || "Line " + r.line) +
+            "</b>" +
+            lines.map((l) => "<small>" + esc(l) + "</small>").join("") +
+            "</li>";
+          sheetBody.innerHTML =
+            '<div class="sheet-sum">' +
+            '<span class="good">' +
+            plural(s.update, "record will change", "records will change") +
+            "</span>" +
+            "<span>" +
+            nfmt(s.unchanged) +
+            " unchanged</span>" +
+            (s.error
+              ? '<span class="bad">' +
+                plural(s.error, "problem", "problems") +
+                "</span>"
+              : "") +
+            "</div>" +
+            (d.warnings || [])
+              .map((w) => '<p class="sheet-note">' + esc(w) + "</p>")
+              .join("") +
+            (bad.length
+              ? '<b>Problems (these rows are skipped)</b><ul class="sheet-list">' +
+                bad
+                  .map((r) =>
+                    li(
+                      r,
+                      "err",
+                      r.errors.map((x) => "Line " + r.line + ": " + x),
+                    ),
+                  )
+                  .join("") +
+                "</ul>"
+              : "") +
+            (upd.length
+              ? '<b>Will be saved</b><ul class="sheet-list">' +
+                upd.map((r) => li(r, "", r.changes)).join("") +
+                "</ul>"
+              : '<p class="sheet-note">Nothing to save from this file.</p>') +
+            '<div class="sheet-row">' +
+            (d.toApply
+              ? '<button class="btn primary" id="sheet-ok" type="button">Save ' +
+                plural(d.toApply, "record", "records") +
+                "</button>"
+              : "") +
+            '<button class="btn quiet" id="sheet-back" type="button">Choose another file</button></div>' +
+            '<p class="sheet-note" id="sheet-msg" role="status"></p>';
+          $("#sheet-back").addEventListener("click", sheetStart);
+          const ok = $("#sheet-ok");
+          if (ok)
+            ok.addEventListener("click", () => {
+              ok.disabled = true;
+              api("/api/admin/import/apply", {
+                method: "POST",
+                body: { token: d.token },
+              })
+                .then((r) => {
+                  sheet.close();
+                  toast(
+                    "Saved " +
+                      plural(r.applied, "record", "records") +
+                      (r.failed.length
+                        ? " · " + r.failed.length + " skipped"
+                        : ""),
+                  );
+                  refreshAfterEdit();
+                })
+                .catch((e) => {
+                  ok.disabled = false;
+                  $("#sheet-msg").textContent = e.message;
+                });
+            });
+        };
+        $("#sheet-open").addEventListener("click", () => {
+          sheetStart();
+          sheet.showModal();
+        });
+        $("#sheet-close").addEventListener("click", () => sheet.close());
+
+        // =====================================================================
+        // USAGE
+        // =====================================================================
+        const spark = (pts) => {
+          const w = 150,
+            h = 34,
+            max = Math.max(...pts),
+            min = Math.min(...pts),
+            rng = max - min || 1,
+            step = w / (pts.length - 1);
+          const P = pts.map((v, i) => [
+            i * step,
+            h - ((v - min) / rng) * (h - 8) - 4,
           ]);
-        } catch (e) {
-          if (e.message !== "unauthorized") console.error(e);
-        }
-      }
+          const line = P.map(
+            (p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1),
+          ).join(" ");
+          const area =
+            "M0 " +
+            h +
+            " " +
+            P.map((p) => "L" + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(
+              " ",
+            ) +
+            " L" +
+            w +
+            " " +
+            h +
+            " Z";
+          const e = P[P.length - 1];
+          return (
+            '<svg viewBox="0 0 ' +
+            w +
+            " " +
+            h +
+            '" preserveAspectRatio="none" aria-hidden="true"><path d="' +
+            area +
+            '" fill="var(--accent-fill)" opacity="0.14"/><path d="' +
+            line +
+            '" fill="none" stroke="var(--accent-fill)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><circle cx="' +
+            e[0].toFixed(1) +
+            '" cy="' +
+            e[1].toFixed(1) +
+            '" r="3" fill="var(--accent-fill)"/></svg>'
+          );
+        };
+        const delta = (cur, prev) => {
+          const d = cur - prev;
+          return d
+            ? '<span class="d ' +
+                (d > 0 ? "up" : "") +
+                '">' +
+                (d > 0 ? "+" : "−") +
+                Math.abs(d) +
+                " vs last week</span>"
+            : '<span class="d">same as last week</span>';
+        };
+        const rowsHtml = (rows, empty) => {
+          const max = Math.max(1, ...rows.map((r) => r.count));
+          return rows.some((r) => r.count > 0)
+            ? rows
+                .filter((r) => r.count > 0)
+                .map(
+                  (r) =>
+                    '<div class="lr"><div class="nm">' +
+                    esc(r.name) +
+                    (r.country
+                      ? ' <span class="note">· ' + esc(r.country) + "</span>"
+                      : "") +
+                    '</div><div class="ct">' +
+                    nfmt(r.count) +
+                    '</div><div class="ba"><i style="width:' +
+                    Math.round((r.count / max) * 100) +
+                    '%"></i></div></div>',
+                )
+                .join("")
+            : '<div class="none">' + esc(empty) + "</div>";
+        };
+        // A card with a few tabs: one list visible at a time instead of one box per list.
+        const tabCard = (el, title, tabs) => {
+          let active = 0;
+          const draw = () => {
+            el.innerHTML =
+              '<div class="tc-head"><h2 class="t">' +
+              esc(title) +
+              '</h2><div class="seg" role="group" aria-label="' +
+              esc(title) +
+              '">' +
+              tabs
+                .map(
+                  (t, i) =>
+                    '<button type="button" data-i="' +
+                    i +
+                    '" aria-pressed="' +
+                    (i === active) +
+                    '">' +
+                    esc(t.label) +
+                    "</button>",
+                )
+                .join("") +
+              "</div></div>" +
+              rowsHtml(tabs[active].rows, tabs[active].empty);
+            $$(".seg button", el).forEach((b) =>
+              b.addEventListener("click", () => {
+                active = Number(b.getAttribute("data-i"));
+                draw();
+              }),
+            );
+          };
+          draw();
+        };
+        const gapLabel = (g) => {
+          const parts = [];
+          if (g.field) parts.push(g.field.split("|").join(" / "));
+          if (g.country) parts.push(g.country);
+          if (g.degree) parts.push(g.degree);
+          if (g.language) parts.push(g.language);
+          if (g.budget) parts.push("under €" + nfmt(g.budget) + " a year");
+          let s = esc(parts.join(" · "));
+          if (g.q) s += (s ? " " : "") + "<small>“" + esc(g.q) + "”</small>";
+          return s || "Search";
+        };
 
-      // ---- boot: are we already signed in? ----
-      (async () => {
-        try {
-          await api("/api/admin/me");
-          showDash();
-          loadAll();
-        } catch {
-          showGate();
+        const loadUsage = () =>
+          api("/api/admin/usage")
+            .then((u) => {
+              usageLoaded = true;
+              const S = u.series,
+                C = u.current,
+                P = u.previous;
+              $("#tiles").innerHTML = [
+                ["visitors", "Visitors"],
+                ["accounts", "New accounts"],
+                ["searches", "Searches"],
+                ["saves", "Shortlist saves"],
+              ]
+                .map(
+                  ([k, l]) =>
+                    '<div class="card tile"><div class="r1"><div class="n">' +
+                    nfmt(C[k]) +
+                    "</div>" +
+                    delta(C[k], P[k]) +
+                    '</div><div class="l">' +
+                    l +
+                    "</div>" +
+                    spark(S[k]) +
+                    "</div>",
+                )
+                .join("");
+              const also = [
+                ["applyClicks", "apply click", "apply clicks"],
+                ["plans", "student started a plan", "students started a plan"],
+                ["scholarships", "scholarship tracked", "scholarships tracked"],
+                ["compares", "comparison", "comparisons"],
+                ["verified", "email verified", "emails verified"],
+                ["deletions", "account deleted", "accounts deleted"],
+              ]
+                .filter(([k]) => C[k] > 0)
+                .map(([k, one, many]) => plural(C[k], one, many));
+              $("#also").textContent = also.length
+                ? "Also this week: " + also.join(" · ")
+                : "";
+              $("#also").hidden = !also.length;
+
+              const sq = u.searchQuality;
+              $("#gaps-sub").textContent = sq.total
+                ? sq.zero +
+                  " of " +
+                  sq.total +
+                  " searches in the last " +
+                  u.lists.days +
+                  " days found nothing" +
+                  (sq.low - sq.zero
+                    ? ", and " +
+                      (sq.low - sq.zero) +
+                      " found only one or two results."
+                    : ".") +
+                  " These are the best data to add next."
+                : "When a student searches and finds little or nothing, it shows up here. That is the best data to add next.";
+              $("#gaps").innerHTML = u.gaps.length
+                ? u.gaps
+                    .map(
+                      (g, i) =>
+                        '<div class="gap"><div class="q">' +
+                        gapLabel(g) +
+                        '<span class="m ' +
+                        (g.results === 0 ? "zero" : "") +
+                        '">' +
+                        (g.results === 0
+                          ? "No matches"
+                          : plural(g.results, "match", "matches")) +
+                        (g.count > 1
+                          ? " · searched " + g.count + " times"
+                          : "") +
+                        '</span></div><button class="btn quiet sm" data-gap="' +
+                        i +
+                        '" type="button">Add data</button></div>',
+                    )
+                    .join("")
+                : "";
+              $$("#gaps [data-gap]").forEach((b) =>
+                b.addEventListener("click", () => {
+                  const g = u.gaps[Number(b.getAttribute("data-gap"))];
+                  Object.assign(q, {
+                    scope: "all",
+                    filter: "",
+                    q: g.q || "",
+                    country: g.country || "",
+                    field: (g.field || "").split("|")[0] || "",
+                  });
+                  $("#f-q").value = q.q;
+                  $("#f-country").value = q.country;
+                  $("#f-field").value = q.field;
+                  $("#more-filters").open = !!(q.country || q.field);
+                  syncScope();
+                  setScreen("data");
+                  loadRecords(true);
+                  toast("Showing universities that match this search");
+                }),
+              );
+
+              const L = u.lists;
+              tabCard($("#want"), "What students search for", [
+                {
+                  label: "Fields",
+                  rows: L.fields,
+                  empty: "Appears as students search by field of study.",
+                },
+                {
+                  label: "Countries",
+                  rows: L.countries,
+                  empty: "Appears as students search by country.",
+                },
+                {
+                  label: "Budget",
+                  rows: L.budgets,
+                  empty: "Appears as students set a yearly budget.",
+                },
+                {
+                  label: "Degree",
+                  rows: L.degrees,
+                  empty: "Appears as students pick a degree level.",
+                },
+              ]);
+              tabCard($("#care"), "Universities students care about", [
+                {
+                  label: "Saved",
+                  rows: L.savedUnis,
+                  empty: "No saves in the last " + L.days + " days.",
+                },
+                {
+                  label: "Viewed",
+                  rows: L.viewedUnis,
+                  empty: "No profile views in the last " + L.days + " days.",
+                },
+                {
+                  label: "Apply clicks",
+                  rows: L.appliedUnis,
+                  empty: "No apply clicks in the last " + L.days + " days.",
+                },
+              ]);
+
+              const A = u.accounts;
+              const kv = (v, k) =>
+                '<div class="kv"><div class="v">' +
+                esc(v) +
+                '</div><div class="k">' +
+                esc(k) +
+                "</div></div>";
+              $("#people").innerHTML =
+                '<h2 class="t" style="margin-bottom:10px">Your students</h2><div class="big">' +
+                nfmt(A.total) +
+                '</div><div class="muted">accounts · counts only, never names</div>' +
+                '<div class="kvs">' +
+                kv(A.verified + " of " + A.total, "verified their email") +
+                kv(A.profiled, "set up a profile") +
+                kv(A.saved, "saved a university") +
+                kv(A.planning, "started a plan") +
+                kv(A.last7, "joined in the last 7 days") +
+                kv(A.last7Unverified, "of those, not verified yet") +
+                "</div>" +
+                (A.homeCountries.length
+                  ? '<div class="homes">' +
+                    A.homeCountries
+                      .slice(0, 6)
+                      .map(
+                        (h) =>
+                          "<span><b>" +
+                          esc(h.name) +
+                          "</b> " +
+                          h.count +
+                          "</span>",
+                      )
+                      .join("") +
+                    "</div>"
+                  : "") +
+                (A.homeNotGiven
+                  ? '<p class="note" style="margin-top:10px">' +
+                    nfmt(A.homeNotGiven) +
+                    " haven't added a home country.</p>"
+                  : "");
+
+              $("#inbox").innerHTML =
+                '<h2 class="t">Inbox</h2>' +
+                '<div class="in-row"><div><div class="v">' +
+                nfmt(u.enquiries.count) +
+                '</div><div class="k">university enquiries</div></div><button class="btn quiet sm" id="leads-btn" type="button">View</button></div>' +
+                '<div id="leads" class="leads" hidden></div>' +
+                '<div class="in-row"><div><div class="v">' +
+                nfmt(u.subscribers) +
+                '</div><div class="k">update-email subscribers</div></div><a class="btn quiet sm" style="text-decoration:none;display:inline-flex;align-items:center" href="' +
+                esc(u.subscribersCsv) +
+                '">Download</a></div>';
+              $("#leads-btn").addEventListener("click", showLeads);
+
+              $("#foot").textContent = u.filtersTrackedSince
+                ? "Field, country and budget demand has been recorded since " +
+                  fmtDate(u.filtersTrackedSince) +
+                  ". Earlier searches only show what was typed."
+                : "Field, country and budget demand is recorded from now on. It fills in as students search.";
+            })
+            .catch((e) => toast(e.message));
+
+        const showLeads = () => {
+          const box = $("#leads");
+          if (!box.hidden) {
+            box.hidden = true;
+            return;
+          }
+          api("/api/admin/leads")
+            .then((r) => {
+              box.innerHTML = r.leads.length
+                ? r.leads
+                    .map(
+                      (l) =>
+                        '<div class="lead"><b>' +
+                        esc(l.contact_name) +
+                        "</b> · " +
+                        esc(l.university_name) +
+                        (l.country ? ", " + esc(l.country) : "") +
+                        '<div class="note">' +
+                        esc(l.work_email) +
+                        " · " +
+                        esc(fmtDate(l.created_at)) +
+                        "</div>" +
+                        (l.message ? "<p>" + esc(l.message) + "</p>" : "") +
+                        "</div>",
+                    )
+                    .join("")
+                : '<div class="none">No enquiries yet.</div>';
+              box.hidden = false;
+            })
+            .catch((e) => toast(e.message));
+        };
+
+        // ---------- boot ----------
+        function start() {
+          showApp();
+          syncScope();
+          setScreen(location.hash === "#usage" ? "usage" : "data");
+          loadVocab();
+          loadHealth();
+          loadRecords(true);
         }
+        api("/api/admin/me")
+          .then(start)
+          .catch(() => showGate());
       })();
     </script>
   </body>

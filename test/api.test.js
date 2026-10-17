@@ -284,15 +284,12 @@ test("signed-out /admin HTML leaks nothing: no setup command, no hint copy, no e
 test("every /api/admin/* and partner route rejects unauthenticated access with JSON 401", async () => {
   const adminRoutes = [
     "/api/admin/me",
-    "/api/admin/stats",
-    "/api/admin/traffic",
-    "/api/admin/funnel",
-    "/api/admin/retention",
-    "/api/admin/searches",
+    "/api/admin/health",
+    "/api/admin/records",
+    "/api/admin/record/university/eter-fr7045",
+    "/api/admin/usage",
     "/api/admin/leads",
     "/api/admin/subscribers.csv",
-    "/api/admin/data-quality",
-    "/api/admin/data-quality/records",
   ];
   for (const path of adminRoutes) {
     const res = await fetch(base + path); // no cookies

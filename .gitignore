@@ -44,3 +44,4 @@ ChatGPT Image*.png
 universo-demo*.html
 universo-site*/
 .claude/
+data/opportunity_overrides.json

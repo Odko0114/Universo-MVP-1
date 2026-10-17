@@ -352,23 +352,12 @@
     }
   }
 
-  const deviceGuess = () => (window.innerWidth < 700 ? "mobile" : "desktop");
-  const trackPageview = (path) =>
-    API.track({ type: "pageview", path, device: deviceGuess() });
-  const trackProfileView = (uni) =>
-    API.track({
-      type: "profile_view",
-      path: location.pathname,
-      uni,
-      device: deviceGuess(),
-    });
-  const trackFilter = (filter, value) =>
-    API.track({
-      type: "filter_used",
-      filter,
-      value: String(value),
-      device: deviceGuess(),
-    });
+  // Usage beacons carry only what the admin uses: a visit, or which university
+  // was opened. Filters are recorded server-side with each search (with the
+  // result count), so there is no separate filter beacon.
+  const trackPageview = () => API.track({ type: "pageview" });
+  const trackProfileView = (uni) => API.track({ type: "profile_view", uni });
+  const trackFilter = () => {};
 
   // ---- History-API router -------------------------------------------------
   // Set once we've pushed at least one in-app entry, so a "back" control knows
@@ -928,11 +917,6 @@
           return;
         }
         writeQuickMatch({ field, country, budget });
-        API.track({
-          type: "filter_used",
-          filter: "quickmatch",
-          value: field || budget,
-        });
         d.page = 1;
         renderDiscover();
       });
@@ -2201,7 +2185,6 @@
       API.track({
         type: "compare",
         count: universities.length,
-        device: deviceGuess(),
       });
 
       const head = universities
