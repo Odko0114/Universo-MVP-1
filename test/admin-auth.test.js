@@ -114,7 +114,7 @@ test("GET /api/admin/records lists the featured work queue, filters and searches
   assert.equal(r.status, 200);
   assert.ok(r.json.total > 0 && r.json.items.length <= 5);
   const it = r.json.items[0];
-  assert.ok(it.id && it.name && Array.isArray(it.pills) && it.pills.length > 0);
+  assert.ok(it.id && it.name && Array.isArray(it.needs));
   assert.equal(it.type, "university");
 
   const sch = await req(
@@ -136,9 +136,7 @@ test("GET /api/admin/records lists the featured work queue, filters and searches
     "GET",
     "/api/admin/records?filter=missing_deadline&limit=100",
   );
-  assert.ok(
-    f.json.items.every((x) => x.pills.some((p) => p.t === "no deadline")),
-  );
+  assert.ok(f.json.items.every((x) => x.needs.includes("deadline")));
 });
 
 test("GET /api/admin/leads returns the pilot-lead rows with a session", async () => {

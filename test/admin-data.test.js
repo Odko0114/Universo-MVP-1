@@ -114,8 +114,9 @@ test("listRecords: default scope is the featured work queue, most-wanted first",
     ["a", "b"],
   ); // c is not featured
   assert.equal(r.total, 2);
-  assert.ok(r.items[0].pills.some((p) => p.t === "no deadline"));
-  assert.ok(r.items[1].pills.some((p) => p.k === "ok"));
+  assert.deepEqual(r.items[0].needs, ["deadline", "tuition"]);
+  assert.deepEqual(r.items[1].needs, []); // nothing left to do
+  assert.equal(r.items[1].stale, false);
 });
 
 test("listRecords: 'all' includes non-featured universities and scholarships", () => {
