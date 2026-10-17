@@ -38,6 +38,9 @@ const curatedScholarships = require("./lib/scholarships-curated");
 const scriptgen = require("./lib/scriptgen");
 const recommend = require("./lib/recommend");
 const trends = require("./lib/trends");
+const overridesLib = require("./lib/overrides");
+const usage = require("./lib/usage");
+const adminData = require("./lib/admin-data");
 const languageReqs = require("./lib/language-requirements");
 const notify = require("./lib/notify");
 const brand = require("./lib/brand");
@@ -77,6 +80,9 @@ store.init("photos", {}); // { id: { photo_url|null, attribution, cached_at } }
 }
 store.init("pilot_leads", []); // university contact/pilot/claim leads (/for-universities form)
 store.init("marketing", { brain: {}, ideas: [] }); // Marketing OS state (founder + marketer)
+// Admin-edited facts (sourced tuition/deadlines/etc.) layered over the DERIVED
+// dataset — see lib/overrides.js. Persistent so a redeploy never loses an edit.
+store.init("opportunity_overrides", { university: {}, scholarship: {}, log: [] });
 store.init("uni_accounts", []); // partner logins, each bound to one university_id
 store.init("claims", {}); // { universityId: { account_id, claimed_at } } — kept
 // separate from the universities file because that
@@ -102,8 +108,26 @@ events
   );
 
 const UNIVERSITIES = store.read("universities");
+// Re-apply admin edits on top of the freshly derived dataset BEFORE the index,
+// filters and quality audit are built, so edits are searchable and scored.
+const overlay = overridesLib.createOverrides({
+  doc: store.read("opportunity_overrides"),
+  universities: UNIVERSITIES,
+  scholarships: curatedScholarships.allCurated(),
+  persist: () => store.write("opportunity_overrides", store.read("opportunity_overrides")),
+});
+overlay.applyAll();
 const INDEX = search.buildIndex(UNIVERSITIES); // built once (dataset is static)
 const FILTERS = search.buildFilters(UNIVERSITIES); // cached
+// What a search is allowed to record: only real filter values, so junk can't
+// pollute the usage log. Rebuilt when an admin edit could change the vocabulary.
+const makeSearchVocab = () => ({
+  countries: new Set(FILTERS.countries),
+  fields: new Set(FILTERS.fields_of_study),
+  degrees: new Set(FILTERS.degree_levels),
+  languages: new Set(FILTERS.languages),
+});
+let SEARCH_VOCAB = makeSearchVocab();
 // Non-EU universities that exist ONLY as part of a curated scholarship (e.g. the
 // Chinese universities under CSC). They are deliberately NOT in UNIVERSITIES /
 // INDEX / FILTERS / recommendations, so normal EU Discover, filters and counts
@@ -938,13 +962,12 @@ api.get("/universities", universitiesLimiter, (req, res) => {
     return withP;
   });
   result.sort = params.sort || (req.query.q ? "relevance" : "name");
-  const q = String(req.query.q || "").trim();
-  if (q) {
-    events.record("search", {
-      anon: req.anon,
-      results: result.count,
-      q: q.slice(0, 80),
-    });
+  // One event per real search (first page only — "load more" isn't a new search),
+  // carrying the filters used and how many results came back. The result count
+  // is what makes unmet demand visible ("Medicine in Finland → 0 matches").
+  if (!(Number(req.query.offset) > 0)) {
+    const meta = usage.searchMeta(req.query, SEARCH_VOCAB);
+    if (meta) events.record("search", { anon: req.anon, results: result.count, ...meta });
   }
   res.json(result);
 });
@@ -1025,46 +1048,24 @@ api.post("/universities/:id/apply-click", clickLimiter, (req, res) => {
 // the client and avoids forwarding a full URL with query strings). No PII is
 // accepted or stored — just a path, an anonymous id, and a device/locale guess.
 
-const TRACK_TYPES = new Set([
-  "pageview",
-  "profile_view",
-  "filter_used",
-  "compare",
-]);
+// Only what the admin actually uses. No device, referrer, language or page path:
+// the Usage screen needs "how many distinct visitors" and "which university",
+// nothing about who they are or where they came from.
+const TRACK_TYPES = new Set(["pageview", "profile_view", "compare"]);
+// Older cached clients still send this; searches now carry their own filters
+// server-side (see GET /universities), so it is accepted and dropped.
+const TRACK_IGNORED = new Set(["filter_used"]);
 const trackLimiter = rateLimit({ windowMs: 60 * 1000, max: 120 });
 
-function refDomain(req) {
-  const ref = req.get("Referer") || "";
-  try {
-    const host = new URL(ref).host;
-    return host && host !== req.get("host") ? host : "";
-  } catch {
-    return "";
-  }
-}
-
 api.post("/track", trackLimiter, (req, res) => {
-  const { type, path: p, uni, filter, value } = req.body || {};
+  const { type, uni } = req.body || {};
+  if (TRACK_IGNORED.has(type)) return res.status(204).end();
   if (!TRACK_TYPES.has(type))
     return res.status(400).json({ error: "Unknown event type." });
 
-  const meta = {
-    anon: req.anon,
-    path: typeof p === "string" ? p.slice(0, 200) : "",
-    ref: refDomain(req),
-    lang: (req.get("Accept-Language") || "")
-      .split(",")[0]
-      .split(";")[0]
-      .trim()
-      .slice(0, 10),
-    device: req.body && req.body.device === "mobile" ? "mobile" : "desktop",
-  };
+  const meta = { anon: req.anon };
   if (type === "profile_view" && typeof uni === "string")
     meta.uni = uni.slice(0, 60);
-  if (type === "filter_used") {
-    meta.filter = typeof filter === "string" ? filter.slice(0, 40) : "";
-    meta.value = typeof value === "string" ? value.slice(0, 80) : "";
-  }
   // How many universities were on screen when the student compared. Still just
   // a number against an anonymous id — no university ids, no student id.
   if (type === "compare") {
@@ -2238,136 +2239,106 @@ api.get("/admin/me", adminAuth.requireAdmin, (req, res) =>
 const adminApi = express.Router();
 adminApi.use(adminAuth.requireAdmin);
 
-adminApi.get("/stats", (_req, res) => {
-  // Read the event log once and reuse it for every aggregation below — this
-  // used to call events.summary() and events.topByUni() separately, each
-  // doing its own synchronous full-file read + JSON.parse of every line.
-  // Harmless at today's size; would double the (blocking) I/O cost of every
-  // dashboard load once events.jsonl has real production history.
-  const allEvents = events.readAll();
-  const s = events.computeSummary(allEvents);
-  const students = store.read("students");
-  const clicks = store.read("clicks");
-  const currentlySaved = students.reduce(
-    (n, x) => n + (x.saved_universities?.length || 0),
-    0,
-  );
+// ---------------------------------------------------------------------------
+// Admin = two screens.
+//   Data  — keep the opportunity facts accurate (edit, source, verify).
+//   Usage — what students look for, so you know what to curate next.
+// Everything below is behind requireAdmin (full admin only).
+// ---------------------------------------------------------------------------
 
-  const topByClicks = Object.entries(clicks)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 10)
-    .map(([id, count]) => ({
-      id,
-      name: BY_ID.get(id)?.name || id,
-      country: BY_ID.get(id)?.country || "",
-      click_count: count,
-    }));
+const adminActor = (req) => (req.admin && req.admin.email) || "admin";
+const recordType = (t) => (t === "university" || t === "scholarship" ? t : null);
 
-  const topByViews = events
-    .computeTopByUni(allEvents, "profile_view", 10)
-    .map((r) => ({
-      id: r.id,
-      name: BY_ID.get(r.id)?.name || r.id,
-      country: BY_ID.get(r.id)?.country || "",
-      views: r.count,
-      unique_viewers: r.unique,
-    }));
+// An edit to teaching languages can change the filter options and the set of
+// values a search may record, so rebuild both (cheap: ~3k records, rare edit).
+function refreshFilters() {
+  Object.assign(FILTERS, search.buildFilters(UNIVERSITIES));
+  SEARCH_VOCAB = makeSearchVocab();
+}
 
-  // Level-1 "how are we doing" extras, computed from the same single read:
-  // week-over-week signup change, activation, and new B2B leads this week.
-  const now = Date.now();
-  const WEEK = 7 * 86_400_000;
-  const signupEvents = allEvents.filter((e) => e.type === "signup");
-  const signups_7d = signupEvents.filter(
-    (e) => now - Date.parse(e.ts) <= WEEK,
-  ).length;
-  const signups_prev_7d = signupEvents.filter((e) => {
-    const age = now - Date.parse(e.ts);
-    return age > WEEK && age <= 2 * WEEK;
-  }).length;
-  const leads = store.read("pilot_leads");
-  const leads_7d = leads.filter(
-    (l) => l.created_at && now - Date.parse(l.created_at) <= WEEK,
-  ).length;
-
+// Headline dataset numbers + the latest edits.
+adminApi.get("/health", (_req, res) => {
   res.json({
-    generated_at: new Date().toISOString(),
-    totals: {
-      universities: UNIVERSITIES.length,
-      students: students.length,
-      signups: s.totals.signup || 0,
-      logins: s.totals.login || 0,
-      searches: s.totals.search || 0,
-      saves_events: s.totals.save || 0,
-      currently_saved: currentlySaved,
-      compares: s.totals.compare || 0,
-      apply_clicks: s.totals.apply_click || 0,
-      apply_clicks_unique: Object.values(s.applyUnique).reduce(
-        (a, b) => a + b,
-        0,
-      ),
-      pageviews: (s.totals.pageview || 0) + (s.totals.profile_view || 0),
-      universities_verified: VERIFIED_COUNT,
-      pilot_leads: leads.length,
-      update_subscribers: students.filter((x) => x.updates_optin).length,
-    },
-    activation: events.computeActivation(allEvents),
-    signups_7d,
-    signups_prev_7d,
-    leads_7d,
-    last_24h: s.last24h,
-    last_7d: s.last7d,
-    top_universities_by_apply_clicks: topByClicks,
-    top_universities_by_views: topByViews,
+    overview: adminData.datasetOverview({
+      universities: UNIVERSITIES,
+      scholarships: curatedScholarships.allCurated(),
+      verifiedAt: overlay.verifiedAt,
+      audit: dataQuality.auditDataset(UNIVERSITIES),
+    }),
+    recent: overlay.recentLog(8),
   });
 });
 
-// Time-windowed traffic view: visitors, pageviews, top pages/referrers/devices/languages.
-adminApi.get("/traffic", (req, res) => {
-  const days = Math.min(
-    90,
-    Math.max(1, parseInt(String(req.query.days || ""), 10) || 7),
+// The work queue: featured universities (default), all universities, or
+// scholarships — searchable, filterable, ranked by how much students look at them.
+adminApi.get("/records", (req, res) => {
+  res.json(
+    adminData.listRecords({
+      universities: UNIVERSITIES,
+      scholarships: curatedScholarships.allCurated(),
+      verifiedAt: overlay.verifiedAt,
+      interest: adminData.interestIndex(events.readAll()),
+      query: req.query,
+    }),
   );
-  res.json({ days, ...events.traffic({ sinceMs: days * 86_400_000 }) });
 });
 
-// Reach funnel: distinct clients at each stage, with conversion rates.
-// Overview: DAU/WAU/MAU with a new-vs-returning split, over distinct anonymous
-// clients. No query params — these three windows are the metric definition.
-adminApi.get("/overview", (_req, res) => {
-  res.json(events.overview());
+adminApi.get("/record/:type/:id", (req, res) => {
+  const type = recordType(req.params.type);
+  const rec = type && overlay.get(type, req.params.id);
+  if (!rec) return res.status(404).json({ error: "Record not found." });
+  res.json(rec);
 });
 
-adminApi.get("/funnel", (req, res) => {
-  const days = Math.min(
-    90,
-    Math.max(1, parseInt(String(req.query.days || ""), 10) || 7),
-  );
-  res.json({ days, stages: events.funnel({ sinceMs: days * 86_400_000 }) });
+// Save edits. Numbers, dates and language claims are rejected without a source
+// link (enforced in lib/overrides.js, not just the form).
+adminApi.patch("/record/:type/:id", (req, res) => {
+  const type = recordType(req.params.type);
+  if (!type) return res.status(404).json({ error: "Record not found." });
+  const fields = (req.body || {}).fields;
+  const r = overlay.save(type, req.params.id, fields, adminActor(req));
+  if (!r.ok) return res.status(r.status || 400).json({ error: r.error, field: r.field });
+  if (fields && "languages" in fields) refreshFilters();
+  res.json(r.record);
 });
 
-// Weekly cohort retention grid.
-adminApi.get("/retention", (req, res) => {
-  const weeks = Math.min(
-    12,
-    Math.max(2, parseInt(String(req.query.weeks || ""), 10) || 6),
-  );
-  res.json(events.retention({ weeks }));
+// "I re-checked it and it's still right."
+adminApi.post("/record/:type/:id/verify", (req, res) => {
+  const type = recordType(req.params.type);
+  if (!type) return res.status(404).json({ error: "Record not found." });
+  const r = overlay.verify(type, req.params.id, adminActor(req));
+  if (!r.ok) return res.status(r.status || 400).json({ error: r.error });
+  res.json(r.record);
 });
 
-// Most common search terms — tells you what students want and where data gaps are.
-adminApi.get("/searches", (req, res) => {
-  const days = Math.min(
-    90,
-    Math.max(1, parseInt(String(req.query.days || ""), 10) || 7),
-  );
-  const limit = Math.min(
-    50,
-    Math.max(1, parseInt(String(req.query.limit || ""), 10) || 10),
+// Usage: weekly counts with an 8-week trend, demand lists, unmet demand, and
+// account aggregates (counts only — never who).
+adminApi.get("/usage", (_req, res) => {
+  const all = events.readAll();
+  const u = usage.computeUsage(all);
+  const named = (rows) =>
+    rows.map((x) => ({
+      ...x,
+      name: (BY_ID.get(x.id) || {}).name || x.id,
+      country: (BY_ID.get(x.id) || {}).country || "",
+    }));
+  u.lists.savedUnis = named(u.lists.savedUnis);
+  u.lists.viewedUnis = named(u.lists.viewedUnis);
+  u.lists.appliedUnis = named(u.lists.appliedUnis);
+  const students = store.read("students");
+  // Field/country demand only exists from the day searches started carrying their
+  // filters; say so, so an empty list is explained rather than mysterious.
+  const firstFilterSearch = all.find(
+    (e) => e.type === "search" && (e.field || e.country || e.degree || e.language || e.budget),
   );
   res.json({
-    days,
-    terms: events.topSearches({ sinceMs: days * 86_400_000, limit }),
+    ...u,
+    accounts: usage.summarizeAccounts(students),
+    enquiries: { count: store.read("pilot_leads").length },
+    subscribers: students.filter((s) => s.updates_optin).length,
+    // Handed out only after sign-in so the public /admin HTML never names it.
+    subscribersCsv: "/api/admin/subscribers.csv",
+    filtersTrackedSince: firstFilterSearch ? firstFilterSearch.ts : null,
   });
 });
 
@@ -2376,35 +2347,6 @@ adminApi.get("/searches", (req, res) => {
 adminApi.get("/leads", (_req, res) => {
   const leads = [...store.read("pilot_leads")].reverse();
   res.json({ count: leads.length, leads });
-});
-
-// ---- Data-quality audit (admin-only, precomputed at boot) -------------------
-// The aggregate dataset audit. No per-request scanning — this is the cached
-// DATASET_AUDIT computed once at startup.
-adminApi.get("/data-quality", (_req, res) => res.json(DATASET_AUDIT));
-
-// Filterable record list for the audit table: by quality band, verification
-// status, staleness. Reads the precomputed QUALITY_RECORDS index (no rescan).
-adminApi.get("/data-quality/records", (req, res) => {
-  const band = typeof req.query.band === "string" ? req.query.band : "";
-  const status = typeof req.query.status === "string" ? req.query.status : "";
-  const staleOnly = req.query.stale === "1";
-  const limit = Math.min(
-    200,
-    Math.max(1, parseInt(String(req.query.limit || ""), 10) || 50),
-  );
-  const offset = Math.max(0, parseInt(String(req.query.offset || ""), 10) || 0);
-
-  let rows = QUALITY_RECORDS;
-  if (band) rows = rows.filter((r) => r.band === band);
-  if (status) rows = rows.filter((r) => r.verification_status === status);
-  if (staleOnly) rows = rows.filter((r) => r.stale);
-  // Lowest quality first — the records most in need of review lead the table.
-  const sorted = [...rows].sort((a, b) => a.score - b.score);
-  res.json({
-    count: sorted.length,
-    records: sorted.slice(offset, offset + limit),
-  });
 });
 
 // Create a partner login for a verified claim: binds an email+password to one
@@ -2902,17 +2844,7 @@ app.get("/partners/demo", (_req, res) => sendHtml(res, PARTNERS_DEMO_PAGE));
 // The B2B pitch (analytics, claim-a-profile, pilot contact form) lives on its
 // own page, off the student-facing homepage.
 app.get("/for-universities", (req, res) => {
-  events.record("pageview", {
-    anon: req.anon,
-    path: "/for-universities",
-    ref: refDomain(req),
-    lang: (req.get("Accept-Language") || "")
-      .split(",")[0]
-      .split(";")[0]
-      .trim()
-      .slice(0, 10),
-    device: /mobile/i.test(req.get("User-Agent") || "") ? "mobile" : "desktop",
-  });
+  events.record("pageview", { anon: req.anon });
   res.send(FOR_UNIVERSITIES);
 });
 
@@ -3094,17 +3026,7 @@ app.get("/unsubscribe", (req, res) => {
 // pageview is recorded server-side so anonymous first visits (the top of the
 // funnel) aren't invisible to analytics.
 app.get("/discover", (req, res) => {
-  events.record("pageview", {
-    anon: req.anon,
-    path: "/discover",
-    ref: refDomain(req),
-    lang: (req.get("Accept-Language") || "")
-      .split(",")[0]
-      .split(";")[0]
-      .trim()
-      .slice(0, 10),
-    device: /mobile/i.test(req.get("User-Agent") || "") ? "mobile" : "desktop",
-  });
+  events.record("pageview", { anon: req.anon });
   // SSR mirrors the client default: verified profiles first impression.
   const list = search.query(
     INDEX,

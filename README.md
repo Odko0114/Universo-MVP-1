@@ -83,7 +83,7 @@ Universo/
 │   ├── search.js                  # pure search/filter/sort over a prebuilt index
 │   ├── auth.js                    # student cookie-session auth
 │   ├── admin-auth.js              # admin cookie-session auth (fully separate from students)
-│   ├── events.js                  # PII-free event log + funnel/retention/traffic aggregation
+│   ├── events.js                  # PII-free event log (record/rotate/purge) + partner time-series
 │   ├── validate.js                # request-body validation
 │   ├── rate-limit.js              # in-memory sliding-window limiter
 │   ├── http.js                    # outbound fetch with timeout/retry/circuit-breaker
@@ -138,17 +138,23 @@ Short-form video feed, student-to-student chat/networking, and lead-capture form
 
 ---
 
-## Measuring success — admin dashboard, traffic & behavior
+## Admin — keep the data accurate, see what to curate next
 
-`/admin` is a **password-protected** dashboard (separate admin login — see [Admin setup](#admin-setup)) showing:
+`/admin` is a **password-protected** admin (separate login — see [Admin setup](#admin-setup)) with two screens:
 
-- **Stat cards & rolling windows** — sign-ups, searches, saves, Apply-Now clicks (raw + deduplicated-unique), pageviews, students, last-24h/7d breakdowns.
-- **Acquisition funnel** — distinct clients reaching Visit → Search → View a profile → Save → Apply, each stage as a % of the first stage, over a selectable 7/14/30-day window.
-- **Traffic** — unique visitors, pageviews, top pages, top referrer domains, device split (mobile/desktop), all first-party (no third-party analytics script, no cookie-consent banner needed).
-- **Weekly retention** — a cohort grid: of the clients first seen in a given week, what % came back in each following week.
-- **Top search terms** and **top universities by Apply-Now clicks / by profile views**.
+**Data** — the workspace for keeping opportunity facts accurate.
 
-This is powered by a first-party, **PII-free** event log (`data/events.jsonl`) — every action is a timestamped event (`{ ts, type, anon, … }`) tied to a random anonymous browser id, never an email. It's the same log a warehouse or product-analytics tool would ingest; the aggregation (funnel/retention/traffic math) lives in pure, unit-tested functions in `lib/events.js`.
+- A dataset-health band (how many of the ~300 *featured* profiles a person has confirmed) and a work queue: featured universities with no deadline, with an estimated tuition, or not confirmed in 6 months — ranked by how much students look at them.
+- Edit a university's tuition, deadline, requirements, teaching languages and application link, or a scholarship's deadline and link. **Any number, date or language claim is rejected without a source link** (enforced on the server, `lib/overrides.js`). "Mark verified today" and "Revert to original" are one click; every change is logged.
+- Edits are stored in `opportunity_overrides.json` (on the persistent disk) and re-applied over the dataset at every boot, so a redeploy never loses them. A sourced tuition figure flips `tuition_source` to `curated_research`, which is the gate every student-facing tuition display already checks.
+
+**Usage** — plain numbers, no cohorts.
+
+- Visitors, new accounts, searches and shortlist saves for the last 7 days with an 8-week trend, plus apply clicks, plans started, scholarships tracked and comparisons.
+- **Searches with no good match** — real searches (with the filters used) that returned 0–2 results: the best data to add next.
+- Top searched fields, countries, budgets and degree levels; most saved / viewed / apply-clicked universities; account counts (verified, profiled, planning, new-and-unverified) and where students are from. Counts only, never names.
+
+Collected on purpose, and only this: a random anonymous id plus the filters a student searched with and how many results came back. **No device, referrer, language or page path is stored.** The numbers come from `lib/usage.js` (pure, unit-tested); the work queue from `lib/admin-data.js`.
 
 ### Admin setup
 
@@ -187,11 +193,11 @@ The `/admin` sign-in page deliberately does **not** describe this on-page (it's 
 | `POST`            | `/api/admin/login`                  | —    | Admin sign-in (separate cookie/session from student auth; rate-limited)                                                                                                    |
 | `POST`            | `/api/admin/logout`                 | —    | Clear the admin session                                                                                                                                                    |
 | `GET`             | `/api/admin/me`                     | 🔐   | Current admin                                                                                                                                                              |
-| `GET`             | `/api/admin/stats`                  | 🔐   | Totals, 24h/7d windows, top universities by clicks & by views                                                                                                              |
-| `GET`             | `/api/admin/funnel?days=`           | 🔐   | Visit→search→view→save→apply funnel with conversion %                                                                                                                      |
-| `GET`             | `/api/admin/retention?weeks=`       | 🔐   | Weekly cohort retention grid                                                                                                                                               |
-| `GET`             | `/api/admin/traffic?days=`          | 🔐   | Visitors, pageviews, top pages/referrers/devices                                                                                                                           |
-| `GET`             | `/api/admin/searches?days=&limit=`  | 🔐   | Most common search terms                                                                                                                                                   |
+| `GET`             | `/api/admin/health`                 | 🔐   | Dataset overview (featured/confirmed counts, work-queue counts) + latest edits |
+| `GET`             | `/api/admin/records?scope=&q=&filter=` | 🔐 | The work queue: featured / all universities / scholarships, ranked by student interest |
+| `GET` / `PATCH`   | `/api/admin/record/:type/:id`       | 🔐   | Read / edit one record (sourced edits only; `null` reverts a field) |
+| `POST`            | `/api/admin/record/:type/:id/verify` | 🔐  | Stamp 'checked again today' |
+| `GET`             | `/api/admin/usage`                  | 🔐   | Weekly counts + trend, demand lists, unmet-demand searches, account counts |
 | `GET`             | `/healthz`                          | —    | Health check (status, dataset size, uptime)                                                                                                                                |
 | `GET`             | `/sitemap.xml`, `/robots.txt`       | —    | SEO                                                                                                                                                                        |
 

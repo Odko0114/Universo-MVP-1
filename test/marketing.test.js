@@ -369,14 +369,20 @@ test("script endpoint composes a ready script from real data with sources", asyn
 
 test("a marketing account is BLOCKED (403) from full-admin routes", async () => {
   assert.equal(await loginAs(MKT.email, MKT.pw), 200);
-  assert.equal((await req("GET", "/api/admin/stats")).status, 403);
+  assert.equal((await req("GET", "/api/admin/health")).status, 403);
+  assert.equal((await req("GET", "/api/admin/usage")).status, 403);
+  assert.equal((await req("GET", "/api/admin/records")).status, 403);
+  assert.equal(
+    (await req("PATCH", "/api/admin/record/university/eter-fr7045", { fields: { deadline: { value: "x", source: "https://example.com" } } })).status,
+    403,
+  );
   assert.equal((await req("GET", "/api/admin/leads")).status, 403);
 });
 
 test("a full admin reaches BOTH the Marketing OS and the admin dashboard", async () => {
   assert.equal(await loginAs(ADM.email, ADM.pw), 200);
   assert.equal((await req("GET", "/api/marketing/me")).status, 200);
-  assert.equal((await req("GET", "/api/admin/stats")).status, 200);
+  assert.equal((await req("GET", "/api/admin/health")).status, 200);
 });
 
 test("ideas carry source/rationale/priority; invalid priority falls back to med", async () => {
