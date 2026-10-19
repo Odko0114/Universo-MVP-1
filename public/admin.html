@@ -996,6 +996,55 @@
         color: var(--ink-soft);
         margin: 0 0 2px;
       }
+      .aud-grid small.cmp {
+        color: var(--ink-faint);
+      }
+      .aud-grid small.cmp.up {
+        color: var(--ok);
+        font-weight: 600;
+      }
+      .aud-lists .note {
+        font-size: 0.78rem;
+        color: var(--ink-faint);
+        padding-top: 4px;
+      }
+      .aud-more > summary {
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.9rem;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+      }
+      .aud-people {
+        display: grid;
+        gap: 8px;
+        max-height: 50vh;
+        overflow-y: auto;
+      }
+      .who {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 8px 12px;
+        font-size: 0.88rem;
+        overflow-wrap: anywhere;
+      }
+      .who .note {
+        font-size: 0.8rem;
+        color: var(--ink-soft);
+      }
+      .who .tag {
+        font-size: 0.72rem;
+        font-weight: 700;
+        border-radius: 999px;
+        padding: 1px 8px;
+        background: var(--surface-2);
+        color: var(--ink-soft);
+      }
+      .who .tag.new {
+        background: var(--accent-fill);
+        color: var(--on-accent);
+      }
       .aud-days {
         font-size: 0.72rem;
         display: grid;
@@ -1441,6 +1490,10 @@
           </div>
           <div class="aud-lists" id="aud-lists"></div>
           <div class="aud-days" id="aud-days" aria-label="Last 7 days"></div>
+          <details class="aud-more">
+            <summary id="aud-people-sum">Who they are</summary>
+            <div class="aud-people" id="aud-people"></div>
+          </details>
         </section>
 
         <div>
@@ -2652,22 +2705,43 @@
                 "7d": "in the last 7 days",
                 "30d": "in the last 30 days",
               }[a.range];
-              const tile = (n, l, sub) =>
+              const vs = {
+                today: "yesterday",
+                "7d": "the 7 days before",
+                "30d": "the 30 days before",
+              }[a.range];
+              const cmp = (cur, prev) => {
+                const d = cur - prev;
+                return (
+                  '<small class="cmp ' +
+                  (d > 0 ? "up" : "") +
+                  '">' +
+                  (d === 0
+                    ? "same as " + vs
+                    : (d > 0 ? "+" : "−") + Math.abs(d) + " vs " + vs) +
+                  "</small>"
+                );
+              };
+              const tile = (n, l, sub, prev) =>
                 "<div><b>" +
                 nfmt(n) +
                 "</b><span>" +
                 l +
-                "</span>" +
-                (sub ? "<small>" + sub + "</small>" : "") +
+                "</span><small>" +
+                sub +
+                "</small>" +
+                cmp(n, prev) +
                 "</div>";
+              const P = a.previous;
               $("#aud-tiles").innerHTML =
                 tile(
                   a.accounts.total,
                   "students active " + lab,
-                  plural(a.accounts.new, "new", "new") +
-                    " · " +
+                  nfmt(a.accounts.new) +
+                    " new · " +
                     nfmt(a.accounts.returning) +
                     " returning",
+                  P.accounts.total,
                 ) +
                 tile(
                   a.visitors.total,
@@ -2676,13 +2750,14 @@
                     " new · " +
                     nfmt(a.visitors.returning) +
                     " returning",
+                  P.visitors.total,
                 );
-              const list = (t, rows) =>
+              const list = (t, b) =>
                 "<div><h3>" +
                 t +
                 "</h3>" +
-                (rows.length
-                  ? rows
+                (b.rows.length
+                  ? b.rows
                       .map(
                         (r) =>
                           '<div class="lr"><div class="nm">' +
@@ -2693,6 +2768,11 @@
                       )
                       .join("")
                   : '<div class="none">None yet</div>') +
+                (b.unknown
+                  ? '<div class="note">' +
+                    nfmt(b.unknown) +
+                    " not filled in</div>"
+                  : "") +
                 "</div>";
               $("#aud-lists").innerHTML =
                 list("Home country", a.breakdown.countries) +
@@ -2710,6 +2790,36 @@
                     "</b>seen</div>",
                 )
                 .join("");
+              const ppl = a.people || [];
+              $("#aud-people-sum").textContent =
+                "Who they are · " +
+                (a.peopleTotal > ppl.length
+                  ? "latest " + ppl.length + " of " + nfmt(a.peopleTotal)
+                  : nfmt(ppl.length));
+              $("#aud-people").innerHTML = ppl.length
+                ? ppl
+                    .map(
+                      (p) =>
+                        '<div class="who"><div><b>' +
+                        esc(p.name || "No name") +
+                        '</b> <span class="tag ' +
+                        esc(p.status) +
+                        '">' +
+                        esc(p.status) +
+                        '</span></div><div class="note">' +
+                        esc(
+                          [p.country, p.field].filter(Boolean).join(" · ") ||
+                            "Profile not filled in",
+                        ) +
+                        '</div><div class="note">Joined ' +
+                        esc(fmtDate(p.signedUp)) +
+                        " · last seen " +
+                        esc(ago(p.lastActive) || "—") +
+                        (p.saved ? " · " + p.saved + " saved" : "") +
+                        "</div></div>",
+                    )
+                    .join("")
+                : '<div class="none">Nobody in this view yet.</div>';
             })
             .catch((e) => toast(e.message));
         [

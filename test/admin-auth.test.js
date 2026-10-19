@@ -101,7 +101,15 @@ test("GET /api/admin/audience returns counts only, and falls back on bad input",
   assert.equal(r.status, 200);
   assert.equal(r.json.range, "today");
   assert.equal(r.json.daily.length, 7);
-  assert.ok(!/@|password/i.test(JSON.stringify(r.json)));
+  assert.ok(
+    Array.isArray(r.json.people),
+    "founder view includes the people list",
+  );
+  assert.ok(r.json.previous.visitors, "every number has a comparison");
+  assert.ok(
+    !/@|password/i.test(JSON.stringify(r.json)),
+    "never emails or hashes",
+  );
 });
 
 test("GET /api/admin/health returns the dataset overview and recent edits", async () => {

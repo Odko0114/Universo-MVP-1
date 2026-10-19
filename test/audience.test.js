@@ -63,7 +63,7 @@ test("7 days includes the account from 3 days ago; 30 days includes all", () => 
 test("the filter narrows the breakdown to new or returning accounts", () => {
   const all = computeAudience({ students, events, now: NOW, range: "today" });
   assert.deepEqual(
-    all.breakdown.countries,
+    all.breakdown.countries.rows,
     [
       { label: "India", count: 1 },
       { label: "Mongolia", count: 2 },
@@ -76,7 +76,9 @@ test("the filter narrows the breakdown to new or returning accounts", () => {
     range: "today",
     who: "returning",
   });
-  assert.deepEqual(ret.breakdown.countries, [{ label: "India", count: 1 }]);
+  assert.deepEqual(ret.breakdown.countries.rows, [
+    { label: "India", count: 1 },
+  ]);
   const nu = computeAudience({
     students,
     events,
@@ -84,8 +86,10 @@ test("the filter narrows the breakdown to new or returning accounts", () => {
     range: "today",
     who: "new",
   });
-  assert.deepEqual(nu.breakdown.countries, [{ label: "Mongolia", count: 2 }]);
-  assert.deepEqual(nu.breakdown.fields.map((f) => f.label).sort(), [
+  assert.deepEqual(nu.breakdown.countries.rows, [
+    { label: "Mongolia", count: 2 },
+  ]);
+  assert.deepEqual(nu.breakdown.fields.rows.map((f) => f.label).sort(), [
     "Computer Science",
     "Medicine",
   ]);
@@ -115,4 +119,65 @@ test("no names or emails ever leave this function", () => {
     }),
   );
   assert.ok(!/x@y\.z|Secret Name/.test(out));
+});
+
+test("every number comes with the same-length window just before it", () => {
+  const a = computeAudience({ students, events, now: NOW, range: "today" });
+  // yesterday: nobody signed up; visitors seen = none
+  assert.equal(a.previous.accounts.new, 0);
+  assert.equal(a.previous.visitors.total, 0);
+  // 7 days: the window before it holds the two signups from 10 days ago
+  const w = computeAudience({ students, events, now: NOW, range: "7d" });
+  assert.equal(w.previous.accounts.new, 2);
+  assert.equal(w.previous.visitors.total, 0);
+});
+
+test("a person with two devices counts once; blank profile fields are counted, not hidden", () => {
+  const two = [
+    {
+      student_id: "s1",
+      signup_date: ago(0, 1),
+      last_active_date: ago(0),
+      anon_ids: ["x", "y"],
+    },
+  ];
+  const ev = [
+    { ts: ago(0, 1), anon: "x" },
+    { ts: ago(0, 2), anon: "y" },
+  ];
+  const a = computeAudience({
+    students: two,
+    events: ev,
+    now: NOW,
+    range: "today",
+  });
+  assert.equal(a.visitors.total, 1);
+  assert.equal(a.breakdown.countries.unknown, 1);
+  assert.deepEqual(a.breakdown.countries.rows, []);
+});
+
+test("the people list exists only when asked for, and never carries an email", () => {
+  const withEmail = [
+    {
+      ...students[0],
+      full_name: "Bat",
+      email: "bat@example.com",
+      saved_universities: ["u1"],
+    },
+  ];
+  assert.equal(
+    computeAudience({ students: withEmail, events, now: NOW }).people,
+    undefined,
+  );
+  const a = computeAudience({
+    students: withEmail,
+    events,
+    now: NOW,
+    withPeople: true,
+  });
+  assert.equal(a.people.length, 1);
+  assert.equal(a.people[0].name, "Bat");
+  assert.equal(a.people[0].status, "new");
+  assert.equal(a.people[0].saved, 1);
+  assert.ok(!JSON.stringify(a).includes("bat@example.com"));
 });
