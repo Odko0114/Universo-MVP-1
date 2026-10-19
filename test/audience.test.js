@@ -181,3 +181,34 @@ test("the people list exists only when asked for, and never carries an email", (
   assert.equal(a.people[0].saved, 1);
   assert.ok(!JSON.stringify(a).includes("bat@example.com"));
 });
+
+test("a picked day shows exactly that day, compared with the day before; future days are ignored", () => {
+  const a = computeAudience({
+    students,
+    events,
+    now: NOW,
+    day: "2026-10-16",
+    withPeople: true,
+  });
+  assert.equal(a.day, "2026-10-16");
+  assert.equal(a.accounts.new, 1); // the Nepal signup from 3 days ago
+  assert.equal(a.people[0].country, "Nepal");
+  const b = computeAudience({ students, events, now: NOW, day: "2026-10-19" });
+  assert.deepEqual(b.accounts, { new: 2, returning: 1, total: 3 }); // same as "today"
+  assert.equal(
+    computeAudience({ students, events, now: NOW, day: "2099-01-01" }).day,
+    "",
+  );
+  assert.equal(
+    computeAudience({ students, events, now: NOW, day: "nonsense" }).day,
+    "",
+  );
+  const old = computeAudience({
+    students,
+    events,
+    now: NOW,
+    day: "2026-10-09",
+  });
+  assert.equal(old.accounts.new, 2); // the two signups from 10 days ago
+  assert.equal(old.previous.accounts.new, 0);
+});

@@ -2367,6 +2367,7 @@ adminApi.get("/audience", (req, res) =>
       events: events.readAll(),
       range: String(req.query.range || ""),
       who: String(req.query.who || ""),
+      day: String(req.query.day || ""),
       withPeople: true,
     }),
   ),

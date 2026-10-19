@@ -1054,6 +1054,31 @@
         font-size: 0.78rem;
         color: var(--ink-soft);
       }
+      .aud-date {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .aud-date input {
+        min-height: 42px;
+      }
+      .aud-days button {
+        border: 0;
+        background: transparent;
+        color: inherit;
+        font: inherit;
+        padding: 6px 0;
+        min-height: 44px;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+      .aud-days button:hover {
+        background: var(--surface-2);
+      }
+      .aud-days button.sel {
+        outline: 2px solid var(--accent-fill);
+      }
       .aud-days .wd {
         display: block;
         font-size: 0.7rem;
@@ -1485,6 +1510,10 @@
               </button>
             </div>
           </div>
+          <label class="aud-date">
+            <span class="note">Or pick any date</span>
+            <input type="date" id="aud-date" aria-label="Pick a date" />
+          </label>
           <div class="aud-grid" id="aud-tiles"></div>
           <div class="aud-filter">
             <span class="note">Show details for</span>
@@ -1507,6 +1536,11 @@
           </div>
           <div class="aud-lists" id="aud-lists"></div>
           <div class="aud-days" id="aud-days" aria-label="Last 7 days"></div>
+          <p class="note" id="aud-note" hidden>
+            For a past day, “returning” only counts students whose last visit
+            was that day, so it can read low. New students and visitors are
+            exact.
+          </p>
           <details class="aud-more">
             <summary id="aud-people-sum">Who they are</summary>
             <div class="aud-people" id="aud-people"></div>
@@ -2713,7 +2747,7 @@
         };
 
         // ---- who came: new vs returning ----
-        const aud = { range: "today", who: "all" };
+        const aud = { range: "today", who: "all", day: "" };
         // "2026-10-13" -> "13 Oct" / "Mon" (the date is a plain day, not a moment, so format it as UTC)
         const dayLabel = (iso, opts) =>
           new Date(iso + "T12:00:00Z").toLocaleDateString("en-GB", {
@@ -2721,18 +2755,43 @@
             timeZone: "UTC",
           });
         const loadAudience = () =>
-          api("/api/admin/audience?range=" + aud.range + "&who=" + aud.who)
+          api(
+            "/api/admin/audience?range=" +
+              aud.range +
+              "&who=" +
+              aud.who +
+              (aud.day ? "&day=" + aud.day : ""),
+          )
             .then((a) => {
-              const lab = {
-                today: "today",
-                "7d": "in the last 7 days",
-                "30d": "in the last 30 days",
-              }[a.range];
-              const vs = {
-                today: "yesterday",
-                "7d": "the 7 days before",
-                "30d": "the 30 days before",
-              }[a.range];
+              const dayName = a.day
+                ? dayLabel(a.day, {
+                    weekday: "short",
+                    day: "numeric",
+                    month: "short",
+                  })
+                : "";
+              const lab = a.day
+                ? "on " + dayName
+                : {
+                    today: "today",
+                    "7d": "in the last 7 days",
+                    "30d": "in the last 30 days",
+                  }[a.range];
+              const vs = a.day
+                ? "the day before"
+                : {
+                    today: "yesterday",
+                    "7d": "the 7 days before",
+                    "30d": "the 30 days before",
+                  }[a.range];
+              $$("#aud-range button").forEach((b) =>
+                b.setAttribute(
+                  "aria-pressed",
+                  String(!a.day && b.dataset.v === a.range),
+                ),
+              );
+              $("#aud-date").value = a.day || "";
+              $("#aud-note").hidden = !a.day;
               const cmp = (cur, prev) => {
                 const d = cur - prev;
                 return (
@@ -2804,8 +2863,13 @@
               $("#aud-days").innerHTML = a.daily
                 .map(
                   (d) =>
-                    '<div class="' +
-                    (d.day === a.daily[a.daily.length - 1].day ? "now" : "") +
+                    '<button type="button" data-day="' +
+                    esc(d.day) +
+                    '" class="' +
+                    (d.day === a.daily[a.daily.length - 1].day ? "now " : "") +
+                    (d.day === a.day ? "sel" : "") +
+                    '" aria-label="Show ' +
+                    esc(dayLabel(d.day, { day: "numeric", month: "long" })) +
                     '"><span class="wd">' +
                     esc(dayLabel(d.day, { weekday: "short" })) +
                     '</span><span class="dt">' +
@@ -2814,7 +2878,7 @@
                     nfmt(d.newAccounts) +
                     "</b>new<b>" +
                     nfmt(d.visitors) +
-                    "</b>seen</div>",
+                    "</b>seen</button>",
                 )
                 .join("");
               const ppl = a.people || [];
@@ -2849,6 +2913,17 @@
                 : '<div class="none">Nobody in this view yet.</div>';
             })
             .catch((e) => toast(e.message));
+        $("#aud-days").addEventListener("click", (e) => {
+          const b = e.target.closest("button[data-day]");
+          if (!b) return;
+          aud.day = aud.day === b.dataset.day ? "" : b.dataset.day;
+          loadAudience();
+        });
+        $("#aud-date").addEventListener("change", (e) => {
+          aud.day = e.target.value;
+          loadAudience();
+        });
+        $("#aud-date").max = new Date().toISOString().slice(0, 10);
         [
           ["#aud-range", "range"],
           ["#aud-who", "who"],
@@ -2857,6 +2932,7 @@
             const b = e.target.closest("button");
             if (!b) return;
             aud[key] = b.dataset.v;
+            if (key === "range") aud.day = ""; // choosing a period leaves single-day mode
             $$("button", $(sel)).forEach((x) =>
               x.setAttribute("aria-pressed", String(x === b)),
             );
