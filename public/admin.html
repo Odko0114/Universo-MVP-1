@@ -1054,6 +1054,23 @@
         font-size: 0.78rem;
         color: var(--ink-soft);
       }
+      .aud-days .wd {
+        display: block;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--ink-faint);
+      }
+      .aud-days .dt {
+        display: block;
+        font-weight: 600;
+        color: var(--ink);
+        margin-bottom: 4px;
+      }
+      .aud-days .now {
+        background: var(--surface-2);
+        border-radius: 8px;
+      }
       .aud-days b {
         display: block;
         color: var(--ink);
@@ -2697,6 +2714,12 @@
 
         // ---- who came: new vs returning ----
         const aud = { range: "today", who: "all" };
+        // "2026-10-13" -> "13 Oct" / "Mon" (the date is a plain day, not a moment, so format it as UTC)
+        const dayLabel = (iso, opts) =>
+          new Date(iso + "T12:00:00Z").toLocaleDateString("en-GB", {
+            ...opts,
+            timeZone: "UTC",
+          });
         const loadAudience = () =>
           api("/api/admin/audience?range=" + aud.range + "&who=" + aud.who)
             .then((a) => {
@@ -2781,9 +2804,13 @@
               $("#aud-days").innerHTML = a.daily
                 .map(
                   (d) =>
-                    "<div>" +
-                    esc(d.day.slice(5)) +
-                    "<b>" +
+                    '<div class="' +
+                    (d.day === a.daily[a.daily.length - 1].day ? "now" : "") +
+                    '"><span class="wd">' +
+                    esc(dayLabel(d.day, { weekday: "short" })) +
+                    '</span><span class="dt">' +
+                    esc(dayLabel(d.day, { day: "numeric", month: "short" })) +
+                    "</span><b>" +
                     nfmt(d.newAccounts) +
                     "</b>new<b>" +
                     nfmt(d.visitors) +
