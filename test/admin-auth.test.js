@@ -96,6 +96,14 @@ test("GET /api/admin/me now succeeds with the session cookie", async () => {
   assert.equal(r.json.admin.email, email);
 });
 
+test("GET /api/admin/audience returns counts only, and falls back on bad input", async () => {
+  const r = await req("GET", "/api/admin/audience?range=bogus&who=x");
+  assert.equal(r.status, 200);
+  assert.equal(r.json.range, "today");
+  assert.equal(r.json.daily.length, 7);
+  assert.ok(!/@|password/i.test(JSON.stringify(r.json)));
+});
+
 test("GET /api/admin/health returns the dataset overview and recent edits", async () => {
   const r = await req("GET", "/api/admin/health");
   assert.equal(r.status, 200);

@@ -40,6 +40,7 @@ const recommend = require("./lib/recommend");
 const trends = require("./lib/trends");
 const overridesLib = require("./lib/overrides");
 const csvImport = require("./lib/csv-import");
+const audience = require("./lib/audience");
 const usage = require("./lib/usage");
 const adminData = require("./lib/admin-data");
 const languageReqs = require("./lib/language-requirements");
@@ -2358,6 +2359,18 @@ adminApi.post("/record/:type/:id/verify", (req, res) => {
 
 // Usage: weekly counts with an 8-week trend, demand lists, unmet demand, and
 // account aggregates (counts only — never who).
+// Who came — counts only — never names or emails.
+adminApi.get("/audience", (req, res) =>
+  res.json(
+    audience.computeAudience({
+      students: store.read("students"),
+      events: events.readAll(),
+      range: String(req.query.range || ""),
+      who: String(req.query.who || ""),
+    }),
+  ),
+);
+
 adminApi.get("/usage", (_req, res) => {
   const all = events.readAll();
   const u = usage.computeUsage(all);

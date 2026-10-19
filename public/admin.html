@@ -254,6 +254,9 @@
         display: grid;
         gap: 20px;
       }
+      .wrap > * {
+        min-width: 0;
+      }
       .card {
         background: var(--surface);
         border: 1px solid var(--line);
@@ -939,6 +942,74 @@
         flex-wrap: wrap;
         margin-bottom: 14px;
       }
+      .aud {
+        min-width: 0;
+        padding: 18px 20px;
+        display: grid;
+        gap: 14px;
+      }
+      .aud-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .aud .tc-head {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .aud-grid > div {
+        min-width: 0;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px 14px;
+      }
+      .aud-grid b {
+        display: block;
+        font-size: 1.6rem;
+        font-variant-numeric: tabular-nums;
+        line-height: 1.1;
+      }
+      .aud-grid span,
+      .aud-filter .note {
+        font-size: 0.82rem;
+        color: var(--ink-soft);
+      }
+      .aud-grid small {
+        display: block;
+        font-size: 0.78rem;
+        color: var(--ink-faint);
+        margin-top: 4px;
+      }
+      .aud-filter {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+      }
+      .aud-lists {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 6px 24px;
+      }
+      .aud-lists h3 {
+        font-size: 0.8rem;
+        color: var(--ink-soft);
+        margin: 0 0 2px;
+      }
+      .aud-days {
+        font-size: 0.72rem;
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 6px;
+        text-align: center;
+        font-size: 0.78rem;
+        color: var(--ink-soft);
+      }
+      .aud-days b {
+        display: block;
+        color: var(--ink);
+        font-variant-numeric: tabular-nums;
+      }
       .seg {
         display: inline-flex;
         background: var(--surface-2);
@@ -1333,6 +1404,45 @@
         aria-labelledby="tab-usage"
         hidden
       >
+        <section class="card aud" aria-label="Who came">
+          <div class="tc-head">
+            <h2 class="t">Who came</h2>
+            <div class="seg" id="aud-range" role="group" aria-label="Period">
+              <button type="button" data-v="today" aria-pressed="true">
+                Today
+              </button>
+              <button type="button" data-v="7d" aria-pressed="false">
+                7 days
+              </button>
+              <button type="button" data-v="30d" aria-pressed="false">
+                30 days
+              </button>
+            </div>
+          </div>
+          <div class="aud-grid" id="aud-tiles"></div>
+          <div class="aud-filter">
+            <span class="note">Show details for</span>
+            <div
+              class="seg"
+              id="aud-who"
+              role="group"
+              aria-label="Which accounts"
+            >
+              <button type="button" data-v="all" aria-pressed="true">
+                All
+              </button>
+              <button type="button" data-v="new" aria-pressed="false">
+                New
+              </button>
+              <button type="button" data-v="returning" aria-pressed="false">
+                Returning
+              </button>
+            </div>
+          </div>
+          <div class="aud-lists" id="aud-lists"></div>
+          <div class="aud-days" id="aud-days" aria-label="Last 7 days"></div>
+        </section>
+
         <div>
           <div class="label" style="margin-bottom: 12px">
             Last 7 days · trend over 8 weeks
@@ -2532,7 +2642,96 @@
           return s || "Search";
         };
 
-        const loadUsage = () =>
+        // ---- who came: new vs returning ----
+        const aud = { range: "today", who: "all" };
+        const loadAudience = () =>
+          api("/api/admin/audience?range=" + aud.range + "&who=" + aud.who)
+            .then((a) => {
+              const lab = {
+                today: "today",
+                "7d": "in the last 7 days",
+                "30d": "in the last 30 days",
+              }[a.range];
+              const tile = (n, l, sub) =>
+                "<div><b>" +
+                nfmt(n) +
+                "</b><span>" +
+                l +
+                "</span>" +
+                (sub ? "<small>" + sub + "</small>" : "") +
+                "</div>";
+              $("#aud-tiles").innerHTML =
+                tile(
+                  a.accounts.total,
+                  "students active " + lab,
+                  plural(a.accounts.new, "new", "new") +
+                    " · " +
+                    nfmt(a.accounts.returning) +
+                    " returning",
+                ) +
+                tile(
+                  a.visitors.total,
+                  "visitors " + lab,
+                  nfmt(a.visitors.new) +
+                    " new · " +
+                    nfmt(a.visitors.returning) +
+                    " returning",
+                );
+              const list = (t, rows) =>
+                "<div><h3>" +
+                t +
+                "</h3>" +
+                (rows.length
+                  ? rows
+                      .map(
+                        (r) =>
+                          '<div class="lr"><div class="nm">' +
+                          esc(r.label) +
+                          '</div><div class="ct">' +
+                          nfmt(r.count) +
+                          "</div></div>",
+                      )
+                      .join("")
+                  : '<div class="none">None yet</div>') +
+                "</div>";
+              $("#aud-lists").innerHTML =
+                list("Home country", a.breakdown.countries) +
+                list("Field of interest", a.breakdown.fields) +
+                list("Degree", a.breakdown.degrees);
+              $("#aud-days").innerHTML = a.daily
+                .map(
+                  (d) =>
+                    "<div>" +
+                    esc(d.day.slice(5)) +
+                    "<b>" +
+                    nfmt(d.newAccounts) +
+                    "</b>new<b>" +
+                    nfmt(d.visitors) +
+                    "</b>seen</div>",
+                )
+                .join("");
+            })
+            .catch((e) => toast(e.message));
+        [
+          ["#aud-range", "range"],
+          ["#aud-who", "who"],
+        ].forEach(([sel, key]) =>
+          $(sel).addEventListener("click", (e) => {
+            const b = e.target.closest("button");
+            if (!b) return;
+            aud[key] = b.dataset.v;
+            $$("button", $(sel)).forEach((x) =>
+              x.setAttribute("aria-pressed", String(x === b)),
+            );
+            loadAudience();
+          }),
+        );
+
+        const loadUsage = () => {
+          loadAudience();
+          return loadUsageNumbers();
+        };
+        const loadUsageNumbers = () =>
           api("/api/admin/usage")
             .then((u) => {
               usageLoaded = true;
