@@ -212,3 +212,29 @@ test("a picked day shows exactly that day, compared with the day before; future 
   assert.equal(old.accounts.new, 2); // the two signups from 10 days ago
   assert.equal(old.previous.accounts.new, 0);
 });
+
+test("a student who came back on a past day is found from the daily log, even if they visited since", () => {
+  const log = [
+    {
+      student_id: "z",
+      signup_date: ago(20),
+      last_active_date: ago(0), // visited again today
+      active_days: ["2026-10-14", "2026-10-19"],
+    },
+  ];
+  const sat = computeAudience({
+    students: log,
+    events: [],
+    now: NOW,
+    day: "2026-10-14",
+  });
+  assert.deepEqual(sat.accounts, { new: 0, returning: 1, total: 1 });
+  const other = computeAudience({
+    students: log,
+    events: [],
+    now: NOW,
+    day: "2026-10-15",
+  });
+  assert.equal(other.accounts.returning, 0);
+  assert.equal(sat.trackedSince, "2026-10-14");
+});

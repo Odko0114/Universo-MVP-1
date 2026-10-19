@@ -2791,7 +2791,11 @@
                 ),
               );
               $("#aud-date").value = a.day || "";
-              $("#aud-note").hidden = !a.day;
+              // Only past days before per-day logging began can undercount returning.
+              $("#aud-note").hidden = !(
+                a.day &&
+                (!a.trackedSince || a.day < a.trackedSince)
+              );
               const cmp = (cur, prev) => {
                 const d = cur - prev;
                 return (

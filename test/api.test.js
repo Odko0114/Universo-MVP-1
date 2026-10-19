@@ -223,6 +223,26 @@ test("a logged-in student sees rule-based match reasons on a profile; logged-out
   await req("DELETE", "/api/me");
 });
 
+test("a signed-in visit is logged as an active day (so past returning visits stay answerable)", async () => {
+  const email = `days_${Date.now()}@example.com`;
+  await req("POST", "/api/auth/register", {
+    full_name: "Days T",
+    email,
+    password: "password123",
+    consent: true,
+  });
+  assert.equal((await req("GET", "/api/me/journey")).status, 200);
+  const me = store.read("students").find((s) => s.email === email);
+  const today = require("../lib/audience").dayKey(Date.now());
+  assert.ok(me.active_days.includes(today), JSON.stringify(me.active_days));
+  assert.equal(
+    new Set(me.active_days).size,
+    me.active_days.length,
+    "one entry per day",
+  );
+  await req("DELETE", "/api/me");
+});
+
 test("PATCH /api/me/profile stores matching fields and flips profile_completed", async () => {
   const email = `prof_${Date.now()}@example.com`;
   const reg = await req("POST", "/api/auth/register", {
@@ -531,8 +551,7 @@ test("GET /me/journey assembles the dashboard and gains match picks once a profi
   // Scholarships are now destination-driven: with nothing saved and no
   // preferred countries, there are no groups yet (home country is not a source).
   assert.ok(
-    before.json.scholarships &&
-      Array.isArray(before.json.scholarships.groups),
+    before.json.scholarships && Array.isArray(before.json.scholarships.groups),
     "scholarships payload is the grouped shape",
   );
   assert.equal(
@@ -713,10 +732,16 @@ test("shortlist priority + reason persist and surface on /me/saved", async () =>
   const tum = saved.universities.find((u) => u.id === "tum");
   assert.equal(tum.application_priority, "target");
   assert.equal(tum.application_reason, "Strong CS program, English-taught");
-  assert.equal(tum.application_status, "planning", "priority doesn't start an application");
+  assert.equal(
+    tum.application_status,
+    "planning",
+    "priority doesn't start an application",
+  );
 
   // Unknown priority rejected.
-  const bad = await req("POST", "/api/me/application/tum", { priority: "dream" });
+  const bad = await req("POST", "/api/me/application/tum", {
+    priority: "dream",
+  });
   assert.equal(bad.status, 400);
 
   await req("DELETE", "/api/me");
@@ -735,7 +760,11 @@ test("Dream Plan shows only committed applications (planning stays on the shortl
 
   // Both saved (status planning) → neither is a Dream Plan application yet.
   let j = (await req("GET", "/api/me/journey")).json;
-  assert.equal(j.applications.length, 0, "planning universities aren't applications");
+  assert.equal(
+    j.applications.length,
+    0,
+    "planning universities aren't applications",
+  );
 
   // Start one → it appears in the Dream Plan; the other stays out.
   await req("POST", "/api/me/application/tum", { status: "preparing" });
@@ -774,7 +803,8 @@ test("application checklists are fully independent per application (incl. shared
   assert.equal(r.status, 200);
 
   const readyOf = (j, uni, key) =>
-    j.applications.find((a) => a.uni_id === uni).docs.find((d) => d.key === key).ready;
+    j.applications.find((a) => a.uni_id === uni).docs.find((d) => d.key === key)
+      .ready;
 
   let j = (await req("GET", "/api/me/journey")).json;
   assert.equal(readyOf(j, "tum", "passport"), true, "A: passport ticked");
@@ -788,9 +818,21 @@ test("application checklists are fully independent per application (incl. shared
   });
   j = (await req("GET", "/api/me/journey")).json;
   assert.equal(readyOf(j, "tum", "passport"), true, "A unchanged");
-  assert.equal(readyOf(j, "tum", "personal_statement"), false, "A's letter still not done");
-  assert.equal(readyOf(j, "uni-freiburg", "passport"), false, "B passport still off");
-  assert.equal(readyOf(j, "uni-freiburg", "personal_statement"), true, "B's letter done");
+  assert.equal(
+    readyOf(j, "tum", "personal_statement"),
+    false,
+    "A's letter still not done",
+  );
+  assert.equal(
+    readyOf(j, "uni-freiburg", "passport"),
+    false,
+    "B passport still off",
+  );
+  assert.equal(
+    readyOf(j, "uni-freiburg", "personal_statement"),
+    true,
+    "B's letter done",
+  );
 
   // Possessing a doc in My Documents is a hint (`have`), never completion.
   await req("POST", "/api/me/document", { key: "transcript", done: true });
@@ -799,7 +841,11 @@ test("application checklists are fully independent per application (incl. shared
     .find((a) => a.uni_id === "tum")
     .docs.find((d) => d.key === "transcript");
   assert.equal(tumTranscript.have, true, "recognized as on file");
-  assert.equal(tumTranscript.ready, false, "but not auto-completed for the application");
+  assert.equal(
+    tumTranscript.ready,
+    false,
+    "but not auto-completed for the application",
+  );
 
   await req("DELETE", "/api/me");
 });
@@ -830,13 +876,20 @@ test("since_away surfaces real deadline deltas for a returning student", async (
   store.write("students", students);
 
   const j = (await req("GET", "/api/me/journey")).json;
-  assert.ok(j.since_away, "a returning student with a newly-urgent deadline gets a summary");
+  assert.ok(
+    j.since_away,
+    "a returning student with a newly-urgent deadline gets a summary",
+  );
   assert.equal(j.since_away.items[0].uni_id, "tum");
   assert.equal(j.since_away.items[0].kind, "urgent");
 
   // The marker advanced, so an immediate second load shows nothing.
   const j2 = (await req("GET", "/api/me/journey")).json;
-  assert.equal(j2.since_away, null, "no phantom 'while away' on a fresh reload");
+  assert.equal(
+    j2.since_away,
+    null,
+    "no phantom 'while away' on a fresh reload",
+  );
 
   await req("DELETE", "/api/me");
 });
@@ -861,7 +914,11 @@ test("notification prefs resolve to defaults, PATCH persists, one-click unsubscr
   });
   assert.equal(patched.status, 200);
   assert.equal(patched.json.notifications.weekly_digest, false);
-  assert.equal(patched.json.notifications.deadline_reminders, true, "others unchanged");
+  assert.equal(
+    patched.json.notifications.deadline_reminders,
+    true,
+    "others unchanged",
+  );
 
   // Requires auth.
   const unauth = await fetch(base + "/api/me/notifications", {
@@ -873,7 +930,9 @@ test("notification prefs resolve to defaults, PATCH persists, one-click unsubscr
 
   // One-click unsubscribe (no login) via the stateless HMAC token.
   const token = authLib.unsubscribeToken(id);
-  const un = await fetch(`${base}/unsubscribe?token=${encodeURIComponent(token)}`);
+  const un = await fetch(
+    `${base}/unsubscribe?token=${encodeURIComponent(token)}`,
+  );
   assert.equal(un.status, 200);
   assert.match(await un.text(), /unsubscribed/i);
   // All categories now off in the store.

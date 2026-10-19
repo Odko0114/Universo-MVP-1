@@ -151,7 +151,7 @@ Short-form video feed, student-to-student chat/networking, and lead-capture form
 
 **Usage** — plain numbers, no cohorts.
 
-- **Who came** card on top: students and visitors for Today / 7 days / 30 days, split new vs returning, each compared with the period before it, with an All / New / Returning filter that narrows the home-country, field and degree breakdown (blank profiles are counted as "not filled in"), and a founder-only "Who they are" list (name, country, field, joined, last seen — never emails). A visitor with an account counts once across devices. Helsinki days; `lib/audience.js`.
+- **Who came** card on top: students and visitors for Today / 7 days / 30 days, split new vs returning, each compared with the period before it, with an All / New / Returning filter that narrows the home-country, field and degree breakdown (blank profiles are counted as "not filled in"), and a founder-only "Who they are" list (name, country, field, joined, last seen — never emails). A visitor with an account counts once across devices. Each signed-in student's visit days are logged (`active_days`, one entry per day, last 400), so "returning on day X" stays answerable later. Helsinki days; `lib/audience.js`.
 - Visitors, new accounts, searches and shortlist saves for the last 7 days with an 8-week trend, plus apply clicks, plans started, scholarships tracked and comparisons.
 - **Searches with no good match** — real searches (with the filters used) that returned 0–2 results: the best data to add next.
 - Top searched fields, countries, budgets and degree levels; most saved / viewed / apply-clicked universities; account counts (verified, profiled, planning, new-and-unverified) and where students are from. Counts only, never names.
