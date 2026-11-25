@@ -3705,6 +3705,259 @@ a.ov-deadline:hover strong {
 }
 
 /* =====================================================================
+   Search landing pages + related links (lib/seo-pages.js) and site footer
+   ===================================================================== */
+.seo {
+  color: var(--ink-soft);
+}
+.seo--more {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 0 16px 28px;
+}
+.seo--more:empty {
+  display: none;
+}
+.seo h1 {
+  color: var(--ink);
+  font-size: var(--text-3xl);
+  line-height: 1.15;
+  margin: 8px 0 8px;
+  text-wrap: balance;
+}
+.seo h2 {
+  color: var(--ink);
+  font-size: var(--text-xl);
+  margin: 32px 0 10px;
+}
+.seo h3 {
+  color: var(--ink);
+  font-size: 1rem;
+  margin: 18px 0 4px;
+}
+.seo p,
+.seo li {
+  max-width: 72ch;
+}
+.seo a {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.seo-lead {
+  font-size: 1.08rem;
+}
+.seo-crumbs {
+  font-size: 0.85rem;
+  color: var(--ink-faint);
+}
+.seo-crumbs a {
+  display: inline-block;
+  padding: 8px 0;
+}
+.seo-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin: 18px 0;
+}
+.seo-facts > div {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+}
+.seo-facts dt {
+  font-size: 0.8rem;
+  color: var(--ink-faint);
+}
+.seo-facts dd {
+  margin: 2px 0 0;
+  color: var(--ink);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.seo-chips,
+.seo-more,
+.seo-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.seo-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.seo-chips a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 0.92rem;
+}
+.seo-chips a:hover {
+  border-color: var(--teal-600);
+}
+.seo-chips span,
+.seo-more span,
+.seo-list span {
+  color: var(--ink-faint);
+  font-weight: 400;
+  font-size: 0.88rem;
+}
+.seo-more {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+  gap: 2px 20px;
+}
+.seo-more li {
+  padding: 8px 0;
+}
+.seo-list li {
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+.seo-list li:first-child {
+  border-top: 0;
+}
+.seo-table {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.seo-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+.seo-table th,
+.seo-table td {
+  text-align: left;
+  padding: 10px 14px;
+  border-top: 1px solid var(--line);
+  vertical-align: top;
+}
+.seo-table thead th {
+  border-top: 0;
+  color: var(--ink-faint);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+.seo-table td {
+  font-variant-numeric: tabular-nums;
+}
+.seo-table td.dim {
+  color: var(--ink-faint);
+}
+.seo-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 32px 0 0;
+  padding: 18px 20px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+.seo-cta strong {
+  color: var(--ink);
+}
+.seo-cta p {
+  margin: 2px 0 0;
+}
+.seo-source {
+  margin-top: 28px;
+  font-size: 0.85rem;
+  color: var(--ink-faint);
+}
+.sitefoot {
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+}
+.sitefoot__in {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 24px 16px 32px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 20px;
+}
+.sitefoot h2 {
+  margin: 0 0 4px;
+  font-size: 0.85rem;
+  color: var(--ink-faint);
+}
+.sitefoot ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.sitefoot a {
+  display: inline-block;
+  padding: 7px 0;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+  text-decoration: none;
+}
+.sitefoot a:hover {
+  color: var(--ink);
+  text-decoration: underline;
+}
+@media (max-width: 640px) {
+  .seo-table thead {
+    display: none;
+  }
+  .seo-table tr {
+    display: block;
+    padding: 10px 14px;
+    border-top: 1px solid var(--line);
+  }
+  .seo-table tbody tr:first-child {
+    border-top: 0;
+  }
+  .seo-table th,
+  .seo-table td {
+    display: inline;
+    border: 0;
+    padding: 0;
+  }
+  .seo-table th[scope="row"] {
+    display: block;
+  }
+  .seo-table td::after {
+    content: attr(data-after) " · ";
+  }
+  .seo-table td::before {
+    content: attr(data-before);
+  }
+  .seo-table td:nth-last-child(1)::after,
+  .seo-table td:nth-last-child(2):has(+ .dim)::after {
+    content: attr(data-after);
+  }
+  .seo-table td.nil,
+  .seo-table td.dim {
+    display: none;
+  }
+  .seo-table td {
+    font-size: 0.86rem;
+    color: var(--ink-faint);
+  }
+  .seo-cta .btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* =====================================================================
    Landing page (public/landing.html) — shares every color/button/shadow
    variable with the app so the transition in feels like one product.
    ===================================================================== */

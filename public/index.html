@@ -13,6 +13,8 @@
       content="Universo helps international students discover and compare universities abroad."
     />
     <link rel="icon" href="/favicon.svg?v=3" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/img/icon-96.png" />
+    <link rel="apple-touch-icon" href="/img/icon-180.png" />
     <!-- Preload only the `latin` subsets: they cover almost every page render,
          and arriving before first paint avoids a visible reflow when the body
          font swaps in. `latin-ext` stays lazy — it loads only when a page
@@ -79,6 +81,9 @@
 
     <!-- Route outlet -->
     <main id="view" class="view" tabindex="-1" aria-live="polite"></main>
+
+    <!-- Country / subject / legal links, filled by the server (lib/seo-pages.js). -->
+    <!--SITE_FOOTER-->
 
     <!-- Bottom tab navigation (mobile).
          Icons are inline SVG, not emoji: emoji render as full-colour OS glyphs

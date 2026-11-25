@@ -138,6 +138,10 @@ Short-form video feed, student-to-student chat/networking, and lead-capture form
 
 ---
 
+## Search landing pages (SEO)
+
+`lib/seo-pages.js` builds server-rendered pages from data we already hold: `/study-in-europe` (hub), `/study-in/:country`, `/study/:subject`, `/universities-in/:city`, plus the first HTML of `/scholarships`, `/scholarship/:key` and the title, description and related links of every profile. A page exists only where there is enough real data; estimates are labelled, unresearched tuition never appears, passed deadlines are shown as past. Related links render outside `<main>` because the SPA rewrites it and Google indexes after scripts run. Unknown URLs return a real 404. `test/seo-pages.test.js` opens every sitemap URL and fails on a duplicate title, missing description, wrong canonical or dead internal link.
+
 ## Admin — keep the data accurate, see what to curate next
 
 `/admin` is a **password-protected** admin (separate login — see [Admin setup](#admin-setup)) with two screens:
@@ -151,7 +155,8 @@ Short-form video feed, student-to-student chat/networking, and lead-capture form
 
 **Usage** — plain numbers, no cohorts.
 
-- **Who came** card on top: students and visitors for Today / 7 days / 30 days, split new vs returning, each compared with the period before it, with an All / New / Returning filter that narrows the home-country, field and degree breakdown (blank profiles are counted as "not filled in"), and a founder-only "Who they are" list (name, country, field, joined, last seen — never emails). A visitor with an account counts once across devices. Each signed-in student's visit days are logged (`active_days`, one entry per day, last 400), so "returning on day X" stays answerable later. Helsinki days; `lib/audience.js`.
+- **All time** card: total students, real visitors (did more than open one page, or have an account), active / returning students, all-time and 30-day usage, how far people get, growth by month. Reads rotated event files too (`lib/overall.js`, `events.readHistory`). Crawlers are no longer counted as visitors (user agent tested, never stored).
+- **Who came** card: students and visitors for Today / 7 days / 30 days, split new vs returning, each compared with the period before it, with an All / New / Returning filter that narrows the home-country, field and degree breakdown (blank profiles are counted as "not filled in"), and a founder-only "Who they are" list (name, country, field, joined, last seen — never emails). A visitor with an account counts once across devices. Each signed-in student's visit days are logged (`active_days`, one entry per day, last 400), so "returning on day X" stays answerable later. Helsinki days; `lib/audience.js`.
 - Visitors, new accounts, searches and shortlist saves for the last 7 days with an 8-week trend, plus apply clicks, plans started, scholarships tracked and comparisons.
 - **Searches with no good match** — real searches (with the filters used) that returned 0–2 results: the best data to add next.
 - Top searched fields, countries, budgets and degree levels; most saved / viewed / apply-clicked universities; account counts (verified, profiled, planning, new-and-unverified) and where students are from. Counts only, never names.

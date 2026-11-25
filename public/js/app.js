@@ -4,6 +4,20 @@
   ("use strict");
 
   const view = document.getElementById("view");
+
+  // What the server sent for THIS url. Google indexes the page after scripts run,
+  // so the app must not swap a specific server title for a generic one.
+  const SSR_PATH = location.pathname;
+  const SSR_TITLE = document.title;
+  const SSR_HTML = view.innerHTML;
+  // Pages that are complete as served (lib/seo-pages.js) — the app shows them
+  // as they are instead of rendering its own version.
+  const SERVER_PAGES = ["study-in-europe", "study-in", "study", "universities-in"];
+  const isServerPage = (pathname) =>
+    SERVER_PAGES.includes(String(pathname).split(/[/?#]/)[1]);
+  const setTitle = (t) => {
+    document.title = location.pathname === SSR_PATH ? SSR_TITLE : t;
+  };
   const PAGE_SIZE = 48;
 
   // Matching-profile option lists — the field list MUST mirror lib/fields.js
@@ -398,6 +412,7 @@
       )
     )
       return;
+    if (isServerPage(href)) return; // a real page load
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
     e.preventDefault();
     // A "back" control (e.g. the profile's "← Back to discover") returns to the
@@ -617,7 +632,7 @@
     // recommendations) gate on login, at the moment of the action.
     discoverFromUrl();
     setActiveNav("discover");
-    document.title = "Discover universities in Europe — Universo";
+    setTitle("Discover universities in Europe — Universo");
     const d = state.discover;
 
     if (!state.filterMeta) {
@@ -1156,7 +1171,7 @@
       return;
     }
     setActiveNav("journey");
-    document.title = "Dream Plan — Universo";
+    setTitle("Dream Plan — Universo");
     const first = esc((state.user.full_name || "").split(" ")[0] || "there");
     view.innerHTML = `
       <div class="journey">
@@ -1866,7 +1881,7 @@
       return;
     }
     setActiveNav("saved");
-    document.title = "Shortlist — Universo";
+    setTitle("Shortlist — Universo");
     view.innerHTML = `<div class="section-head"><h2>Your shortlist</h2></div><p class="muted sl-lede">Universities you're considering, before you decide where to apply.</p><div id="sl-body"><div class="grid">${'<div class="skeleton"></div>'.repeat(3)}</div></div>`;
     const body = () => document.getElementById("sl-body");
     try {
@@ -2121,7 +2136,7 @@
       return;
     }
     setActiveNav("saved"); // Compare belongs to the shortlist, which lives under Saved.
-    document.title = "Compare — Universo";
+    setTitle("Compare — Universo");
     view.innerHTML = `<div class="section-head"><h2>Compare</h2></div><div class="skeleton skeleton--block"></div>`;
 
     try {
@@ -2526,7 +2541,7 @@
 
     trackProfileView(u.id);
     rememberLastViewed(u);
-    document.title = `${u.name} — Universo`;
+    setTitle(`${u.name} — Universo`);
     const saved = state.savedIds.has(u.id);
     const src = u.source || (u.tuition_range ? "curated" : "global");
     const isCurated = src === "curated";
@@ -2892,7 +2907,7 @@
 
   async function renderScholarships() {
     setActiveNav("scholarships");
-    document.title = "Scholarships — Universo";
+    setTitle("Scholarships — Universo");
     view.innerHTML = `<div class="skeleton" style="height:280px"></div>`;
     let data;
     try {
@@ -3238,7 +3253,7 @@
       view.innerHTML = `<a class="back-link" href="/scholarships" data-back>← Back to scholarships</a>${emptyState({ iconName: "alert", title: "Scholarship not found", sub: "It may have moved — browse the full list.", ctaHref: "/scholarships", ctaLabel: "All scholarships" })}`;
       return;
     }
-    document.title = `${s.name} — Universo`;
+    setTitle(`${s.name} — Universo`);
     const t = (data.tracked || {})[key] || {};
     const trackBlock = state.user
       ? `<div class="info-card"><h3>Track this scholarship</h3>
@@ -3303,7 +3318,7 @@
 
   function renderAccount(initialMode) {
     setActiveNav("account");
-    document.title = "Account — Universo";
+    setTitle("Account — Universo");
     if (state.user) return renderAccountLoggedIn();
     const params = new URLSearchParams(location.search);
     const next = params.get("next") || "";
@@ -3639,7 +3654,7 @@
     // Account claimed the user was somewhere they weren't. No tab is the honest
     // answer here; setActiveNav(null) matches nothing and clears them all.
     setActiveNav(null);
-    document.title = "Set up matching — Universo";
+    setTitle("Set up matching — Universo");
     // The country step needs the facet list — load it once, then re-render.
     if (!state.filterMeta) {
       try {
@@ -3929,7 +3944,7 @@
   }
 
   function renderNotFound() {
-    document.title = "Page not found — Universo";
+    setTitle("Page not found — Universo");
     view.innerHTML = emptyState({
       iconName: "alert",
       title: "Page not found",
@@ -3941,7 +3956,7 @@
 
   function renderPrivacy() {
     setActiveNav("account");
-    document.title = "Privacy — Universo";
+    setTitle("Privacy — Universo");
     view.innerHTML = `
       <a class="back-link" href="/account">← Back</a>
       <div class="card" style="max-width:680px">
@@ -3959,7 +3974,7 @@
 
   function renderTerms() {
     setActiveNav("account");
-    document.title = "Terms — Universo";
+    setTitle("Terms — Universo");
     view.innerHTML = `
       <a class="back-link" href="/account">← Back</a>
       <div class="card" style="max-width:680px">
@@ -4008,7 +4023,7 @@
 
   async function renderVerifyEmail() {
     setActiveNav("account");
-    document.title = "Verify email — Universo";
+    setTitle("Verify email — Universo");
     const token = new URLSearchParams(location.search).get("token") || "";
     if (!token) {
       view.innerHTML = emptyState({
@@ -4044,7 +4059,7 @@
 
   function renderForgotPassword() {
     setActiveNav("account");
-    document.title = "Reset your password — Universo";
+    setTitle("Reset your password — Universo");
     view.innerHTML = `
       <div class="auth-card">
         <div class="card auth-card__body">
@@ -4089,7 +4104,7 @@
 
   function renderResetPassword() {
     setActiveNav("account");
-    document.title = "Choose a new password — Universo";
+    setTitle("Choose a new password — Universo");
     const token = new URLSearchParams(location.search).get("token") || "";
     if (!token) {
       view.innerHTML = emptyState({
@@ -4273,7 +4288,7 @@
     const bn = document.getElementById("verify-banner");
     if (bn) bn.remove();
     setActiveNav("account");
-    document.title = "Verify your email — Universo";
+    setTitle("Verify your email — Universo");
     const u = state.user;
     view.innerHTML = `
       <div class="auth-card">
@@ -4338,6 +4353,21 @@
     const savedY = Number((history.state || {}).scrollY) || 0;
     if (!savedY) window.scrollTo(0, 0);
     view.focus({ preventScroll: true });
+
+    // Server-made related links belong to the page they were served with.
+    const more = document.getElementById("ssr-more");
+    if (more) more.hidden = location.pathname !== SSR_PATH;
+
+    if (isServerPage(location.pathname)) {
+      // Came back here with the back button to a page we weren't loaded on.
+      if (location.pathname !== SSR_PATH) return location.reload();
+      document.title = SSR_TITLE;
+      if (view.innerHTML !== SSR_HTML) view.innerHTML = SSR_HTML;
+      render._ranOnce = true;
+      setActiveNav("");
+      if (savedY) applyScroll(savedY);
+      return;
+    }
 
     // "/" is the marketing landing page (served statically). If the SPA is ever
     // asked to render it, send a logged-in student to their plan (their "what

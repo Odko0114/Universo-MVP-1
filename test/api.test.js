@@ -123,7 +123,7 @@ test("GET /discover is public and server-rendered — no auth wall, no redirect"
   const res = await fetch(base + "/discover", { redirect: "manual" }); // no cookies at all
   assert.equal(res.status, 200);
   const html = await res.text();
-  assert.match(html, /<title>Discover universities in Europe/);
+  assert.match(html, /<title>Find universities in Europe/);
   assert.match(html, /rel="canonical"/);
   assert.match(html, /Same Start\. Equal Chance\./); // slim signup banner in the SSR snapshot
 });
@@ -306,6 +306,7 @@ test("every /api/admin/* and partner route rejects unauthenticated access with J
     "/api/admin/me",
     "/api/admin/health",
     "/api/admin/records",
+    "/api/admin/overall",
     "/api/admin/record/university/eter-fr7045",
     "/api/admin/usage",
     "/api/admin/leads",

@@ -41,6 +41,8 @@ const trends = require("./lib/trends");
 const overridesLib = require("./lib/overrides");
 const csvImport = require("./lib/csv-import");
 const audience = require("./lib/audience");
+const overall = require("./lib/overall");
+const { createSeoPages } = require("./lib/seo-pages");
 const usage = require("./lib/usage");
 const adminData = require("./lib/admin-data");
 const languageReqs = require("./lib/language-requirements");
@@ -302,6 +304,19 @@ app.use((req, res, next) => {
 });
 
 app.use(auth.anon); // ensures req.anon (anonymous analytics id)
+
+// Crawlers don't keep cookies, so every hit looked like a brand-new visitor and
+// inflated the numbers. The user agent is only tested here — never stored.
+const BOT_UA =
+  /bot\b|bot\/|crawl|spider|slurp|preview|facebookexternalhit|whatsapp|telegram|embedly|headless|lighthouse|pingdom|uptime|monitor|curl|wget|python|go-http|okhttp|axios|scrapy|java\/|libwww|httpclient/i;
+const isBot = (req) => {
+  const ua = req.get("user-agent") || "";
+  return !ua || BOT_UA.test(ua);
+};
+/** Record something a PERSON did; crawler traffic is ignored. */
+const recordHuman = (req, type, meta = {}) => {
+  if (!isBot(req)) events.record(type, { anon: req.anon, ...meta });
+};
 
 const api = express.Router();
 
@@ -978,8 +993,7 @@ api.get("/universities", universitiesLimiter, (req, res) => {
   if (!(Number(req.query.offset) > 0)) {
     const meta = usage.searchMeta(req.query, SEARCH_VOCAB);
     if (meta)
-      events.record("search", {
-        anon: req.anon,
+      recordHuman(req, "search", {
         results: result.count,
         ...meta,
       });
@@ -1090,7 +1104,7 @@ api.post("/track", trackLimiter, (req, res) => {
       : 0;
   }
 
-  events.record(type, meta);
+  if (!isBot(req)) events.record(type, meta);
   res.status(204).end();
 });
 
@@ -2364,7 +2378,7 @@ adminApi.get("/audience", (req, res) =>
   res.json(
     audience.computeAudience({
       students: store.read("students"),
-      events: events.readAll(),
+      events: events.readHistory(),
       range: String(req.query.range || ""),
       who: String(req.query.who || ""),
       day: String(req.query.day || ""),
@@ -2373,8 +2387,18 @@ adminApi.get("/audience", (req, res) =>
   ),
 );
 
+// The all-time picture: everyone who ever came, and what they did.
+adminApi.get("/overall", (_req, res) =>
+  res.json(
+    overall.computeOverall({
+      events: events.readHistory(),
+      students: store.read("students"),
+    }),
+  ),
+);
+
 adminApi.get("/usage", (_req, res) => {
-  const all = events.readAll();
+  const all = events.readHistory();
   const u = usage.computeUsage(all);
   const named = (rows) =>
     rows.map((x) => ({
@@ -3097,7 +3121,14 @@ const withBrand = (html) =>
 const readPage = (file) =>
   withBrand(fs.readFileSync(path.join(PUBLIC_DIR, file), "utf8"));
 
-const SHELL = readPage("index.html");
+const seoPages = createSeoPages({
+  universities: UNIVERSITIES,
+  scholarships: curatedScholarships.allCurated(),
+});
+const SHELL = readPage("index.html").replace(
+  "<!--SITE_FOOTER-->",
+  seoPages.footer(),
+);
 const LANDING = readPage("landing.html");
 const ADMIN_PAGE = readPage("admin.html");
 const MARKETING_PAGE = readPage("marketing.html");
@@ -3105,6 +3136,8 @@ const PARTNERS_PAGE = readPage("partners.html");
 const PARTNERS_DEMO_PAGE = readPage("partners-demo.html");
 const sendHtml = (res, html) =>
   res.set("Cache-Control", "no-cache").type("html").send(html);
+// Pages that need absolute URLs (canonical, og:image) carry a {{ORIGIN}} token.
+const withOrigin = (req, html) => html.split("{{ORIGIN}}").join(appOrigin(req));
 const FOR_UNIVERSITIES = (() => {
   const fmt = (n) => n.toLocaleString("en-US");
   return readPage("for-universities.html")
@@ -3199,8 +3232,8 @@ app.get("/partners/demo", (_req, res) => sendHtml(res, PARTNERS_DEMO_PAGE));
 // The B2B pitch (analytics, claim-a-profile, pilot contact form) lives on its
 // own page, off the student-facing homepage.
 app.get("/for-universities", (req, res) => {
-  events.record("pageview", { anon: req.anon });
-  res.send(FOR_UNIVERSITIES);
+  recordHuman(req, "pageview");
+  res.send(withOrigin(req, FOR_UNIVERSITIES));
 });
 
 // Old routes that used to carry this content — permanent redirects so shared
@@ -3252,27 +3285,34 @@ app.get("/robots.txt", (req, res) => {
 // advertised for the rest of the process: one crawler hitting the old hostname
 // after a deploy would have the new domain serving a sitemap full of old-domain
 // URLs. Joining per request is 302 string concats on a rarely-hit route.
-let sitemapPaths = null; // dataset is static — collect once
+let sitemapEntries = null; // which pages exist is static — collect once
 app.get("/sitemap.xml", (req, res) => {
   const base = appOrigin(req);
-  if (!sitemapPaths) {
-    // Only VERIFIED profiles are submitted for indexing. The ~3,700
-    // register-only records are near-duplicate boilerplate (name, city, type,
-    // enrolment) with no tuition, programs or entry requirements — asking
-    // Google to index them invites a thin-content judgement on the whole
-    // domain. They stay reachable and crawlable (noindex,follow on the page
-    // itself), so their outbound links still pass, but they're not advertised.
-    sitemapPaths = [
-      "", // the homepage / front door
-      "discover",
-      "for-universities",
-      ...UNIVERSITIES.filter((u) => u.verified).map(
-        (u) => `university/${u.id}`,
-      ),
+  if (!sitemapEntries) {
+    // Only VERIFIED profiles are submitted for indexing. The register-only
+    // records are near-duplicate boilerplate (name, city, type, enrolment) with
+    // no tuition, programs or entry requirements — asking Google to index them
+    // invites a thin-content judgement on the whole domain. They stay reachable
+    // and crawlable (noindex,follow on the page itself).
+    sitemapEntries = [
+      { p: "/" },
+      { p: "/discover" },
+      { p: "/for-universities" },
+      ...seoPages.paths().map((p) => ({ p })),
+      ...UNIVERSITIES.filter((u) => u.verified).map((u) => ({
+        p: `/university/${u.id}`,
+        uni: u.id,
+      })),
     ];
   }
-  const urls = sitemapPaths
-    .map((p) => `  <url><loc>${base}/${p}</loc></url>`)
+  // lastmod only where it is true: the day a person last confirmed the record.
+  const urls = sitemapEntries
+    .map(({ p, uni }) => {
+      const day = uni
+        ? String(overlay.verifiedAt("university", uni) || "").slice(0, 10)
+        : "";
+      return `  <url><loc>${base}${p}</loc>${day ? `<lastmod>${day}</lastmod>` : ""}</url>`;
+    })
     .join("\n");
   res
     .type("application/xml")
@@ -3280,6 +3320,75 @@ app.get("/sitemap.xml", (req, res) => {
       `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`,
     );
 });
+
+// Landing pages for real searches ("study in Finland", "universities in Berlin").
+// Fully server-rendered; the SPA leaves them alone (see SERVER_PAGES in app.js).
+function sendSeoPage(req, res, page) {
+  if (!page) return sendNotFound(req, res);
+  // One URL per page: /study-in/Finland -> /study-in/finland.
+  if (req.path !== page.path) return res.redirect(301, page.path);
+  recordHuman(req, "pageview");
+  const origin = appOrigin(req);
+  res.send(
+    ssr.injectSSR(SHELL, {
+      metaHtml:
+        ssr.metaTags({
+          title: page.title,
+          description: page.description,
+          canonical: origin + page.path,
+          image: `${origin}/img/og.png`,
+        }) +
+        "\n  " +
+        page.head,
+      viewHtml: page.view,
+    }),
+  );
+}
+const lc = (s) => String(s || "").toLowerCase();
+app.get("/study-in-europe", (req, res) =>
+  sendSeoPage(req, res, seoPages.hub(appOrigin(req))),
+);
+app.get("/study-in/:slug", (req, res) =>
+  sendSeoPage(req, res, seoPages.country(lc(req.params.slug), appOrigin(req))),
+);
+app.get("/study/:slug", (req, res) =>
+  sendSeoPage(req, res, seoPages.field(lc(req.params.slug), appOrigin(req))),
+);
+app.get("/universities-in/:slug", (req, res) =>
+  sendSeoPage(req, res, seoPages.city(lc(req.params.slug), appOrigin(req))),
+);
+
+// Scholarships are SPA screens, so they get real HTML for the first load and the
+// app takes over. The client counts these visits itself.
+function sendScholarshipPage(req, res, page) {
+  if (!page) return sendNotFound(req, res);
+  const origin = appOrigin(req);
+  res.send(
+    ssr.injectSSR(SHELL, {
+      metaHtml:
+        ssr.metaTags({
+          title: page.title,
+          description: page.description,
+          canonical: origin + page.path,
+          image: `${origin}/img/og.png`,
+        }) +
+        "\n  " +
+        page.head,
+      viewHtml: page.view,
+      moreHtml: page.more,
+    }),
+  );
+}
+app.get("/scholarships", (req, res) =>
+  sendScholarshipPage(req, res, seoPages.scholarshipIndex(appOrigin(req))),
+);
+app.get("/scholarship/:key", (req, res) =>
+  sendScholarshipPage(
+    req,
+    res,
+    seoPages.scholarship(req.params.key, appOrigin(req)),
+  ),
+);
 
 // Server-rendered profile pages (real HTML + per-page meta for crawlers).
 app.get("/university/:id", (req, res) => {
@@ -3296,22 +3405,23 @@ app.get("/university/:id", (req, res) => {
         metaHtml: ssr.metaTags({
           title: "University not found — Universo",
           description: "This university could not be found.",
+          noindex: true,
         }),
         viewHtml:
           '<div class="empty"><h3>University not found</h3><a href="/discover">Back to discover</a></div>',
       }),
     );
   }
-  const loc = [uni.city, uni.country].filter(Boolean).join(", ");
+  const origin = appOrigin(req);
+  const page = seoPages.profile(uni, origin);
   res.send(
     ssr.injectSSR(SHELL, {
       metaHtml:
         ssr.metaTags({
-          title: `${uni.name}${loc ? " — " + loc : ""} | Universo`,
-          description:
-            uni.short_description ||
-            `${uni.name} — discover programs, facts and how to apply.`,
-          canonical: `${appOrigin(req)}/university/${uni.id}`,
+          title: page.title,
+          description: page.description,
+          canonical: `${origin}/university/${uni.id}`,
+          image: `${origin}/img/og.png`,
           // Unverified = register-only boilerplate. noindex,FOLLOW: keep it out of
           // the index without orphaning the links on it. A profile becomes
           // indexable the moment it earns real content (or a university claims it).
@@ -3321,12 +3431,14 @@ app.get("/university/:id", (req, res) => {
         // a page told not to index, and it keeps thin records out of rich results.
         (uni.verified
           ? "\n  " +
-            ssr.structuredData(uni, `${appOrigin(req)}/university/${uni.id}`)
+            ssr.structuredData(uni, `${origin}/university/${uni.id}`) +
+            page.head
           : ""),
       viewHtml: ssr.profileView({
         ...withClaim(uni),
         language_requirements: languageReqs.viewForUniversity(uni.id),
       }),
+      moreHtml: page.more,
     }),
   );
 });
@@ -3339,7 +3451,8 @@ app.get("/university/:id", (req, res) => {
 // cold directory. Anonymous visitors get the marketing landing + live matcher.
 app.get("/", (req, res) => {
   if (auth.loadStudent(req)) return res.redirect(302, "/journey");
-  sendHtml(res, LANDING);
+  recordHuman(req, "pageview"); // the static landing page has no client beacon
+  sendHtml(res, withOrigin(req, LANDING));
 });
 
 // One-click unsubscribe (no login, no JS) from an email footer link. The token
@@ -3385,7 +3498,7 @@ app.get("/unsubscribe", (req, res) => {
 // pageview is recorded server-side so anonymous first visits (the top of the
 // funnel) aren't invisible to analytics.
 app.get("/discover", (req, res) => {
-  events.record("pageview", { anon: req.anon });
+  recordHuman(req, "pageview");
   // SSR mirrors the client default: verified profiles first impression.
   const list = search.query(
     INDEX,
@@ -3395,9 +3508,10 @@ app.get("/discover", (req, res) => {
   res.send(
     ssr.injectSSR(SHELL, {
       metaHtml: ssr.metaTags({
-        title: "Discover universities in Europe — Universo",
-        description: `${VERIFIED_COUNT} verified EU university profiles — tuition, scholarships and apply links — in a directory of ${UNIVERSITIES.length.toLocaleString("en-US")} European institutions. Free to browse.`,
+        title: "Find universities in Europe: search & compare | Universo",
+        description: `Search ${UNIVERSITIES.length.toLocaleString("en-US")} European universities by country, subject, language and budget. ${VERIFIED_COUNT} in-depth profiles, real scholarships, official apply links. Free to browse.`,
         canonical: `${appOrigin(req)}/discover`,
+        image: `${appOrigin(req)}/img/og.png`,
       }),
       viewHtml: ssr.directoryView(list, UNIVERSITIES.length),
     }),
@@ -3496,8 +3610,60 @@ app.get("/account", (_req, res) => {
   );
 });
 
-// SPA fallback for any other route.
-app.get("*", (_req, res) => res.send(SHELL));
+// Screens the app renders itself, with nothing for a search engine to index.
+app.get(
+  ["/onboarding", "/verify-email", "/forgot-password", "/reset-password"],
+  (_req, res) =>
+    res.send(
+      ssr.injectSSR(SHELL, {
+        metaHtml: ssr.metaTags({
+          title: "Universo",
+          description: "Your Universo account.",
+          noindex: true,
+        }),
+      }),
+    ),
+);
+for (const [p, title, description] of [
+  [
+    "/privacy",
+    "Privacy policy | Universo",
+    "What Universo stores, why, and how to export or delete it.",
+  ],
+  [
+    "/terms",
+    "Terms of service | Universo",
+    "The terms for using Universo, a free university planning tool for students.",
+  ],
+])
+  app.get(p, (req, res) =>
+    res.send(
+      ssr.injectSSR(SHELL, {
+        metaHtml: ssr.metaTags({
+          title,
+          description,
+          canonical: appOrigin(req) + p,
+        }),
+      }),
+    ),
+  );
+
+// Anything else does not exist — and must SAY so. Answering 200 with the app shell
+// made every mistyped or old URL a duplicate page in Google's eyes ("soft 404").
+function sendNotFound(_req, res) {
+  res.status(404).send(
+    ssr.injectSSR(SHELL, {
+      metaHtml: ssr.metaTags({
+        title: "Page not found | Universo",
+        description: "This page could not be found.",
+        noindex: "follow",
+      }),
+      viewHtml:
+        '<div class="empty"><h1>Page not found</h1><p>That page doesn\'t exist or may have moved.</p><p><a href="/discover">Find a university</a> · <a href="/study-in-europe">Study in Europe</a></p></div>',
+    }),
+  );
+}
+app.get("*", sendNotFound);
 
 // Error handler (last).
 app.use((err, req, res, _next) => {

@@ -943,6 +943,7 @@
         margin-bottom: 14px;
       }
       .aud {
+        grid-template-columns: minmax(0, 1fr);
         min-width: 0;
         padding: 18px 20px;
         display: grid;
@@ -952,6 +953,78 @@
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
+      }
+      .aud .ov-grid {
+        grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr));
+      }
+      .ov-h {
+        font-size: 0.9rem;
+        margin: 4px 0 6px;
+      }
+      .ov-cols {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+        gap: 14px 32px;
+      }
+      .ov-row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 2px 12px;
+        padding: 8px 0;
+        border-top: 1px solid var(--line);
+        font-size: 0.9rem;
+      }
+      .ov-row:first-child {
+        border-top: 0;
+      }
+      .ov-row b {
+        font-variant-numeric: tabular-nums;
+      }
+      .ov-row small {
+        grid-column: 1 / -1;
+        color: var(--ink-faint);
+        font-size: 0.78rem;
+      }
+      .ov-row .bar {
+        grid-column: 1 / -1;
+        height: 6px;
+        border-radius: 3px;
+        background: var(--surface-2);
+        overflow: hidden;
+      }
+      .ov-row .bar i {
+        display: block;
+        height: 100%;
+        background: var(--accent-fill);
+      }
+      .ov-scroll {
+        overflow-x: auto;
+      }
+      .ov-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.88rem;
+        font-variant-numeric: tabular-nums;
+      }
+      .ov-table th,
+      .ov-table td {
+        text-align: right;
+        padding: 7px 0 7px 12px;
+        border-top: 1px solid var(--line);
+        white-space: nowrap;
+      }
+      .ov-table th:first-child,
+      .ov-table td:first-child {
+        text-align: left;
+        padding-left: 0;
+      }
+      .ov-table thead th {
+        border-top: 0;
+        color: var(--ink-soft);
+        font-weight: 600;
+        font-size: 0.78rem;
+        white-space: normal;
+        vertical-align: bottom;
       }
       .aud .tc-head {
         flex-wrap: wrap;
@@ -1495,6 +1568,31 @@
         aria-labelledby="tab-usage"
         hidden
       >
+        <section class="card aud" aria-label="All time" id="overall">
+          <div class="tc-head">
+            <h2 class="t">All time</h2>
+            <span class="note" id="ov-since"></span>
+          </div>
+          <div class="aud-grid ov-grid" id="ov-tiles"></div>
+          <p class="note" id="ov-note"></p>
+          <div class="ov-cols">
+            <div>
+              <h3 class="ov-h">What they did</h3>
+              <div id="ov-usage"></div>
+            </div>
+            <div>
+              <h3 class="ov-h">How far people get</h3>
+              <div id="ov-funnel"></div>
+            </div>
+          </div>
+          <div>
+            <h3 class="ov-h">Growth by month</h3>
+            <div class="ov-scroll">
+              <table class="ov-table" id="ov-growth"></table>
+            </div>
+          </div>
+        </section>
+
         <section class="card aud" aria-label="Who came">
           <div class="tc-head">
             <h2 class="t">Who came</h2>
@@ -2944,7 +3042,141 @@
           }),
         );
 
+        // ---- all time: everyone who ever came, and what they did ----
+        const loadOverall = () =>
+          api("/api/admin/overall")
+            .then((o) => {
+              const S = o.students;
+              const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
+              $("#ov-since").textContent = o.since
+                ? "since " + fmtDate(o.since)
+                : "";
+              const tile = (n, l, sub) =>
+                "<div><b>" +
+                nfmt(n) +
+                "</b><span>" +
+                l +
+                "</span><small>" +
+                sub +
+                "</small></div>";
+              $("#ov-tiles").innerHTML =
+                tile(
+                  S.total,
+                  "students in total",
+                  (S.joined30 ? "+" + nfmt(S.joined30) : "none") +
+                    " in the last 30 days",
+                ) +
+                tile(
+                  o.engaged,
+                  "real visitors",
+                  "looked around or made an account",
+                ) +
+                tile(
+                  S.active30,
+                  "active students, 30 days",
+                  nfmt(S.active7) +
+                    " in 7 days · " +
+                    nfmt(S.active1) +
+                    " today",
+                ) +
+                tile(
+                  S.cameBack,
+                  "students who came back",
+                  pct(S.cameBack, S.total) + "% returned on another day",
+                ) +
+                tile(
+                  S.saved,
+                  "students with a shortlist",
+                  S.saved
+                    ? S.savedPerStudent + " universities each on average"
+                    : "none yet",
+                );
+              $("#ov-note").textContent =
+                nfmt(o.visitors) +
+                " browsers opened the site in total. Many of those only opened one page, and before 25 Nov 2026 that count also included search-engine robots, so “real visitors” is the number to trust.";
+              const U = o.usage;
+              $("#ov-usage").innerHTML = [
+                ["profileViews", "University profiles viewed"],
+                ["searches", "Searches"],
+                ["saves", "Saves to a shortlist"],
+                ["compares", "Comparisons"],
+                ["applyClicks", "Clicks to a university's site"],
+                ["planUpdates", "Application plan updates"],
+                ["scholarships", "Scholarships tracked"],
+                ["logins", "Logins"],
+              ]
+                .map(([k, l]) => {
+                  const d = U.last30[k] - U.prev30[k];
+                  return (
+                    '<div class="ov-row"><span>' +
+                    l +
+                    "</span><b>" +
+                    nfmt(U.total[k]) +
+                    "</b><small>" +
+                    nfmt(U.last30[k]) +
+                    " in the last 30 days" +
+                    (d
+                      ? " (" +
+                        (d > 0 ? "+" : "−") +
+                        nfmt(Math.abs(d)) +
+                        " vs the 30 before)"
+                      : "") +
+                    "</small></div>"
+                  );
+                })
+                .join("");
+              const max = Math.max(1, ...o.funnel.map((f) => f.count));
+              $("#ov-funnel").innerHTML = o.funnel
+                .map(
+                  (f, i) =>
+                    '<div class="ov-row"><span>' +
+                    esc(f.label) +
+                    "</span><b>" +
+                    nfmt(f.count) +
+                    '</b><div class="bar"><i style="width:' +
+                    Math.round((f.count / max) * 100) +
+                    '%"></i></div>' +
+                    (i
+                      ? "<small>" +
+                        (i === 1
+                          ? pct(f.count, o.funnel[0].count) +
+                            "% of real visitors"
+                          : pct(f.count, S.total) + "% of students") +
+                        "</small>"
+                      : "") +
+                    "</div>",
+                )
+                .join("");
+              $("#ov-growth").innerHTML = o.growth.length
+                ? '<thead><tr><th scope="col">Month</th><th scope="col">New real visitors</th><th scope="col">New students</th><th scope="col">Students in total</th></tr></thead><tbody>' +
+                  o.growth
+                    .slice()
+                    .reverse()
+                    .map(
+                      (g) =>
+                        "<tr><td>" +
+                        esc(
+                          dayLabel(g.month + "-01", {
+                            month: "short",
+                            year: "numeric",
+                          }),
+                        ) +
+                        "</td><td>" +
+                        nfmt(g.people) +
+                        "</td><td>" +
+                        nfmt(g.students) +
+                        "</td><td>" +
+                        nfmt(g.totalStudents) +
+                        "</td></tr>",
+                    )
+                    .join("") +
+                  "</tbody>"
+                : "<tbody><tr><td>Nothing recorded yet.</td></tr></tbody>";
+            })
+            .catch((e) => toast(e.message));
+
         const loadUsage = () => {
+          loadOverall();
           loadAudience();
           return loadUsageNumbers();
         };
