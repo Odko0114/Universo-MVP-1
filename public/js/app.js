@@ -1059,6 +1059,9 @@
       });
       state.results.total = res.count;
       state.results.items = res.universities; // one page at a time, not accumulated
+      if (res.widened && hintEl)
+        hintEl.textContent =
+          "No full Universo profiles match yet, so these are basic listings from our wider university list. Check each university's own site for details.";
 
       const totalPages = Math.max(1, Math.ceil(res.count / PAGE_SIZE));
       // A stale deep link (e.g. ?page=40 after narrowing) lands past the end —

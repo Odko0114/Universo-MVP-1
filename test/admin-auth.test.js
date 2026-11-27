@@ -105,7 +105,12 @@ test("GET /api/admin/audience returns counts only, and falls back on bad input",
     Array.isArray(r.json.people),
     "founder view includes the people list",
   );
-  assert.ok(r.json.previous.visitors, "every number has a comparison");
+  assert.ok(r.json.previous.accounts, "student numbers have a comparison");
+  assert.equal(
+    r.json.previous.visitors,
+    null,
+    "nothing was counted back then, so no made-up comparison",
+  );
   assert.ok(
     !/@|password/i.test(JSON.stringify(r.json)),
     "never emails or hashes",

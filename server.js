@@ -967,7 +967,19 @@ api.get("/universities", universitiesLimiter, (req, res) => {
     });
   }
 
-  const result = search.query(INDEX, params, clickOf, { scoreFn });
+  let result = search.query(INDEX, params, clickOf, { scoreFn });
+  // Full profiles are the default view, but whole countries have none yet.
+  // "No matches" would be false there: show the basic listings and say so.
+  let widened = false;
+  if (params.verified === "1" && !result.count) {
+    const every = search.query(INDEX, { ...params, verified: "" }, clickOf, {
+      scoreFn,
+    });
+    if (every.count) {
+      result = every;
+      widened = true;
+    }
+  }
   result.universities = result.universities.map((u) => {
     const withP = withPhoto(u);
     // Attach the fit score + a compressed per-card reason only when we actually
@@ -987,6 +999,7 @@ api.get("/universities", universitiesLimiter, (req, res) => {
     return withP;
   });
   result.sort = params.sort || (req.query.q ? "relevance" : "name");
+  if (widened) result.widened = true;
   // One event per real search (first page only — "load more" isn't a new search),
   // carrying the filters used and how many results came back. The result count
   // is what makes unmet demand visible ("Medicine in Finland → 0 matches").
@@ -1089,6 +1102,12 @@ const trackLimiter = rateLimit({ windowMs: 60 * 1000, max: 120 });
 api.post("/track", trackLimiter, (req, res) => {
   const { type, uni } = req.body || {};
   if (TRACK_IGNORED.has(type)) return res.status(204).end();
+  // "A person did something" (public/js/human.js). Counted only from a browser
+  // that kept our cookie, and never from the founder's own signed-in browser.
+  if (type === "human") {
+    if (req.hadAnon && !adminAuth.loadAdmin(req)) recordHuman(req, "human");
+    return res.status(204).end();
+  }
   if (!TRACK_TYPES.has(type))
     return res.status(400).json({ error: "Unknown event type." });
 

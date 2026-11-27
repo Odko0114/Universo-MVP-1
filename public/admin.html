@@ -837,7 +837,7 @@
       }
       .tiles {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(3, 1fr);
         gap: 16px;
       }
       .tile {
@@ -951,7 +951,7 @@
       }
       .aud-grid {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
         gap: 10px;
       }
       .aud .ov-grid {
@@ -1046,6 +1046,12 @@
       .aud-filter .note {
         font-size: 0.82rem;
         color: var(--ink-soft);
+      }
+      .aud-grid > .off {
+        border-style: dashed;
+      }
+      .aud-grid > .off b {
+        color: var(--ink-faint);
       }
       .aud-grid small {
         display: block;
@@ -1391,6 +1397,9 @@
           grid-template-columns: 1fr 1fr;
           gap: 12px;
         }
+        .tiles > :last-child:nth-child(odd) {
+          grid-column: 1 / -1;
+        }
         .tile {
           padding: 14px 14px 12px;
         }
@@ -1613,6 +1622,12 @@
             <input type="date" id="aud-date" aria-label="Pick a date" />
           </label>
           <div class="aud-grid" id="aud-tiles"></div>
+          <p class="note" id="aud-since" hidden></p>
+          <p class="note">
+            A <b>visitor</b> is counted only after they tap, click, type, scroll
+            or move a mouse. Your own browser isn't counted while you're signed
+            in here.
+          </p>
           <div class="aud-filter">
             <span class="note">Show details for</span>
             <div
@@ -1636,8 +1651,7 @@
           <div class="aud-days" id="aud-days" aria-label="Last 7 days"></div>
           <p class="note" id="aud-note" hidden>
             For a past day, “returning” only counts students whose last visit
-            was that day, so it can read low. New students and visitors are
-            exact.
+            was that day, so it can read low. New students are exact.
           </p>
           <details class="aud-more">
             <summary id="aud-people-sum">Who they are</summary>
@@ -2906,36 +2920,68 @@
                   "</small>"
                 );
               };
-              const tile = (n, l, sub, prev) =>
-                "<div><b>" +
-                nfmt(n) +
+              // n === null: no number exists. prev === null: nothing to compare.
+              const tile = (n, l, sub, prev, cls) =>
+                "<div" +
+                (cls ? ' class="' + cls + '"' : "") +
+                "><b>" +
+                (n === null ? "—" : nfmt(n)) +
                 "</b><span>" +
                 l +
                 "</span><small>" +
                 sub +
                 "</small>" +
-                cmp(n, prev) +
+                (n === null || prev === null ? "" : cmp(n, prev)) +
                 "</div>";
               const P = a.previous;
+              const V = a.visitors;
+              const split = (x) =>
+                nfmt(x.new) + " new · " + nfmt(x.returning) + " returning";
               $("#aud-tiles").innerHTML =
                 tile(
                   a.accounts.total,
                   "students active " + lab,
-                  nfmt(a.accounts.new) +
-                    " new · " +
-                    nfmt(a.accounts.returning) +
-                    " returning",
+                  split(a.accounts),
                   P.accounts.total,
                 ) +
                 tile(
-                  a.visitors.total,
-                  "visitors " + lab,
-                  nfmt(a.visitors.new) +
-                    " new · " +
-                    nfmt(a.visitors.returning) +
-                    " returning",
-                  P.visitors.total,
-                );
+                  V ? V.total : null,
+                  "visitors without an account",
+                  V ? split(V) : "not recorded for this period",
+                  P.visitors && P.visitors.total,
+                ) +
+                (V
+                  ? tile(
+                      a.quiet,
+                      "opened a page, did nothing",
+                      "bots, or people who left at once. Not visitors.",
+                      null,
+                      "off",
+                    )
+                  : tile(
+                      a.mixed,
+                      "other browsers",
+                      "people and bots mixed. Can't be separated.",
+                      null,
+                      "off",
+                    ));
+              const since = a.countingSince
+                ? new Date(a.countingSince).toLocaleString("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    timeZone: "Europe/Helsinki",
+                  })
+                : "";
+              $("#aud-since").textContent = since
+                ? "Visitors are counted from " +
+                  since +
+                  " (Finnish time). Earlier visits in this period are not in that number."
+                : V
+                  ? ""
+                  : "The site was not yet recording whether a person was there, so there is no visitor number here.";
+              $("#aud-since").hidden = !$("#aud-since").textContent;
               const list = (t, b) =>
                 "<div><h3>" +
                 t +
@@ -2978,9 +3024,9 @@
                     esc(dayLabel(d.day, { day: "numeric", month: "short" })) +
                     "</span><b>" +
                     nfmt(d.newAccounts) +
-                    "</b>new<b>" +
-                    nfmt(d.visitors) +
-                    "</b>seen</button>",
+                    "</b>joined<b>" +
+                    (d.visitors === null ? "—" : nfmt(d.visitors)) +
+                    "</b>visitors</button>",
                 )
                 .join("");
               const ppl = a.people || [];
@@ -3053,7 +3099,7 @@
                 : "";
               const tile = (n, l, sub) =>
                 "<div><b>" +
-                nfmt(n) +
+                (n === null ? "—" : nfmt(n)) +
                 "</b><span>" +
                 l +
                 "</span><small>" +
@@ -3067,9 +3113,11 @@
                     " in the last 30 days",
                 ) +
                 tile(
-                  o.engaged,
-                  "real visitors",
-                  "looked around or made an account",
+                  o.visitors ? o.visitors.count : null,
+                  "visitors without an account",
+                  o.visitors
+                    ? "counted since " + fmtDate(o.visitors.since)
+                    : "counting hasn't started yet",
                 ) +
                 tile(
                   S.active30,
@@ -3092,8 +3140,9 @@
                     : "none yet",
                 );
               $("#ov-note").textContent =
-                nfmt(o.visitors) +
-                " browsers opened the site in total. Many of those only opened one page, and before 25 Nov 2026 that count also included search-engine robots, so “real visitors” is the number to trust.";
+                "Not counted as people: " +
+                nfmt(o.browsers) +
+                " browsers without an account have opened the site since records began, bots included.";
               const U = o.usage;
               $("#ov-usage").innerHTML = [
                 ["profileViews", "University profiles viewed"],
@@ -3138,17 +3187,14 @@
                     '%"></i></div>' +
                     (i
                       ? "<small>" +
-                        (i === 1
-                          ? pct(f.count, o.funnel[0].count) +
-                            "% of real visitors"
-                          : pct(f.count, S.total) + "% of students") +
-                        "</small>"
+                        pct(f.count, S.total) +
+                        "% of students</small>"
                       : "") +
                     "</div>",
                 )
                 .join("");
               $("#ov-growth").innerHTML = o.growth.length
-                ? '<thead><tr><th scope="col">Month</th><th scope="col">New real visitors</th><th scope="col">New students</th><th scope="col">Students in total</th></tr></thead><tbody>' +
+                ? '<thead><tr><th scope="col">Month</th><th scope="col">New students</th><th scope="col">Students in total</th></tr></thead><tbody>' +
                   o.growth
                     .slice()
                     .reverse()
@@ -3161,8 +3207,6 @@
                             year: "numeric",
                           }),
                         ) +
-                        "</td><td>" +
-                        nfmt(g.people) +
                         "</td><td>" +
                         nfmt(g.students) +
                         "</td><td>" +
@@ -3188,7 +3232,6 @@
                 C = u.current,
                 P = u.previous;
               $("#tiles").innerHTML = [
-                ["visitors", "Visitors"],
                 ["accounts", "New accounts"],
                 ["searches", "Searches"],
                 ["saves", "Shortlist saves"],

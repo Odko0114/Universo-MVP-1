@@ -243,6 +243,53 @@ test("a signed-in visit is logged as an active day (so past returning visits sta
   await req("DELETE", "/api/me");
 });
 
+test("a visitor is counted only with a kept cookie, a browser user agent and not as the founder", async () => {
+  const events = require("../lib/events");
+  const ua = "Mozilla/5.0 (iPhone) Safari/604.1";
+  const count = async () => {
+    await events.flush();
+    return events.readAll().filter((e) => e.type === "human").length;
+  };
+  const send = (headers) =>
+    fetch(`${base}/api/track`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...headers },
+      body: '{"type":"human"}',
+    });
+  const start = await count();
+  assert.equal((await send({ "User-Agent": ua })).status, 204); // no cookie
+  await send({ Cookie: "uv_anon_x=1", "User-Agent": ua }); // not our cookie
+  const page = await fetch(`${base}/`, { headers: { "User-Agent": ua } });
+  const cookie = page.headers.get("set-cookie").split(";")[0];
+  await send({ Cookie: cookie, "User-Agent": "Googlebot/2.1" });
+  assert.equal(await count(), start, "none of those is a person");
+  await send({ Cookie: cookie, "User-Agent": ua });
+  assert.equal(await count(), start + 1);
+  for (const path of [
+    "/",
+    "/discover",
+    "/for-universities",
+    "/study-in-europe",
+  ])
+    assert.match(
+      await (await fetch(base + path)).text(),
+      /\/js\/human\.js/,
+      path,
+    );
+});
+
+test("a country with no full profile shows basic listings, not 'no matches'", async () => {
+  const r = await req(
+    "GET",
+    "/api/universities?verified=1&country=Switzerland",
+  );
+  assert.equal(r.json.widened, true);
+  assert.ok(r.json.count > 0);
+  const f = await req("GET", "/api/universities?verified=1&country=Finland");
+  assert.equal(f.json.widened, undefined);
+  assert.ok(f.json.universities.every((u) => u.verified));
+});
+
 test("PATCH /api/me/profile stores matching fields and flips profile_completed", async () => {
   const email = `prof_${Date.now()}@example.com`;
   const reg = await req("POST", "/api/auth/register", {

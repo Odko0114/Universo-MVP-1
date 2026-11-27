@@ -35,11 +35,13 @@ const students = [
   { signup_date: ago(3), last_active_date: ago(3), country_of_origin: "Nepal" },
 ];
 const events = [
-  { ts: ago(0, 1), anon: "a" }, // first seen today → new
-  { ts: ago(0, 2), anon: "b" },
+  { ts: ago(20), anon: "old", type: "human" }, // counting has been on a while
+  { ts: ago(0, 1), anon: "a", type: "human" }, // first seen today → new
+  { ts: ago(0, 2), anon: "b", type: "human" },
   { ts: ago(4), anon: "b" }, // b came before → returning today
-  { ts: ago(0, 3), anon: "c" },
-  { ts: ago(2), anon: "d" },
+  { ts: ago(0, 3), anon: "c", type: "human" },
+  { ts: ago(0, 3), anon: "bot", type: "pageview" }, // never did anything
+  { ts: ago(2), anon: "d", type: "human" },
   { ts: ago(0), type: "pageview" }, // no anon → ignored
 ];
 
@@ -47,6 +49,9 @@ test("today: new vs returning accounts and visitors", () => {
   const a = computeAudience({ students, events, now: NOW, range: "today" });
   assert.deepEqual(a.accounts, { new: 2, returning: 1, total: 3 });
   assert.deepEqual(a.visitors, { new: 2, returning: 1, total: 3 });
+  assert.equal(a.quiet, 1, "a page opened with no action is not a visitor");
+  assert.equal(a.mixed, null);
+  assert.equal(a.countingSince, "", "the whole period was counted");
   assert.equal(a.totalAccounts, 5);
 });
 
@@ -130,6 +135,9 @@ test("every number comes with the same-length window just before it", () => {
   const w = computeAudience({ students, events, now: NOW, range: "7d" });
   assert.equal(w.previous.accounts.new, 2);
   assert.equal(w.previous.visitors.total, 0);
+  // 30 days: the window before began before counting did → no comparison
+  const m = computeAudience({ students, events, now: NOW, range: "30d" });
+  assert.equal(m.previous.visitors, null);
 });
 
 test("a person with two devices counts once; blank profile fields are counted, not hidden", () => {
@@ -142,8 +150,9 @@ test("a person with two devices counts once; blank profile fields are counted, n
     },
   ];
   const ev = [
-    { ts: ago(0, 1), anon: "x" },
-    { ts: ago(0, 2), anon: "y" },
+    { ts: ago(0, 1), anon: "x", type: "human" },
+    { ts: ago(0, 2), anon: "y", type: "human" },
+    { ts: ago(0, 2), anon: "z", type: "human" },
   ];
   const a = computeAudience({
     students: two,
@@ -151,6 +160,7 @@ test("a person with two devices counts once; blank profile fields are counted, n
     now: NOW,
     range: "today",
   });
+  // x and y belong to the account: that person is a student, not also a visitor
   assert.equal(a.visitors.total, 1);
   assert.equal(a.breakdown.countries.unknown, 1);
   assert.deepEqual(a.breakdown.countries.rows, []);
@@ -237,4 +247,35 @@ test("a student who came back on a past day is found from the daily log, even if
   });
   assert.equal(other.accounts.returning, 0);
   assert.equal(sat.trackedSince, "2026-10-14");
+});
+
+test("before counting began there is no visitor number, only a mixed total", () => {
+  const ev = [
+    { ts: ago(3), anon: "p", type: "pageview" },
+    { ts: ago(3), anon: "q", type: "search" },
+    { ts: ago(1, 2), anon: "r", type: "pageview" },
+    { ts: ago(1, 1), anon: "s", type: "human" }, // counting starts here
+  ];
+  const old = computeAudience({
+    students: [],
+    events: ev,
+    now: NOW,
+    day: "2026-10-16",
+  });
+  assert.equal(old.visitors, null);
+  assert.equal(old.quiet, null);
+  assert.equal(old.mixed, 2);
+  assert.equal(old.daily[3].visitors, null);
+  // the first counted day: earlier hits that day are left out, and it says so
+  const first = computeAudience({
+    students: [],
+    events: ev,
+    now: NOW,
+    day: "2026-10-18",
+  });
+  assert.equal(first.visitors.total, 1);
+  assert.equal(first.quiet, 0);
+  assert.equal(first.countingSince, ago(1, 1));
+  const none = computeAudience({ students: [], events: [], now: NOW });
+  assert.equal(none.visitors, null);
 });

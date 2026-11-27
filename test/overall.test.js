@@ -31,13 +31,17 @@ const events = [
   { ts: ago(5), type: "pageview", anon: "bot" }, // one page, nothing else
   { ts: ago(2), type: "pageview", anon: "v" },
   { ts: ago(2), type: "profile_view", anon: "v" },
+  { ts: ago(2), type: "human", anon: "v" },
+  { ts: ago(2), type: "human", anon: "a" }, // a student, not a visitor
   { ts: ago(45), type: "search", anon: "v2" },
 ];
 const o = computeOverall({ events, students, now: NOW });
 
-test("people: two devices are one person, single-page openers are not 'real'", () => {
-  assert.equal(o.visitors, 4); // s1, bot, v, v2
-  assert.equal(o.engaged, 4); // s1, v, v2 + s2 (an account without events)
+test("visitors need an observed action; account browsers are students", () => {
+  assert.equal(o.browsers, 3); // bot, v, v2 — s1's two devices are a student
+  assert.deepEqual(o.visitors, { count: 1, since: ago(2) });
+  const none = computeOverall({ events: [], students, now: NOW });
+  assert.equal(none.visitors, null);
 });
 test("students: totals, activity, came back, shortlist average", () => {
   assert.equal(o.students.total, 2);
@@ -52,8 +56,8 @@ test("usage: all time, last 30 days and the 30 before", () => {
   assert.equal(o.usage.last30.profileViews, 1);
   assert.equal(o.usage.prev30.searches, 1);
 });
-test("funnel never shows more accounts than people; growth adds up", () => {
-  assert.ok(o.funnel[0].count >= o.funnel[1].count);
+test("funnel starts at accounts; growth adds up", () => {
+  assert.equal(o.funnel[0].key, "students");
   assert.equal(o.growth.at(-1).totalStudents, 2);
   assert.equal(
     o.growth.reduce((n, g) => n + g.students, 0),

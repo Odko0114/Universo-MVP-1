@@ -8,6 +8,8 @@ declare global {
       id?: string;
       /** anonymous analytics id (from the uv_anon cookie) */
       anon?: string;
+      /** true when the browser sent that cookie back (see lib/auth anon) */
+      hadAnon?: boolean;
       /** authenticated student, attached by requireAuth */
       student?: any;
       /** authenticated admin, attached by requireAdmin */
